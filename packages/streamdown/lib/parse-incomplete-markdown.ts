@@ -46,12 +46,16 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   return text;
 };
 
-// Counts single asterisks that are not part of double asterisks
+// Counts single asterisks that are not part of double asterisks and not escaped
 const countSingleAsterisks = (text: string): number => {
   return text.split('').reduce((acc, char, index) => {
     if (char === '*') {
       const prevChar = text[index - 1];
       const nextChar = text[index + 1];
+      // Skip if escaped with backslash
+      if (prevChar === '\\') {
+        return acc;
+      }
       if (prevChar !== '*' && nextChar !== '*') {
         return acc + 1;
       }
@@ -74,12 +78,16 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   return text;
 };
 
-// Counts single underscores that are not part of double underscores
+// Counts single underscores that are not part of double underscores and not escaped
 const countSingleUnderscores = (text: string): number => {
   return text.split('').reduce((acc, char, index) => {
     if (char === '_') {
       const prevChar = text[index - 1];
       const nextChar = text[index + 1];
+      // Skip if escaped with backslash
+      if (prevChar === '\\') {
+        return acc;
+      }
       if (prevChar !== '_' && nextChar !== '_') {
         return acc + 1;
       }
@@ -125,17 +133,22 @@ const countSingleBackticks = (text: string): number => {
 // Completes incomplete inline code formatting (`)
 // Avoids completing if inside an incomplete code block
 const handleIncompleteInlineCode = (text: string): string => {
+  // Check if we're inside a code block (complete or incomplete)
+  const allTripleBackticks = (text.match(/```/g) || []).length;
+  const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
+  
+  // Don't modify text if we have complete code blocks (even pairs of ```)
+  if (allTripleBackticks > 0 && allTripleBackticks % 2 === 0) {
+    // We have complete code blocks, don't add any backticks
+    return text;
+  }
+
   const inlineCodeMatch = text.match(inlineCodePattern);
 
-  if (inlineCodeMatch) {
-    const allTripleBackticks = (text.match(/```/g) || []).length;
-    const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
-
-    if (!insideIncompleteCodeBlock) {
-      const singleBacktickCount = countSingleBackticks(text);
-      if (singleBacktickCount % 2 === 1) {
-        return `${text}\``;
-      }
+  if (inlineCodeMatch && !insideIncompleteCodeBlock) {
+    const singleBacktickCount = countSingleBackticks(text);
+    if (singleBacktickCount % 2 === 1) {
+      return `${text}\``;
     }
   }
 

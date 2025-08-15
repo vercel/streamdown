@@ -27,9 +27,10 @@ export const components: Options['components'] = {
       {children}
     </span>
   ),
-  a: ({ node, children, className, ...props }) => (
+  a: ({ node, children, className, href, ...props }) => (
     <a
       className={cn('font-medium text-primary underline', className)}
+      href={href}
       rel="noreferrer"
       target="_blank"
       {...props}

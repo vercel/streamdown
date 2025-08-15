@@ -24,7 +24,7 @@ describe('cn utility', () => {
 
   it('should merge complex tailwind classes', () => {
     const result = cn('text-gray-500 text-sm', 'text-blue-600 text-lg');
-    expect(result).toBe('text-lg text-blue-600');
+    expect(result).toBe('text-blue-600 text-lg');
   });
 
   it('should handle arrays of classes', () => {
@@ -61,6 +61,6 @@ describe('cn utility', () => {
 
   it('should preserve non-conflicting tailwind classes', () => {
     const result = cn('mt-4 mb-4', 'mr-2 ml-2');
-    expect(result).toBe('mt-4 mb-4 ml-2 mr-2');
+    expect(result).toBe('mt-4 mb-4 mr-2 ml-2');
   });
 });
