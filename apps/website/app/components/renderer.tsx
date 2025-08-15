@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { type ComponentProps, useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Streamdown } from 'streamdown';
 
@@ -11,12 +11,14 @@ type RendererProps = {
   type: 'markdown' | 'streamdown';
   markdown: string;
   className?: string;
+  streamdownProps?: ComponentProps<typeof Streamdown>;
 };
 
 export const Renderer = ({
   speed = DEFAULT_SPEED,
   type = 'markdown',
   markdown,
+  streamdownProps,
 }: RendererProps) => {
   const [content, setContent] = useState('');
   const tokens = useMemo(
@@ -44,6 +46,6 @@ export const Renderer = ({
   return type === 'markdown' ? (
     <ReactMarkdown>{content}</ReactMarkdown>
   ) : (
-    <Streamdown>{content}</Streamdown>
+    <Streamdown {...streamdownProps}>{content}</Streamdown>
   );
 };
