@@ -1,8 +1,13 @@
-/**
- * Handles incomplete links and images by removing them if not closed
- */
-function handleIncompleteLinksAndImages(text: string): string {
-  const linkImagePattern = /(!?\[)([^\]]*?)$/;
+const linkImagePattern = /(!?\[)([^\]]*?)$/;
+const boldPattern = /(\*\*)([^*]*?)$/;
+const italicPattern = /(__)([^_]*?)$/;
+const singleAsteriskPattern = /(\*)([^*]*?)$/;
+const singleUnderscorePattern = /(_)([^_]*?)$/;
+const inlineCodePattern = /(`)([^`]*?)$/;
+const strikethroughPattern = /(~~)([^~]*?)$/;
+
+// Handles incomplete links and images by removing them if not closed
+const handleIncompleteLinksAndImages = (text: string): string => {
   const linkMatch = text.match(linkImagePattern);
 
   if (linkMatch) {
@@ -11,13 +16,10 @@ function handleIncompleteLinksAndImages(text: string): string {
   }
 
   return text;
-}
+};
 
-/**
- * Completes incomplete bold formatting (**)
- */
-function handleIncompleteBold(text: string): string {
-  const boldPattern = /(\*\*)([^*]*?)$/;
+// Completes incomplete bold formatting (**)
+const handleIncompleteBold = (text: string): string => {
   const boldMatch = text.match(boldPattern);
 
   if (boldMatch) {
@@ -28,13 +30,10 @@ function handleIncompleteBold(text: string): string {
   }
 
   return text;
-}
+};
 
-/**
- * Completes incomplete italic formatting with double underscores (__)
- */
-function handleIncompleteDoubleUnderscoreItalic(text: string): string {
-  const italicPattern = /(__)([^_]*?)$/;
+// Completes incomplete italic formatting with double underscores (__)
+const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   const italicMatch = text.match(italicPattern);
 
   if (italicMatch) {
@@ -45,12 +44,10 @@ function handleIncompleteDoubleUnderscoreItalic(text: string): string {
   }
 
   return text;
-}
+};
 
-/**
- * Counts single asterisks that are not part of double asterisks
- */
-function countSingleAsterisks(text: string): number {
+// Counts single asterisks that are not part of double asterisks
+const countSingleAsterisks = (text: string): number => {
   return text.split('').reduce((acc, char, index) => {
     if (char === '*') {
       const prevChar = text[index - 1];
@@ -61,13 +58,10 @@ function countSingleAsterisks(text: string): number {
     }
     return acc;
   }, 0);
-}
+};
 
-/**
- * Completes incomplete italic formatting with single asterisks (*)
- */
-function handleIncompleteSingleAsteriskItalic(text: string): string {
-  const singleAsteriskPattern = /(\*)([^*]*?)$/;
+// Completes incomplete italic formatting with single asterisks (*)
+const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   const singleAsteriskMatch = text.match(singleAsteriskPattern);
 
   if (singleAsteriskMatch) {
@@ -78,12 +72,10 @@ function handleIncompleteSingleAsteriskItalic(text: string): string {
   }
 
   return text;
-}
+};
 
-/**
- * Counts single underscores that are not part of double underscores
- */
-function countSingleUnderscores(text: string): number {
+// Counts single underscores that are not part of double underscores
+const countSingleUnderscores = (text: string): number => {
   return text.split('').reduce((acc, char, index) => {
     if (char === '_') {
       const prevChar = text[index - 1];
@@ -94,13 +86,10 @@ function countSingleUnderscores(text: string): number {
     }
     return acc;
   }, 0);
-}
+};
 
-/**
- * Completes incomplete italic formatting with single underscores (_)
- */
-function handleIncompleteSingleUnderscoreItalic(text: string): string {
-  const singleUnderscorePattern = /(_)([^_]*?)$/;
+// Completes incomplete italic formatting with single underscores (_)
+const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
 
   if (singleUnderscoreMatch) {
@@ -111,23 +100,19 @@ function handleIncompleteSingleUnderscoreItalic(text: string): string {
   }
 
   return text;
-}
+};
 
-/**
- * Checks if a backtick at position i is part of a triple backtick sequence
- */
-function isPartOfTripleBacktick(text: string, i: number): boolean {
+// Checks if a backtick at position i is part of a triple backtick sequence
+const isPartOfTripleBacktick = (text: string, i: number): boolean => {
   const isTripleStart = text.substring(i, i + 3) === '```';
   const isTripleMiddle = i > 0 && text.substring(i - 1, i + 2) === '```';
   const isTripleEnd = i > 1 && text.substring(i - 2, i + 1) === '```';
 
   return isTripleStart || isTripleMiddle || isTripleEnd;
-}
+};
 
-/**
- * Counts single backticks that are not part of triple backticks
- */
-function countSingleBackticks(text: string): number {
+// Counts single backticks that are not part of triple backticks
+const countSingleBackticks = (text: string): number => {
   let count = 0;
   for (let i = 0; i < text.length; i++) {
     if (text[i] === '`' && !isPartOfTripleBacktick(text, i)) {
@@ -135,14 +120,11 @@ function countSingleBackticks(text: string): number {
     }
   }
   return count;
-}
+};
 
-/**
- * Completes incomplete inline code formatting (`)
- * Avoids completing if inside an incomplete code block
- */
-function handleIncompleteInlineCode(text: string): string {
-  const inlineCodePattern = /(`)([^`]*?)$/;
+// Completes incomplete inline code formatting (`)
+// Avoids completing if inside an incomplete code block
+const handleIncompleteInlineCode = (text: string): string => {
   const inlineCodeMatch = text.match(inlineCodePattern);
 
   if (inlineCodeMatch) {
@@ -158,13 +140,10 @@ function handleIncompleteInlineCode(text: string): string {
   }
 
   return text;
-}
+};
 
-/**
- * Completes incomplete strikethrough formatting (~~)
- */
-function handleIncompleteStrikethrough(text: string): string {
-  const strikethroughPattern = /(~~)([^~]*?)$/;
+// Completes incomplete strikethrough formatting (~~)
+const handleIncompleteStrikethrough = (text: string): string => {
   const strikethroughMatch = text.match(strikethroughPattern);
 
   if (strikethroughMatch) {
@@ -175,12 +154,9 @@ function handleIncompleteStrikethrough(text: string): string {
   }
 
   return text;
-}
+};
 
-/**
- * Parses markdown text and removes incomplete tokens to prevent partial rendering
- * of links, images, bold, and italic formatting during streaming.
- */
+// Parses markdown text and removes incomplete tokens to prevent partial rendering
 export const parseIncompleteMarkdown = (text: string): string => {
   if (!text || typeof text !== 'string') {
     return text;
