@@ -56,4 +56,4 @@ export const Streamdown = memo(
   },
   (prevProps, nextProps) => prevProps.children === nextProps.children,
 );
-Response.displayName = 'Response';
+Streamdown.displayName = 'Streamdown';
