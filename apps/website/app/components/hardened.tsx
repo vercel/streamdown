@@ -13,7 +13,7 @@ export const HardenedMarkdown = () => (
   <section className="space-y-16 px-4">
     <div className="mx-auto max-w-2xl space-y-4 text-center">
       <h2 className="font-semibold text-4xl tracking-tight">
-        Built-in Markdown hardening
+        Built-in security hardening
       </h2>
       <p className="text-balance text-lg text-muted-foreground md:text-xl">
         Streamdown ensures that untrusted markdown does not contain images from
