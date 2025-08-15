@@ -1,7 +1,7 @@
 import { Renderer } from './renderer';
 
 const markdown = `
-Here are some links to potentially malicious sites:
+Here are some links to potentially malicious sites (please don't actually click them):
 
 - [Click here for a free iPhone](http://malicious-site.com)
 - [Get rich quick!](http://phishing.example)
