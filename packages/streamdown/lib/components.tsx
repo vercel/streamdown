@@ -1,7 +1,7 @@
 import { isValidElement } from 'react';
 import type { Options } from 'react-markdown';
 import type { BundledLanguage } from 'shiki';
-import { CodeBlock } from './code-block';
+import { CodeBlock, CodeBlockCopyButton } from './code-block';
 import { cn } from './utils';
 
 export const components: Options['components'] = {
@@ -171,7 +171,9 @@ export const components: Options['components'] = {
         className={cn('my-4 h-auto rounded-lg border p-4', className)}
         code={code}
         language={language}
-      />
+      >
+        <CodeBlockCopyButton />
+      </CodeBlock>
     );
   },
 };

@@ -18,8 +18,8 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
       ultracite:
-        specifier: 5.1.5
-        version: 5.1.5(@types/debug@4.1.12)(@types/node@20.19.10)(jiti@2.5.1)(jsdom@25.0.1)(lightningcss@1.30.1)(typescript@5.9.2)
+        specifier: 5.1.6
+        version: 5.1.6(@types/debug@4.1.12)(@types/node@20.19.10)(jiti@2.5.1)(jsdom@25.0.1)(lightningcss@1.30.1)(typescript@5.9.2)
 
   apps/website:
     dependencies:
@@ -87,6 +87,9 @@ importers:
       katex:
         specifier: ^0.16.22
         version: 0.16.22
+      lucide-react:
+        specifier: ^0.539.0
+        version: 0.539.0(react@19.1.1)
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.1.10)(react@19.1.1)
@@ -2480,8 +2483,8 @@ packages:
   ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
 
-  ultracite@5.1.5:
-    resolution: {integrity: sha512-CsNNFbM182p57txZSJ0BnUqhfavx4TFYALYJQ8BU7jRtDh4swfe4Ok0Rj7MTZfKpLc8H13n1pj60FM4yxvq5Eg==}
+  ultracite@5.1.6:
+    resolution: {integrity: sha512-OJqVa0K3ueEk2CxTsoEPMAHEA7fWUNr0X9j+aUbbP01ewGiV4BMu9+ZGCUvh+/RNtxjD2wTFRyOUVJNaPKAzXA==}
     hasBin: true
 
   undici-types@6.21.0:
@@ -4253,6 +4256,10 @@ snapshots:
     dependencies:
       react: 19.1.0
 
+  lucide-react@0.539.0(react@19.1.1):
+    dependencies:
+      react: 19.1.1
+
   lz-string@1.5.0: {}
 
   magic-string@0.30.17:
@@ -5212,7 +5219,7 @@ snapshots:
 
   ufo@1.6.1: {}
 
-  ultracite@5.1.5(@types/debug@4.1.12)(@types/node@20.19.10)(jiti@2.5.1)(jsdom@25.0.1)(lightningcss@1.30.1)(typescript@5.9.2):
+  ultracite@5.1.6(@types/debug@4.1.12)(@types/node@20.19.10)(jiti@2.5.1)(jsdom@25.0.1)(lightningcss@1.30.1)(typescript@5.9.2):
     dependencies:
       '@clack/prompts': 0.11.0
       deepmerge: 4.3.1
