@@ -1,0 +1,29 @@
+{
+  "name": "streamdown",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "react": "^19.1.1",
+    "tsup": "^8.5.0"
+  },
+  "peerDependencies": {
+    "react": "^19.1.1"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "harden-react-markdown": "^1.0.4",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
+    "tailwind-merge": "^3.3.1"
+  }
+}
