@@ -10,9 +10,10 @@
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
-    "prettier": "^3.6.2",
+    "@biomejs/biome": "2.2.0",
     "turbo": "^2.5.5",
-    "typescript": "5.9.2"
+    "typescript": "5.9.2",
+    "ultracite": "5.1.5"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {
