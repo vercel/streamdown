@@ -1,6 +1,6 @@
 'use client';
 
-import { Streamdown } from '../../../../packages/streamdown/index';
+import { Streamdown } from 'streamdown';
 import { useEffect, useState } from 'react';
 
 const tokens = [
