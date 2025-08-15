@@ -20,6 +20,7 @@
   "dependencies": {
     "clsx": "^2.1.1",
     "harden-react-markdown": "^1.0.4",
+    "katex": "^0.16.22",
     "react-markdown": "^10.1.0",
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
