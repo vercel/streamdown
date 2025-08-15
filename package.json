@@ -1,0 +1,11 @@
+{
+  "name": "streamdown",
+  "version": "0.0.1",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
+  "license": "ISC",
+  "description": ""
+}
