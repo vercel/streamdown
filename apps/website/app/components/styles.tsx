@@ -28,7 +28,7 @@ Learn more about [AI safety](https://example.com) and \`transformer\` architectu
 `;
 
 export const Styles = () => (
-  <section className="space-y-16 px-4">
+  <section className="space-y-16 pt-16">
     <div className="mx-auto max-w-2xl space-y-4 text-center">
       <h2 className="font-semibold text-4xl tracking-tight">
         Built-in typography styles
@@ -38,8 +38,9 @@ export const Styles = () => (
         components &mdash; headings, lists, code blocks, and more.
       </p>
     </div>
-    <div className="grid grid-cols-2 divide-x overflow-hidden rounded-3xl border">
-      <div>
+    <div className="grid grid-cols-12 divide-x overflow-hidden border-t">
+      <div />
+      <div className="col-span-5 bg-background">
         <div className="w-full bg-secondary p-4 text-center">
           With react-markdown
         </div>
@@ -47,7 +48,7 @@ export const Styles = () => (
           <Renderer markdown={markdown} type="markdown" />
         </div>
       </div>
-      <div>
+      <div className="col-span-5 bg-background">
         <div className="w-full bg-secondary p-4 text-center">
           With Streamdown
         </div>
@@ -55,6 +56,7 @@ export const Styles = () => (
           <Renderer markdown={markdown} type="streamdown" />
         </div>
       </div>
+      <div />
     </div>
   </section>
 );
