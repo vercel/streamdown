@@ -1,4 +1,4 @@
-import { CodeBlock, CodeBlockCopyButton } from './code-block';
+// import { CodeBlock, CodeBlockCopyButton } from './code-block';
 import { isValidElement } from 'react';
 import { type Options } from 'react-markdown';
 import { cn } from './utils';
@@ -142,7 +142,7 @@ export const components: Options['components'] = {
       />
     );
   },
-  pre: ({ node, className, children }) => {
+  pre: ({ node, className, children, ...props }) => {
     let language = 'javascript';
 
     if (typeof node?.properties?.className === 'string') {
@@ -162,16 +162,21 @@ export const components: Options['components'] = {
     }
 
     return (
-      <CodeBlock
-        className={cn('my-4 h-auto', className)}
-        code={code}
-        language={language}
-      >
-        <CodeBlockCopyButton
-          onCopy={() => console.log('Copied code to clipboard')}
-          onError={() => console.error('Failed to copy code to clipboard')}
-        />
-      </CodeBlock>
+      <pre className={cn('my-4 h-auto', className)} {...props}>
+        <code className={cn('language-javascript', className)}>
+          {code}
+        </code>
+      </pre>
+      // <CodeBlock
+      //   className={cn('my-4 h-auto', className)}
+      //   code={code}
+      //   language={language}
+      // >
+      //   <CodeBlockCopyButton
+      //     onCopy={() => console.log('Copied code to clipboard')}
+      //     onError={() => console.error('Failed to copy code to clipboard')}
+      //   />
+      // </CodeBlock>
     );
   },
 };
