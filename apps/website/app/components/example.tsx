@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { Streamdown } from 'streamdown';
 
 const markdown = `# Styling the Web: A Modern CSS Journey
 
@@ -66,9 +67,18 @@ E = mc2 is Einstein's mass-energy equivalence. Water is H 2O.
 
 const tokens = markdown.split(' ').map((token) => `${token} `);
 
-export const MarkdownExample = () => {
+type ExampleProps = {
+  speed?: number;
+  type: 'markdown' | 'streamdown';
+};
+
+const DEFAULT_SPEED = 1000;
+
+export const Example = ({
+  speed = DEFAULT_SPEED,
+  type = 'markdown',
+}: ExampleProps) => {
   const [content, setContent] = useState('');
-  const SPEED = 1000;
 
   useEffect(() => {
     let currentContent = '';
@@ -82,10 +92,14 @@ export const MarkdownExample = () => {
       } else {
         clearInterval(interval);
       }
-    }, SPEED);
+    }, speed);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [speed]);
 
-  return <ReactMarkdown>{content}</ReactMarkdown>;
+  return type === 'markdown' ? (
+    <ReactMarkdown>{content}</ReactMarkdown>
+  ) : (
+    <Streamdown>{content}</Streamdown>
+  );
 };
