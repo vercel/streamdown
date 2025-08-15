@@ -1,41 +1,49 @@
 import { Renderer } from './renderer';
 
-const markdown = `# AI Models Overview
+const markdown = `# GitHub Flavored Markdown Features
 
-Modern AI models have revolutionized how we interact with technology. From **language models** to _computer vision_, these systems demonstrate remarkable capabilities.
+GFM extends standard Markdown with powerful features. Here's a comprehensive demo:
 
-## Key Features
+## Tables
 
-### Benefits
-- Natural language understanding
-- Multi-modal processing
-- Real-time inference
+| Feature | Standard MD | GFM |
+|---------|------------|-----|
+| Tables | ❌ | ✅ |
+| Task Lists | ❌ | ✅ |
+| Strikethrough | ❌ | ✅ |
 
-### Requirements
-1. GPU acceleration
-2. Model weights
-3. API access
+## Task Lists
 
-## Architecture
+- [x] Implement authentication
+- [x] Add database models
+- [ ] Write unit tests
+- [ ] Deploy to production
 
-![Model Architecture](https://placehold.co/600x400)
+## Strikethrough
 
-## Insights
+~~Old approach~~ → New approach with AI models
 
-> "The development of full artificial intelligence could spell the end of the human race." — Stephen Hawking
+## Autolinks
 
-Learn more about [AI safety](https://example.com) and \`transformer\` architectures.
+Visit https://github.com for more examples
+Email: contact@example.com
+
+## Footnotes
+
+AI models use transformers[^1] for processing text efficiently.
+
+[^1]: Transformers are a neural network architecture introduced in 2017.
 `;
 
-export const Styles = () => (
+export const GitHubFlavoredMarkdown = () => (
   <section className="space-y-16 px-4">
     <div className="mx-auto max-w-2xl space-y-4 text-center">
       <h2 className="font-semibold text-4xl tracking-tight">
-        Built-in typography styles
+        GitHub Flavored Markdown
       </h2>
       <p className="text-balance text-lg text-muted-foreground md:text-xl">
-        Streamdown comes with built-in Tailwind classes for common Markdown
-        components &mdash; headings, lists, code blocks, and more.
+        Streamdown supports GitHub Flavored Markdown (GFM) out of the box, so
+        you get things like task lists, tables, and more.
       </p>
     </div>
     <div className="grid grid-cols-2 divide-x overflow-hidden rounded-3xl border">

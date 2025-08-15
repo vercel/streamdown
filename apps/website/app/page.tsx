@@ -1,5 +1,6 @@
 import { CodeBlocks } from './components/code-blocks';
 import { DeltaSmoothing } from './components/delta-smoothing';
+import { GitHubFlavoredMarkdown } from './components/gfm';
 import { Header } from './components/header';
 import { Hero } from './components/hero';
 import { RenderOptimizations } from './components/render-optimizations';
@@ -13,6 +14,7 @@ const Home = () => (
       <Hero />
     </div>
     <Styles />
+    <GitHubFlavoredMarkdown />
     <CodeBlocks />
     <TerminatorParser />
     <RenderOptimizations />

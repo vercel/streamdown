@@ -10,6 +10,7 @@ type RendererProps = {
   speed?: number;
   type: 'markdown' | 'streamdown';
   markdown: string;
+  className?: string;
 };
 
 export const Renderer = ({

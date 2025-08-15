@@ -176,4 +176,14 @@ export const components: Options['components'] = {
       </CodeBlock>
     );
   },
+  sup: ({ node, children, className, ...props }) => (
+    <sup className={cn('text-sm', className)} {...props}>
+      {children}
+    </sup>
+  ),
+  sub: ({ node, children, className, ...props }) => (
+    <sub className={cn('text-sm', className)} {...props}>
+      {children}
+    </sub>
+  ),
 };

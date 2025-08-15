@@ -1,10 +1,26 @@
 import { Renderer } from './renderer';
 
-const markdown = `\`\`\`
-.button {
-  @apply px-4 py-2 bg-blue-600 text-white rounded;
-}
-\`\`\``;
+const markdown = `
+\`\`\`tsx
+import React from "react";
+
+type ButtonProps = {
+  label: string;
+  onClick: () => void;
+};
+
+export const Button: React.FC<ButtonProps> = ({ label, onClick }) => (
+  <button
+    type="button"
+    className="button"
+    onClick={onClick}
+    aria-label={label}
+  >
+    {label}
+  </button>
+);
+\`\`\`
+`;
 
 export const CodeBlocks = () => (
   <section className="space-y-16 px-4">
@@ -34,7 +50,7 @@ export const CodeBlocks = () => (
         <div className="w-full bg-secondary p-4 text-center">
           With react-markdown
         </div>
-        <div className="p-4">
+        <div className="h-[400px] overflow-y-auto p-4">
           <Renderer markdown={markdown} type="markdown" />
         </div>
       </div>
@@ -42,7 +58,7 @@ export const CodeBlocks = () => (
         <div className="w-full bg-secondary p-4 text-center">
           With Streamdown
         </div>
-        <div className="p-4">
+        <div className="h-[400px] overflow-y-auto p-4">
           <Renderer markdown={markdown} type="streamdown" />
         </div>
       </div>

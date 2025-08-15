@@ -1,10 +1,6 @@
 import { Renderer } from './renderer';
 
-const markdown = `\`\`\`
-.button {
-  @apply px-4 py-2 bg-blue-600 text-white rounded;
-}
-\`\`\``;
+const markdown = 'TBD.';
 
 export const DeltaSmoothing = () => (
   <section className="space-y-16 px-4">
