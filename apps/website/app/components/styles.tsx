@@ -1,8 +1,4 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Streamdown } from 'streamdown';
+import { Renderer } from './renderer';
 
 const markdown = `# Styling the Web: A Modern CSS Journey
 
@@ -65,41 +61,34 @@ You can **bold** text, _italicize_ it, underline it, or even add [links](https:/
 E = mc2 is Einstein's mass-energy equivalence. Water is H 2O.
 `;
 
-const tokens = markdown.split(' ').map((token) => `${token} `);
-
-type ExampleProps = {
-  speed?: number;
-  type: 'markdown' | 'streamdown';
-};
-
-const DEFAULT_SPEED = 1000;
-
-export const Example = ({
-  speed = DEFAULT_SPEED,
-  type = 'markdown',
-}: ExampleProps) => {
-  const [content, setContent] = useState('');
-
-  useEffect(() => {
-    let currentContent = '';
-    let index = 0;
-
-    const interval = setInterval(() => {
-      if (index < tokens.length) {
-        currentContent += tokens[index];
-        setContent(currentContent);
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, speed);
-
-    return () => clearInterval(interval);
-  }, [speed]);
-
-  return type === 'markdown' ? (
-    <ReactMarkdown>{content}</ReactMarkdown>
-  ) : (
-    <Streamdown>{content}</Streamdown>
-  );
-};
+export const Styles = () => (
+  <section className="space-y-16 px-4">
+    <div className="mx-auto max-w-2xl space-y-4 text-center">
+      <h2 className="font-semibold text-4xl tracking-tight">
+        Built-in typography styles
+      </h2>
+      <p className="text-balance text-lg text-muted-foreground md:text-xl">
+        Streamdown comes with built-in Tailwind classes for common Markdown
+        components &mdash; headings, lists, code blocks, and more.
+      </p>
+    </div>
+    <div className="grid grid-cols-2 divide-x overflow-hidden rounded-3xl border">
+      <div>
+        <div className="w-full bg-secondary p-4 text-center">
+          With react-markdown
+        </div>
+        <div className="p-4">
+          <Renderer markdown={markdown} type="markdown" />
+        </div>
+      </div>
+      <div>
+        <div className="w-full bg-secondary p-4 text-center">
+          With Streamdown
+        </div>
+        <div className="p-4">
+          <Renderer markdown={markdown} type="streamdown" />
+        </div>
+      </div>
+    </div>
+  </section>
+);
