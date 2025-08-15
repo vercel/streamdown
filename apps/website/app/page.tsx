@@ -1,4 +1,5 @@
 import { CodeBlocks } from './components/code-blocks';
+import { DeltaSmoothing } from './components/delta-smoothing';
 import { Header } from './components/header';
 import { Hero } from './components/hero';
 import { RenderOptimizations } from './components/render-optimizations';
@@ -15,6 +16,7 @@ const Home = () => (
     <CodeBlocks />
     <TerminatorParser />
     <RenderOptimizations />
+    <DeltaSmoothing />
   </div>
 );
 

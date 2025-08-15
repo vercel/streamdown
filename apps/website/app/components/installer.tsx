@@ -27,7 +27,7 @@ export const Installer = () => {
   const Icon = isCopied ? CheckIcon : CopyIcon;
 
   return (
-    <div className="relative flex items-center gap-3 rounded-lg border px-0.5">
+    <div className="relative flex items-center gap-3 rounded-lg border bg-background px-0.5">
       <pre className="w-full py-2 pl-3">{CODE}</pre>
       <Button onClick={copyToClipboard} size="icon" variant="ghost">
         <Icon className="h-4 w-4" />
