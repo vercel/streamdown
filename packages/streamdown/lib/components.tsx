@@ -1,6 +1,6 @@
 // import { CodeBlock, CodeBlockCopyButton } from './code-block';
 import { isValidElement } from 'react';
-import { type Options } from 'react-markdown';
+import type { Options } from 'react-markdown';
 import { cn } from './utils';
 
 export const components: Options['components'] = {
@@ -97,7 +97,7 @@ export const components: Options['components'] = {
     </tbody>
   ),
   tr: ({ node, children, className, ...props }) => (
-    <tr className={cn('border-b border-border', className)} {...props}>
+    <tr className={cn('border-border border-b', className)} {...props}>
       {children}
     </tr>
   ),
@@ -117,8 +117,8 @@ export const components: Options['components'] = {
   blockquote: ({ node, children, className, ...props }) => (
     <blockquote
       className={cn(
-        'my-4 border-l-4 border-muted-foreground/30 pl-4 italic text-muted-foreground',
-        className,
+        'my-4 border-muted-foreground/30 border-l-4 pl-4 text-muted-foreground italic',
+        className
       )}
       {...props}
     >
@@ -136,7 +136,7 @@ export const components: Options['components'] = {
       <code
         className={cn(
           'rounded bg-muted px-1.5 py-0.5 font-mono text-sm',
-          className,
+          className
         )}
         {...props}
       />
@@ -163,9 +163,7 @@ export const components: Options['components'] = {
 
     return (
       <pre className={cn('my-4 h-auto', className)} {...props}>
-        <code className={cn('language-javascript', className)}>
-          {code}
-        </code>
+        <code className={cn('language-javascript', className)}>{code}</code>
       </pre>
       // <CodeBlock
       //   className={cn('my-4 h-auto', className)}

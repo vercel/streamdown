@@ -1,35 +1,36 @@
-import Link from "next/link";
-import Example from "./components/example";
-import { SVGProps } from "react";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link';
+import type { SVGProps } from 'react';
+import { Button } from '@/components/ui/button';
+import Example from './components/example';
 
 const Vercel = (props: SVGProps<SVGSVGElement>) => (
   <svg
+    fill="none"
     viewBox="0 0 76 65"
-    fill="none" xmlns="http://www.w3.org/2000/svg"
+    xmlns="http://www.w3.org/2000/svg"
     {...props}
   >
     <title>Vercel</title>
-    <path
-      d="M37.5274 0L75.0548 65H0L37.5274 0Z"
-      fill="currentColor"
-    />
+    <path d="M37.5274 0L75.0548 65H0L37.5274 0Z" fill="currentColor" />
   </svg>
-)
+);
 
 const Home = () => (
-  <div className="max-w-3xl mx-auto border-x min-h-screen divide-y divide-border">
-    <div className='sticky p-4 bg-background/90 backdrop-blur-sm top-0 z-10'>
+  <div className="mx-auto min-h-screen max-w-3xl divide-y divide-border border-x">
+    <div className="sticky top-0 z-10 bg-background/90 p-4 backdrop-blur-sm">
       <div className="flex items-center gap-2">
         <Vercel className="h-4 w-auto" />
-        <span className="text-sm font-medium">Vercel</span>
-        <div className="text-sm text-muted-foreground">/</div> 
-        <div className="text-sm text-muted-foreground">Streamdown</div>
+        <span className="font-medium text-sm">Vercel</span>
+        <div className="text-muted-foreground text-sm">/</div>
+        <div className="text-muted-foreground text-sm">Streamdown</div>
       </div>
     </div>
-    <main className="py-8 space-y-4 px-4">
-      <h1 className="text-4xl font-semibold tracking-tight">Streamdown</h1>
-      <p>A drop-in replacement for react-markdown, designed for AI-powered streaming.</p>
+    <main className="space-y-4 px-4 py-8">
+      <h1 className="font-semibold text-4xl tracking-tight">Streamdown</h1>
+      <p>
+        A drop-in replacement for react-markdown, designed for AI-powered
+        streaming.
+      </p>
       <div className="flex items-center gap-2">
         <Button asChild>
           <Link href="https://npmjs.com/package/streamdown">
@@ -37,9 +38,7 @@ const Home = () => (
           </Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href="https://github.com/vercel/streamdown">
-            Source code
-          </Link>
+          <Link href="https://github.com/vercel/streamdown">Source code</Link>
         </Button>
       </div>
     </main>
@@ -47,6 +46,6 @@ const Home = () => (
       <Example />
     </div>
   </div>
-)
+);
 
 export default Home;

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { parseIncompleteMarkdown } from '../lib/parse-incomplete-markdown';
 
 describe('parseIncompleteMarkdown', () => {
@@ -21,7 +21,9 @@ describe('parseIncompleteMarkdown', () => {
 
   describe('link handling', () => {
     it('should remove incomplete links', () => {
-      expect(parseIncompleteMarkdown('Text with [incomplete link')).toBe('Text with ');
+      expect(parseIncompleteMarkdown('Text with [incomplete link')).toBe(
+        'Text with '
+      );
       expect(parseIncompleteMarkdown('Text [partial')).toBe('Text ');
     });
 
@@ -38,7 +40,9 @@ describe('parseIncompleteMarkdown', () => {
 
   describe('image handling', () => {
     it('should remove incomplete images', () => {
-      expect(parseIncompleteMarkdown('Text with ![incomplete image')).toBe('Text with ');
+      expect(parseIncompleteMarkdown('Text with ![incomplete image')).toBe(
+        'Text with '
+      );
       expect(parseIncompleteMarkdown('![partial')).toBe('');
     });
 
@@ -50,7 +54,9 @@ describe('parseIncompleteMarkdown', () => {
 
   describe('bold formatting (**)', () => {
     it('should complete incomplete bold formatting', () => {
-      expect(parseIncompleteMarkdown('Text with **bold')).toBe('Text with **bold**');
+      expect(parseIncompleteMarkdown('Text with **bold')).toBe(
+        'Text with **bold**'
+      );
       expect(parseIncompleteMarkdown('**incomplete')).toBe('**incomplete**');
     });
 
@@ -65,13 +71,17 @@ describe('parseIncompleteMarkdown', () => {
     });
 
     it('should complete odd number of bold markers', () => {
-      expect(parseIncompleteMarkdown('**first** and **second')).toBe('**first** and **second**');
+      expect(parseIncompleteMarkdown('**first** and **second')).toBe(
+        '**first** and **second**'
+      );
     });
   });
 
   describe('italic formatting with underscores (__)', () => {
     it('should complete incomplete italic formatting with double underscores', () => {
-      expect(parseIncompleteMarkdown('Text with __italic')).toBe('Text with __italic__');
+      expect(parseIncompleteMarkdown('Text with __italic')).toBe(
+        'Text with __italic__'
+      );
       expect(parseIncompleteMarkdown('__incomplete')).toBe('__incomplete__');
     });
 
@@ -81,13 +91,17 @@ describe('parseIncompleteMarkdown', () => {
     });
 
     it('should handle odd number of double underscore pairs', () => {
-      expect(parseIncompleteMarkdown('__first__ and __second')).toBe('__first__ and __second__');
+      expect(parseIncompleteMarkdown('__first__ and __second')).toBe(
+        '__first__ and __second__'
+      );
     });
   });
 
   describe('italic formatting with asterisks (*)', () => {
     it('should complete incomplete italic formatting with single asterisks', () => {
-      expect(parseIncompleteMarkdown('Text with *italic')).toBe('Text with *italic*');
+      expect(parseIncompleteMarkdown('Text with *italic')).toBe(
+        'Text with *italic*'
+      );
       expect(parseIncompleteMarkdown('*incomplete')).toBe('*incomplete*');
     });
 
@@ -97,13 +111,17 @@ describe('parseIncompleteMarkdown', () => {
     });
 
     it('should not confuse single asterisks with bold markers', () => {
-      expect(parseIncompleteMarkdown('**bold** and *italic')).toBe('**bold** and *italic*');
+      expect(parseIncompleteMarkdown('**bold** and *italic')).toBe(
+        '**bold** and *italic*'
+      );
     });
   });
 
   describe('italic formatting with single underscores (_)', () => {
     it('should complete incomplete italic formatting with single underscores', () => {
-      expect(parseIncompleteMarkdown('Text with _italic')).toBe('Text with _italic_');
+      expect(parseIncompleteMarkdown('Text with _italic')).toBe(
+        'Text with _italic_'
+      );
       expect(parseIncompleteMarkdown('_incomplete')).toBe('_incomplete_');
     });
 
@@ -113,13 +131,17 @@ describe('parseIncompleteMarkdown', () => {
     });
 
     it('should not confuse single underscores with double underscore markers', () => {
-      expect(parseIncompleteMarkdown('__bold__ and _italic')).toBe('__bold__ and _italic_');
+      expect(parseIncompleteMarkdown('__bold__ and _italic')).toBe(
+        '__bold__ and _italic_'
+      );
     });
   });
 
   describe('inline code formatting (`)', () => {
     it('should complete incomplete inline code', () => {
-      expect(parseIncompleteMarkdown('Text with `code')).toBe('Text with `code`');
+      expect(parseIncompleteMarkdown('Text with `code')).toBe(
+        'Text with `code`'
+      );
       expect(parseIncompleteMarkdown('`incomplete')).toBe('`incomplete`');
     });
 
@@ -146,7 +168,9 @@ describe('parseIncompleteMarkdown', () => {
 
   describe('strikethrough formatting (~~)', () => {
     it('should complete incomplete strikethrough', () => {
-      expect(parseIncompleteMarkdown('Text with ~~strike')).toBe('Text with ~~strike~~');
+      expect(parseIncompleteMarkdown('Text with ~~strike')).toBe(
+        'Text with ~~strike~~'
+      );
       expect(parseIncompleteMarkdown('~~incomplete')).toBe('~~incomplete~~');
     });
 
@@ -161,7 +185,9 @@ describe('parseIncompleteMarkdown', () => {
     });
 
     it('should complete odd number of strikethrough markers', () => {
-      expect(parseIncompleteMarkdown('~~first~~ and ~~second')).toBe('~~first~~ and ~~second~~');
+      expect(parseIncompleteMarkdown('~~first~~ and ~~second')).toBe(
+        '~~first~~ and ~~second~~'
+      );
     });
   });
 
@@ -172,7 +198,9 @@ describe('parseIncompleteMarkdown', () => {
     });
 
     it('should complete multiple incomplete formats', () => {
-      expect(parseIncompleteMarkdown('**bold and *italic')).toBe('**bold and *italic*');
+      expect(parseIncompleteMarkdown('**bold and *italic')).toBe(
+        '**bold and *italic*'
+      );
     });
 
     it('should handle nested formatting', () => {
@@ -181,19 +209,26 @@ describe('parseIncompleteMarkdown', () => {
     });
 
     it('should prioritize link/image removal over formatting completion', () => {
-      expect(parseIncompleteMarkdown('Text with [link and **bold')).toBe('Text with ');
+      expect(parseIncompleteMarkdown('Text with [link and **bold')).toBe(
+        'Text with '
+      );
     });
 
     it('should handle complex real-world markdown', () => {
-      const text = '# Heading\n\n**Bold text** with *italic* and `code`.\n\n- List item\n- Another item with ~~strike~~';
+      const text =
+        '# Heading\n\n**Bold text** with *italic* and `code`.\n\n- List item\n- Another item with ~~strike~~';
       expect(parseIncompleteMarkdown(text)).toBe(text);
     });
   });
 
   describe('edge cases', () => {
     it('should handle text ending with formatting characters', () => {
-      expect(parseIncompleteMarkdown('Text ending with *')).toBe('Text ending with **');
-      expect(parseIncompleteMarkdown('Text ending with **')).toBe('Text ending with ****');
+      expect(parseIncompleteMarkdown('Text ending with *')).toBe(
+        'Text ending with **'
+      );
+      expect(parseIncompleteMarkdown('Text ending with **')).toBe(
+        'Text ending with ****'
+      );
     });
 
     it('should handle empty formatting markers', () => {
@@ -202,8 +237,8 @@ describe('parseIncompleteMarkdown', () => {
     });
 
     it('should handle very long text', () => {
-      const longText = 'a'.repeat(10000) + ' **bold';
-      const expected = 'a'.repeat(10000) + ' **bold**';
+      const longText = 'a'.repeat(10_000) + ' **bold';
+      const expected = 'a'.repeat(10_000) + ' **bold**';
       expect(parseIncompleteMarkdown(longText)).toBe(expected);
     });
 

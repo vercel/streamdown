@@ -8,15 +8,15 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import 'katex/dist/katex.min.css';
 import hardenReactMarkdown from 'harden-react-markdown';
-import { parseIncompleteMarkdown } from './lib/parse-incomplete-markdown';
 import { components as defaultComponents } from './lib/components';
+import { parseIncompleteMarkdown } from './lib/parse-incomplete-markdown';
 
 // Create a hardened version of ReactMarkdown
 const HardenedMarkdown = hardenReactMarkdown(ReactMarkdown);
 
 export type ResponseProps = ComponentProps<typeof HardenedMarkdown> & {
   parseIncompleteMarkdown?: boolean;
-}
+};
 
 export const Streamdown = memo(
   ({
@@ -38,22 +38,21 @@ export const Streamdown = memo(
 
     return (
       <HardenedMarkdown
+        allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
+        allowedLinkPrefixes={allowedLinkPrefixes ?? ['*']}
         components={{
           ...defaultComponents,
           ...components,
         }}
+        defaultOrigin={defaultOrigin}
         rehypePlugins={[rehypeKatex, ...(rehypePlugins ?? [])]}
         remarkPlugins={[remarkGfm, remarkMath, ...(remarkPlugins ?? [])]}
-        allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
-        allowedLinkPrefixes={allowedLinkPrefixes ?? ['*']}
-        defaultOrigin={defaultOrigin}
         {...props}
       >
         {parsedChildren}
       </HardenedMarkdown>
-
     );
   },
-  (prevProps, nextProps) => prevProps.children === nextProps.children,
+  (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 Streamdown.displayName = 'Streamdown';

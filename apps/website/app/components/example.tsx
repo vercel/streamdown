@@ -1,7 +1,7 @@
 'use client';
 
-import { Streamdown } from 'streamdown';
 import { useEffect, useState } from 'react';
+import { Streamdown } from 'streamdown';
 
 const tokens = [
   '### Hello',

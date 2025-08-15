@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
-import { components } from '../lib/components';
 import React from 'react';
+import { describe, expect, it } from 'vitest';
+import { components } from '../lib/components';
 
 describe('Markdown Components', () => {
   describe('List Components', () => {
@@ -49,9 +49,7 @@ describe('Markdown Components', () => {
   describe('Heading Components', () => {
     it('should render h1 with correct classes', () => {
       const H1 = components.h1!;
-      const { container } = render(
-        <H1 node={null as any}>Heading 1</H1>
-      );
+      const { container } = render(<H1 node={null as any}>Heading 1</H1>);
       const h1 = container.querySelector('h1');
       expect(h1).toBeTruthy();
       expect(h1?.className).toContain('mt-6');
@@ -62,9 +60,7 @@ describe('Markdown Components', () => {
 
     it('should render h2 with correct classes', () => {
       const H2 = components.h2!;
-      const { container } = render(
-        <H2 node={null as any}>Heading 2</H2>
-      );
+      const { container } = render(<H2 node={null as any}>Heading 2</H2>);
       const h2 = container.querySelector('h2');
       expect(h2).toBeTruthy();
       expect(h2?.className).toContain('text-2xl');
@@ -72,9 +68,7 @@ describe('Markdown Components', () => {
 
     it('should render h3 with correct classes', () => {
       const H3 = components.h3!;
-      const { container } = render(
-        <H3 node={null as any}>Heading 3</H3>
-      );
+      const { container } = render(<H3 node={null as any}>Heading 3</H3>);
       const h3 = container.querySelector('h3');
       expect(h3).toBeTruthy();
       expect(h3?.className).toContain('text-xl');
@@ -82,9 +76,7 @@ describe('Markdown Components', () => {
 
     it('should render h4 with correct classes', () => {
       const H4 = components.h4!;
-      const { container } = render(
-        <H4 node={null as any}>Heading 4</H4>
-      );
+      const { container } = render(<H4 node={null as any}>Heading 4</H4>);
       const h4 = container.querySelector('h4');
       expect(h4).toBeTruthy();
       expect(h4?.className).toContain('text-lg');
@@ -92,9 +84,7 @@ describe('Markdown Components', () => {
 
     it('should render h5 with correct classes', () => {
       const H5 = components.h5!;
-      const { container } = render(
-        <H5 node={null as any}>Heading 5</H5>
-      );
+      const { container } = render(<H5 node={null as any}>Heading 5</H5>);
       const h5 = container.querySelector('h5');
       expect(h5).toBeTruthy();
       expect(h5?.className).toContain('text-base');
@@ -102,9 +92,7 @@ describe('Markdown Components', () => {
 
     it('should render h6 with correct classes', () => {
       const H6 = components.h6!;
-      const { container } = render(
-        <H6 node={null as any}>Heading 6</H6>
-      );
+      const { container } = render(<H6 node={null as any}>Heading 6</H6>);
       const h6 = container.querySelector('h6');
       expect(h6).toBeTruthy();
       expect(h6?.className).toContain('text-sm');
@@ -125,7 +113,9 @@ describe('Markdown Components', () => {
     it('should render link with correct attributes and classes', () => {
       const A = components.a!;
       const { container } = render(
-        <A node={null as any} href="https://example.com">Link text</A>
+        <A href="https://example.com" node={null as any}>
+          Link text
+        </A>
       );
       const link = container.querySelector('a');
       expect(link).toBeTruthy();
@@ -154,13 +144,15 @@ describe('Markdown Components', () => {
     it('should render inline code with correct classes', () => {
       const Code = components.code!;
       const { container } = render(
-        <Code 
-          node={{
-            position: {
-              start: { line: 1, column: 1 },
-              end: { line: 1, column: 10 }
-            }
-          } as any}
+        <Code
+          node={
+            {
+              position: {
+                start: { line: 1, column: 1 },
+                end: { line: 1, column: 10 },
+              },
+            } as any
+          }
         >
           code
         </Code>
@@ -178,13 +170,15 @@ describe('Markdown Components', () => {
     it('should render block code without inline styles', () => {
       const Code = components.code!;
       const { container } = render(
-        <Code 
-          node={{
-            position: {
-              start: { line: 1, column: 1 },
-              end: { line: 2, column: 10 }
-            }
-          } as any}
+        <Code
+          node={
+            {
+              position: {
+                start: { line: 1, column: 1 },
+                end: { line: 2, column: 10 },
+              },
+            } as any
+          }
         >
           code
         </Code>
@@ -197,12 +191,10 @@ describe('Markdown Components', () => {
 
     it('should render pre with code block', () => {
       const Pre = components.pre!;
-      const codeElement = React.createElement('code', { children: 'const x = 1;' });
-      const { container } = render(
-        <Pre node={null as any}>
-          {codeElement}
-        </Pre>
-      );
+      const codeElement = React.createElement('code', {
+        children: 'const x = 1;',
+      });
+      const { container } = render(<Pre node={null as any}>{codeElement}</Pre>);
       const pre = container.querySelector('pre');
       expect(pre).toBeTruthy();
       expect(pre?.className).toContain('my-4');
@@ -212,9 +204,7 @@ describe('Markdown Components', () => {
     it('should extract code from children in pre component', () => {
       const Pre = components.pre!;
       const { container } = render(
-        <Pre node={null as any}>
-          plain text code
-        </Pre>
+        <Pre node={null as any}>plain text code</Pre>
       );
       const code = container.querySelector('code');
       expect(code).toBeTruthy();
@@ -228,7 +218,9 @@ describe('Markdown Components', () => {
       const { container } = render(
         <Table node={null as any}>
           <tbody>
-            <tr><td>Cell</td></tr>
+            <tr>
+              <td>Cell</td>
+            </tr>
           </tbody>
         </Table>
       );
@@ -236,7 +228,7 @@ describe('Markdown Components', () => {
       expect(wrapper).toBeTruthy();
       expect(wrapper?.className).toContain('my-4');
       expect(wrapper?.className).toContain('overflow-x-auto');
-      
+
       const table = wrapper?.querySelector('table');
       expect(table).toBeTruthy();
       expect(table?.className).toContain('w-full');
@@ -248,7 +240,9 @@ describe('Markdown Components', () => {
       const THead = components.thead!;
       const { container } = render(
         <THead node={null as any}>
-          <tr><th>Header</th></tr>
+          <tr>
+            <th>Header</th>
+          </tr>
         </THead>
       );
       const thead = container.querySelector('thead');
@@ -260,7 +254,9 @@ describe('Markdown Components', () => {
       const TBody = components.tbody!;
       const { container } = render(
         <TBody node={null as any}>
-          <tr><td>Cell</td></tr>
+          <tr>
+            <td>Cell</td>
+          </tr>
         </TBody>
       );
       const tbody = container.querySelector('tbody');
@@ -284,9 +280,7 @@ describe('Markdown Components', () => {
 
     it('should render th with correct classes', () => {
       const TH = components.th!;
-      const { container } = render(
-        <TH node={null as any}>Header</TH>
-      );
+      const { container } = render(<TH node={null as any}>Header</TH>);
       const th = container.querySelector('th');
       expect(th).toBeTruthy();
       expect(th?.className).toContain('px-4');
@@ -298,9 +292,7 @@ describe('Markdown Components', () => {
 
     it('should render td with correct classes', () => {
       const TD = components.td!;
-      const { container } = render(
-        <TD node={null as any}>Cell</TD>
-      );
+      const { container } = render(<TD node={null as any}>Cell</TD>);
       const td = container.querySelector('td');
       expect(td).toBeTruthy();
       expect(td?.className).toContain('px-4');
@@ -312,9 +304,7 @@ describe('Markdown Components', () => {
   describe('Other Components', () => {
     it('should render hr with correct classes', () => {
       const HR = components.hr!;
-      const { container } = render(
-        <HR node={null as any} />
-      );
+      const { container } = render(<HR node={null as any} />);
       const hr = container.querySelector('hr');
       expect(hr).toBeTruthy();
       expect(hr?.className).toContain('my-6');
@@ -326,7 +316,9 @@ describe('Markdown Components', () => {
     it('should merge custom className with default classes', () => {
       const H1 = components.h1!;
       const { container } = render(
-        <H1 node={null as any} className="custom-class">Heading</H1>
+        <H1 className="custom-class" node={null as any}>
+          Heading
+        </H1>
       );
       const h1 = container.querySelector('h1');
       expect(h1?.className).toContain('custom-class');

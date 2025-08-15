@@ -4,12 +4,12 @@
 function handleIncompleteLinksAndImages(text: string): string {
   const linkImagePattern = /(!?\[)([^\]]*?)$/;
   const linkMatch = text.match(linkImagePattern);
-  
+
   if (linkMatch) {
     const startIndex = text.lastIndexOf(linkMatch[1]);
     return text.substring(0, startIndex);
   }
-  
+
   return text;
 }
 
@@ -19,14 +19,14 @@ function handleIncompleteLinksAndImages(text: string): string {
 function handleIncompleteBold(text: string): string {
   const boldPattern = /(\*\*)([^*]*?)$/;
   const boldMatch = text.match(boldPattern);
-  
+
   if (boldMatch) {
     const asteriskPairs = (text.match(/\*\*/g) || []).length;
     if (asteriskPairs % 2 === 1) {
       return `${text}**`;
     }
   }
-  
+
   return text;
 }
 
@@ -36,14 +36,14 @@ function handleIncompleteBold(text: string): string {
 function handleIncompleteDoubleUnderscoreItalic(text: string): string {
   const italicPattern = /(__)([^_]*?)$/;
   const italicMatch = text.match(italicPattern);
-  
+
   if (italicMatch) {
     const underscorePairs = (text.match(/__/g) || []).length;
     if (underscorePairs % 2 === 1) {
       return `${text}__`;
     }
   }
-  
+
   return text;
 }
 
@@ -69,14 +69,14 @@ function countSingleAsterisks(text: string): number {
 function handleIncompleteSingleAsteriskItalic(text: string): string {
   const singleAsteriskPattern = /(\*)([^*]*?)$/;
   const singleAsteriskMatch = text.match(singleAsteriskPattern);
-  
+
   if (singleAsteriskMatch) {
     const singleAsterisks = countSingleAsterisks(text);
     if (singleAsterisks % 2 === 1) {
       return `${text}*`;
     }
   }
-  
+
   return text;
 }
 
@@ -102,14 +102,14 @@ function countSingleUnderscores(text: string): number {
 function handleIncompleteSingleUnderscoreItalic(text: string): string {
   const singleUnderscorePattern = /(_)([^_]*?)$/;
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
-  
+
   if (singleUnderscoreMatch) {
     const singleUnderscores = countSingleUnderscores(text);
     if (singleUnderscores % 2 === 1) {
       return `${text}_`;
     }
   }
-  
+
   return text;
 }
 
@@ -120,7 +120,7 @@ function isPartOfTripleBacktick(text: string, i: number): boolean {
   const isTripleStart = text.substring(i, i + 3) === '```';
   const isTripleMiddle = i > 0 && text.substring(i - 1, i + 2) === '```';
   const isTripleEnd = i > 1 && text.substring(i - 2, i + 1) === '```';
-  
+
   return isTripleStart || isTripleMiddle || isTripleEnd;
 }
 
@@ -144,11 +144,11 @@ function countSingleBackticks(text: string): number {
 function handleIncompleteInlineCode(text: string): string {
   const inlineCodePattern = /(`)([^`]*?)$/;
   const inlineCodeMatch = text.match(inlineCodePattern);
-  
+
   if (inlineCodeMatch) {
     const allTripleBackticks = (text.match(/```/g) || []).length;
     const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
-    
+
     if (!insideIncompleteCodeBlock) {
       const singleBacktickCount = countSingleBackticks(text);
       if (singleBacktickCount % 2 === 1) {
@@ -156,7 +156,7 @@ function handleIncompleteInlineCode(text: string): string {
       }
     }
   }
-  
+
   return text;
 }
 
@@ -166,14 +166,14 @@ function handleIncompleteInlineCode(text: string): string {
 function handleIncompleteStrikethrough(text: string): string {
   const strikethroughPattern = /(~~)([^~]*?)$/;
   const strikethroughMatch = text.match(strikethroughPattern);
-  
+
   if (strikethroughMatch) {
     const tildePairs = (text.match(/~~/g) || []).length;
     if (tildePairs % 2 === 1) {
       return `${text}~~`;
     }
   }
-  
+
   return text;
 }
 
@@ -190,7 +190,7 @@ export const parseIncompleteMarkdown = (text: string): string => {
 
   // Handle incomplete links and images first (removes content)
   result = handleIncompleteLinksAndImages(result);
-  
+
   // Handle various formatting completions
   result = handleIncompleteBold(result);
   result = handleIncompleteDoubleUnderscoreItalic(result);
@@ -200,4 +200,4 @@ export const parseIncompleteMarkdown = (text: string): string => {
   result = handleIncompleteStrikethrough(result);
 
   return result;
-}
+};

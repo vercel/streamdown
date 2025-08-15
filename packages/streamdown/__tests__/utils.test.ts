@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { cn } from '../lib/utils';
 
 describe('cn utility', () => {
@@ -8,7 +8,7 @@ describe('cn utility', () => {
   });
 
   it('should handle conditional classes', () => {
-    const result = cn('base-class', false && 'conditional-class', 'another-class');
+    const result = cn('base-class', false, 'another-class');
     expect(result).toBe('base-class another-class');
   });
 
@@ -23,10 +23,7 @@ describe('cn utility', () => {
   });
 
   it('should merge complex tailwind classes', () => {
-    const result = cn(
-      'text-sm text-gray-500',
-      'text-lg text-blue-600'
-    );
+    const result = cn('text-gray-500 text-sm', 'text-blue-600 text-lg');
     expect(result).toBe('text-lg text-blue-600');
   });
 
@@ -39,7 +36,7 @@ describe('cn utility', () => {
     const result = cn({
       'active-class': true,
       'inactive-class': false,
-      'another-active': true
+      'another-active': true,
     });
     expect(result).toBe('active-class another-active');
   });
@@ -63,7 +60,7 @@ describe('cn utility', () => {
   });
 
   it('should preserve non-conflicting tailwind classes', () => {
-    const result = cn('mt-4 mb-4', 'ml-2 mr-2');
+    const result = cn('mt-4 mb-4', 'mr-2 ml-2');
     expect(result).toBe('mt-4 mb-4 ml-2 mr-2');
   });
 });

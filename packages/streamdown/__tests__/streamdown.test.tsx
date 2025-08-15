@@ -1,27 +1,31 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Streamdown } from '../index';
 import React from 'react';
+import { describe, expect, it, vi } from 'vitest';
+import { Streamdown } from '../index';
 
 // Mock the dependencies
 vi.mock('react-markdown', () => ({
-  default: ({ children, ...props }: any) => <div data-testid="markdown" {...props}>{children}</div>
+  default: ({ children, ...props }: any) => (
+    <div data-testid="markdown" {...props}>
+      {children}
+    </div>
+  ),
 }));
 
 vi.mock('harden-react-markdown', () => ({
-  default: (Component: any) => Component
+  default: (Component: any) => Component,
 }));
 
 vi.mock('rehype-katex', () => ({
-  default: () => {}
+  default: () => {},
 }));
 
 vi.mock('remark-gfm', () => ({
-  default: () => {}
+  default: () => {},
 }));
 
 vi.mock('remark-math', () => ({
-  default: () => {}
+  default: () => {},
 }));
 
 describe('Streamdown Component', () => {
@@ -65,9 +69,7 @@ describe('Streamdown Component', () => {
   });
 
   it('should use default allowed prefixes when not specified', () => {
-    const { container } = render(
-      <Streamdown>Content</Streamdown>
-    );
+    const { container } = render(<Streamdown>Content</Streamdown>);
     const markdown = container.querySelector('[data-testid="markdown"]');
     expect(markdown?.getAttribute('allowedImagePrefixes')).toBe('*');
     expect(markdown?.getAttribute('allowedLinkPrefixes')).toBe('*');
@@ -75,7 +77,7 @@ describe('Streamdown Component', () => {
 
   it('should use custom allowed prefixes when specified', () => {
     const { container } = render(
-      <Streamdown 
+      <Streamdown
         allowedImagePrefixes={['https://', 'http://']}
         allowedLinkPrefixes={['https://', 'mailto:']}
       >
@@ -83,15 +85,17 @@ describe('Streamdown Component', () => {
       </Streamdown>
     );
     const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown?.getAttribute('allowedImagePrefixes')).toBe('https://,http://');
-    expect(markdown?.getAttribute('allowedLinkPrefixes')).toBe('https://,mailto:');
+    expect(markdown?.getAttribute('allowedImagePrefixes')).toBe(
+      'https://,http://'
+    );
+    expect(markdown?.getAttribute('allowedLinkPrefixes')).toBe(
+      'https://,mailto:'
+    );
   });
 
   it('should pass defaultOrigin prop', () => {
     const { container } = render(
-      <Streamdown defaultOrigin="https://example.com">
-        Content
-      </Streamdown>
+      <Streamdown defaultOrigin="https://example.com">Content</Streamdown>
     );
     const markdown = container.querySelector('[data-testid="markdown"]');
     expect(markdown?.getAttribute('defaultOrigin')).toBe('https://example.com');
@@ -99,41 +103,35 @@ describe('Streamdown Component', () => {
 
   it('should merge custom components with defaults', () => {
     const customComponents = {
-      h1: ({ children }: any) => <h1 className="custom-h1">{children}</h1>
+      h1: ({ children }: any) => <h1 className="custom-h1">{children}</h1>,
     };
-    
+
     const { container } = render(
-      <Streamdown components={customComponents}>
-        # Heading
-      </Streamdown>
+      <Streamdown components={customComponents}># Heading</Streamdown>
     );
-    
+
     const markdown = container.querySelector('[data-testid="markdown"]');
     expect(markdown?.getAttribute('components')).toBeTruthy();
   });
 
   it('should merge custom rehype plugins', () => {
     const customPlugin = () => {};
-    
+
     const { container } = render(
-      <Streamdown rehypePlugins={[customPlugin]}>
-        Content
-      </Streamdown>
+      <Streamdown rehypePlugins={[customPlugin]}>Content</Streamdown>
     );
-    
+
     const markdown = container.querySelector('[data-testid="markdown"]');
     expect(markdown).toBeTruthy();
   });
 
   it('should merge custom remark plugins', () => {
     const customPlugin = () => {};
-    
+
     const { container } = render(
-      <Streamdown remarkPlugins={[customPlugin]}>
-        Content
-      </Streamdown>
+      <Streamdown remarkPlugins={[customPlugin]}>Content</Streamdown>
     );
-    
+
     const markdown = container.querySelector('[data-testid="markdown"]');
     expect(markdown).toBeTruthy();
   });
@@ -142,13 +140,13 @@ describe('Streamdown Component', () => {
     const { rerender } = render(
       <Streamdown className="class1">Content</Streamdown>
     );
-    
+
     // Same children, different prop - should not re-render (memoized)
     rerender(<Streamdown className="class2">Content</Streamdown>);
-    
+
     // Different children - should re-render
     rerender(<Streamdown className="class2">Different Content</Streamdown>);
-    
+
     const markdown = screen.getByTestId('markdown');
     expect(markdown.textContent).toBe('Different Content');
   });
@@ -186,7 +184,7 @@ This is **bold** and *italic* text.
 Here's an incomplete **bold
 And an incomplete [link
 `;
-    
+
     render(<Streamdown>{content}</Streamdown>);
     const markdown = screen.getByTestId('markdown');
     expect(markdown.textContent).toContain('**bold**');
