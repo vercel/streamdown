@@ -1,6 +1,7 @@
-// import { CodeBlock, CodeBlockCopyButton } from './code-block';
 import { isValidElement } from 'react';
 import type { Options } from 'react-markdown';
+import type { BundledLanguage } from 'shiki';
+import { CodeBlock } from './code-block';
 import { cn } from './utils';
 
 export const components: Options['components'] = {
@@ -143,11 +144,14 @@ export const components: Options['components'] = {
       />
     );
   },
-  pre: ({ node, className, children, ...props }) => {
-    let language = 'javascript';
+  pre: ({ node, className, children }) => {
+    let language: BundledLanguage = 'javascript';
 
     if (typeof node?.properties?.className === 'string') {
-      language = node.properties.className.replace('language-', '');
+      language = node.properties.className.replace(
+        'language-',
+        ''
+      ) as BundledLanguage;
     }
 
     // Extract code content from children safely
@@ -163,19 +167,11 @@ export const components: Options['components'] = {
     }
 
     return (
-      <pre className={cn('my-4 h-auto', className)} {...props}>
-        <code className={cn('language-javascript', className)}>{code}</code>
-      </pre>
-      // <CodeBlock
-      //   className={cn('my-4 h-auto', className)}
-      //   code={code}
-      //   language={language}
-      // >
-      //   <CodeBlockCopyButton
-      //     onCopy={() => console.log('Copied code to clipboard')}
-      //     onError={() => console.error('Failed to copy code to clipboard')}
-      //   />
-      // </CodeBlock>
+      <CodeBlock
+        className={cn('my-4 h-auto rounded-lg border p-4', className)}
+        code={code}
+        language={language}
+      />
     );
   },
 };

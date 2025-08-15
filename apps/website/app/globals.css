@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+@source "node_modules/streamdown/**/*.{ts,tsx}";
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
