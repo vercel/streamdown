@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import type { SVGProps } from 'react';
 import { Button } from '@/components/ui/button';
-import Example from './components/example';
+import { MarkdownExample } from './components/example-markdown';
+import { StreamdownExample } from './components/example-streamdown';
 
 const Vercel = (props: SVGProps<SVGSVGElement>) => (
   <svg
@@ -16,7 +17,7 @@ const Vercel = (props: SVGProps<SVGSVGElement>) => (
 );
 
 const Home = () => (
-  <div className="mx-auto min-h-screen max-w-3xl divide-y divide-border border-x">
+  <div className="mx-auto min-h-screen max-w-4xl divide-y divide-border border-x">
     <div className="sticky top-0 z-10 bg-background/90 p-4 backdrop-blur-sm">
       <div className="flex items-center gap-2">
         <Vercel className="h-4 w-auto" />
@@ -42,8 +43,23 @@ const Home = () => (
         </Button>
       </div>
     </main>
-    <div className="p-4">
-      <Example />
+    <div className="grid grid-cols-2 divide-x">
+      <div>
+        <div className="w-full bg-secondary p-4 text-center">
+          With Streamdown
+        </div>
+        <div className="p-4">
+          <StreamdownExample />
+        </div>
+      </div>
+      <div>
+        <div className="w-full bg-secondary p-4 text-center">
+          With react-markdown
+        </div>
+        <div className="p-4">
+          <MarkdownExample />
+        </div>
+      </div>
     </div>
   </div>
 );

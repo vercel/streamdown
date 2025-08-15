@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Streamdown } from 'streamdown';
+import ReactMarkdown from 'react-markdown';
 
 const markdown = `# Styling the Web: A Modern CSS Journey
 
@@ -13,9 +13,9 @@ Web design today is more accessible than ever. Thanks to utility-first framework
 
 ### Key Benefits of Utility CSS
 
-* Faster development
-* Consistent design system
-* Better collaboration between dev and design
+- Faster development
+- Consistent design system
+- Better collaboration between dev and design
 
 ### What You Need
 
@@ -25,9 +25,9 @@ Web design today is more accessible than ever. Thanks to utility-first framework
 
 ## Checklist
 
-* Install Tailwind CSS
-* Configure PostCSS
-* Create base components
+- Install Tailwind CSS
+- Configure PostCSS
+- Create base components
 
 ## Sample Image
 
@@ -66,11 +66,9 @@ E = mc2 is Einstein's mass-energy equivalence. Water is H 2O.
 
 const tokens = markdown.split(' ').map((token) => `${token} `);
 
-const Example = () => {
+export const MarkdownExample = () => {
   const [content, setContent] = useState('');
-  const SPEED = 100;
-
-  console.log(content);
+  const SPEED = 1000;
 
   useEffect(() => {
     let currentContent = '';
@@ -89,7 +87,5 @@ const Example = () => {
     return () => clearInterval(interval);
   }, []);
 
-  return <Streamdown>{content}</Streamdown>;
+  return <ReactMarkdown>{content}</ReactMarkdown>;
 };
-
-export default Example;
