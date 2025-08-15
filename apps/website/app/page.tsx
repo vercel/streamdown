@@ -9,7 +9,7 @@ import { Styles } from './components/styles';
 import { TerminatorParser } from './components/terminator-parser';
 
 const Home = () => (
-  <div className="container mx-auto space-y-24">
+  <div className="container mx-auto space-y-24 pb-16">
     <div>
       <Header />
       <Hero />
