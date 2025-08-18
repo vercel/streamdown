@@ -1,11 +1,17 @@
 'use client';
 
-import { type ComponentProps, useEffect, useMemo, useRef, useState } from 'react';
+import { useInView } from 'motion/react';
+import {
+  type ComponentProps,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Streamdown } from 'streamdown';
-import { useInView } from 'motion/react';
 
-const DEFAULT_SPEED = 50;
+const DEFAULT_SPEED = 100;
 
 type RendererProps = {
   speed?: number;
@@ -30,7 +36,9 @@ export const Renderer = ({
   );
 
   useEffect(() => {
-    if (!isInView) return;
+    if (!isInView) {
+      return;
+    }
 
     let currentContent = '';
     let index = 0;

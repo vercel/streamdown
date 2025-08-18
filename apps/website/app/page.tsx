@@ -4,6 +4,7 @@ import { GitHubFlavoredMarkdown } from './components/gfm';
 import { HardenedMarkdown } from './components/hardened';
 import { Header } from './components/header';
 import { Hero } from './components/hero';
+import { Mathematics } from './components/mathematics';
 import { Styles } from './components/styles';
 import { TerminatorParser } from './components/terminator-parser';
 
@@ -20,6 +21,7 @@ const Home = () => (
     <Styles />
     <GitHubFlavoredMarkdown />
     <CodeBlocks />
+    <Mathematics />
     <TerminatorParser />
     <HardenedMarkdown />
   </div>

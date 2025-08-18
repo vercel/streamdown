@@ -1,6 +1,6 @@
 import { Renderer } from './renderer';
 
-const markdown = `# Markdown Elements Showcase
+const markdown = `# This is a showcase of unterminated Markdown blocks
 
 **This is a very long bold text that keeps going and going without a clear end, so you can see how unterminated bold blocks are handled by the renderer, especially when the text wraps across multiple lines and continues even further to really test the limits of the parser**
 
