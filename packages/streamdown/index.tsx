@@ -23,12 +23,21 @@ export type ResponseProps = ComponentProps<typeof HardenedMarkdown> & {
 
 type BlockProps = ComponentProps<typeof HardenedMarkdown> & {
   content: string;
+  shouldParseIncompleteMarkdown: boolean;
 };
 
 const Block = memo(
-  ({ content, ...props }: BlockProps) => (
-    <HardenedMarkdown {...props}>{content}</HardenedMarkdown>
-  ),
+  ({ content, shouldParseIncompleteMarkdown, ...props }: BlockProps) => {
+    const parsedContent = useMemo(
+      () =>
+        typeof content === 'string' && shouldParseIncompleteMarkdown
+          ? parseIncompleteMarkdown(content)
+          : content,
+      [content, shouldParseIncompleteMarkdown]
+    );
+
+    return <HardenedMarkdown {...props}>{parsedContent}</HardenedMarkdown>;
+  },
   (prevProps, nextProps) => prevProps.content === nextProps.content
 );
 
@@ -46,14 +55,10 @@ export const Streamdown = memo(
     ...props
   }: ResponseProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
-    const parsedChildren =
-      typeof children === 'string' && shouldParseIncompleteMarkdown
-        ? parseIncompleteMarkdown(children)
-        : children;
     const generatedId = useId();
     const blocks = useMemo(
-      () => parseMarkdownIntoBlocks(parsedChildren ?? ''),
-      [parsedChildren]
+      () => parseMarkdownIntoBlocks(children ?? ''),
+      [children]
     );
 
     return (
@@ -72,6 +77,7 @@ export const Streamdown = memo(
             key={`${generatedId}-block_${index}`}
             rehypePlugins={[rehypeKatex, ...(rehypePlugins ?? [])]}
             remarkPlugins={[remarkGfm, remarkMath, ...(remarkPlugins ?? [])]}
+            shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
             {...props}
           />
         ))}
