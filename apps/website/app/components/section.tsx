@@ -87,7 +87,7 @@ export const Section = ({
   return (
     <section className="space-y-16 pt-16">
       <div className="mx-auto max-w-3xl space-y-4 px-4 text-center sm:px-8">
-        <h2 className="text-pretty font-semibold text-2xl tracking-tight sm:text-3xl md:text-4xl">
+        <h2 className="text-pretty font-semibold text-2xl tracking-tighter sm:text-3xl md:text-4xl">
           {title}
         </h2>
         <p className="text-balance text-muted-foreground sm:text-lg md:text-xl">

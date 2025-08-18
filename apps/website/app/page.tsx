@@ -6,6 +6,7 @@ import { GitHubFlavoredMarkdown } from './components/gfm';
 import { HardenedMarkdown } from './components/hardened';
 import { Header } from './components/header';
 import { Hero } from './components/hero';
+import { Implementation } from './components/implementation';
 import { Mathematics } from './components/mathematics';
 import { Styles } from './components/styles';
 import { TerminatorParser } from './components/terminator-parser';
@@ -20,6 +21,7 @@ const Home = () => (
   <div className="container mx-auto max-w-5xl divide-y px-0 sm:border-x">
     <Header />
     <Hero />
+    <Implementation />
     <Styles />
     <GitHubFlavoredMarkdown />
     <CodeBlocks />

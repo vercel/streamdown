@@ -1,3 +1,5 @@
+'use client';
+
 import { CheckIcon, CopyIcon } from 'lucide-react';
 import {
   type ComponentProps,
@@ -41,13 +43,13 @@ export const CodeBlock = ({
 
   useEffect(() => {
     let isMounted = true;
-    
+
     highlightCode(code, language).then((result) => {
       if (isMounted) {
         setHtml(result);
       }
     });
-    
+
     return () => {
       isMounted = false;
     };
@@ -57,7 +59,7 @@ export const CodeBlock = ({
     <CodeBlockContext.Provider value={{ code }}>
       <div className="group relative">
         <div
-          className={cn('overflow-x-auto', className)}
+          className={cn('overflow-x-auto [&_pre]:bg-transparent!', className)}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
           dangerouslySetInnerHTML={{ __html: html }}
           {...props}
