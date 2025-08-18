@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import { CodeBlocks } from './components/code-blocks';
+import { CallToAction } from './components/cta';
+import { Footer } from './components/footer';
 import { GitHubFlavoredMarkdown } from './components/gfm';
 import { HardenedMarkdown } from './components/hardened';
 import { Header } from './components/header';
@@ -15,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 const Home = () => (
-  <div className="container mx-auto max-w-5xl divide-y divide-border border-x px-0 pb-16">
+  <div className="container mx-auto max-w-5xl divide-y divide-border border-x px-0">
     <Header />
     <Hero />
     <Styles />
@@ -24,6 +26,8 @@ const Home = () => (
     <Mathematics />
     <TerminatorParser />
     <HardenedMarkdown />
+    <CallToAction />
+    <Footer />
   </div>
 );
 
