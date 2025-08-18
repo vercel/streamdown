@@ -16,7 +16,7 @@ import { cn } from './lib/utils';
 // Create a hardened version of ReactMarkdown
 const HardenedMarkdown = hardenReactMarkdown(ReactMarkdown);
 
-export type ResponseProps = ComponentProps<typeof HardenedMarkdown> & {
+export type StreamdownProps = ComponentProps<typeof HardenedMarkdown> & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
 };
@@ -53,7 +53,7 @@ export const Streamdown = memo(
     remarkPlugins,
     className,
     ...props
-  }: ResponseProps) => {
+  }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
     const generatedId = useId();
     const blocks = useMemo(
