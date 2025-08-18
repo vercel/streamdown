@@ -22,17 +22,6 @@ GFM extends standard Markdown with powerful features. Here's a comprehensive dem
 ## Strikethrough
 
 ~~Old approach~~ → New approach with AI models
-
-## Autolinks
-
-Visit https://github.com for more examples
-Email: contact@example.com
-
-## Footnotes
-
-AI models use transformers[^1] for processing text efficiently.
-
-[^1]: Transformers are a neural network architecture introduced in 2017.
 `;
 
 export const GitHubFlavoredMarkdown = () => (

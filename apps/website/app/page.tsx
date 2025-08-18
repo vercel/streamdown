@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import { CodeBlocks } from './components/code-blocks';
-import { DeltaSmoothing } from './components/delta-smoothing';
 import { GitHubFlavoredMarkdown } from './components/gfm';
 import { HardenedMarkdown } from './components/hardened';
 import { Header } from './components/header';
@@ -23,8 +22,12 @@ const Home = () => (
     <CodeBlocks />
     <TerminatorParser />
     <HardenedMarkdown />
-    <DeltaSmoothing />
   </div>
 );
 
 export default Home;
+
+// - mathematics
+// - mermaid diagrams
+// - custom components?
+// - fix footnotes

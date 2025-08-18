@@ -11,12 +11,14 @@ import hardenReactMarkdown from 'harden-react-markdown';
 import { components as defaultComponents } from './lib/components';
 import { parseMarkdownIntoBlocks } from './lib/parse-blocks';
 import { parseIncompleteMarkdown } from './lib/parse-incomplete-markdown';
+import { cn } from './lib/utils';
 
 // Create a hardened version of ReactMarkdown
 const HardenedMarkdown = hardenReactMarkdown(ReactMarkdown);
 
 export type ResponseProps = ComponentProps<typeof HardenedMarkdown> & {
   parseIncompleteMarkdown?: boolean;
+  className?: string;
 };
 
 type BlockProps = ComponentProps<typeof HardenedMarkdown> & {
@@ -40,6 +42,7 @@ export const Streamdown = memo(
     components,
     rehypePlugins,
     remarkPlugins,
+    className,
     ...props
   }: ResponseProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
@@ -54,7 +57,7 @@ export const Streamdown = memo(
     );
 
     return (
-      <>
+      <div className={cn('space-y-4', className)}>
         {blocks.map((block, index) => (
           <Block
             allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
@@ -72,7 +75,7 @@ export const Streamdown = memo(
             {...props}
           />
         ))}
-      </>
+      </div>
     );
   },
   (prevProps, nextProps) => prevProps.children === nextProps.children
