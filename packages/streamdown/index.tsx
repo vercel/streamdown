@@ -31,7 +31,7 @@ const Block = memo(
     const parsedContent = useMemo(
       () =>
         typeof content === 'string' && shouldParseIncompleteMarkdown
-          ? parseIncompleteMarkdown(content)
+          ? parseIncompleteMarkdown(content.trim())
           : content,
       [content, shouldParseIncompleteMarkdown]
     );
