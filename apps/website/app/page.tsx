@@ -8,6 +8,7 @@ import { Header } from './components/header';
 import { Hero } from './components/hero';
 import { Implementation } from './components/implementation';
 import { Mathematics } from './components/mathematics';
+import { Props } from './components/props';
 import { Styles } from './components/styles';
 import { TerminatorParser } from './components/terminator-parser';
 
@@ -28,6 +29,7 @@ const Home = () => (
     <Mathematics />
     <TerminatorParser />
     <HardenedMarkdown />
+    <Props />
     <CallToAction />
     <Footer />
   </div>
