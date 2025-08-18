@@ -312,6 +312,22 @@ describe('Markdown Components', () => {
       expect(hr?.className).toContain('my-6');
       expect(hr?.className).toContain('border-border');
     });
+
+    it('should render sup with correct classes', () => {
+      const Sup = components.sup!;
+      const { container } = render(<Sup node={null as any}>superscript</Sup>);
+      const sup = container.querySelector('sup');
+      expect(sup).toBeTruthy();
+      expect(sup?.className).toContain('text-sm');
+    });
+
+    it('should render sub with correct classes', () => {
+      const Sub = components.sub!;
+      const { container } = render(<Sub node={null as any}>subscript</Sub>);
+      const sub = container.querySelector('sub');
+      expect(sub).toBeTruthy();
+      expect(sub?.className).toContain('text-sm');
+    });
   });
 
   describe('Custom className prop', () => {

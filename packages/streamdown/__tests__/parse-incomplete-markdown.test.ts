@@ -221,6 +221,86 @@ describe('parseIncompleteMarkdown', () => {
     });
   });
 
+  describe('KaTeX block formatting ($$)', () => {
+    it('should complete incomplete block KaTeX', () => {
+      expect(parseIncompleteMarkdown('Text with $$formula')).toBe(
+        'Text with $$formula$$'
+      );
+      expect(parseIncompleteMarkdown('$$incomplete')).toBe('$$incomplete$$');
+    });
+
+    it('should keep complete block KaTeX unchanged', () => {
+      const text = 'Text with $$E = mc^2$$';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should handle multiple block KaTeX sections', () => {
+      const text = '$$formula1$$ and $$formula2$$';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should complete odd number of block KaTeX markers', () => {
+      expect(parseIncompleteMarkdown('$$first$$ and $$second')).toBe(
+        '$$first$$ and $$second$$'
+      );
+    });
+
+    it('should handle block KaTeX at start of text', () => {
+      expect(parseIncompleteMarkdown('$$x + y = z')).toBe('$$x + y = z$$');
+    });
+
+    it('should handle multiline block KaTeX', () => {
+      expect(parseIncompleteMarkdown('$$\nx = 1\ny = 2')).toBe(
+        '$$\nx = 1\ny = 2$$'
+      );
+    });
+  });
+
+  describe('KaTeX inline formatting ($)', () => {
+    it('should complete incomplete inline KaTeX', () => {
+      expect(parseIncompleteMarkdown('Text with $formula')).toBe(
+        'Text with $formula$'
+      );
+      expect(parseIncompleteMarkdown('$incomplete')).toBe('$incomplete$');
+    });
+
+    it('should keep complete inline KaTeX unchanged', () => {
+      const text = 'Text with $x^2 + y^2 = z^2$';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should handle multiple inline KaTeX sections', () => {
+      const text = '$a = 1$ and $b = 2$';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should complete odd number of inline KaTeX markers', () => {
+      expect(parseIncompleteMarkdown('$first$ and $second')).toBe(
+        '$first$ and $second$'
+      );
+    });
+
+    it('should not confuse single $ with block $$', () => {
+      expect(parseIncompleteMarkdown('$$block$$ and $inline')).toBe(
+        '$$block$$ and $inline$'
+      );
+    });
+
+    it('should handle inline KaTeX at start of text', () => {
+      expect(parseIncompleteMarkdown('$x + y = z')).toBe('$x + y = z$');
+    });
+
+    it('should handle escaped dollar signs', () => {
+      const text = 'Price is \\$100';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should handle multiple consecutive dollar signs correctly', () => {
+      expect(parseIncompleteMarkdown('$$$')).toBe('$$$$$');
+      expect(parseIncompleteMarkdown('$$$$')).toBe('$$$$');
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle text ending with formatting characters', () => {
       expect(parseIncompleteMarkdown('Text ending with *')).toBe(
