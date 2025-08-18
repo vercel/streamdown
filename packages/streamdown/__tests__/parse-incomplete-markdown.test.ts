@@ -135,6 +135,14 @@ describe('parseIncompleteMarkdown', () => {
         '__bold__ and _italic_'
       );
     });
+
+    it('should handle escaped single underscores', () => {
+      const text = 'Text with \\_escaped underscore';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+      
+      const text2 = 'some\\_text_with_underscores';
+      expect(parseIncompleteMarkdown(text2)).toBe('some\\_text_with_underscores');
+    });
   });
 
   describe('inline code formatting (`)', () => {

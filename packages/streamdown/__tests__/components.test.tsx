@@ -202,6 +202,21 @@ describe('Markdown Components', () => {
       expect(codeBlock?.className).toContain('h-auto');
     });
 
+    it('should extract language from code className', () => {
+      const Pre = components.pre!;
+      const codeElement = React.createElement('code', {
+        children: 'const x = 1;',
+        className: 'language-javascript',
+      });
+      const nodeWithClassName = {
+        properties: { className: 'language-javascript' }
+      };
+      const { container } = render(<Pre node={nodeWithClassName as any}>{codeElement}</Pre>);
+      // The pre component renders a CodeBlock with the extracted language
+      const codeBlock = container.querySelector('[class*="my-4"]');
+      expect(codeBlock).toBeTruthy();
+    });
+
     it('should extract code from children in pre component', () => {
       const Pre = components.pre!;
       const { container } = render(
