@@ -1,11 +1,12 @@
 {
   "name": "streamdown",
   "version": "0.0.1",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "vitest run",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:ui": "vitest --ui run",
+    "test:coverage": "vitest --coverage run"
   },
   "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
   "license": "ISC",
@@ -15,13 +16,13 @@
     "@testing-library/react": "^16.1.0",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
-    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-react": "^5.0.0",
     "@vitest/coverage-v8": "^3.2.4",
     "jsdom": "^25.0.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "tsup": "^8.5.0",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.4"
   },
   "peerDependencies": {
     "react": "^19.1.1"
