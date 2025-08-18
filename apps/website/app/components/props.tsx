@@ -59,8 +59,8 @@ const props = [
 ];
 
 export const Props = () => (
-  <div className="grid grid-cols-12 divide-x">
-    <div className="col-span-4 space-y-2 p-8">
+  <div className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+    <div className="space-y-2 p-8">
       <h2 className="font-semibold text-2xl tracking-tight">Props</h2>
       <p className="text-muted-foreground">
         StreamdownProps extends the react-markdown component props with
@@ -70,7 +70,7 @@ export const Props = () => (
         All props are optional and have sensible defaults for typical use cases.
       </p>
     </div>
-    <div className="col-span-8 divide-y">
+    <div className="divide-y sm:col-span-2">
       {props.map((prop) => (
         <div className="space-y-2 p-8" key={prop.name}>
           <div className="flex items-center gap-2">

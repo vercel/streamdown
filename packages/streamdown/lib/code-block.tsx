@@ -59,7 +59,7 @@ export const CodeBlock = ({
     <CodeBlockContext.Provider value={{ code }}>
       <div className="group relative">
         <div
-          className={cn('overflow-x-auto [&_pre]:bg-transparent!', className)}
+          className={cn('overflow-x-auto', className)}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
           dangerouslySetInnerHTML={{ __html: html }}
           {...props}

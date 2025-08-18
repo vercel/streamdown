@@ -45,8 +45,8 @@ export default function Page() {
 `;
 
 export const Implementation = () => (
-  <div className="grid grid-cols-12 divide-x">
-    <div className="col-span-4 space-y-2 p-8">
+  <div className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+    <div className="space-y-2 p-8">
       <h2 className="font-semibold text-2xl tracking-tight">Implementation</h2>
       <p className="text-muted-foreground">
         Streamdown is a drop-in replacement for react-markdown, designed for
@@ -65,7 +65,7 @@ export const Implementation = () => (
         .
       </p>
     </div>
-    <div className="col-span-8 bg-background">
+    <div className="overflow-x-hidden bg-background sm:col-span-2">
       <CodeBlock className="p-8" code={code} language="tsx" />
     </div>
   </div>
