@@ -40,7 +40,17 @@ export const CodeBlock = ({
   const [html, setHtml] = useState<string>('');
 
   useEffect(() => {
-    highlightCode(code, language).then(setHtml);
+    let isMounted = true;
+    
+    highlightCode(code, language).then((result) => {
+      if (isMounted) {
+        setHtml(result);
+      }
+    });
+    
+    return () => {
+      isMounted = false;
+    };
   }, [code, language]);
 
   return (

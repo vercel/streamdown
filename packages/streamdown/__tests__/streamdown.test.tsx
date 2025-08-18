@@ -5,7 +5,16 @@ import { Streamdown } from '../index';
 
 // Mock the dependencies
 vi.mock('react-markdown', () => ({
-  default: ({ children, ...props }: any) => (
+  default: ({ 
+    children, 
+    allowedImagePrefixes,
+    allowedLinkPrefixes,
+    defaultOrigin,
+    rehypePlugins,
+    remarkPlugins,
+    components,
+    ...props 
+  }: any) => (
     <div data-testid="markdown" {...props}>
       {children}
     </div>
