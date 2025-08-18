@@ -36,8 +36,3 @@ const Home = () => (
 );
 
 export default Home;
-
-// - mathematics
-// - mermaid diagrams
-// - custom components?
-// - fix footnotes
