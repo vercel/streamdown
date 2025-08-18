@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/suspicious/noArrayIndexKey: "required" */
+
 import { cn } from '@/lib/utils';
 import { Installer } from './installer';
 
@@ -17,7 +19,7 @@ export const Hero = () => (
       <h1 className="font-semibold text-6xl leading-tight tracking-tighter md:text-7xl">
         Streamdown
       </h1>
-      <p className="max-w-2xl text-balance text-lg text-muted-foreground md:text-2xl">
+      <p className="mx-auto max-w-2xl text-balance text-lg text-muted-foreground md:text-2xl">
         A drop-in replacement for react-markdown, designed for AI-powered
         streaming.
       </p>

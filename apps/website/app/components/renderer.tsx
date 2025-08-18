@@ -1,8 +1,9 @@
 'use client';
 
-import { type ComponentProps, useEffect, useMemo, useState } from 'react';
+import { type ComponentProps, useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Streamdown } from 'streamdown';
+import { useInView } from 'motion/react';
 
 const DEFAULT_SPEED = 50;
 
@@ -21,12 +22,16 @@ export const Renderer = ({
   streamdownProps,
 }: RendererProps) => {
   const [content, setContent] = useState('');
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-100px' });
   const tokens = useMemo(
     () => markdown.split(' ').map((token) => `${token} `),
     [markdown]
   );
 
   useEffect(() => {
+    if (!isInView) return;
+
     let currentContent = '';
     let index = 0;
 
@@ -41,11 +46,15 @@ export const Renderer = ({
     }, speed);
 
     return () => clearInterval(interval);
-  }, [speed, tokens]);
+  }, [speed, tokens, isInView]);
 
-  return type === 'markdown' ? (
-    <ReactMarkdown>{content}</ReactMarkdown>
-  ) : (
-    <Streamdown {...streamdownProps}>{content}</Streamdown>
+  return (
+    <div ref={ref}>
+      {type === 'markdown' ? (
+        <ReactMarkdown>{content}</ReactMarkdown>
+      ) : (
+        <Streamdown {...streamdownProps}>{content}</Streamdown>
+      )}
+    </div>
   );
 };
