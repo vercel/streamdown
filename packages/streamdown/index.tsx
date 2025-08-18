@@ -19,6 +19,17 @@ export type ResponseProps = ComponentProps<typeof HardenedMarkdown> & {
   parseIncompleteMarkdown?: boolean;
 };
 
+type BlockProps = ComponentProps<typeof HardenedMarkdown> & {
+  content: string;
+};
+
+const Block = memo(
+  ({ content, ...props }: BlockProps) => (
+    <HardenedMarkdown {...props}>{content}</HardenedMarkdown>
+  ),
+  (prevProps, nextProps) => prevProps.content === nextProps.content
+);
+
 export const Streamdown = memo(
   ({
     children,
@@ -45,22 +56,21 @@ export const Streamdown = memo(
     return (
       <>
         {blocks.map((block, index) => (
-          <HardenedMarkdown
+          <Block
             allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
             allowedLinkPrefixes={allowedLinkPrefixes ?? ['*']}
             components={{
               ...defaultComponents,
               ...components,
             }}
+            content={block}
             defaultOrigin={defaultOrigin}
             // biome-ignore lint/suspicious/noArrayIndexKey: "required"
             key={`${generatedId}-block_${index}`}
             rehypePlugins={[rehypeKatex, ...(rehypePlugins ?? [])]}
             remarkPlugins={[remarkGfm, remarkMath, ...(remarkPlugins ?? [])]}
             {...props}
-          >
-            {block}
-          </HardenedMarkdown>
+          />
         ))}
       </>
     );
