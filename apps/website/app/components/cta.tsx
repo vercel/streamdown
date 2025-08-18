@@ -1,3 +1,5 @@
+/** biome-ignore-all lint/suspicious/noArrayIndexKey: "required" */
+
 import { cn } from '@/lib/utils';
 import { Installer } from './installer';
 

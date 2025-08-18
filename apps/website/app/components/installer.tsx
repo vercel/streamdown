@@ -1,5 +1,6 @@
 'use client';
 
+import { track } from '@vercel/analytics/react';
 import { CheckIcon, CopyIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ export const Installer = () => {
     try {
       await navigator.clipboard.writeText(CODE);
       setIsCopied(true);
+      track('Copied installer code');
       setTimeout(() => setIsCopied(false), TIMEOUT);
     } catch (error) {
       console.error(error);

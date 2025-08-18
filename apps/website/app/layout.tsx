@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import { Analytics } from '@vercel/analytics/next';
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +32,7 @@ const RootLayout = ({ children }: RootLayoutProps) => (
       )}
     >
       {children}
+      <Analytics />
     </body>
   </html>
 );
