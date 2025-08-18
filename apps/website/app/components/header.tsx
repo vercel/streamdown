@@ -17,10 +17,12 @@ export const Header = () => (
   <div className="sticky top-0 z-10 flex items-center justify-between bg-secondary p-4 backdrop-blur-sm">
     <div className="flex items-center gap-1">
       <Vercel className="h-4 w-auto" />
-      <span className="font-medium">Vercel</span>
-      <div className="text-muted-foreground">/</div>
-      <div className="text-muted-foreground">Streamdown</div>
+      <span className="font-semibold sm:text-lg">Vercel</span>
+      <div className="text-muted-foreground sm:text-lg">/</div>
+      <div className="text-muted-foreground sm:text-lg">Streamdown</div>
     </div>
-    <Installer />
+    <div className="hidden md:block">
+      <Installer />
+    </div>
   </div>
 );

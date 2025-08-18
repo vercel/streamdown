@@ -13,11 +13,11 @@ export const CallToAction = () => (
       />
     ))}
     <div />
-    <div className="col-span-10 space-y-4 border-y p-16 text-center">
-      <h1 className="font-semibold text-4xl leading-tight tracking-tighter">
+    <div className="col-span-10 space-y-4 border-y px-4 py-16 text-center sm:px-8">
+      <h1 className="font-semibold text-2xl leading-tight tracking-tighter sm:text-3xl md:text-4xl">
         Upgrade your AI-powered streaming
       </h1>
-      <p className="mx-auto max-w-2xl text-balance text-lg text-muted-foreground md:text-xl">
+      <p className="mx-auto max-w-2xl text-balance text-muted-foreground sm:text-lg md:text-xl">
         Try Streamdown today and take your AI-powered streaming to the next
         level.
       </p>

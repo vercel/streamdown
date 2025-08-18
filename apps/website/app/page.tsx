@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 const Home = () => (
-  <div className="container mx-auto max-w-5xl divide-y divide-border border-x px-0">
+  <div className="container mx-auto max-w-5xl divide-y px-0 sm:border-x">
     <Header />
     <Hero />
     <Styles />

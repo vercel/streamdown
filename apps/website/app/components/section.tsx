@@ -86,15 +86,17 @@ export const Section = ({
 
   return (
     <section className="space-y-16 pt-16">
-      <div className="mx-auto max-w-2xl space-y-4 text-center">
-        <h2 className="font-semibold text-4xl tracking-tight">{title}</h2>
-        <p className="text-balance text-lg text-muted-foreground md:text-xl">
+      <div className="mx-auto max-w-2xl space-y-4 px-4 text-center sm:px-8">
+        <h2 className="text-pretty font-semibold text-2xl tracking-tight sm:text-3xl md:text-4xl">
+          {title}
+        </h2>
+        <p className="text-pretty text-muted-foreground sm:text-lg md:text-xl">
           {description}
         </p>
       </div>
       <div className="relative">
         <div
-          className="grid grid-cols-2 divide-x overflow-hidden border-t"
+          className="grid divide-y overflow-hidden border-t md:grid-cols-2 md:divide-x md:divide-y-0"
           ref={ref}
         >
           <div className="divide-y">
