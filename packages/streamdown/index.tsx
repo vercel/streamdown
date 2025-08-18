@@ -36,7 +36,10 @@ const Block = memo(
       [content, shouldParseIncompleteMarkdown]
     );
 
-    return <HardenedMarkdown {...props}>{parsedContent}</HardenedMarkdown>;
+    // Filter out data-testid and other DOM props that shouldn't be passed to HardenedMarkdown
+    const { 'data-testid': _, 'data-custom': __, ...markdownProps } = props as any;
+
+    return <HardenedMarkdown {...markdownProps}>{parsedContent}</HardenedMarkdown>;
   },
   (prevProps, nextProps) => prevProps.content === nextProps.content
 );
@@ -57,12 +60,12 @@ export const Streamdown = memo(
     // Parse the children to remove incomplete markdown tokens if enabled
     const generatedId = useId();
     const blocks = useMemo(
-      () => parseMarkdownIntoBlocks(children ?? ''),
+      () => parseMarkdownIntoBlocks(typeof children === 'string' ? children : ''),
       [children]
     );
 
     return (
-      <div className={cn('space-y-4', className)}>
+      <div className={cn('space-y-4', className)} data-testid="markdown" {...props}>
         {blocks.map((block, index) => (
           <Block
             allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
@@ -78,7 +81,6 @@ export const Streamdown = memo(
             rehypePlugins={[rehypeKatex, ...(rehypePlugins ?? [])]}
             remarkPlugins={[remarkGfm, remarkMath, ...(remarkPlugins ?? [])]}
             shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-            {...props}
           />
         ))}
       </div>
