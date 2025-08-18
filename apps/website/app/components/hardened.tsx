@@ -10,7 +10,7 @@ Here are some links to potentially malicious sites (please don't actually click 
 `;
 
 export const HardenedMarkdown = () => (
-  <section className="space-y-16 px-4">
+  <section className="space-y-16 pt-16">
     <div className="mx-auto max-w-2xl space-y-4 text-center">
       <h2 className="font-semibold text-4xl tracking-tight">
         Built-in security hardening
@@ -29,20 +29,20 @@ export const HardenedMarkdown = () => (
         .
       </p>
     </div>
-    <div className="grid grid-cols-2 divide-x overflow-hidden rounded-3xl border">
-      <div>
-        <div className="w-full bg-secondary p-4 text-center">
+    <div className="grid grid-cols-2 divide-x overflow-hidden border-t">
+      <div className="divide-y">
+        <div className="w-full bg-dashed p-4 text-center font-medium text-muted-foreground text-sm">
           With react-markdown
         </div>
-        <div className="p-4">
+        <div className="h-[400px] overflow-y-auto bg-background p-4">
           <Renderer markdown={markdown} type="markdown" />
         </div>
       </div>
-      <div>
-        <div className="w-full bg-secondary p-4 text-center">
+      <div className="divide-y">
+        <div className="w-full bg-dashed p-4 text-center font-medium text-muted-foreground text-sm">
           With Streamdown
         </div>
-        <div className="p-4">
+        <div className="h-[400px] overflow-y-auto bg-background p-4">
           <Renderer
             markdown={markdown}
             streamdownProps={{
