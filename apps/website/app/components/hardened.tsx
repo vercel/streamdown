@@ -4,7 +4,7 @@ const markdown = `
 Here are some links to potentially malicious sites (please don't actually click them):
 
 - [Click here for a free iPhone](http://malicious-site.com)
-- [Get rich quick!](http://phishing.example)
+- [Get rich quick!](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 - [Download suspicious file](http://dangerous-downloads.net)
 - [Fake login page](http://fake-login.com)
 `;
