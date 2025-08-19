@@ -91,6 +91,15 @@ export default function Page() {
 }
 `;
 
+const cssCode = `/*
+ * Update your Tailwind globals.css
+ * to include the following code.
+ * This will ensure that the Streamdown
+ * styles are applied to your project.
+ */
+
+@source "../node_modules/streamdown/dist/index.js";`;
+
 export const Implementation = () => (
   <div className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
     <div className="space-y-2 p-8">
@@ -148,6 +157,8 @@ export const Implementation = () => (
           <CodeBlock className="p-8" code={streamdownCode} language="tsx" />
         </TabsContent>
       </Tabs>
+      <hr />
+      <CodeBlock className="p-8" code={cssCode} language="css" />
     </div>
   </div>
 );
