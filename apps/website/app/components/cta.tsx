@@ -19,7 +19,7 @@ export const CallToAction = () => (
     <div className="grid sm:grid-cols-12 sm:divide-x">
       <div />
       <div className="col-span-10 space-y-4 border-y px-4 py-16 text-center sm:px-8">
-        <h1 className="font-semibold text-2xl leading-tight tracking-tighter sm:text-3xl md:text-4xl">
+        <h1 className="font-semibold text-xl leading-tight tracking-tighter sm:text-2xl md:text-3xl">
           Upgrade your AI-powered streaming
         </h1>
         <p className="mx-auto max-w-2xl text-balance text-muted-foreground sm:text-lg md:text-xl">

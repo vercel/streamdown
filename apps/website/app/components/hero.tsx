@@ -26,8 +26,14 @@ export const Hero = () => (
           A drop-in replacement for react-markdown, designed for AI-powered
           streaming.
         </p>
-        <div className="mx-auto w-fit pt-4">
+        <div className="mx-auto flex w-fit flex-col items-center gap-8 pt-4">
           <Installer />
+          <p className="text-muted-foreground text-sm">
+            or install it directly with{' '}
+            <code className="rounded-md bg-foreground/5 px-2 py-1 tracking-tight">
+              npm i streamdown
+            </code>
+          </p>
         </div>
       </div>
       <div className="border-r-0" />

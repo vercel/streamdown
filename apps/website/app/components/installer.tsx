@@ -5,7 +5,7 @@ import { CheckIcon, CopyIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
-const CODE = 'npm i streamdown';
+const CODE = 'npx ai-elements@latest add response';
 const TIMEOUT = 2000;
 
 export const Installer = () => {
@@ -29,7 +29,7 @@ export const Installer = () => {
   const Icon = isCopied ? CheckIcon : CopyIcon;
 
   return (
-    <div className="dark">
+    <div className="dark w-fit">
       <div className="relative flex items-center gap-3 rounded-md border bg-background p-0.5 text-foreground">
         <pre className="w-full py-2 pl-3 text-sm">{CODE}</pre>
         <Button

@@ -47,22 +47,39 @@ export default function Page() {
 export const Implementation = () => (
   <div className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
     <div className="space-y-2 p-8">
-      <h2 className="font-semibold text-2xl tracking-tight">Implementation</h2>
+      <h2 className="font-semibold text-2xl tracking-tight">Overview</h2>
       <p className="text-muted-foreground">
-        Streamdown is a drop-in replacement for react-markdown, designed for
-        AI-powered streaming.
+        Formatting Markdown is easy, but when you tokenize and stream it, new
+        challenges arise.
       </p>
       <p className="text-muted-foreground">
-        Here's an example of how to use it with the{' '}
+        With{' '}
         <a
           className="font-medium text-blue-600 underline"
-          href="https://ai-sdk.dev"
-          rel="noreferrer"
+          href="https://ai-sdk.dev/elements"
+          rel="noopener noreferrer"
           target="_blank"
         >
-          Vercel AI SDK
+          AI Elements
         </a>
-        .
+        , we wanted to a way to stream safe and perfectly formatted Markdown
+        without having to worry about the details.
+      </p>
+      <p className="text-muted-foreground">
+        So we built Streamdown, a drop-in replacement for react-markdown,
+        designed for AI-powered streaming.
+      </p>
+      <p className="text-muted-foreground">
+        It powers the AI Elements{' '}
+        <a
+          className="font-medium text-blue-600 underline"
+          href="https://ai-sdk.dev/elements/components/response"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Response
+        </a>{' '}
+        component, but you can install it as a standalone package if you want.
       </p>
     </div>
     <div className="overflow-x-hidden bg-background sm:col-span-2">
