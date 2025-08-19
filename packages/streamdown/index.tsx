@@ -7,11 +7,14 @@ import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import 'katex/dist/katex.min.css';
-import hardenReactMarkdown from 'harden-react-markdown';
+import hardenReactMarkdownImport from 'harden-react-markdown';
 import { components as defaultComponents } from './lib/components';
 import { parseMarkdownIntoBlocks } from './lib/parse-blocks';
 import { parseIncompleteMarkdown } from './lib/parse-incomplete-markdown';
 import { cn } from './lib/utils';
+
+// Handle both ESM and CJS imports
+const hardenReactMarkdown = (hardenReactMarkdownImport as any).default || hardenReactMarkdownImport;
 
 // Create a hardened version of ReactMarkdown
 const HardenedMarkdown: ReturnType<typeof hardenReactMarkdown> =
@@ -88,3 +91,5 @@ export const Streamdown = memo(
   (prevProps, nextProps) => prevProps.children === nextProps.children
 );
 Streamdown.displayName = 'Streamdown';
+
+export default Streamdown;
