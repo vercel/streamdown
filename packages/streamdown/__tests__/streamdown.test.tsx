@@ -14,11 +14,15 @@ vi.mock('react-markdown', () => ({
     remarkPlugins,
     components,
     ...props 
-  }: any) => (
-    <div data-testid="markdown" {...props}>
-      {children}
-    </div>
-  ),
+  }: any) => {
+    // Only render if children is provided
+    if (!children) return null;
+    return (
+      <div data-testid="markdown" {...props}>
+        {children}
+      </div>
+    );
+  },
 }));
 
 vi.mock('harden-react-markdown', () => ({
@@ -62,8 +66,10 @@ describe('Streamdown Component', () => {
   it('should handle non-string children', () => {
     const content = <div>React Element</div>;
     const { container } = render(<Streamdown>{content as any}</Streamdown>);
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
+    // Non-string children get converted to empty string, so no blocks are created
+    const wrapper = container.firstElementChild;
+    expect(wrapper).toBeTruthy();
+    expect(wrapper?.children.length).toBe(0);
   });
 
   it('should pass through custom props', () => {
@@ -72,9 +78,9 @@ describe('Streamdown Component', () => {
         Content
       </Streamdown>
     );
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown?.getAttribute('class')).toContain('custom-class');
-    expect(markdown?.getAttribute('data-custom')).toBe('value');
+    const wrapper = container.firstElementChild;
+    expect(wrapper?.getAttribute('class')).toContain('custom-class');
+    expect(wrapper?.getAttribute('data-custom')).toBe('value');
   });
 
   it('should use default allowed prefixes when not specified', () => {
@@ -171,29 +177,36 @@ describe('Streamdown Component', () => {
 
   it('should handle empty children', () => {
     const { container } = render(<Streamdown>{''}</Streamdown>);
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
-    expect(markdown?.textContent).toBe('');
+    // Empty string results in no blocks
+    const wrapper = container.firstElementChild;
+    expect(wrapper).toBeTruthy();
+    expect(wrapper?.children.length).toBe(0);
+    expect(wrapper?.textContent).toBe('');
   });
 
   it('should handle null children', () => {
     const { container } = render(<Streamdown>{null as any}</Streamdown>);
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
+    // Null children get converted to empty string, so no blocks are created
+    const wrapper = container.firstElementChild;
+    expect(wrapper).toBeTruthy();
+    expect(wrapper?.children.length).toBe(0);
   });
 
   it('should handle undefined children', () => {
     const { container } = render(<Streamdown>{undefined as any}</Streamdown>);
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
+    // Undefined children get converted to empty string, so no blocks are created
+    const wrapper = container.firstElementChild;
+    expect(wrapper).toBeTruthy();
+    expect(wrapper?.children.length).toBe(0);
   });
 
   it('should handle number children', () => {
     const { container } = render(<Streamdown>{123 as any}</Streamdown>);
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
-    // Numbers are coerced to empty string in parseMarkdownIntoBlocks
-    expect(markdown?.textContent).toBe('');
+    // Numbers get converted to empty string, so no blocks are created
+    const wrapper = container.firstElementChild;
+    expect(wrapper).toBeTruthy();
+    expect(wrapper?.children.length).toBe(0);
+    expect(wrapper?.textContent).toBe('');
   });
 
   it('should handle complex markdown with incomplete tokens', () => {
@@ -205,11 +218,13 @@ And an incomplete [link
 `;
 
     const { container } = render(<Streamdown>{content}</Streamdown>);
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
+    const wrapper = container.firstElementChild;
+    expect(wrapper).toBeTruthy();
     // Check that incomplete markdown is parsed correctly
-    expect(markdown?.textContent).toContain('Heading');
-    expect(markdown?.textContent).toContain('bold');
-    expect(markdown?.textContent).toContain('italic');
+    // The content is split into blocks and rendered separately
+    const allText = wrapper?.textContent || '';
+    expect(allText).toContain('Heading');
+    expect(allText).toContain('bold');
+    expect(allText).toContain('italic');
   });
 });
