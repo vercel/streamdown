@@ -118,7 +118,7 @@ export const Implementation = () => (
         >
           AI Elements
         </a>
-        , we wanted to a way to stream safe and perfectly formatted Markdown
+        , we wanted a way to stream safe and perfectly formatted Markdown
         without having to worry about the details.
       </p>
       <p className="text-muted-foreground">
