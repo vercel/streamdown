@@ -13,6 +13,7 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "baseUrl": ".",
     "plugins": [
       {
         "name": "next"
@@ -20,7 +21,7 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "streamdown": ["../packages/streamdown"]
+      "streamdown/*": ["../../packages/streamdown/*"]
     },
     "strictNullChecks": true
   },
