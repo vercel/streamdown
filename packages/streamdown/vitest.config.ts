@@ -10,7 +10,7 @@ export default defineConfig({
     setupFiles: ['./__tests__/setup.ts'],
     coverage: {
       reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', '__tests__/', '*.config.ts', '*.config.js'],
+      exclude: ['node_modules/', '__tests__/', '*.config.ts', '*.config.js', 'dist/'],
     },
   },
   resolve: {
