@@ -7,4 +7,5 @@ export default defineConfig({
   minify: true,
   outDir: 'dist',
   sourcemap: false,
+  external: ['react', 'react-dom'],
 });

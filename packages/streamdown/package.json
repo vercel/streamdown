@@ -1,8 +1,17 @@
 {
   "name": "streamdown",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "type": "module",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
   "files": [
     "dist",
     "README.md"
@@ -14,8 +23,8 @@
     "test:coverage": "vitest --coverage run"
   },
   "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
-  "license": "ISC",
-  "description": "",
+  "license": "Apache-2.0",
+  "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
