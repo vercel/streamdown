@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "streamdown": ["../packages/streamdown"]
     },
     "strictNullChecks": true
   },
