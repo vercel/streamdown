@@ -3,7 +3,12 @@
   "version": "0.0.1",
   "type": "module",
   "main": "index.js",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
+    "build": "tsup",
     "test": "vitest run",
     "test:ui": "vitest --ui run",
     "test:coverage": "vitest --coverage run"

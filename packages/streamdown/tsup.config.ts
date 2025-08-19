@@ -2,7 +2,7 @@ import { defineConfig } from 'tsup';
 
 export default defineConfig({
   dts: true,
-  entry: ['scripts/index.tsx'],
+  entry: ['index.tsx'],
   format: ['cjs', 'esm'],
   minify: true,
   outDir: 'dist',

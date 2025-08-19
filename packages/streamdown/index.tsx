@@ -14,7 +14,8 @@ import { parseIncompleteMarkdown } from './lib/parse-incomplete-markdown';
 import { cn } from './lib/utils';
 
 // Create a hardened version of ReactMarkdown
-const HardenedMarkdown = hardenReactMarkdown(ReactMarkdown);
+const HardenedMarkdown: ReturnType<typeof hardenReactMarkdown> =
+  hardenReactMarkdown(ReactMarkdown);
 
 export type StreamdownProps = ComponentProps<typeof HardenedMarkdown> & {
   parseIncompleteMarkdown?: boolean;
@@ -36,10 +37,7 @@ const Block = memo(
       [content, shouldParseIncompleteMarkdown]
     );
 
-    // Filter out data-testid and other DOM props that shouldn't be passed to HardenedMarkdown
-    const { 'data-testid': _, 'data-custom': __, ...markdownProps } = props as any;
-
-    return <HardenedMarkdown {...markdownProps}>{parsedContent}</HardenedMarkdown>;
+    return <HardenedMarkdown {...props}>{parsedContent}</HardenedMarkdown>;
   },
   (prevProps, nextProps) => prevProps.content === nextProps.content
 );
@@ -60,12 +58,13 @@ export const Streamdown = memo(
     // Parse the children to remove incomplete markdown tokens if enabled
     const generatedId = useId();
     const blocks = useMemo(
-      () => parseMarkdownIntoBlocks(typeof children === 'string' ? children : ''),
+      () =>
+        parseMarkdownIntoBlocks(typeof children === 'string' ? children : ''),
       [children]
     );
 
     return (
-      <div className={cn('space-y-4', className)} data-testid="markdown" {...props}>
+      <div className={cn('space-y-4', className)} {...props}>
         {blocks.map((block, index) => (
           <Block
             allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
