@@ -319,6 +319,211 @@ describe('parseIncompleteMarkdown', () => {
     });
   });
 
+  describe('code block handling', () => {
+    it('should handle incomplete multiline code blocks', () => {
+      expect(parseIncompleteMarkdown('```javascript\nconst x = 5;')).toBe(
+        '```javascript\nconst x = 5;'
+      );
+      expect(parseIncompleteMarkdown('```\ncode here')).toBe('```\ncode here');
+    });
+
+    it('should handle complete multiline code blocks', () => {
+      const text = '```javascript\nconst x = 5;\n```';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should handle code blocks with language and incomplete content', () => {
+      expect(parseIncompleteMarkdown('```python\ndef hello():')).toBe(
+        '```python\ndef hello():'
+      );
+    });
+
+    it('should handle nested backticks inside code blocks', () => {
+      const text = '```\nconst str = `template`;\n```';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should handle incomplete code blocks at end of chunked response', () => {
+      expect(parseIncompleteMarkdown('Some text\n```js\nconsole.log')).toBe(
+        'Some text\n```js\nconsole.log'
+      );
+    });
+
+    it('should handle code blocks with trailing content', () => {
+      const text = '```\ncode\n```\nMore text';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+  });
+
+  describe('chunked streaming scenarios', () => {
+    it('should handle partial bold text at chunk boundary', () => {
+      expect(parseIncompleteMarkdown('Here is some **bold tex')).toBe(
+        'Here is some **bold tex**'
+      );
+    });
+
+    it('should handle partial link at chunk boundary', () => {
+      expect(parseIncompleteMarkdown('Check out [this lin')).toBe('Check out ');
+      // Links with partial URLs are kept as-is since they might be complete
+      expect(parseIncompleteMarkdown('Visit [our site](https://exa')).toBe(
+        'Visit [our site](https://exa'
+      );
+    });
+
+    it('should handle partial image at chunk boundary', () => {
+      expect(parseIncompleteMarkdown('See ![the diag')).toBe('See ');
+      // Images with partial URLs are kept as-is since they might be complete
+      expect(parseIncompleteMarkdown('![logo](./assets/log')).toBe('![logo](./assets/log');
+    });
+
+    it('should handle nested formatting cut mid-stream', () => {
+      expect(parseIncompleteMarkdown('This is **bold with *ital')).toBe(
+        'This is **bold with *ital*'
+      );
+      // When bold is unclosed, it gets closed first, then underscore
+      expect(parseIncompleteMarkdown('**bold _und')).toBe('**bold _und**_');
+    });
+
+    it('should handle lists with incomplete formatting', () => {
+      expect(parseIncompleteMarkdown('- Item 1\n- Item 2 with **bol')).toBe(
+        '- Item 1\n- Item 2 with **bol**'
+      );
+    });
+
+    it('should handle headings with incomplete formatting', () => {
+      expect(parseIncompleteMarkdown('# Main Title\n## Subtitle with **emph')).toBe(
+        '# Main Title\n## Subtitle with **emph**'
+      );
+    });
+
+    it('should handle blockquotes with incomplete formatting', () => {
+      expect(parseIncompleteMarkdown('> Quote with **bold')).toBe(
+        '> Quote with **bold**'
+      );
+    });
+
+    it('should handle tables with incomplete formatting', () => {
+      expect(parseIncompleteMarkdown('| Col1 | Col2 |\n|------|------|\n| **dat')).toBe(
+        '| Col1 | Col2 |\n|------|------|\n| **dat**'
+      );
+    });
+
+    it('should handle complex nested structures from chunks', () => {
+      // Backticks spanning multiple lines need special handling
+      expect(
+        parseIncompleteMarkdown(
+          '1. First item\n   - Nested with `code\n2. Second'
+        )
+      ).toBe('1. First item\n   - Nested with `code\n2. Second`');
+    });
+
+    it('should handle multiple incomplete formats in one chunk', () => {
+      // Formats are closed in order they're processed
+      expect(parseIncompleteMarkdown('Text **bold `code')).toBe(
+        'Text **bold `code**`'
+      );
+    });
+  });
+
+  describe('mixed formatting scenarios', () => {
+    it('should handle bold inside italic', () => {
+      expect(parseIncompleteMarkdown('*italic with **bold')).toBe(
+        '*italic with **bold***'
+      );
+    });
+
+    it('should handle code inside bold', () => {
+      // Bold gets closed first, then code
+      expect(parseIncompleteMarkdown('**bold with `code')).toBe(
+        '**bold with `code**`'
+      );
+    });
+
+    it('should handle strikethrough with other formatting', () => {
+      // Both formats get closed
+      expect(parseIncompleteMarkdown('~~strike with **bold')).toBe(
+        '~~strike with **bold**~~'
+      );
+    });
+
+    it('should handle KaTeX inside other formatting', () => {
+      // Bold gets closed first, then KaTeX
+      expect(parseIncompleteMarkdown('**bold with $x^2')).toBe(
+        '**bold with $x^2**$'
+      );
+    });
+
+    it('should handle deeply nested incomplete formatting', () => {
+      // Formats are closed in the order they're processed
+      expect(parseIncompleteMarkdown('**bold *italic `code ~~strike')).toBe(
+        '**bold *italic `code ~~strike*`~~'
+      );
+    });
+
+    it('should preserve complete nested formatting', () => {
+      const text = '**bold *italic* text** and `code`';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+  });
+
+  describe('real-world streaming chunks', () => {
+    it('should handle typical GPT response chunks', () => {
+      const chunks = [
+        'Here is',
+        'Here is a **bold',
+        'Here is a **bold statement',
+        'Here is a **bold statement** about',
+        'Here is a **bold statement** about `code',
+        'Here is a **bold statement** about `code`.',
+      ];
+
+      expect(parseIncompleteMarkdown(chunks[0])).toBe('Here is');
+      expect(parseIncompleteMarkdown(chunks[1])).toBe('Here is a **bold**');
+      expect(parseIncompleteMarkdown(chunks[2])).toBe(
+        'Here is a **bold statement**'
+      );
+      expect(parseIncompleteMarkdown(chunks[3])).toBe(
+        'Here is a **bold statement** about'
+      );
+      expect(parseIncompleteMarkdown(chunks[4])).toBe(
+        'Here is a **bold statement** about `code`'
+      );
+      expect(parseIncompleteMarkdown(chunks[5])).toBe(chunks[5]);
+    });
+
+    it('should handle code explanation chunks', () => {
+      const chunks = [
+        'To use this function',
+        'To use this function, call `getData(',
+        'To use this function, call `getData()` with',
+      ];
+
+      expect(parseIncompleteMarkdown(chunks[0])).toBe(chunks[0]);
+      expect(parseIncompleteMarkdown(chunks[1])).toBe(
+        'To use this function, call `getData(`'
+      );
+      expect(parseIncompleteMarkdown(chunks[2])).toBe(chunks[2]);
+    });
+
+    it('should handle mathematical expression chunks', () => {
+      const chunks = [
+        'The formula',
+        'The formula $E',
+        'The formula $E = mc',
+        'The formula $E = mc^2',
+        'The formula $E = mc^2$ shows',
+      ];
+
+      expect(parseIncompleteMarkdown(chunks[0])).toBe(chunks[0]);
+      expect(parseIncompleteMarkdown(chunks[1])).toBe('The formula $E$');
+      expect(parseIncompleteMarkdown(chunks[2])).toBe('The formula $E = mc$');
+      expect(parseIncompleteMarkdown(chunks[3])).toBe(
+        'The formula $E = mc^2$'
+      );
+      expect(parseIncompleteMarkdown(chunks[4])).toBe(chunks[4]);
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle text ending with formatting characters', () => {
       expect(parseIncompleteMarkdown('Text ending with *')).toBe(
@@ -349,6 +554,30 @@ describe('parseIncompleteMarkdown', () => {
     it('should handle escaped characters', () => {
       const text = 'Text with \\* escaped asterisk';
       expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should handle markdown at very end of string', () => {
+      expect(parseIncompleteMarkdown('text**')).toBe('text****');
+      expect(parseIncompleteMarkdown('text*')).toBe('text**');
+      expect(parseIncompleteMarkdown('text`')).toBe('text``');
+      expect(parseIncompleteMarkdown('text$')).toBe('text$$');
+      expect(parseIncompleteMarkdown('text~~')).toBe('text~~~~');
+    });
+
+    it('should handle whitespace before incomplete markdown', () => {
+      expect(parseIncompleteMarkdown('text **bold')).toBe('text **bold**');
+      expect(parseIncompleteMarkdown('text\n**bold')).toBe('text\n**bold**');
+      expect(parseIncompleteMarkdown('text\t`code')).toBe('text\t`code`');
+    });
+
+    it('should handle unicode characters in incomplete markdown', () => {
+      expect(parseIncompleteMarkdown('**émoji 🎉')).toBe('**émoji 🎉**');
+      expect(parseIncompleteMarkdown('`código')).toBe('`código`');
+    });
+
+    it('should handle HTML entities in incomplete markdown', () => {
+      expect(parseIncompleteMarkdown('**&lt;tag&gt;')).toBe('**&lt;tag&gt;**');
+      expect(parseIncompleteMarkdown('`&amp;')).toBe('`&amp;`');
     });
   });
 });
