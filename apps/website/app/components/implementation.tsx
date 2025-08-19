@@ -1,6 +1,6 @@
 'use client';
 
-import { CodeBlock } from '@/components/code-block';
+import { CodeBlock, CodeBlockCopyButton } from '@/components/code-block';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const streamdownCode = `'use client';
@@ -151,14 +151,20 @@ export const Implementation = () => (
           </TabsList>
         </div>
         <TabsContent className="overflow-x-hidden" value="elements">
-          <CodeBlock className="p-8" code={elementsCode} language="tsx" />
+          <CodeBlock className="p-8" code={elementsCode} language="tsx">
+            <CodeBlockCopyButton />
+          </CodeBlock>
         </TabsContent>
         <TabsContent className="overflow-x-hidden" value="streamdown">
-          <CodeBlock className="p-8" code={streamdownCode} language="tsx" />
+          <CodeBlock className="p-8" code={streamdownCode} language="tsx">
+            <CodeBlockCopyButton />
+          </CodeBlock>
         </TabsContent>
       </Tabs>
       <hr />
-      <CodeBlock className="p-8" code={cssCode} language="css" />
+      <CodeBlock className="p-8" code={cssCode} language="css">
+        <CodeBlockCopyButton />
+      </CodeBlock>
     </div>
   </div>
 );
