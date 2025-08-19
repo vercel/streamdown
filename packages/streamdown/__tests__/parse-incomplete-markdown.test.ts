@@ -417,6 +417,26 @@ describe('parseIncompleteMarkdown', () => {
       const text = '```js\ncode1\n```\n\n```python\ncode2\n```';
       expect(parseIncompleteMarkdown(text)).toBe(text);
     });
+
+    it('should correctly handle code on same line as opening backticks with closing on newline', () => {
+      // This was causing issues - being treated as inline when it should be multiline
+      const text = '```python def greet(name): return f"Hello, {name}!"\n```';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+      
+      // Should NOT be treated as inline triple backticks
+      const result = parseIncompleteMarkdown(text);
+      expect(result).not.toContain('````'); // Should not add extra backticks
+    });
+
+    it('should only treat truly inline triple backticks as inline', () => {
+      // This SHOULD be treated as inline (no newlines)
+      const inline = '```python code```';
+      expect(parseIncompleteMarkdown(inline)).toBe(inline);
+      
+      // This should NOT be treated as inline (has newline)
+      const multiline = '```python code\n```';
+      expect(parseIncompleteMarkdown(multiline)).toBe(multiline);
+    });
   });
 
   describe('chunked streaming scenarios', () => {

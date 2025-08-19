@@ -137,9 +137,10 @@ const countSingleBackticks = (text: string): number => {
 // Avoids completing if inside an incomplete code block
 const handleIncompleteInlineCode = (text: string): string => {
   // Check if we have inline triple backticks (starts with ``` and should end with ```)
-  // This pattern matches inline code blocks like ```language code```
+  // This pattern should ONLY match truly inline code (no newlines)
+  // Examples: ```code``` or ```python code```
   const inlineTripleBacktickMatch = text.match(/^```[^`\n]*```?$/);
-  if (inlineTripleBacktickMatch) {
+  if (inlineTripleBacktickMatch && !text.includes('\n')) {
     // Check if it ends with exactly 2 backticks (incomplete)
     if (text.endsWith('``') && !text.endsWith('```')) {
       return `${text}` + '`';
