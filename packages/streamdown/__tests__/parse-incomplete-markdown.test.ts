@@ -396,6 +396,27 @@ describe('parseIncompleteMarkdown', () => {
       const text = '```\ncode\n```\nMore text';
       expect(parseIncompleteMarkdown(text)).toBe(text);
     });
+
+    it('should handle complete code blocks ending with triple backticks on newline', () => {
+      const text = '```python\ndef greet(name):\n    return f"Hello, {name}!"\n```';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should handle complete code blocks with trailing newline after closing backticks', () => {
+      const text = '```python\ndef greet(name):\n    return f"Hello, {name}!"\n```\n';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should not add backticks when code block ends properly', () => {
+      // This is the exact case from Grok
+      const grokOutput = '```python def greet(name): return f"Hello, {name}!"\n```';
+      expect(parseIncompleteMarkdown(grokOutput)).toBe(grokOutput);
+    });
+
+    it('should handle multiple complete code blocks with newlines', () => {
+      const text = '```js\ncode1\n```\n\n```python\ncode2\n```';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
   });
 
   describe('chunked streaming scenarios', () => {

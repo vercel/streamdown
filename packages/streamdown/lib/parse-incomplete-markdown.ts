@@ -152,6 +152,15 @@ const handleIncompleteInlineCode = (text: string): string => {
   const allTripleBackticks = (text.match(/```/g) || []).length;
   const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
   
+  // Special case: if text ends with ```\n (triple backticks followed by newline)
+  // This is actually a complete code block, not incomplete
+  if (text.endsWith('```\n') || text.endsWith('```')) {
+    // Count all triple backticks - if even, it's complete
+    if (allTripleBackticks % 2 === 0) {
+      return text;
+    }
+  }
+  
   // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
   if (allTripleBackticks > 0 && allTripleBackticks % 2 === 0 && text.includes('\n')) {
     // We have complete multi-line code blocks, don't add any backticks
