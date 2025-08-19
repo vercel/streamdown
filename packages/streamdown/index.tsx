@@ -2,7 +2,7 @@
 
 import type { ComponentProps } from 'react';
 import { memo, useId, useMemo } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Options } from 'react-markdown';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -13,19 +13,26 @@ import { parseMarkdownIntoBlocks } from './lib/parse-blocks';
 import { parseIncompleteMarkdown } from './lib/parse-incomplete-markdown';
 import { cn } from './lib/utils';
 
+type HardenReactMarkdownProps = Options & {
+  defaultOrigin?: string;
+  allowedLinkPrefixes?: string[];
+  allowedImagePrefixes?: string[];
+};
+
 // Handle both ESM and CJS imports
-const hardenReactMarkdown = (hardenReactMarkdownImport as any).default || hardenReactMarkdownImport;
+const hardenReactMarkdown =
+  (hardenReactMarkdownImport as any).default || hardenReactMarkdownImport;
 
 // Create a hardened version of ReactMarkdown
 const HardenedMarkdown: ReturnType<typeof hardenReactMarkdown> =
   hardenReactMarkdown(ReactMarkdown);
 
-export type StreamdownProps = ComponentProps<typeof HardenedMarkdown> & {
+export type StreamdownProps = HardenReactMarkdownProps & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
 };
 
-type BlockProps = ComponentProps<typeof HardenedMarkdown> & {
+type BlockProps = HardenReactMarkdownProps & {
   content: string;
   shouldParseIncompleteMarkdown: boolean;
 };
