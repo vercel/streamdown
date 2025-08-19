@@ -56,6 +56,9 @@ importers:
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.1.10)(react@19.1.0)
+      shiki:
+        specifier: ^3.9.2
+        version: 3.9.2
       streamdown:
         specifier: workspace:*
         version: link:../../packages/streamdown

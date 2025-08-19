@@ -1,7 +1,6 @@
 'use client';
 
-import { useState } from 'react';
-import { CodeBlock } from 'streamdown/lib/code-block';
+import { CodeBlock } from '@/components/code-block';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const streamdownCode = `'use client';
