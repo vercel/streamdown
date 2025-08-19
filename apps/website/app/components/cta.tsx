@@ -16,7 +16,7 @@ export const CallToAction = () => (
         />
       ))}
     </div>
-    <div className="grid sm:grid-cols-12 sm:divide-x">
+    <div className="sm:grid sm:grid-cols-12 sm:divide-x">
       <div />
       <div className="col-span-10 space-y-4 border-y px-4 py-16 text-center sm:px-8">
         <h1 className="font-semibold text-xl leading-tight tracking-tighter sm:text-2xl md:text-3xl">

@@ -16,7 +16,7 @@ export const Hero = () => (
         />
       ))}
     </div>
-    <div className="grid sm:grid-cols-12 sm:divide-x">
+    <div className="sm:grid sm:grid-cols-12 sm:divide-x">
       <div />
       <div className="col-span-10 space-y-4 px-4 py-16 text-center sm:border-y sm:px-8">
         <h1 className="font-semibold text-4xl leading-tight tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl">

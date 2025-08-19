@@ -96,7 +96,7 @@ export const Section = ({
       </div>
       <div className="relative">
         <div
-          className="grid divide-y overflow-hidden border-t md:grid-cols-2 md:divide-x md:divide-y-0"
+          className="divide-y overflow-hidden border-t sm:grid md:grid-cols-2 md:divide-x md:divide-y-0"
           ref={ref}
         >
           <div className="divide-y">

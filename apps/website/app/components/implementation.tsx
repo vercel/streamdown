@@ -101,8 +101,8 @@ const cssCode = `/*
 @source "../node_modules/streamdown/dist/index.js";`;
 
 export const Implementation = () => (
-  <div className="grid divide-y sm:grid-cols-3 sm:divide-x sm:divide-y-0">
-    <div className="space-y-2 p-8">
+  <div className="divide-y sm:grid sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+    <div className="space-y-2 px-4 pt-8 pb-16 sm:p-8!">
       <h2 className="font-semibold text-2xl tracking-tight">Overview</h2>
       <p className="text-muted-foreground">
         Formatting Markdown is easy, but when you tokenize and stream it, new

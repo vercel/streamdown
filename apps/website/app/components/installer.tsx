@@ -5,7 +5,7 @@ import { CheckIcon, CopyIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
-const CODE = 'npx ai-elements@latest add response';
+const CODE = 'npx ai-elements add response';
 const TIMEOUT = 2000;
 
 export const Installer = () => {
