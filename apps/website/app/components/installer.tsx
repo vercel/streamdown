@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
 const CODE = 'npx ai-elements add response';
+const CODE_SM = 'npx ai-elements@latest add response';
 const TIMEOUT = 2000;
 
 export const Installer = () => {
@@ -31,7 +32,10 @@ export const Installer = () => {
   return (
     <div className="dark w-fit">
       <div className="relative flex items-center gap-3 rounded-md border bg-background p-0.5 text-foreground">
-        <pre className="w-full py-2 pl-3 text-sm">{CODE}</pre>
+        <pre className="block w-full py-2 pl-3 text-sm sm:hidden">{CODE}</pre>
+        <pre className="hidden w-full py-2 pl-3 text-sm sm:block">
+          {CODE_SM}
+        </pre>
         <Button
           className="rounded-sm"
           onClick={copyToClipboard}
