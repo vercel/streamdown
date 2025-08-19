@@ -186,6 +186,22 @@ describe('parseIncompleteMarkdown', () => {
       const text2 = 'some\\_text_with_underscores';
       expect(parseIncompleteMarkdown(text2)).toBe('some\\_text_with_underscores');
     });
+
+    it('should not complete underscores inside math equations', () => {
+      expect(parseIncompleteMarkdown('$x_i$')).toBe('$x_i$');
+      expect(parseIncompleteMarkdown('$a_1 + b_2$')).toBe('$a_1 + b_2$');
+      
+      expect(parseIncompleteMarkdown('$$x_i$$')).toBe('$$x_i$$');
+      expect(parseIncompleteMarkdown('$$a_1 + b_2$$')).toBe('$$a_1 + b_2$$');
+      
+      expect(parseIncompleteMarkdown('$x_i')).toBe('$x_i$');
+      expect(parseIncompleteMarkdown('$$a_1 + b_2')).toBe('$$a_1 + b_2$$');
+      
+      expect(parseIncompleteMarkdown('_italic_ and $x_i$')).toBe('_italic_ and $x_i$');
+      expect(parseIncompleteMarkdown('_incomplete and $x_i$')).toBe('_incomplete_ and $x_i$');
+      
+      expect(parseIncompleteMarkdown('_text before $x_i')).toBe('_text_ before $x_i$');
+    });
   });
 
   describe('inline code formatting (`)', () => {
@@ -531,9 +547,9 @@ describe('parseIncompleteMarkdown', () => {
     });
 
     it('should handle KaTeX inside other formatting', () => {
-      // Bold gets closed first, then KaTeX
+      // KaTeX gets completed first, then bold
       expect(parseIncompleteMarkdown('**bold with $x^2')).toBe(
-        '**bold with $x^2**$'
+        '**bold with $x^2$**'
       );
     });
 

@@ -81,16 +81,48 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   return text;
 };
 
-// Counts single underscores that are not part of double underscores and not escaped
+const isInsideMathBlock = (text: string, position: number): boolean => {
+  let insideInlineMath = false;
+  let insideBlockMath = false;
+  
+  for (let i = 0; i < position; i++) {
+    const char = text[i];
+    const prevChar = text[i - 1];
+    
+    if (prevChar === '\\') {
+      continue;
+    }
+    
+    if (char === '$') {
+      const nextChar = text[i + 1];
+      
+      if (nextChar === '$' && !insideInlineMath) {
+        insideBlockMath = !insideBlockMath;
+      } else if (!insideBlockMath) {
+        insideInlineMath = !insideInlineMath;
+      }
+    }
+  }
+  
+  return insideInlineMath || insideBlockMath;
+};
+
+// Counts single underscores that are not part of double underscores, not escaped, and not inside math blocks
 const countSingleUnderscores = (text: string): number => {
   return text.split('').reduce((acc, char, index) => {
     if (char === '_') {
       const prevChar = text[index - 1];
       const nextChar = text[index + 1];
-      // Skip if escaped with backslash
+      
       if (prevChar === '\\') {
         return acc;
       }
+      
+      // Skip if inside math block
+      if (isInsideMathBlock(text, index)) {
+        return acc;
+      }
+      
       if (prevChar !== '_' && nextChar !== '_') {
         return acc + 1;
       }
@@ -101,12 +133,40 @@ const countSingleUnderscores = (text: string): number => {
 
 // Completes incomplete italic formatting with single underscores (_)
 const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
-  const singleUnderscoreMatch = text.match(singleUnderscorePattern);
-
-  if (singleUnderscoreMatch) {
-    const singleUnderscores = countSingleUnderscores(text);
-    if (singleUnderscores % 2 === 1) {
-      return `${text}_`;
+  const singleUnderscores = countSingleUnderscores(text);
+  
+  if (singleUnderscores % 2 === 1) {
+    // Find the last underscore that's not inside a math block
+    let lastValidUnderscoreIndex = -1;
+    
+    for (let i = text.length - 1; i >= 0; i--) {
+      if (text[i] === '_' && text[i - 1] !== '\\') {
+        // Check if this underscore is part of a double underscore
+        const prevChar = text[i - 1];
+        const nextChar = text[i + 1];
+        if (prevChar === '_' || nextChar === '_') {
+          continue;
+        }
+        
+        // Check if this underscore is inside a math block
+        if (!isInsideMathBlock(text, i)) {
+          lastValidUnderscoreIndex = i;
+          break;
+        }
+      }
+    }
+    
+    if (lastValidUnderscoreIndex !== -1) {
+      // Find the end of the word/content that started with this underscore
+      let endIndex = lastValidUnderscoreIndex + 1;
+      
+      // Move forward to find the end of the current word
+      while (endIndex < text.length && /\S/.test(text[endIndex])) {
+        endIndex++;
+      }
+      
+      // Insert the closing underscore right after the word
+      return text.substring(0, endIndex) + '_' + text.substring(endIndex);
     }
   }
 
@@ -288,6 +348,11 @@ export const parseIncompleteMarkdown = (text: string): string => {
   // Handle incomplete links and images first (removes content)
   result = handleIncompleteLinksAndImages(result);
 
+  // Handle KaTeX formatting first (block first, then inline)
+  // This must come before underscore handling since underscores have special meaning in math
+  result = handleIncompleteBlockKatex(result);
+  result = handleIncompleteInlineKatex(result);
+  
   // Handle various formatting completions
   // Handle triple asterisks first (most specific)
   result = handleIncompleteBoldItalic(result);
@@ -297,10 +362,6 @@ export const parseIncompleteMarkdown = (text: string): string => {
   result = handleIncompleteSingleUnderscoreItalic(result);
   result = handleIncompleteInlineCode(result);
   result = handleIncompleteStrikethrough(result);
-  
-  // Handle KaTeX formatting (block first, then inline)
-  result = handleIncompleteBlockKatex(result);
-  result = handleIncompleteInlineKatex(result);
 
   return result;
 };
