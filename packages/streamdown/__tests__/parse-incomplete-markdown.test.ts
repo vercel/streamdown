@@ -172,6 +172,16 @@ describe('parseIncompleteMarkdown', () => {
       const text = '```javascript\nconst x = `template';
       expect(parseIncompleteMarkdown(text)).toBe(text);
     });
+
+    it('should handle inline triple backticks correctly', () => {
+      const text = '```python print("Hello, Sunnyvale!")```';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should handle incomplete inline triple backticks', () => {
+      const text = '```python print("Hello, Sunnyvale!")``';
+      expect(parseIncompleteMarkdown(text)).toBe('```python print("Hello, Sunnyvale!")```');
+    });
   });
 
   describe('strikethrough formatting (~~)', () => {

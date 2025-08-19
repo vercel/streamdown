@@ -135,13 +135,25 @@ const countSingleBackticks = (text: string): number => {
 // Completes incomplete inline code formatting (`)
 // Avoids completing if inside an incomplete code block
 const handleIncompleteInlineCode = (text: string): string => {
-  // Check if we're inside a code block (complete or incomplete)
+  // Check if we have inline triple backticks (starts with ``` and should end with ```)
+  // This pattern matches inline code blocks like ```language code```
+  const inlineTripleBacktickMatch = text.match(/^```[^`\n]*```?$/);
+  if (inlineTripleBacktickMatch) {
+    // Check if it ends with exactly 2 backticks (incomplete)
+    if (text.endsWith('``') && !text.endsWith('```')) {
+      return `${text}\``;
+    }
+    // Already complete inline triple backticks
+    return text;
+  }
+  
+  // Check if we're inside a multi-line code block (complete or incomplete)
   const allTripleBackticks = (text.match(/```/g) || []).length;
   const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
   
-  // Don't modify text if we have complete code blocks (even pairs of ```)
-  if (allTripleBackticks > 0 && allTripleBackticks % 2 === 0) {
-    // We have complete code blocks, don't add any backticks
+  // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
+  if (allTripleBackticks > 0 && allTripleBackticks % 2 === 0 && text.includes('\n')) {
+    // We have complete multi-line code blocks, don't add any backticks
     return text;
   }
 
