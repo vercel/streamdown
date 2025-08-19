@@ -1,6 +1,7 @@
 const linkImagePattern = /(!?\[)([^\]]*?)$/;
 const boldPattern = /(\*\*)([^*]*?)$/;
 const italicPattern = /(__)([^_]*?)$/;
+const boldItalicPattern = /(\*\*\*)([^*]*?)$/;
 const singleAsteriskPattern = /(\*)([^*]*?)$/;
 const singleUnderscorePattern = /(_)([^_]*?)$/;
 const inlineCodePattern = /(`)([^`]*?)$/;
@@ -229,6 +230,43 @@ const handleIncompleteInlineKatex = (text: string): string => {
   return text;
 };
 
+// Counts triple asterisks that are not part of quadruple or more asterisks
+const countTripleAsterisks = (text: string): number => {
+  let count = 0;
+  const matches = text.match(/\*+/g) || [];
+  
+  for (const match of matches) {
+    // Count how many complete triple asterisks are in this sequence
+    const asteriskCount = match.length;
+    if (asteriskCount >= 3) {
+      // Each group of exactly 3 asterisks counts as one triple asterisk marker
+      count += Math.floor(asteriskCount / 3);
+    }
+  }
+  
+  return count;
+};
+
+// Completes incomplete bold-italic formatting (***)
+const handleIncompleteBoldItalic = (text: string): string => {
+  // Don't process if text is only asterisks and has 4 or more consecutive asterisks
+  // This prevents cases like **** from being treated as incomplete ***
+  if (/^\*{4,}$/.test(text)) {
+    return text;
+  }
+  
+  const boldItalicMatch = text.match(boldItalicPattern);
+
+  if (boldItalicMatch) {
+    const tripleAsteriskCount = countTripleAsterisks(text);
+    if (tripleAsteriskCount % 2 === 1) {
+      return `${text}***`;
+    }
+  }
+
+  return text;
+};
+
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
 export const parseIncompleteMarkdown = (text: string): string => {
   if (!text || typeof text !== 'string') {
@@ -241,6 +279,8 @@ export const parseIncompleteMarkdown = (text: string): string => {
   result = handleIncompleteLinksAndImages(result);
 
   // Handle various formatting completions
+  // Handle triple asterisks first (most specific)
+  result = handleIncompleteBoldItalic(result);
   result = handleIncompleteBold(result);
   result = handleIncompleteDoubleUnderscoreItalic(result);
   result = handleIncompleteSingleAsteriskItalic(result);
