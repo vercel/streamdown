@@ -101,7 +101,9 @@ export const Streamdown = memo(
       </ShikiThemeContext.Provider>
     );
   },
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) =>
+    prevProps.children === nextProps.children &&
+    prevProps.shikiTheme === nextProps.shikiTheme
 );
 Streamdown.displayName = 'Streamdown';
 
