@@ -4,6 +4,8 @@ import type { BundledLanguage } from 'shiki';
 import { CodeBlock, CodeBlockCopyButton } from './code-block';
 import { cn } from './utils';
 
+const LANGUAGE_RE = /language-(\w+)/;
+
 export const components: Options['components'] = {
   ol: ({ node, children, className, ...props }) => (
     <ol className={cn('ml-4 list-outside list-decimal', className)} {...props}>
@@ -127,32 +129,25 @@ export const components: Options['components'] = {
       {children}
     </blockquote>
   ),
-  code: ({ node, className, ...props }) => {
+  code: ({ node, className, children, ...props }) => {
     const inline = node?.position?.start.line === node?.position?.end.line;
 
-    if (!inline) {
-      return <code className={className} {...props} />;
+    if (inline) {
+      return (
+        <code
+          className={cn(
+            'rounded bg-muted px-1.5 py-0.5 font-mono text-sm',
+            className
+          )}
+          {...props}
+        >
+          {children}
+        </code>
+      );
     }
 
-    return (
-      <code
-        className={cn(
-          'rounded bg-muted px-1.5 py-0.5 font-mono text-sm',
-          className
-        )}
-        {...props}
-      />
-    );
-  },
-  pre: ({ node, className, children }) => {
-    let language: BundledLanguage = 'javascript';
-
-    if (typeof node?.properties?.className === 'string') {
-      language = node.properties.className.replace(
-        'language-',
-        ''
-      ) as BundledLanguage;
-    }
+    const match = className?.match(LANGUAGE_RE);
+    const language = (match ? match[1] : 'plaintext') as BundledLanguage;
 
     // Extract code content from children safely
     let code = '';
@@ -177,6 +172,9 @@ export const components: Options['components'] = {
         <CodeBlockCopyButton />
       </CodeBlock>
     );
+  },
+  pre: ({ className, children }) => {
+    return <pre className={cn('my-4 h-auto', className)}>{children}</pre>;
   },
   sup: ({ node, children, className, ...props }) => (
     <sup className={cn('text-sm', className)} {...props}>
