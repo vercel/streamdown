@@ -1,7 +1,7 @@
 const props = [
   {
     name: 'children',
-    type: 'string | React.ReactNode',
+    type: 'string',
     description:
       'The markdown content to render. Can be a string of markdown or React nodes.',
   },
@@ -55,6 +55,12 @@ const props = [
     default: '[remarkGfm, remarkMath]',
     description:
       'Array of remark plugins to use for processing markdown. Includes GitHub Flavored Markdown and math support by default.',
+  },
+  {
+    name: 'shikiTheme',
+    type: 'BundledTheme (from Shiki)',
+    default: 'github-light',
+    description: 'The theme to use for code blocks.',
   },
 ];
 
