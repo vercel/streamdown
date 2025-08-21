@@ -1,11 +1,11 @@
 'use client';
 
-import type { ComponentProps } from 'react';
-import { memo, useId, useMemo } from 'react';
+import { createContext, memo, useId, useMemo } from 'react';
 import ReactMarkdown, { type Options } from 'react-markdown';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
+import type { BundledTheme } from 'shiki';
 import 'katex/dist/katex.min.css';
 import hardenReactMarkdownImport from 'harden-react-markdown';
 import { components as defaultComponents } from './lib/components';
@@ -30,7 +30,10 @@ const HardenedMarkdown: ReturnType<typeof hardenReactMarkdown> =
 export type StreamdownProps = HardenReactMarkdownProps & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
+  shikiTheme?: BundledTheme;
 };
+
+export const ShikiThemeContext = createContext<BundledTheme>('github-light');
 
 type BlockProps = HardenReactMarkdownProps & {
   content: string;
@@ -63,6 +66,7 @@ export const Streamdown = memo(
     rehypePlugins,
     remarkPlugins,
     className,
+    shikiTheme = 'github-light',
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
@@ -74,28 +78,32 @@ export const Streamdown = memo(
     );
 
     return (
-      <div className={cn('space-y-4', className)} {...props}>
-        {blocks.map((block, index) => (
-          <Block
-            allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
-            allowedLinkPrefixes={allowedLinkPrefixes ?? ['*']}
-            components={{
-              ...defaultComponents,
-              ...components,
-            }}
-            content={block}
-            defaultOrigin={defaultOrigin}
-            // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-            key={`${generatedId}-block_${index}`}
-            rehypePlugins={[rehypeKatex, ...(rehypePlugins ?? [])]}
-            remarkPlugins={[remarkGfm, remarkMath, ...(remarkPlugins ?? [])]}
-            shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-          />
-        ))}
-      </div>
+      <ShikiThemeContext.Provider value={shikiTheme}>
+        <div className={cn('space-y-4', className)} {...props}>
+          {blocks.map((block, index) => (
+            <Block
+              allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
+              allowedLinkPrefixes={allowedLinkPrefixes ?? ['*']}
+              components={{
+                ...defaultComponents,
+                ...components,
+              }}
+              content={block}
+              defaultOrigin={defaultOrigin}
+              // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+              key={`${generatedId}-block_${index}`}
+              rehypePlugins={[rehypeKatex, ...(rehypePlugins ?? [])]}
+              remarkPlugins={[remarkGfm, remarkMath, ...(remarkPlugins ?? [])]}
+              shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
+            />
+          ))}
+        </div>
+      </ShikiThemeContext.Provider>
     );
   },
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) =>
+    prevProps.children === nextProps.children &&
+    prevProps.shikiTheme === nextProps.shikiTheme
 );
 Streamdown.displayName = 'Streamdown';
 
