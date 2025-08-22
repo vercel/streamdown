@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import mermaid from 'mermaid';
 import { cn } from './utils';
 
 interface MermaidProps {
@@ -10,6 +9,7 @@ interface MermaidProps {
 export const Mermaid = ({ chart, className }: MermaidProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -17,6 +17,10 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
     const renderChart = async () => {
       try {
         setError(null);
+        setIsLoading(true);
+        
+        // Dynamic import of mermaid to avoid SSR issues
+        const mermaid = (await import('mermaid')).default;
         
         // Initialize and configure mermaid
         mermaid.initialize({
@@ -35,11 +39,24 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to render Mermaid chart');
         console.error('Mermaid render error:', err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     renderChart();
   }, [chart]);
+
+  if (isLoading) {
+    return (
+      <div className={cn('flex justify-center my-4 p-4', className)}>
+        <div className="flex items-center space-x-2 text-muted-foreground">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+          <span className="text-sm">Loading diagram...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (error) {
     return (
