@@ -1,6 +1,29 @@
 import { useEffect, useState } from 'react';
 import { cn } from './utils';
 
+// Global mermaid initialization
+let mermaidInitialized = false;
+
+const initializeMermaid = async () => {
+  if (!mermaidInitialized) {
+    const mermaidModule = await import('mermaid');
+    const mermaid = mermaidModule.default;
+    
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'default',
+      securityLevel: 'strict',
+      fontFamily: 'monospace',
+    });
+    
+    mermaidInitialized = true;
+    return mermaid;
+  }
+  
+  const mermaidModule = await import('mermaid');
+  return mermaidModule.default;
+};
+
 interface MermaidProps {
   chart: string;
   className?: string;
@@ -18,17 +41,8 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
         setIsLoading(true);
         setSvgContent('');
         
-        // Dynamic import of mermaid to avoid SSR issues
-        const mermaidModule = await import('mermaid');
-        const mermaid = mermaidModule.default;
-        
-        // Initialize and configure mermaid
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'default',
-          securityLevel: 'strict',
-          fontFamily: 'monospace',
-        });
+        // Initialize mermaid only once globally
+        const mermaid = await initializeMermaid();
 
         // Render the chart
         const { svg } = await mermaid.render(`mermaid-${Date.now()}`, chart);
