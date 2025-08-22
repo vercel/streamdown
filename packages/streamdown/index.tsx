@@ -109,4 +109,5 @@ export const Streamdown = memo(
 Streamdown.displayName = 'Streamdown';
 
 export { Mermaid };
+export { CodeBlock, CodeBlockCopyButton, CodeBlockRenderButton } from './lib/code-block';
 export default Streamdown;

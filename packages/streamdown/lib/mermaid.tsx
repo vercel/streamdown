@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from './utils';
 
 interface MermaidProps {
@@ -7,20 +7,20 @@ interface MermaidProps {
 }
 
 export const Mermaid = ({ chart, className }: MermaidProps) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [svgContent, setSvgContent] = useState<string>('');
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
     const renderChart = async () => {
       try {
         setError(null);
         setIsLoading(true);
+        setSvgContent('');
         
         // Dynamic import of mermaid to avoid SSR issues
-        const mermaid = (await import('mermaid')).default;
+        const mermaidModule = await import('mermaid');
+        const mermaid = mermaidModule.default;
         
         // Initialize and configure mermaid
         mermaid.initialize({
@@ -32,13 +32,10 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
 
         // Render the chart
         const { svg } = await mermaid.render(`mermaid-${Date.now()}`, chart);
-        
-        if (containerRef.current) {
-          containerRef.current.innerHTML = svg;
-        }
+        setSvgContent(svg);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to render Mermaid chart');
-        console.error('Mermaid render error:', err);
+        const errorMessage = err instanceof Error ? err.message : 'Failed to render Mermaid chart';
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -74,10 +71,10 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
 
   return (
     <div 
-      ref={containerRef} 
       className={cn('flex justify-center my-4', className)}
       role="img"
       aria-label="Mermaid chart"
+      dangerouslySetInnerHTML={{ __html: svgContent }}
     />
   );
 };
