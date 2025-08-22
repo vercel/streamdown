@@ -62,7 +62,7 @@ const PreComponent = ({ node, className, children }: any) => {
       language={language as BundledLanguage}
     >
       <CodeBlockCopyButton />
-      <CodeBlockRenderButton onRender={() => setShowMermaid(true)} />
+      {isMermaid && <CodeBlockRenderButton onRender={() => setShowMermaid(true)} />}
     </CodeBlock>
   );
 };
