@@ -50,11 +50,18 @@ export const CodeBlock = ({
   useEffect(() => {
     let isMounted = true;
 
-    highlightCode(code, language, theme).then((result) => {
-      if (isMounted) {
-        setHtml(result);
-      }
-    });
+    highlightCode(code, language, theme)
+      .then((result) => {
+        if (isMounted) {
+          setHtml(result);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to highlight code:', error);
+        if (isMounted) {
+          setHtml(`<pre><code>${code}</code></pre>`);
+        }
+      });
 
     return () => {
       isMounted = false;

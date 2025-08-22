@@ -44,8 +44,9 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
         // Initialize mermaid only once globally
         const mermaid = await initializeMermaid();
 
-        // Render the chart
-        const { svg } = await mermaid.render(`mermaid-${Date.now()}`, chart);
+        // Render the chart with unique ID to prevent conflicts
+        const uniqueId = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const { svg } = await mermaid.render(uniqueId, chart);
         setSvgContent(svg);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to render Mermaid chart';
