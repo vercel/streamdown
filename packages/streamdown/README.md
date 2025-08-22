@@ -18,6 +18,7 @@ Streamdown powers the [AI Elements Response](https://ai-sdk.dev/elements/compone
 - 📊 **GitHub Flavored Markdown** - Tables, task lists, and strikethrough support
 - 🔢 **Math rendering** - LaTeX equations via KaTeX
 - 🎯 **Code syntax highlighting** - Beautiful code blocks with Shiki
+- 📈 **Mermaid diagrams** - Render flowcharts, sequence diagrams, and more
 - 🛡️ **Security-first** - Built on harden-react-markdown for safe rendering
 - ⚡ **Performance optimized** - Memoized rendering for efficient updates
 
@@ -44,6 +45,44 @@ import { Streamdown } from 'streamdown';
 
 export default function Page() {
   const markdown = "# Hello World\n\nThis is **streaming** markdown!";
+  
+  return <Streamdown>{markdown}</Streamdown>;
+}
+```
+
+### Mermaid Diagrams
+
+Streamdown supports Mermaid diagrams using the `mermaid` language identifier:
+
+```tsx
+import { Streamdown } from 'streamdown';
+
+export default function Page() {
+  const markdown = `
+# Flowchart Example
+
+\`\`\`mermaid
+graph TD
+    A[Start] --> B{Is it working?}
+    B -->|Yes| C[Great!]
+    B -->|No| D[Debug]
+    D --> B
+\`\`\`
+
+# Sequence Diagram
+
+\`\`\`mermaid
+sequenceDiagram
+    participant User
+    participant API
+    participant Database
+    
+    User->>API: Request data
+    API->>Database: Query
+    Database-->>API: Results
+    API-->>User: Response
+\`\`\`
+  `;
   
   return <Streamdown>{markdown}</Streamdown>;
 }
