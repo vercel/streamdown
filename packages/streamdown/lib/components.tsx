@@ -2,6 +2,7 @@ import { isValidElement } from 'react';
 import type { Options } from 'react-markdown';
 import type { BundledLanguage } from 'shiki';
 import { CodeBlock, CodeBlockCopyButton } from './code-block';
+import { Mermaid } from './mermaid';
 import { cn } from './utils';
 
 export const components: Options['components'] = {
@@ -166,6 +167,16 @@ export const components: Options['components'] = {
       code = children.props.children;
     } else if (typeof children === 'string') {
       code = children;
+    }
+
+    // Mermaid grafiği kontrolü
+    if (language === 'mermaid') {
+      return (
+        <Mermaid
+          chart={code}
+          className={cn('my-4', className)}
+        />
+      );
     }
 
     return (

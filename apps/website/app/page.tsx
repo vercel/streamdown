@@ -7,6 +7,7 @@ import { HardenedMarkdown } from './components/hardened';
 import { Header } from './components/header';
 import { Hero } from './components/hero';
 import { Implementation } from './components/implementation';
+import { MermaidDemo } from './components/mermaid';
 import { Mathematics } from './components/mathematics';
 import { Props } from './components/props';
 import { Styles } from './components/styles';
@@ -27,6 +28,7 @@ const Home = () => (
     <GitHubFlavoredMarkdown />
     <CodeBlocks />
     <Mathematics />
+    <MermaidDemo />
     <TerminatorParser />
     <HardenedMarkdown />
     <Props />

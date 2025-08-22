@@ -11,6 +11,7 @@ import hardenReactMarkdownImport from 'harden-react-markdown';
 import { components as defaultComponents } from './lib/components';
 import { parseMarkdownIntoBlocks } from './lib/parse-blocks';
 import { parseIncompleteMarkdown } from './lib/parse-incomplete-markdown';
+import { Mermaid } from './lib/mermaid';
 import { cn } from './lib/utils';
 
 type HardenReactMarkdownProps = Options & {
@@ -107,4 +108,5 @@ export const Streamdown = memo(
 );
 Streamdown.displayName = 'Streamdown';
 
+export { Mermaid };
 export default Streamdown;
