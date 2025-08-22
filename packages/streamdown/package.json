@@ -16,6 +16,12 @@
     "dist",
     "README.md"
   ],
+  "homepage": "https://streamdown.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vercel/streamdown.git",
+    "directory": "packages/streamdown"
+  },
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
