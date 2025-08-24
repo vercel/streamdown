@@ -4,7 +4,7 @@ import type { BundledLanguage } from 'shiki';
 import { CodeBlock, CodeBlockCopyButton } from './code-block';
 import { cn } from './utils';
 
-const LANGUAGE_RE = /language-(\w+)/;
+const LANGUAGE_RE = /language-([^\s]+)/;
 
 export const components: Options['components'] = {
   ol: ({ node, children, className, ...props }) => (
