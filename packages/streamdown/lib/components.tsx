@@ -173,8 +173,8 @@ export const components: Options['components'] = {
       </CodeBlock>
     );
   },
-  pre: ({ className, children }) => {
-    return <pre className={cn('my-4 h-auto', className)}>{children}</pre>;
+  pre: ({ children }) => {
+    return <>{children}</>;
   },
   sup: ({ node, children, className, ...props }) => (
     <sup className={cn('text-sm', className)} {...props}>
