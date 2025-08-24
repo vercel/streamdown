@@ -51,7 +51,7 @@
     "clsx": "^2.1.1",
     "harden-react-markdown": "^1.0.4",
     "katex": "^0.16.22",
-    "lucide-react": "^0.539.0",
+    "lucide-react": "^0.541.0",
     "marked": "^16.1.2",
     "react-markdown": "^10.1.0",
     "rehype-katex": "^7.0.1",
