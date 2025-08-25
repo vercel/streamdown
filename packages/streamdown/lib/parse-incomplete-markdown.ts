@@ -81,7 +81,36 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   return text;
 };
 
-// Counts single underscores that are not part of double underscores and not escaped
+// Check if a position is within a math block (between $ or $$)
+const isWithinMathBlock = (text: string, position: number): boolean => {
+  // Count dollar signs before this position
+  let inInlineMath = false;
+  let inBlockMath = false;
+  
+  for (let i = 0; i < text.length && i < position; i++) {
+    // Skip escaped dollar signs
+    if (text[i] === '\\' && text[i + 1] === '$') {
+      i++; // Skip the next character
+      continue;
+    }
+    
+    if (text[i] === '$') {
+      // Check for block math ($$)
+      if (text[i + 1] === '$') {
+        inBlockMath = !inBlockMath;
+        i++; // Skip the second $
+        inInlineMath = false; // Block math takes precedence
+      } else if (!inBlockMath) {
+        // Only toggle inline math if not in block math
+        inInlineMath = !inInlineMath;
+      }
+    }
+  }
+  
+  return inInlineMath || inBlockMath;
+};
+
+// Counts single underscores that are not part of double underscores, not escaped, and not in math blocks
 const countSingleUnderscores = (text: string): number => {
   return text.split('').reduce((acc, char, index) => {
     if (char === '_') {
@@ -89,6 +118,10 @@ const countSingleUnderscores = (text: string): number => {
       const nextChar = text[index + 1];
       // Skip if escaped with backslash
       if (prevChar === '\\') {
+        return acc;
+      }
+      // Skip if within math block
+      if (isWithinMathBlock(text, index)) {
         return acc;
       }
       if (prevChar !== '_' && nextChar !== '_') {
