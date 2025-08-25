@@ -183,10 +183,14 @@ describe('Markdown Components', () => {
           code
         </Code>
       );
-      const code = container.querySelector('code');
-      expect(code).toBeTruthy();
-      expect(code?.className).not.toContain('rounded');
-      expect(code?.className).not.toContain('bg-muted');
+      // Block code renders a CodeBlock component, not a plain code element
+      const codeBlock = container.querySelector('[class*="my-4"]');
+      expect(codeBlock).toBeTruthy();
+      expect(codeBlock?.className).toContain('my-4');
+      expect(codeBlock?.className).toContain('h-auto');
+      expect(codeBlock?.className).toContain('rounded-lg');
+      expect(codeBlock?.className).toContain('border');
+      expect(codeBlock?.className).toContain('p-4');
     });
 
     it('should render pre with code block', () => {
@@ -195,24 +199,32 @@ describe('Markdown Components', () => {
         children: 'const x = 1;',
       });
       const { container } = render(<Pre node={null as any}>{codeElement}</Pre>);
-      // The pre component renders a CodeBlock, not a pre element
-      const codeBlock = container.querySelector('[class*="my-4"]');
-      expect(codeBlock).toBeTruthy();
-      expect(codeBlock?.className).toContain('my-4');
-      expect(codeBlock?.className).toContain('h-auto');
+      // The pre component now just returns its children
+      // The code element should be present as a child
+      const code = container.querySelector('code');
+      expect(code).toBeTruthy();
+      expect(code?.textContent).toBe('const x = 1;');
     });
 
     it('should extract language from code className', () => {
-      const Pre = components.pre!;
-      const codeElement = React.createElement('code', {
-        children: 'const x = 1;',
-        className: 'language-javascript',
-      });
-      const nodeWithClassName = {
-        properties: { className: 'language-javascript' }
-      };
-      const { container } = render(<Pre node={nodeWithClassName as any}>{codeElement}</Pre>);
-      // The pre component renders a CodeBlock with the extracted language
+      const Code = components.code!;
+      // Test the code component directly since it handles language extraction
+      const { container } = render(
+        <Code
+          node={
+            {
+              position: {
+                start: { line: 1, column: 1 },
+                end: { line: 2, column: 10 },
+              },
+            } as any
+          }
+          className="language-javascript"
+        >
+          const x = 1;
+        </Code>
+      );
+      // Code component with multi-line position renders a CodeBlock
       const codeBlock = container.querySelector('[class*="my-4"]');
       expect(codeBlock).toBeTruthy();
     });
@@ -222,10 +234,8 @@ describe('Markdown Components', () => {
       const { container } = render(
         <Pre node={null as any}>plain text code</Pre>
       );
-      // The pre component renders a CodeBlock which processes code asynchronously
-      const codeBlock = container.querySelector('[class*="my-4"]');
-      expect(codeBlock).toBeTruthy();
-      // The CodeBlock component exists but text is rendered asynchronously
+      // The pre component now just returns its children directly
+      expect(container.textContent).toBe('plain text code');
     });
   });
 
