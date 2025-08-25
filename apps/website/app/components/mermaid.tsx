@@ -45,8 +45,8 @@ sequenceDiagram
     <Section
       description={
         <>
-          Streamdown supports Mermaid diagrams, rendered automatically with the
-          option to view the source code.
+          Streamdown supports Mermaid diagrams, streaming as code blocks with a
+          button to render them.
         </>
       }
       markdown={mermaidExample}
