@@ -61,7 +61,9 @@ const CodeComponent = ({
 
   if (isMermaid) {
     return (
-      <div className={cn('my-4 h-auto rounded-lg border p-4', className)}>
+      <div
+        className={cn('relative my-4 h-auto rounded-lg border p-4', className)}
+      >
         <Mermaid chart={code} />
         <CodeBlockCopyButton code={code} />
       </div>
@@ -70,7 +72,7 @@ const CodeComponent = ({
 
   return (
     <CodeBlock
-      className={cn('my-4 h-auto rounded-lg border p-4', className)}
+      className={cn('relative my-4 h-auto rounded-lg border p-4', className)}
       code={code}
       language={language}
     >
