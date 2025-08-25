@@ -8,26 +8,26 @@ const initializeMermaid = async () => {
   if (!mermaidInitialized) {
     const mermaidModule = await import('mermaid');
     const mermaid = mermaidModule.default;
-    
+
     mermaid.initialize({
       startOnLoad: false,
       theme: 'default',
       securityLevel: 'strict',
       fontFamily: 'monospace',
     });
-    
+
     mermaidInitialized = true;
     return mermaid;
   }
-  
+
   const mermaidModule = await import('mermaid');
   return mermaidModule.default;
 };
 
-interface MermaidProps {
+type MermaidProps = {
   chart: string;
   className?: string;
-}
+};
 
 export const Mermaid = ({ chart, className }: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +40,7 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
         setError(null);
         setIsLoading(true);
         setSvgContent('');
-        
+
         // Initialize mermaid only once globally
         const mermaid = await initializeMermaid();
 
@@ -49,7 +49,8 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
         const { svg } = await mermaid.render(uniqueId, chart);
         setSvgContent(svg);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to render Mermaid chart';
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to render Mermaid chart';
         setError(errorMessage);
       } finally {
         setIsLoading(false);
@@ -61,9 +62,9 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
 
   if (isLoading) {
     return (
-      <div className={cn('flex justify-center my-4 p-4', className)}>
+      <div className={cn('my-4 flex justify-center p-4', className)}>
         <div className="flex items-center space-x-2 text-muted-foreground">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+          <div className="h-4 w-4 animate-spin rounded-full border-current border-b-2" />
           <span className="text-sm">Loading diagram...</span>
         </div>
       </div>
@@ -72,11 +73,18 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
 
   if (error) {
     return (
-      <div className={cn('p-4 border border-red-200 bg-red-50 rounded-lg', className)}>
-        <p className="text-red-700 text-sm font-mono">Mermaid Error: {error}</p>
+      <div
+        className={cn(
+          'rounded-lg border border-red-200 bg-red-50 p-4',
+          className
+        )}
+      >
+        <p className="font-mono text-red-700 text-sm">Mermaid Error: {error}</p>
         <details className="mt-2">
-          <summary className="text-red-600 text-xs cursor-pointer">Show Code</summary>
-          <pre className="mt-2 text-xs text-red-800 bg-red-100 p-2 rounded overflow-x-auto">
+          <summary className="cursor-pointer text-red-600 text-xs">
+            Show Code
+          </summary>
+          <pre className="mt-2 overflow-x-auto rounded bg-red-100 p-2 text-red-800 text-xs">
             {chart}
           </pre>
         </details>
@@ -85,11 +93,11 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
   }
 
   return (
-    <div 
-      className={cn('flex justify-center my-4', className)}
-      role="img"
+    <div
       aria-label="Mermaid chart"
+      className={cn('my-4 flex justify-center', className)}
       dangerouslySetInnerHTML={{ __html: svgContent }}
+      role="img"
     />
   );
 };
