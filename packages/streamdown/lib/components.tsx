@@ -1,6 +1,11 @@
 import { CodeIcon } from 'lucide-react';
-import { isValidElement, useState } from 'react';
-import type { Options } from 'react-markdown';
+import {
+  type DetailedHTMLProps,
+  type HTMLAttributes,
+  isValidElement,
+  useState,
+} from 'react';
+import type { ExtraProps, Options } from 'react-markdown';
 import type { BundledLanguage } from 'shiki';
 import {
   CodeBlock,
@@ -12,7 +17,12 @@ import { cn } from './utils';
 
 const LANGUAGE_RE = /language-([^\s]+)/;
 
-const PreComponent = ({ node, className, children }: any) => {
+const PreComponent = ({
+  node,
+  className,
+  children,
+}: DetailedHTMLProps<HTMLAttributes<HTMLPreElement>, HTMLPreElement> &
+  ExtraProps) => {
   const [showMermaid, setShowMermaid] = useState(false);
 
   let language: BundledLanguage | string = 'javascript';
@@ -80,6 +90,57 @@ const PreComponent = ({ node, className, children }: any) => {
       {isMermaid && (
         <CodeBlockRenderButton onRender={() => setShowMermaid(true)} />
       )}
+    </CodeBlock>
+  );
+};
+
+const CodeComponent = ({
+  node,
+  className,
+  children,
+  ...props
+}: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
+  ExtraProps) => {
+  const inline = node?.position?.start.line === node?.position?.end.line;
+
+  if (inline) {
+    return (
+      <code
+        className={cn(
+          'rounded bg-muted px-1.5 py-0.5 font-mono text-sm',
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </code>
+    );
+  }
+
+  const match = className?.match(LANGUAGE_RE);
+  const language = (match?.at(1) ?? 'plaintext') as BundledLanguage;
+
+  // Extract code content from children safely
+  let code = '';
+  if (
+    isValidElement(children) &&
+    children.props &&
+    typeof children.props === 'object' &&
+    'children' in children.props &&
+    typeof children.props.children === 'string'
+  ) {
+    code = children.props.children;
+  } else if (typeof children === 'string') {
+    code = children;
+  }
+
+  return (
+    <CodeBlock
+      className={cn('my-4 h-auto rounded-lg border p-4', className)}
+      code={code}
+      language={language}
+    >
+      <CodeBlockCopyButton />
     </CodeBlock>
   );
 };
@@ -207,50 +268,7 @@ export const components: Options['components'] = {
       {children}
     </blockquote>
   ),
-  code: ({ node, className, children, ...props }) => {
-    const inline = node?.position?.start.line === node?.position?.end.line;
-
-    if (inline) {
-      return (
-        <code
-          className={cn(
-            'rounded bg-muted px-1.5 py-0.5 font-mono text-sm',
-            className
-          )}
-          {...props}
-        >
-          {children}
-        </code>
-      );
-    }
-
-    const match = className?.match(LANGUAGE_RE);
-    const language = (match ? match[1] : 'plaintext') as BundledLanguage;
-
-    // Extract code content from children safely
-    let code = '';
-    if (
-      isValidElement(children) &&
-      children.props &&
-      typeof children.props === 'object' &&
-      'children' in children.props &&
-      typeof children.props.children === 'string'
-    ) {
-      code = children.props.children;
-    } else if (typeof children === 'string') {
-      code = children;
-    }
-
-    return (
-      <CodeBlock
-        className={cn('my-4 h-auto rounded-lg border p-4', className)}
-        code={code}
-        language={language}
-      >
-        <CodeBlockCopyButton />
-      </CodeBlock>
-    );
-  },
+  code: CodeComponent,
   pre: PreComponent,
   sup: ({ node, children, className, ...props }) => (
     <sup className={cn('text-sm', className)} {...props}>
