@@ -95,10 +95,12 @@ export const CodeBlockCopyButton = ({
   timeout = 2000,
   children,
   className,
+  code: propCode,
   ...props
-}: CodeBlockCopyButtonProps) => {
+}: CodeBlockCopyButtonProps & { code?: string }) => {
   const [isCopied, setIsCopied] = useState(false);
-  const { code } = useContext(CodeBlockContext);
+  const contextCode = useContext(CodeBlockContext).code;
+  const code = propCode ?? contextCode;
 
   const copyToClipboard = async () => {
     if (typeof window === 'undefined' || !navigator?.clipboard?.writeText) {

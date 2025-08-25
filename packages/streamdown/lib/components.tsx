@@ -1,63 +1,15 @@
-import { CodeIcon } from 'lucide-react';
 import {
   type DetailedHTMLProps,
   type HTMLAttributes,
   isValidElement,
-  useState,
 } from 'react';
 import type { ExtraProps, Options } from 'react-markdown';
 import type { BundledLanguage } from 'shiki';
-import {
-  CodeBlock,
-  CodeBlockCopyButton,
-  CodeBlockRenderButton,
-} from './code-block';
+import { CodeBlock, CodeBlockCopyButton } from './code-block';
 import { Mermaid } from './mermaid';
 import { cn } from './utils';
 
 const LANGUAGE_RE = /language-([^\s]+)/;
-
-type MermaidCodeBlockProps = {
-  code: string;
-  className?: string;
-  language: BundledLanguage;
-};
-
-const MermaidCodeBlock = ({
-  code,
-  className,
-  language,
-}: MermaidCodeBlockProps) => {
-  const [showMermaid, setShowMermaid] = useState(false);
-
-  if (showMermaid) {
-    return (
-      <div className="relative">
-        <Mermaid chart={code} className={cn('my-4', className)} />
-        <button
-          className={cn(
-            'absolute top-2 right-2 shrink-0 rounded-md p-3 opacity-80 transition-all hover:bg-secondary hover:opacity-100'
-          )}
-          onClick={() => setShowMermaid(false)}
-          type="button"
-        >
-          <CodeIcon size={14} />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <CodeBlock
-      className={cn('my-4 h-auto rounded-lg border p-4', className)}
-      code={code}
-      language={language}
-    >
-      <CodeBlockCopyButton />
-      <CodeBlockRenderButton onRender={() => setShowMermaid(true)} />
-    </CodeBlock>
-  );
-};
 
 const CodeComponent = ({
   node,
@@ -109,11 +61,10 @@ const CodeComponent = ({
 
   if (isMermaid) {
     return (
-      <MermaidCodeBlock
-        className={cn('my-4 h-auto rounded-lg border p-4', className)}
-        code={code}
-        language={language}
-      />
+      <div className={cn('my-4 h-auto rounded-lg border p-4', className)}>
+        <Mermaid chart={code} />
+        <CodeBlockCopyButton code={code} />
+      </div>
     );
   }
 

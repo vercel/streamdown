@@ -33,34 +33,46 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [svgContent, setSvgContent] = useState<string>('');
+  const [lastValidSvg, setLastValidSvg] = useState<string>('');
 
   useEffect(() => {
     const renderChart = async () => {
       try {
         setError(null);
         setIsLoading(true);
-        setSvgContent('');
 
         // Initialize mermaid only once globally
         const mermaid = await initializeMermaid();
 
         // Render the chart with unique ID to prevent conflicts
-        const uniqueId = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const uniqueId = `mermaid-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
         const { svg } = await mermaid.render(uniqueId, chart);
+
+        // Update both current and last valid SVG
         setSvgContent(svg);
+        setLastValidSvg(svg);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to render Mermaid chart';
-        setError(errorMessage);
+        // Silently fail and keep the last valid SVG
+        setSvgContent(lastValidSvg);
+
+        // Only set error if we don't have a last valid SVG
+        if (!lastValidSvg) {
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : 'Failed to render Mermaid chart';
+          setError(errorMessage);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     renderChart();
-  }, [chart]);
+  }, [chart, lastValidSvg]);
 
-  if (isLoading) {
+  // Show loading only on initial load when we have no content
+  if (isLoading && !svgContent && !lastValidSvg) {
     return (
       <div className={cn('my-4 flex justify-center p-4', className)}>
         <div className="flex items-center space-x-2 text-muted-foreground">
@@ -71,7 +83,8 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
     );
   }
 
-  if (error) {
+  // Only show error if we have no valid SVG to display
+  if (error && !svgContent && !lastValidSvg) {
     return (
       <div
         className={cn(
@@ -92,11 +105,15 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
     );
   }
 
+  // Always render the SVG if we have content (either current or last valid)
+  const displaySvg = svgContent || lastValidSvg;
+
   return (
     <div
       aria-label="Mermaid chart"
       className={cn('my-4 flex justify-center', className)}
-      dangerouslySetInnerHTML={{ __html: svgContent }}
+      // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
+      dangerouslySetInnerHTML={{ __html: displaySvg }}
       role="img"
     />
   );
