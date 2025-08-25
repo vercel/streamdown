@@ -143,7 +143,3 @@ pnpm build
 
 - Node.js >= 18
 - React >= 19.1.1
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
