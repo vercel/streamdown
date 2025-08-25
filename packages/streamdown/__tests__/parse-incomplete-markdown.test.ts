@@ -626,6 +626,73 @@ describe('parseIncompleteMarkdown', () => {
     });
   });
 
+  describe('math blocks with underscores', () => {
+    it('should not complete underscores within inline math blocks', () => {
+      const text = 'The variable $x_1$ represents the first element';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+      
+      const text2 = 'Formula: $a_b + c_d = e_f$';
+      expect(parseIncompleteMarkdown(text2)).toBe(text2);
+    });
+
+    it('should not complete underscores within block math', () => {
+      const text = '$$x_1 + y_2 = z_3$$';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+      
+      const text2 = '$$\na_1 + b_2\nc_3 + d_4\n$$';
+      expect(parseIncompleteMarkdown(text2)).toBe(text2);
+    });
+
+    it('should not add underscore when math block has incomplete underscore', () => {
+      // Incomplete math blocks get completed by handleIncompleteInlineKatex
+      // The underscore inside should not be treated as italic
+      const text = 'Math expression $x_';
+      expect(parseIncompleteMarkdown(text)).toBe('Math expression $x_$');
+      
+      const text2 = '$$formula_';
+      expect(parseIncompleteMarkdown(text2)).toBe('$$formula_$$');
+    });
+
+    it('should handle underscores outside math blocks normally', () => {
+      const text = 'Text with _italic_ and math $x_1$';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+      
+      const text2 = '_italic text_ followed by $a_b$';
+      expect(parseIncompleteMarkdown(text2)).toBe(text2);
+    });
+
+    it('should complete italic underscore outside math but not inside', () => {
+      const text = 'Start _italic with $x_1$';
+      expect(parseIncompleteMarkdown(text)).toBe('Start _italic with $x_1$_');
+    });
+
+    it('should handle complex math expressions with multiple underscores', () => {
+      const text = '$x_1 + x_2 + x_3 = y_1$';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+      
+      const text2 = '$$\\sum_{i=1}^{n} x_i = \\prod_{j=1}^{m} y_j$$';
+      expect(parseIncompleteMarkdown(text2)).toBe(text2);
+    });
+
+    it('should handle escaped dollar signs correctly', () => {
+      const text = 'Price is \\$50 and _this is italic_';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+      
+      const text2 = 'Cost \\$100 with _incomplete';
+      expect(parseIncompleteMarkdown(text2)).toBe('Cost \\$100 with _incomplete_');
+    });
+
+    it('should handle mixed inline and block math', () => {
+      const text = 'Inline $x_1$ and block $$y_2$$ math';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should not interfere with complete math blocks when adding underscores outside', () => {
+      const text = '_italic start $x_1$ italic end_';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+  });
+
   describe('edge cases', () => {
     it('should handle text ending with formatting characters', () => {
       expect(parseIncompleteMarkdown('Text ending with *')).toBe(
