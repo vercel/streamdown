@@ -28,6 +28,9 @@ jobs:
       - name: Install Dependencies
         run: pnpm i
 
+      - name: Run Tests
+        run: pnpm test
+
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
