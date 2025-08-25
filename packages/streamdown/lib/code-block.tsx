@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckIcon, CopyIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon, BarChart3Icon } from 'lucide-react';
 import {
   type ComponentProps,
   createContext,
@@ -9,7 +9,8 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { type BundledLanguage, codeToHtml } from 'shiki';
+import { type BundledLanguage, type BundledTheme, codeToHtml } from 'shiki';
+import { ShikiThemeContext } from '../index';
 import { cn } from './utils';
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
@@ -25,10 +26,14 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   code: '',
 });
 
-export async function highlightCode(code: string, language: BundledLanguage) {
+export async function highlightCode(
+  code: string,
+  language: BundledLanguage,
+  theme: BundledTheme
+) {
   return await codeToHtml(code, {
     lang: language,
-    theme: 'github-light',
+    theme,
   });
 }
 
@@ -40,20 +45,28 @@ export const CodeBlock = ({
   ...props
 }: CodeBlockProps) => {
   const [html, setHtml] = useState<string>('');
+  const theme = useContext(ShikiThemeContext);
 
   useEffect(() => {
     let isMounted = true;
 
-    highlightCode(code, language).then((result) => {
-      if (isMounted) {
-        setHtml(result);
-      }
-    });
+    highlightCode(code, language, theme)
+      .then((result) => {
+        if (isMounted) {
+          setHtml(result);
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to highlight code:', error);
+        if (isMounted) {
+          setHtml(`<pre><code>${code}</code></pre>`);
+        }
+      });
 
     return () => {
       isMounted = false;
     };
-  }, [code, language]);
+  }, [code, language, theme]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
@@ -117,6 +130,37 @@ export const CodeBlockCopyButton = ({
       {...props}
     >
       {children ?? <Icon size={14} />}
+    </button>
+  );
+};
+
+export type CodeBlockRenderButtonProps = ComponentProps<'button'> & {
+  onRender?: (code: string) => void;
+};
+
+export const CodeBlockRenderButton = ({
+  onRender,
+  children,
+  className,
+  ...props
+}: CodeBlockRenderButtonProps) => {
+  const { code } = useContext(CodeBlockContext);
+
+  const handleRender = () => {
+    onRender?.(code);
+  };
+
+  return (
+    <button
+      className={cn(
+        'absolute top-2 right-12 shrink-0 rounded-md p-3 opacity-0 transition-all hover:bg-secondary group-hover:opacity-100',
+        className
+      )}
+      onClick={handleRender}
+      type="button"
+      {...props}
+    >
+      {children || <BarChart3Icon size={14} />}
     </button>
   );
 };

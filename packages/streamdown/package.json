@@ -1,6 +1,6 @@
 {
   "name": "streamdown",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -16,6 +16,12 @@
     "dist",
     "README.md"
   ],
+  "homepage": "https://streamdown.ai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vercel/streamdown.git",
+    "directory": "packages/streamdown"
+  },
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
@@ -39,14 +45,15 @@
     "vitest": "^3.2.4"
   },
   "peerDependencies": {
-    "react": "^19.1.1"
+    "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
     "clsx": "^2.1.1",
     "harden-react-markdown": "^1.0.4",
     "katex": "^0.16.22",
-    "lucide-react": "^0.539.0",
+    "lucide-react": "^0.541.0",
     "marked": "^16.1.2",
+    "mermaid": "^11.0.0",
     "react-markdown": "^10.1.0",
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",

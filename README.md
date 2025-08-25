@@ -110,6 +110,7 @@ Streamdown accepts all the same props as react-markdown, plus additional streami
 | `rehypePlugins` | `array` | `[rehypeKatex]` | Rehype plugins to use |
 | `allowedImagePrefixes` | `array` | `['*']` | Allowed image URL prefixes |
 | `allowedLinkPrefixes` | `array` | `['*']` | Allowed link URL prefixes |
+| `shikiTheme` | `BundledTheme` (from Shiki) | `github-light` | The theme to use for code blocks |
 
 ## Architecture
 
@@ -123,6 +124,9 @@ Streamdown is built as a monorepo with:
 ```bash
 # Install dependencies
 pnpm install
+
+# Build the streamdown package
+pnpm --filter streamdown build
 
 # Run development server
 pnpm dev
