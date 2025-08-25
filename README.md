@@ -125,6 +125,9 @@ Streamdown is built as a monorepo with:
 # Install dependencies
 pnpm install
 
+# Build the streamdown package
+pnpm --filter streamdown build
+
 # Run development server
 pnpm dev
 
