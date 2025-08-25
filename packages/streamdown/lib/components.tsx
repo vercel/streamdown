@@ -1,8 +1,71 @@
-import { isValidElement } from 'react';
+import { isValidElement, useState } from 'react';
 import type { Options } from 'react-markdown';
 import type { BundledLanguage } from 'shiki';
-import { CodeBlock, CodeBlockCopyButton } from './code-block';
+import { CodeIcon } from 'lucide-react';
+import { CodeBlock, CodeBlockCopyButton, CodeBlockRenderButton } from './code-block';
+import { Mermaid } from './mermaid';
 import { cn } from './utils';
+
+const PreComponent = ({ node, className, children }: any) => {
+  const [showMermaid, setShowMermaid] = useState(false);
+
+  let language: BundledLanguage | string = 'javascript';
+  let code = '';
+
+  // Extract language and code from either node or children
+  if (typeof node?.properties?.className === 'string') {
+    language = node.properties.className.replace('language-', '');
+  }
+  
+  // Extract code content from children safely
+  if (
+    isValidElement(children) &&
+    children.props &&
+    typeof children.props === 'object' &&
+    'children' in children.props &&
+    typeof children.props.children === 'string'
+  ) {
+    code = children.props.children;
+    
+    // If language not found in node, check children props
+    if (language === 'javascript' && 'className' in children.props && typeof children.props.className === 'string') {
+      language = children.props.className.replace('language-', '');
+    }
+  } else if (typeof children === 'string') {
+    code = children;
+  }
+
+  const isMermaid = language === 'mermaid' || code.includes('graph') || code.includes('flowchart') || 
+    code.includes('sequenceDiagram') || code.includes('classDiagram') || code.includes('gantt');
+
+  if (showMermaid && isMermaid) {
+    return (
+      <div className="relative">
+        <Mermaid chart={code} className={cn('my-4', className)} />
+        <button
+          className={cn(
+            'absolute top-2 right-2 shrink-0 rounded-md p-3 opacity-80 transition-all hover:bg-secondary hover:opacity-100'
+          )}
+          onClick={() => setShowMermaid(false)}
+          type="button"
+        >
+          <CodeIcon size={14} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <CodeBlock
+      className={cn('my-4 h-auto rounded-lg border p-4', className)}
+      code={code}
+      language={language as BundledLanguage}
+    >
+      <CodeBlockCopyButton />
+      {isMermaid && <CodeBlockRenderButton onRender={() => setShowMermaid(true)} />}
+    </CodeBlock>
+  );
+};
 
 export const components: Options['components'] = {
   ol: ({ node, children, className, ...props }) => (
@@ -144,40 +207,7 @@ export const components: Options['components'] = {
       />
     );
   },
-  pre: ({ node, className, children }) => {
-    let language: BundledLanguage = 'javascript';
-
-    if (typeof node?.properties?.className === 'string') {
-      language = node.properties.className.replace(
-        'language-',
-        ''
-      ) as BundledLanguage;
-    }
-
-    // Extract code content from children safely
-    let code = '';
-    if (
-      isValidElement(children) &&
-      children.props &&
-      typeof children.props === 'object' &&
-      'children' in children.props &&
-      typeof children.props.children === 'string'
-    ) {
-      code = children.props.children;
-    } else if (typeof children === 'string') {
-      code = children;
-    }
-
-    return (
-      <CodeBlock
-        className={cn('my-4 h-auto rounded-lg border p-4', className)}
-        code={code}
-        language={language}
-      >
-        <CodeBlockCopyButton />
-      </CodeBlock>
-    );
-  },
+  pre: PreComponent,
   sup: ({ node, children, className, ...props }) => (
     <sup className={cn('text-sm', className)} {...props}>
       {children}
