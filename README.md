@@ -17,6 +17,7 @@ Streamdown powers the [AI Elements Response](https://ai-sdk.dev/elements/compone
 - 🎨 **Unterminated block parsing** - Styles incomplete bold, italic, code, links, and headings
 - 📊 **GitHub Flavored Markdown** - Tables, task lists, and strikethrough support
 - 🔢 **Math rendering** - LaTeX equations via KaTeX
+- 📊 **Mermaid diagrams** - Render Mermaid diagrams as code blocks with a button to render them
 - 🎯 **Code syntax highlighting** - Beautiful code blocks with Shiki
 - 🛡️ **Security-first** - Built on harden-react-markdown for safe rendering
 - ⚡ **Performance optimized** - Memoized rendering for efficient updates
