@@ -55,6 +55,8 @@ const Block = memo(
   (prevProps, nextProps) => prevProps.content === nextProps.content
 );
 
+Block.displayName = 'Block';
+
 export const Streamdown = memo(
   ({
     children,
