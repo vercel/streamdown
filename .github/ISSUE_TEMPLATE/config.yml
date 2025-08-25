@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://streamdown.ai
+    about: Check out the documentation for usage examples and API reference
+  - name: GitHub Discussions
+    url: https://github.com/vercel/streamdown/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: Security Vulnerability
+    url: https://github.com/vercel/streamdown/security/advisories/new
+    about: Please report security vulnerabilities privately

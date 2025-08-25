@@ -1,0 +1,118 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in Streamdown
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this bug! Please fill out the information below to help us understand and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Import Streamdown with '...'
+        2. Pass markdown content '...'
+        3. Render component with '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: Describe what should happen...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: Describe what actually happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: code-sample
+    attributes:
+      label: Code Sample
+      description: If applicable, add a minimal code sample to help reproduce the issue
+      render: tsx
+      placeholder: |
+        import { Streamdown } from 'streamdown';
+        
+        // Your code here...
+
+  - type: input
+    id: version
+    attributes:
+      label: Streamdown Version
+      description: What version of Streamdown are you using?
+      placeholder: e.g., 1.1.1
+    validations:
+      required: true
+
+  - type: input
+    id: react-version
+    attributes:
+      label: React Version
+      description: What version of React are you using?
+      placeholder: e.g., 18.2.0 or 19.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version
+      description: What version of Node.js are you using?
+      placeholder: e.g., 20.10.0
+
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: Browser(s)
+      description: What browsers are you seeing the problem on?
+      multiple: true
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Other
+        - Not applicable (Node.js)
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - macOS
+        - Windows
+        - Linux
+        - iOS
+        - Android
+        - Other
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here (e.g., screenshots, error messages, console logs)
+      placeholder: Any additional information...
