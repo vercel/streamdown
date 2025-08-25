@@ -14,6 +14,7 @@ const initializeMermaid = async () => {
       theme: 'default',
       securityLevel: 'strict',
       fontFamily: 'monospace',
+      suppressErrorRendering: true,
     });
 
     mermaidInitialized = true;
@@ -35,6 +36,7 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
   const [svgContent, setSvgContent] = useState<string>('');
   const [lastValidSvg, setLastValidSvg] = useState<string>('');
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"
   useEffect(() => {
     const renderChart = async () => {
       try {
@@ -46,10 +48,11 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
 
         // Use a stable ID based on chart content hash to prevent re-renders
         const chartHash = chart.split('').reduce((acc, char) => {
+          // biome-ignore lint/suspicious/noBitwiseOperators: "Required for Mermaid"
           return ((acc << 5) - acc + char.charCodeAt(0)) | 0;
         }, 0);
         const uniqueId = `mermaid-${Math.abs(chartHash)}`;
-        
+
         const { svg } = await mermaid.render(uniqueId, chart);
 
         // Update both current and last valid SVG
@@ -58,9 +61,9 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
       } catch (err) {
         // Silently fail and keep the last valid SVG
         // Don't update svgContent here - just keep what we have
-        
+
         // Only set error if we don't have any valid SVG
-        if (!lastValidSvg && !svgContent) {
+        if (!(lastValidSvg || svgContent)) {
           const errorMessage =
             err instanceof Error
               ? err.message
