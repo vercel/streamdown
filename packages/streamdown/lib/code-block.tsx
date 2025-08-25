@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckIcon, CopyIcon, BarChart3Icon } from 'lucide-react';
+import { CheckIcon, CopyIcon, RouteIcon } from 'lucide-react';
 import {
   type ComponentProps,
   createContext,
@@ -160,7 +160,7 @@ export const CodeBlockRenderButton = ({
       type="button"
       {...props}
     >
-      {children || <BarChart3Icon size={14} />}
+      {children || <RouteIcon size={14} />}
     </button>
   );
 };

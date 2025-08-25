@@ -17,53 +17,20 @@ import { cn } from './utils';
 
 const LANGUAGE_RE = /language-([^\s]+)/;
 
-const PreComponent = ({
-  node,
+type MermaidCodeBlockProps = {
+  code: string;
+  className?: string;
+  language: BundledLanguage;
+};
+
+const MermaidCodeBlock = ({
+  code,
   className,
-  children,
-}: DetailedHTMLProps<HTMLAttributes<HTMLPreElement>, HTMLPreElement> &
-  ExtraProps) => {
+  language,
+}: MermaidCodeBlockProps) => {
   const [showMermaid, setShowMermaid] = useState(false);
 
-  let language: BundledLanguage | string = 'javascript';
-  let code = '';
-
-  // Extract language and code from either node or children
-  if (typeof node?.properties?.className === 'string') {
-    language = node.properties.className.replace('language-', '');
-  }
-
-  // Extract code content from children safely
-  if (
-    isValidElement(children) &&
-    children.props &&
-    typeof children.props === 'object' &&
-    'children' in children.props &&
-    typeof children.props.children === 'string'
-  ) {
-    code = children.props.children;
-
-    // If language not found in node, check children props
-    if (
-      language === 'javascript' &&
-      'className' in children.props &&
-      typeof children.props.className === 'string'
-    ) {
-      language = children.props.className.replace('language-', '');
-    }
-  } else if (typeof children === 'string') {
-    code = children;
-  }
-
-  const isMermaid =
-    language === 'mermaid' ||
-    code.includes('graph') ||
-    code.includes('flowchart') ||
-    code.includes('sequenceDiagram') ||
-    code.includes('classDiagram') ||
-    code.includes('gantt');
-
-  if (showMermaid && isMermaid) {
+  if (showMermaid) {
     return (
       <div className="relative">
         <Mermaid chart={code} className={cn('my-4', className)} />
@@ -84,12 +51,10 @@ const PreComponent = ({
     <CodeBlock
       className={cn('my-4 h-auto rounded-lg border p-4', className)}
       code={code}
-      language={language as BundledLanguage}
+      language={language}
     >
       <CodeBlockCopyButton />
-      {isMermaid && (
-        <CodeBlockRenderButton onRender={() => setShowMermaid(true)} />
-      )}
+      <CodeBlockRenderButton onRender={() => setShowMermaid(true)} />
     </CodeBlock>
   );
 };
@@ -132,6 +97,24 @@ const CodeComponent = ({
     code = children.props.children;
   } else if (typeof children === 'string') {
     code = children;
+  }
+
+  const isMermaid =
+    language === 'mermaid' ||
+    code.includes('graph') ||
+    code.includes('flowchart') ||
+    code.includes('sequenceDiagram') ||
+    code.includes('classDiagram') ||
+    code.includes('gantt');
+
+  if (isMermaid) {
+    return (
+      <MermaidCodeBlock
+        className={cn('my-4 h-auto rounded-lg border p-4', className)}
+        code={code}
+        language={language}
+      />
+    );
   }
 
   return (
@@ -269,7 +252,7 @@ export const components: Options['components'] = {
     </blockquote>
   ),
   code: CodeComponent,
-  pre: PreComponent,
+  pre: ({ children }) => children,
   sup: ({ node, children, className, ...props }) => (
     <sup className={cn('text-sm', className)} {...props}>
       {children}
