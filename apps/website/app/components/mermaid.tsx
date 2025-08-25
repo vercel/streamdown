@@ -1,9 +1,7 @@
 import { Section } from './section';
 
 export const MermaidDemo = () => {
-  const mermaidExample = `# Mermaid Diagram Support
-
-Interactive diagram rendering with manual control. Click the chart icon next to any Mermaid code block to render it!
+  const mermaidExample = `Interactive diagram rendering with manual control. Click the chart icon next to any Mermaid code block to render it!
 
 ## Simple Flowchart
 
@@ -45,16 +43,15 @@ sequenceDiagram
 
   return (
     <Section
-      title="Interactive Mermaid Diagrams"
       description={
         <>
-          Streamdown now supports Mermaid diagrams with manual rendering.
-          <br />
-          Look for the chart icon button next to Mermaid code blocks to render them on demand.
+          Streamdown supports Mermaid diagrams, streaming as code blocks with a
+          button to render them.
         </>
       }
       markdown={mermaidExample}
       speed={60}
+      title="Interactive Mermaid Diagrams"
     />
   );
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckIcon, CopyIcon, BarChart3Icon } from 'lucide-react';
+import { CheckIcon, CopyIcon, RouteIcon } from 'lucide-react';
 import {
   type ComponentProps,
   createContext,
@@ -95,10 +95,12 @@ export const CodeBlockCopyButton = ({
   timeout = 2000,
   children,
   className,
+  code: propCode,
   ...props
-}: CodeBlockCopyButtonProps) => {
+}: CodeBlockCopyButtonProps & { code?: string }) => {
   const [isCopied, setIsCopied] = useState(false);
-  const { code } = useContext(CodeBlockContext);
+  const contextCode = useContext(CodeBlockContext).code;
+  const code = propCode ?? contextCode;
 
   const copyToClipboard = async () => {
     if (typeof window === 'undefined' || !navigator?.clipboard?.writeText) {
@@ -160,7 +162,7 @@ export const CodeBlockRenderButton = ({
       type="button"
       {...props}
     >
-      {children || <BarChart3Icon size={14} />}
+      {children || <RouteIcon size={14} />}
     </button>
   );
 };
