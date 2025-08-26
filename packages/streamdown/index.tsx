@@ -30,6 +30,7 @@ const HardenedMarkdown: ReturnType<typeof hardenReactMarkdown> =
 
 export type StreamdownProps = HardenReactMarkdownProps & {
   parseIncompleteMarkdown?: boolean;
+  rehypeKatexErrorColor?: string;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
 };
@@ -72,6 +73,7 @@ export const Streamdown = memo(
     rehypePlugins,
     remarkPlugins,
     className,
+    rehypeKatexErrorColor,
     shikiTheme = ['github-light', 'github-dark'],
     ...props
   }: StreamdownProps) => {
@@ -98,7 +100,7 @@ export const Streamdown = memo(
               defaultOrigin={defaultOrigin}
               // biome-ignore lint/suspicious/noArrayIndexKey: "required"
               key={`${generatedId}-block_${index}`}
-              rehypePlugins={[rehypeKatex, ...(rehypePlugins ?? [])]}
+              rehypePlugins={[rehypeKatexErrorColor ? () => rehypeKatex({errorColor: rehypeKatexErrorColor}) : rehypeKatex, ...(rehypePlugins ?? [])]}
               remarkPlugins={[remarkGfm, remarkMath, ...(remarkPlugins ?? [])]}
               shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
             />
