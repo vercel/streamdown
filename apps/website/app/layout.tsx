@@ -2,8 +2,8 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Analytics } from '@vercel/analytics/next';
 import type { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
 import { Providers } from '@/components/providers';
+import { cn } from '@/lib/utils';
 
 const geistSans = Geist({
   variable: '--font-sans',
