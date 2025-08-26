@@ -7,15 +7,35 @@ on:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
 
+      - name: Generate GitHub App Token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.STREAMDOWN_APP_ID }}
+          private-key: ${{ secrets.STREAMDOWN_APP_PRIVATE_KEY }}
+
       - name: Checkout Repo
         uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Setup Git User
+        run: |
+          git config --global user.email "streamdown-bot[bot]@users.noreply.github.com"
+          git config --global user.name "streamdown-bot[bot]"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -24,6 +44,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
         run: pnpm i
@@ -40,6 +61,9 @@ jobs:
         with:
           version: pnpm changeset version
           publish: pnpm changeset publish
+          createGithubReleases: true
+          setupGitUser: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
