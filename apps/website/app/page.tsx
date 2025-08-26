@@ -8,6 +8,7 @@ import { Header } from './components/header';
 import { Hero } from './components/hero';
 import { Implementation } from './components/implementation';
 import { Mathematics } from './components/mathematics';
+import { Memoization } from './components/memoization';
 import { MermaidDemo } from './components/mermaid';
 import { Props } from './components/props';
 import { Styles } from './components/styles';
@@ -31,6 +32,7 @@ const Home = () => (
     <MermaidDemo />
     <TerminatorParser />
     <HardenedMarkdown />
+    <Memoization />
     <Props />
     <CallToAction />
     <Footer />
