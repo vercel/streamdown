@@ -7,6 +7,7 @@ import {
   type HTMLAttributes,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { type BundledLanguage, type BundledTheme, codeToHtml } from 'shiki';
@@ -26,15 +27,17 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   code: '',
 });
 
-export async function highlightCode(
-  code: string,
-  language: BundledLanguage,
-  theme: BundledTheme
-) {
-  return await codeToHtml(code, {
-    lang: language,
-    theme,
-  });
+export async function highlightCode(code: string, language: BundledLanguage) {
+  return Promise.all([
+    await codeToHtml(code, {
+      lang: language,
+      theme: 'github-light',
+    }),
+    await codeToHtml(code, {
+      lang: language,
+      theme: 'github-dark',
+    }),
+  ]);
 }
 
 export const CodeBlock = ({
@@ -45,36 +48,42 @@ export const CodeBlock = ({
   ...props
 }: CodeBlockProps) => {
   const [html, setHtml] = useState<string>('');
-  const theme = useContext(ShikiThemeContext);
+  const [darkHtml, setDarkHtml] = useState<string>('');
+  const mounted = useRef(false);
 
   useEffect(() => {
-    let isMounted = true;
-
-    highlightCode(code, language, theme)
-      .then((result) => {
-        if (isMounted) {
-          setHtml(result);
-        }
-      })
-      .catch((error) => {
-        console.error('Failed to highlight code:', error);
-        if (isMounted) {
-          setHtml(`<pre><code>${code}</code></pre>`);
-        }
-      });
+    highlightCode(code, language).then(([light, dark]) => {
+      if (!mounted.current) {
+        setHtml(light);
+        setDarkHtml(dark);
+        mounted.current = true;
+      }
+    });
 
     return () => {
-      isMounted = false;
+      mounted.current = false;
     };
-  }, [code, language, theme]);
+  }, [code, language]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
       <div className="group relative">
         <div
-          className={cn('overflow-x-auto', className)}
+          className={cn(
+            'overflow-x-auto dark:hidden [&>pre]:bg-transparent!',
+            className
+          )}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
           dangerouslySetInnerHTML={{ __html: html }}
+          {...props}
+        />
+        <div
+          className={cn(
+            'hidden overflow-x-auto dark:block [&>pre]:bg-transparent!',
+            className
+          )}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+          dangerouslySetInnerHTML={{ __html: darkHtml }}
           {...props}
         />
         {children}
