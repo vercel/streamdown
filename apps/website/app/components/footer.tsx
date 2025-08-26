@@ -3,7 +3,7 @@ import { ModeToggle } from '@/components/mode-toggle';
 export const Footer = () => (
   <footer className="px-4 py-8">
     <div className="flex items-center justify-between">
-      <div className="flex-1 text-center text-muted-foreground text-sm">
+      <div className="text-muted-foreground text-sm">
         <p>
           Made with 🖤 and 🤖 by{' '}
           <a
