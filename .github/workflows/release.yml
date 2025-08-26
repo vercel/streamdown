@@ -24,7 +24,7 @@ jobs:
         id: generate-token
         uses: actions/create-github-app-token@v1
         with:
-          app-id: ${{ vars.STREAMDOWN_APP_ID }}
+          app-id: ${{ secrets.STREAMDOWN_APP_ID }}
           private-key: ${{ secrets.STREAMDOWN_APP_PRIVATE_KEY }}
 
       - name: Checkout Repo
