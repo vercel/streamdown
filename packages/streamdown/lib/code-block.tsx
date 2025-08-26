@@ -27,15 +27,19 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   code: '',
 });
 
-export async function highlightCode(code: string, language: BundledLanguage) {
+export async function highlightCode(
+  code: string,
+  language: BundledLanguage,
+  themes: [BundledTheme, BundledTheme]
+) {
   return Promise.all([
     await codeToHtml(code, {
       lang: language,
-      theme: 'github-light',
+      theme: themes[0],
     }),
     await codeToHtml(code, {
       lang: language,
-      theme: 'github-dark',
+      theme: themes[1],
     }),
   ]);
 }
@@ -50,20 +54,23 @@ export const CodeBlock = ({
   const [html, setHtml] = useState<string>('');
   const [darkHtml, setDarkHtml] = useState<string>('');
   const mounted = useRef(false);
+  const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
   useEffect(() => {
-    highlightCode(code, language).then(([light, dark]) => {
-      if (!mounted.current) {
-        setHtml(light);
-        setDarkHtml(dark);
-        mounted.current = true;
+    highlightCode(code, language, [lightTheme, darkTheme]).then(
+      ([light, dark]) => {
+        if (!mounted.current) {
+          setHtml(light);
+          setDarkHtml(dark);
+          mounted.current = true;
+        }
       }
-    });
+    );
 
     return () => {
       mounted.current = false;
     };
-  }, [code, language]);
+  }, [code, language, lightTheme, darkTheme]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
