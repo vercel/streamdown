@@ -30,7 +30,6 @@ const HardenedMarkdown: ReturnType<typeof hardenReactMarkdown> =
 
 export type StreamdownProps = HardenReactMarkdownProps & {
   parseIncompleteMarkdown?: boolean;
-  rehypeKatexErrorColor?: string;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
 };
