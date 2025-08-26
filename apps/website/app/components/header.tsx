@@ -14,9 +14,9 @@ const Vercel = (props: SVGProps<SVGSVGElement>) => (
 );
 
 export const Header = () => (
-  <div className="sticky top-0 z-10 flex items-center justify-between bg-secondary p-4 backdrop-blur-sm">
+  <div className="sticky top-0 z-10 flex items-center justify-between bg-secondary p-4 backdrop-blur-sm dark:bg-background">
     <div className="mx-auto flex items-center gap-1 sm:mx-0">
-      <a href="https://vercel.com" className="flex items-center gap-1">
+      <a className="flex items-center gap-1" href="https://vercel.com">
         <Vercel className="h-4 w-auto" />
         <span className="font-semibold sm:text-lg">Vercel</span>
       </a>

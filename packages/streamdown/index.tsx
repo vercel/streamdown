@@ -11,7 +11,6 @@ import hardenReactMarkdownImport from 'harden-react-markdown';
 import { components as defaultComponents } from './lib/components';
 import { parseMarkdownIntoBlocks } from './lib/parse-blocks';
 import { parseIncompleteMarkdown } from './lib/parse-incomplete-markdown';
-import { Mermaid } from './lib/mermaid';
 import { cn } from './lib/utils';
 
 type HardenReactMarkdownProps = Options & {
@@ -22,6 +21,7 @@ type HardenReactMarkdownProps = Options & {
 
 // Handle both ESM and CJS imports
 const hardenReactMarkdown =
+  // biome-ignore lint/suspicious/noExplicitAny: "this is needed."
   (hardenReactMarkdownImport as any).default || hardenReactMarkdownImport;
 
 // Create a hardened version of ReactMarkdown
@@ -31,10 +31,13 @@ const HardenedMarkdown: ReturnType<typeof hardenReactMarkdown> =
 export type StreamdownProps = HardenReactMarkdownProps & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
-  shikiTheme?: BundledTheme;
+  shikiTheme?: [BundledTheme, BundledTheme];
 };
 
-export const ShikiThemeContext = createContext<BundledTheme>('github-light');
+export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
+  'github-light' as BundledTheme,
+  'github-dark' as BundledTheme,
+]);
 
 type BlockProps = HardenReactMarkdownProps & {
   content: string;
@@ -69,7 +72,7 @@ export const Streamdown = memo(
     rehypePlugins,
     remarkPlugins,
     className,
-    shikiTheme = 'github-light',
+    shikiTheme = ['github-light', 'github-dark'],
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
@@ -109,7 +112,3 @@ export const Streamdown = memo(
     prevProps.shikiTheme === nextProps.shikiTheme
 );
 Streamdown.displayName = 'Streamdown';
-
-export { Mermaid };
-export { CodeBlock, CodeBlockCopyButton, CodeBlockRenderButton } from './lib/code-block';
-export default Streamdown;

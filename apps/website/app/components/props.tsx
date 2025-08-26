@@ -58,9 +58,10 @@ const props = [
   },
   {
     name: 'shikiTheme',
-    type: 'BundledTheme (from Shiki)',
-    default: 'github-light',
-    description: 'The theme to use for code blocks.',
+    type: '[BundledTheme, BundledTheme] (from Shiki)',
+    default: '["github-light", "github-dark"]',
+    description:
+      'The themes to use for code blocks. Defaults to ["github-light", "github-dark"].',
   },
 ];
 

@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Analytics } from '@vercel/analytics/next';
 import type { ReactNode } from 'react';
+import { Providers } from '@/components/providers';
 import { cn } from '@/lib/utils';
 
 const geistSans = Geist({
@@ -23,7 +24,7 @@ type RootLayoutProps = {
 };
 
 const RootLayout = ({ children }: RootLayoutProps) => (
-  <html lang="en">
+  <html lang="en" suppressHydrationWarning>
     <body
       className={cn(
         geistSans.variable,
@@ -31,8 +32,10 @@ const RootLayout = ({ children }: RootLayoutProps) => (
         'overflow-x-hidden font-sans antialiased sm:px-4'
       )}
     >
-      {children}
-      <Analytics />
+      <Providers>
+        {children}
+        <Analytics />
+      </Providers>
     </body>
   </html>
 );

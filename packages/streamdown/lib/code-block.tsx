@@ -7,6 +7,7 @@ import {
   type HTMLAttributes,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 import { type BundledLanguage, type BundledTheme, codeToHtml } from 'shiki';
@@ -29,12 +30,18 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
 export async function highlightCode(
   code: string,
   language: BundledLanguage,
-  theme: BundledTheme
+  themes: [BundledTheme, BundledTheme]
 ) {
-  return await codeToHtml(code, {
-    lang: language,
-    theme,
-  });
+  return Promise.all([
+    await codeToHtml(code, {
+      lang: language,
+      theme: themes[0],
+    }),
+    await codeToHtml(code, {
+      lang: language,
+      theme: themes[1],
+    }),
+  ]);
 }
 
 export const CodeBlock = ({
@@ -45,36 +52,45 @@ export const CodeBlock = ({
   ...props
 }: CodeBlockProps) => {
   const [html, setHtml] = useState<string>('');
-  const theme = useContext(ShikiThemeContext);
+  const [darkHtml, setDarkHtml] = useState<string>('');
+  const mounted = useRef(false);
+  const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
   useEffect(() => {
-    let isMounted = true;
-
-    highlightCode(code, language, theme)
-      .then((result) => {
-        if (isMounted) {
-          setHtml(result);
+    highlightCode(code, language, [lightTheme, darkTheme]).then(
+      ([light, dark]) => {
+        if (!mounted.current) {
+          setHtml(light);
+          setDarkHtml(dark);
+          mounted.current = true;
         }
-      })
-      .catch((error) => {
-        console.error('Failed to highlight code:', error);
-        if (isMounted) {
-          setHtml(`<pre><code>${code}</code></pre>`);
-        }
-      });
+      }
+    );
 
     return () => {
-      isMounted = false;
+      mounted.current = false;
     };
-  }, [code, language, theme]);
+  }, [code, language, lightTheme, darkTheme]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
       <div className="group relative">
         <div
-          className={cn('overflow-x-auto', className)}
+          className={cn(
+            'overflow-x-auto dark:hidden [&>pre]:bg-transparent!',
+            className
+          )}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
           dangerouslySetInnerHTML={{ __html: html }}
+          {...props}
+        />
+        <div
+          className={cn(
+            'hidden overflow-x-auto dark:block [&>pre]:bg-transparent!',
+            className
+          )}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+          dangerouslySetInnerHTML={{ __html: darkHtml }}
           {...props}
         />
         {children}
