@@ -92,10 +92,13 @@ export default function Page() {
 `;
 
 const cssCode = `/*
- * Update your Tailwind globals.css
- * to include the following code.
- * This will ensure that the Streamdown
- * styles are applied to your project.
+ * Update your Tailwind globals.css to include the 
+ * following code. This will ensure that the
+ * Streamdown styles are applied to your project.
+ * 
+ * Make sure the path matches the location of the
+ * node_modules folder in your project i.e.
+ * @source "<path-to-node_modules>/node_modules/streamdown/dist/index.js";
  */
 
 @source "../node_modules/streamdown/dist/index.js";`;

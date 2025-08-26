@@ -28,13 +28,13 @@ Streamdown powers the [AI Elements Response](https://ai-sdk.dev/elements/compone
 npm i streamdown
 ```
 
-Then, update your Tailwind `globals.css` to include the following:
+Then, update your Tailwind `globals.css` to include the following.
 
 ```css
 @source "../node_modules/streamdown/dist/index.js";
 ```
 
-This will ensure that the Streamdown styles are applied to your project.
+Make sure the path matches the location of the `node_modules` folder in your project. This will ensure that the Streamdown styles are applied to your project.
 
 ## Usage
 
