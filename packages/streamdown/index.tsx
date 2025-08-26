@@ -82,6 +82,10 @@ export const Streamdown = memo(
         parseMarkdownIntoBlocks(typeof children === 'string' ? children : ''),
       [children]
     );
+    const rehypeKatexPlugin = useMemo(
+      () => () => rehypeKatex({ errorColor: 'var(--color-muted-foreground)' }),
+      []
+    );
 
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
@@ -98,7 +102,7 @@ export const Streamdown = memo(
               defaultOrigin={defaultOrigin}
               // biome-ignore lint/suspicious/noArrayIndexKey: "required"
               key={`${generatedId}-block_${index}`}
-              rehypePlugins={[rehypeKatex, ...(rehypePlugins ?? [])]}
+              rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
               remarkPlugins={[remarkGfm, remarkMath, ...(remarkPlugins ?? [])]}
               shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
             />
