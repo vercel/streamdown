@@ -73,7 +73,6 @@ export const Streamdown = memo(
     rehypePlugins,
     remarkPlugins,
     className,
-    rehypeKatexErrorColor,
     shikiTheme = ['github-light', 'github-dark'],
     ...props
   }: StreamdownProps) => {
@@ -83,6 +82,10 @@ export const Streamdown = memo(
       () =>
         parseMarkdownIntoBlocks(typeof children === 'string' ? children : ''),
       [children]
+    );
+    const rehypeKatexPlugin = useMemo(
+      () => () => rehypeKatex({ errorColor: 'var(--color-muted-foreground)' }),
+      []
     );
 
     return (
@@ -100,7 +103,7 @@ export const Streamdown = memo(
               defaultOrigin={defaultOrigin}
               // biome-ignore lint/suspicious/noArrayIndexKey: "required"
               key={`${generatedId}-block_${index}`}
-              rehypePlugins={[rehypeKatexErrorColor ? () => rehypeKatex({errorColor: rehypeKatexErrorColor}) : rehypeKatex, ...(rehypePlugins ?? [])]}
+              rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
               remarkPlugins={[remarkGfm, remarkMath, ...(remarkPlugins ?? [])]}
               shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
             />
