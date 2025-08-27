@@ -1,5 +1,15 @@
 # streamdown
 
+## 1.1.4
+
+### Patch Changes
+
+- 5fbad80: fix asterisk list termination
+- 13898aa: Add data-streamdown attributes to components
+- 390bbc7: temporary fix for error color in rehype katex
+- 5f4ed3d: chore: remove package-lock.json
+- 9b5b56d: enable release-based web deploys
+
 ## 1.1.2
 
 ### Patch Changes
