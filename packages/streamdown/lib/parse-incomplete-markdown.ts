@@ -49,7 +49,7 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   return text;
 };
 
-// Counts single asterisks that are not part of double asterisks and not escaped
+// Counts single asterisks that are not part of double asterisks, not escaped, and not list markers
 const countSingleAsterisks = (text: string): number => {
   return text.split('').reduce((acc, char, index) => {
     if (char === '*') {
@@ -57,6 +57,25 @@ const countSingleAsterisks = (text: string): number => {
       const nextChar = text[index + 1];
       // Skip if escaped with backslash
       if (prevChar === '\\') {
+        return acc;
+      }
+      // Check if this is a list marker (asterisk at start of line followed by space)
+      // Look backwards to find the start of the current line
+      let lineStartIndex = index;
+      for (let i = index - 1; i >= 0; i--) {
+        if (text[i] === '\n') {
+          lineStartIndex = i + 1;
+          break;
+        }
+        if (i === 0) {
+          lineStartIndex = 0;
+          break;
+        }
+      }
+      // Check if this asterisk is at the beginning of a line (with optional whitespace)
+      const beforeAsterisk = text.substring(lineStartIndex, index);
+      if (beforeAsterisk.trim() === '' && (nextChar === ' ' || nextChar === '\t')) {
+        // This is likely a list marker, don't count it
         return acc;
       }
       if (prevChar !== '*' && nextChar !== '*') {
