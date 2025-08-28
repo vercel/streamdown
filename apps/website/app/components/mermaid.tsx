@@ -1,7 +1,7 @@
 import { Section } from './section';
 
 export const MermaidDemo = () => {
-  const mermaidExample = `Interactive diagram rendering with manual control. Click the chart icon next to any Mermaid code block to render it!
+  const mermaidExample = `Interactive diagram rendering with manual control. Click the copy icon next to any Mermaid diagram to copy the code to your clipboard.
 
 ## Simple Flowchart
 
