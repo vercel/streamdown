@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { CodeBlocks } from './components/code-blocks';
 import { CallToAction } from './components/cta';
+import { FAQ } from './components/faq';
 import { Footer } from './components/footer';
 import { GitHubFlavoredMarkdown } from './components/gfm';
 import { HardenedMarkdown } from './components/hardened';
@@ -33,6 +34,7 @@ const Home = () => (
     <HardenedMarkdown />
     <Props />
     <CallToAction />
+    <FAQ />
     <Footer />
   </div>
 );
