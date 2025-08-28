@@ -86,20 +86,27 @@ export const Streamdown = memo(
       () => () => rehypeKatex({ errorColor: 'var(--color-muted-foreground)' }),
       []
     );
+    const origin = useMemo(() => {
+      if (typeof window === 'undefined') {
+        return;
+      }
+
+      return window.location.origin;
+    }, []);
 
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
         <div className={cn('space-y-4', className)} {...props}>
           {blocks.map((block, index) => (
             <Block
-              allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
+              allowedImagePrefixes={allowedImagePrefixes ?? ['self']}
               allowedLinkPrefixes={allowedLinkPrefixes ?? ['*']}
               components={{
                 ...defaultComponents,
                 ...components,
               }}
               content={block}
-              defaultOrigin={defaultOrigin}
+              defaultOrigin={defaultOrigin ?? origin}
               // biome-ignore lint/suspicious/noArrayIndexKey: "required"
               key={`${generatedId}-block_${index}`}
               rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
