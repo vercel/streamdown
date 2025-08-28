@@ -149,6 +149,8 @@ Streamdown accepts all the same props as react-markdown, plus additional streami
 | `rehypePlugins` | `array` | `[rehypeKatex]` | Rehype plugins to use |
 | `allowedImagePrefixes` | `array` | `['*']` | Allowed image URL prefixes |
 | `allowedLinkPrefixes` | `array` | `['*']` | Allowed link URL prefixes |
+| `defaultOrigin` | `string` | - | Default origin to use for relative URLs in links and images |
+| `shikiTheme` | `BundledTheme` (from Shiki) | `github-light` | The theme to use for code blocks |
 
 ## Architecture
 
