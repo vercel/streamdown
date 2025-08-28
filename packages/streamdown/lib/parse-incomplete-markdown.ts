@@ -6,7 +6,7 @@ const singleAsteriskPattern = /(\*)([^*]*?)$/;
 const singleUnderscorePattern = /(_)([^_]*?)$/;
 const inlineCodePattern = /(`)([^`]*?)$/;
 const strikethroughPattern = /(~~)([^~]*?)$/;
-const inlineKatexPattern = /(\$)([^$]*?)$/;
+// Removed inlineKatexPattern - no longer processing single dollar signs
 const blockKatexPattern = /(\$\$)([^$]*?)$/;
 
 // Helper function to check if we have a complete code block
@@ -300,21 +300,11 @@ const handleIncompleteBlockKatex = (text: string): string => {
 };
 
 // Completes incomplete inline KaTeX formatting ($)
+// Note: Since we've disabled single dollar math delimiters in remarkMath,
+// we should not auto-complete single dollar signs as they're likely currency symbols
 const handleIncompleteInlineKatex = (text: string): string => {
-  // Don't process if inside a complete code block
-  if (hasCompleteCodeBlock(text)) {
-    return text;
-  }
-  
-  const inlineKatexMatch = text.match(inlineKatexPattern);
-
-  if (inlineKatexMatch) {
-    const singleDollars = countSingleDollarSigns(text);
-    if (singleDollars % 2 === 1) {
-      return `${text}$`;
-    }
-  }
-
+  // Don't process single dollar signs - they're likely currency symbols, not math
+  // Only process block math ($$) which is handled separately
   return text;
 };
 
@@ -381,9 +371,9 @@ export const parseIncompleteMarkdown = (text: string): string => {
   result = handleIncompleteInlineCode(result);
   result = handleIncompleteStrikethrough(result);
   
-  // Handle KaTeX formatting (block first, then inline)
+  // Handle KaTeX formatting (only block math with $$)
   result = handleIncompleteBlockKatex(result);
-  result = handleIncompleteInlineKatex(result);
+  // Note: We don't handle inline KaTeX with single $ as they're likely currency symbols
 
   return result;
 };
