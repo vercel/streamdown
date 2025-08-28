@@ -1,5 +1,11 @@
 # streamdown
 
+## 1.1.7
+
+### Patch Changes
+
+- 6751cbb: fix katex post-processing
+
 ## 1.1.6
 
 ### Patch Changes
