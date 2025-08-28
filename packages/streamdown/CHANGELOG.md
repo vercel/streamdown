@@ -1,5 +1,12 @@
 # streamdown
 
+## 1.1.5
+
+### Patch Changes
+
+- 593e49e: fix multiple renders of the same mermaid diagram
+- bf8c798: update props in readme
+
 ## 1.1.4
 
 ### Patch Changes
