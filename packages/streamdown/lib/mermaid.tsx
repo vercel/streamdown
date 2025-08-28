@@ -46,12 +46,12 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
         // Initialize mermaid only once globally
         const mermaid = await initializeMermaid();
 
-        // Use a stable ID based on chart content hash to prevent re-renders
+        // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
         const chartHash = chart.split('').reduce((acc, char) => {
           // biome-ignore lint/suspicious/noBitwiseOperators: "Required for Mermaid"
           return ((acc << 5) - acc + char.charCodeAt(0)) | 0;
         }, 0);
-        const uniqueId = `mermaid-${Math.abs(chartHash)}`;
+        const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
         const { svg } = await mermaid.render(uniqueId, chart);
 
