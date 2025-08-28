@@ -1,5 +1,12 @@
 # streamdown
 
+## 1.1.6
+
+### Patch Changes
+
+- e01669b: add test app, fix code block incomplete parsing
+- 69fb1e0: fix single dollar sign text rendering as math
+
 ## 1.1.5
 
 ### Patch Changes
