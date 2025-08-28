@@ -9,6 +9,12 @@ const strikethroughPattern = /(~~)([^~]*?)$/;
 const inlineKatexPattern = /(\$)([^$]*?)$/;
 const blockKatexPattern = /(\$\$)([^$]*?)$/;
 
+// Helper function to check if we have a complete code block
+const hasCompleteCodeBlock = (text: string): boolean => {
+  const tripleBackticks = (text.match(/```/g) || []).length;
+  return tripleBackticks > 0 && tripleBackticks % 2 === 0 && text.includes('\n');
+};
+
 // Handles incomplete links and images by removing them if not closed
 const handleIncompleteLinksAndImages = (text: string): string => {
   const linkMatch = text.match(linkImagePattern);
@@ -23,6 +29,11 @@ const handleIncompleteLinksAndImages = (text: string): string => {
 
 // Completes incomplete bold formatting (**)
 const handleIncompleteBold = (text: string): string => {
+  // Don't process if inside a complete code block
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+  
   const boldMatch = text.match(boldPattern);
 
   if (boldMatch) {
@@ -88,6 +99,11 @@ const countSingleAsterisks = (text: string): number => {
 
 // Completes incomplete italic formatting with single asterisks (*)
 const handleIncompleteSingleAsteriskItalic = (text: string): string => {
+  // Don't process if inside a complete code block
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+  
   const singleAsteriskMatch = text.match(singleAsteriskPattern);
 
   if (singleAsteriskMatch) {
@@ -153,6 +169,11 @@ const countSingleUnderscores = (text: string): number => {
 
 // Completes incomplete italic formatting with single underscores (_)
 const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
+  // Don't process if inside a complete code block
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+  
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
 
   if (singleUnderscoreMatch) {
@@ -205,6 +226,12 @@ const handleIncompleteInlineCode = (text: string): string => {
   const allTripleBackticks = (text.match(/```/g) || []).length;
   const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
   
+  // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
+  if (allTripleBackticks > 0 && allTripleBackticks % 2 === 0 && text.includes('\n')) {
+    // We have complete multi-line code blocks, don't add any backticks
+    return text;
+  }
+  
   // Special case: if text ends with ```\n (triple backticks followed by newline)
   // This is actually a complete code block, not incomplete
   if (text.endsWith('```\n') || text.endsWith('```')) {
@@ -212,12 +239,6 @@ const handleIncompleteInlineCode = (text: string): string => {
     if (allTripleBackticks % 2 === 0) {
       return text;
     }
-  }
-  
-  // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
-  if (allTripleBackticks > 0 && allTripleBackticks % 2 === 0 && text.includes('\n')) {
-    // We have complete multi-line code blocks, don't add any backticks
-    return text;
   }
 
   const inlineCodeMatch = text.match(inlineCodePattern);
@@ -280,6 +301,11 @@ const handleIncompleteBlockKatex = (text: string): string => {
 
 // Completes incomplete inline KaTeX formatting ($)
 const handleIncompleteInlineKatex = (text: string): string => {
+  // Don't process if inside a complete code block
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+  
   const inlineKatexMatch = text.match(inlineKatexPattern);
 
   if (inlineKatexMatch) {
@@ -311,6 +337,11 @@ const countTripleAsterisks = (text: string): number => {
 
 // Completes incomplete bold-italic formatting (***)
 const handleIncompleteBoldItalic = (text: string): string => {
+  // Don't process if inside a complete code block
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+  
   // Don't process if text is only asterisks and has 4 or more consecutive asterisks
   // This prevents cases like **** from being treated as incomplete ***
   if (/^\*{4,}$/.test(text)) {

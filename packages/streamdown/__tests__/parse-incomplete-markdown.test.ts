@@ -407,6 +407,18 @@ describe('parseIncompleteMarkdown', () => {
       expect(parseIncompleteMarkdown(text)).toBe(text);
     });
 
+    it('should not add extra characters to complete simple code block', () => {
+      // Bug report: This was being rendered with extra characters at the end
+      const text = '```\nSimple code block\nwith multiple lines\nand some special characters: !@#$%^&*()\n```';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it('should not add extra characters to complete Python code block with underscores and asterisks', () => {
+      // Bug report: This was being rendered with **_ appended
+      const text = '```python\ndef hello_world():\n    """A simple function"""\n    name = "World"\n    print(f"Hello, {name}!")\n    \n    # List comprehension\n    numbers = [x**2 for x in range(10) if x % 2 == 0]\n    return numbers\n\nclass TestClass:\n    def __init__(self, value):\n        self.value = value\n```';
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
     it('should not add backticks when code block ends properly', () => {
       // This is the exact case from Grok
       const grokOutput = '```python def greet(name): return f"Hello, {name}!"\n```';
