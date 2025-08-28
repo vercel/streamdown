@@ -318,14 +318,16 @@ describe('parseIncompleteMarkdown', () => {
   });
 
   describe('KaTeX inline formatting ($)', () => {
-    it('should complete incomplete inline KaTeX', () => {
+    it('should NOT complete single dollar signs (likely currency)', () => {
+      // Single dollar signs are likely currency, not math
       expect(parseIncompleteMarkdown('Text with $formula')).toBe(
-        'Text with $formula$'
+        'Text with $formula'
       );
-      expect(parseIncompleteMarkdown('$incomplete')).toBe('$incomplete$');
+      expect(parseIncompleteMarkdown('$incomplete')).toBe('$incomplete');
     });
 
-    it('should keep complete inline KaTeX unchanged', () => {
+    it('should keep text with paired dollar signs unchanged', () => {
+      // Even paired dollar signs are preserved but not treated as math
       const text = 'Text with $x^2 + y^2 = z^2$';
       expect(parseIncompleteMarkdown(text)).toBe(text);
     });
@@ -335,20 +337,23 @@ describe('parseIncompleteMarkdown', () => {
       expect(parseIncompleteMarkdown(text)).toBe(text);
     });
 
-    it('should complete odd number of inline KaTeX markers', () => {
+    it('should NOT complete odd number of dollar signs', () => {
+      // We don't auto-complete dollar signs anymore
       expect(parseIncompleteMarkdown('$first$ and $second')).toBe(
-        '$first$ and $second$'
+        '$first$ and $second'
       );
     });
 
-    it('should not confuse single $ with block $$', () => {
+    it('should not complete single $ but should complete block $$', () => {
+      // Block math $$ is completed, single $ is not
       expect(parseIncompleteMarkdown('$$block$$ and $inline')).toBe(
-        '$$block$$ and $inline$'
+        '$$block$$ and $inline'
       );
     });
 
-    it('should handle inline KaTeX at start of text', () => {
-      expect(parseIncompleteMarkdown('$x + y = z')).toBe('$x + y = z$');
+    it('should NOT complete dollar sign at start of text', () => {
+      // Single dollar sign is likely currency
+      expect(parseIncompleteMarkdown('$x + y = z')).toBe('$x + y = z');
     });
 
     it('should handle escaped dollar signs', () => {
@@ -542,10 +547,10 @@ describe('parseIncompleteMarkdown', () => {
       );
     });
 
-    it('should handle KaTeX inside other formatting', () => {
-      // Bold gets closed first, then KaTeX
+    it('should handle dollar sign inside other formatting', () => {
+      // Bold gets closed, dollar sign stays as-is (likely currency)
       expect(parseIncompleteMarkdown('**bold with $x^2')).toBe(
-        '**bold with $x^2**$'
+        '**bold with $x^2**'
       );
     });
 
@@ -610,11 +615,12 @@ describe('parseIncompleteMarkdown', () => {
         'The formula $E = mc^2$ shows',
       ];
 
+      // Single dollar signs are not auto-completed (likely currency)
       expect(parseIncompleteMarkdown(chunks[0])).toBe(chunks[0]);
-      expect(parseIncompleteMarkdown(chunks[1])).toBe('The formula $E$');
-      expect(parseIncompleteMarkdown(chunks[2])).toBe('The formula $E = mc$');
+      expect(parseIncompleteMarkdown(chunks[1])).toBe('The formula $E');
+      expect(parseIncompleteMarkdown(chunks[2])).toBe('The formula $E = mc');
       expect(parseIncompleteMarkdown(chunks[3])).toBe(
-        'The formula $E = mc^2$'
+        'The formula $E = mc^2'
       );
       expect(parseIncompleteMarkdown(chunks[4])).toBe(chunks[4]);
     });
@@ -656,10 +662,10 @@ describe('parseIncompleteMarkdown', () => {
     });
 
     it('should not add underscore when math block has incomplete underscore', () => {
-      // Incomplete math blocks get completed by handleIncompleteInlineKatex
-      // The underscore inside should not be treated as italic
+      // We no longer auto-complete single dollar signs
+      // The underscore inside is not treated as italic since it's likely part of a variable name
       const text = 'Math expression $x_';
-      expect(parseIncompleteMarkdown(text)).toBe('Math expression $x_$');
+      expect(parseIncompleteMarkdown(text)).toBe('Math expression $x_');
       
       const text2 = '$$formula_';
       expect(parseIncompleteMarkdown(text2)).toBe('$$formula_$$');
@@ -791,7 +797,7 @@ describe('parseIncompleteMarkdown', () => {
       expect(parseIncompleteMarkdown('text**')).toBe('text****');
       expect(parseIncompleteMarkdown('text*')).toBe('text**');
       expect(parseIncompleteMarkdown('text`')).toBe('text``');
-      expect(parseIncompleteMarkdown('text$')).toBe('text$$');
+      expect(parseIncompleteMarkdown('text$')).toBe('text$'); // Single dollar not completed
       expect(parseIncompleteMarkdown('text~~')).toBe('text~~~~');
     });
 

@@ -2,9 +2,9 @@ import { Section } from './section';
 
 const markdown = `## Inline Math
 
-The quadratic formula is $x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$ for solving $ax^2 + bx + c = 0$.
+The quadratic formula is $$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$ for solving $$ax^2 + bx + c = 0$$.
 
-Euler's identity: $e^{i\\pi} + 1 = 0$ combines five fundamental mathematical constants.
+Euler's identity: $$e^{i\\pi} + 1 = 0$$ combines five fundamental mathematical constants.
 
 ## Block Math
 
@@ -16,9 +16,9 @@ $$
 
 ## Summations and Integrals
 
-The sum of the first $n$ natural numbers: $\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$
+The sum of the first $$n$$ natural numbers: $$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
 
-Integration by parts: $\\int u \\, dv = uv - \\int v \\, du$
+Integration by parts: $$\\int u \\, dv = uv - \\int v \\, du$$
 `;
 
 export const Mathematics = () => (
