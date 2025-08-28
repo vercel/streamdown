@@ -312,7 +312,7 @@ describe('parseIncompleteMarkdown', () => {
 
     it('should handle multiline block KaTeX', () => {
       expect(parseIncompleteMarkdown('$$\nx = 1\ny = 2')).toBe(
-        '$$\nx = 1\ny = 2$$'
+        '$$\nx = 1\ny = 2\n$$'
       );
     });
   });
