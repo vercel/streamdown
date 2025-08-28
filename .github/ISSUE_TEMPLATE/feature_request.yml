@@ -1,6 +1,6 @@
 name: Feature Request
 description: Suggest a new feature or enhancement for Streamdown
-title: ""
+title: "I have an idea for a feature..."
 labels: ["enhancement", "needs-triage"]
 body:
   - type: markdown
