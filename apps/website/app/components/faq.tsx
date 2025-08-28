@@ -77,6 +77,46 @@ const faqs = [
     ),
   },
   {
+    id: 'vite-ssr-error',
+    question: 'Why do I get a CSS loading error when using Streamdown with Vite SSR?',
+    answer: (
+      <div>
+        <p>
+          When using Streamdown with Vite and server-side rendering, you might
+          encounter a{' '}
+          <code className="rounded-md bg-foreground/5 px-2 py-1 font-mono text-sm tracking-tight">
+            TypeError [ERR_UNKNOWN_FILE_EXTENSION]
+          </code>{' '}
+          error for CSS files (like{' '}
+          <code className="rounded-md bg-foreground/5 px-2 py-1 font-mono text-sm tracking-tight">
+            katex.min.css
+          </code>
+          ). To fix this, add Streamdown to your{' '}
+          <code className="rounded-md bg-foreground/5 px-2 py-1 font-mono text-sm tracking-tight">
+            vite.config.ts
+          </code>
+          :
+        </p>
+        <div className="my-2">
+          <CodeBlock
+            className="my-4 rounded-md border p-4"
+            code={`export default {
+  // ... other config
+  ssr: {
+    noExternal: ['streamdown'],
+  },
+}`}
+            language="tsx"
+          />
+        </div>
+        <p>
+          This prevents Vite from treating Streamdown as an external module during
+          SSR, ensuring CSS files are properly processed.
+        </p>
+      </div>
+    ),
+  },
+  {
     id: 'tailwind-config',
     question: 'How do I configure Tailwind CSS to work with Streamdown?',
     answer: (
