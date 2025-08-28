@@ -103,7 +103,11 @@ export const Streamdown = memo(
               // biome-ignore lint/suspicious/noArrayIndexKey: "required"
               key={`${generatedId}-block_${index}`}
               rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
-              remarkPlugins={[remarkGfm, remarkMath, ...(remarkPlugins ?? [])]}
+              remarkPlugins={[
+                remarkGfm,
+                [remarkMath, { singleDollarTextMath: false }],
+                ...(remarkPlugins ?? []),
+              ]}
               shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
             />
           ))}
