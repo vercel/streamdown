@@ -76,6 +76,63 @@ const faqs = [
       </div>
     ),
   },
+  {
+    id: 'tailwind-config',
+    question: 'How do I configure Tailwind CSS to work with Streamdown?',
+    answer: (
+      <>
+        <div>
+          <p>
+            For <span className="font-medium">Tailwind v4</span>, add a{' '}
+            <code className="rounded-md bg-foreground/5 px-2 py-1 font-mono text-sm tracking-tight">
+              @source
+            </code>{' '}
+            directive to your{' '}
+            <code className="rounded-md bg-foreground/5 px-2 py-1 font-mono text-sm tracking-tight">
+              globals.css
+            </code>{' '}
+            file with the path to Streamdown's distribution files:
+          </p>
+          <div className="my-2">
+            <CodeBlock
+              className="my-4 rounded-md border p-4"
+              code={`@source "../node_modules/streamdown/dist/index.js";`}
+              language="css"
+            />
+          </div>
+        </div>
+        <div>
+          <p>
+            For <span className="font-medium">Tailwind v3</span>, add Streamdown
+            to your{' '}
+            <code className="rounded-md bg-foreground/5 px-2 py-1 font-mono text-sm tracking-tight">
+              content
+            </code>{' '}
+            array in{' '}
+            <code className="rounded-md bg-foreground/5 px-2 py-1 font-mono text-sm tracking-tight">
+              tailwind.config.js
+            </code>
+            :
+          </p>
+          <div className="my-2">
+            <CodeBlock
+              className="my-4 rounded-md border p-4"
+              code={`content: [
+  // ... your other content paths
+  "./node_modules/streamdown/dist/**/*.js",
+]`}
+              language="js"
+            />
+          </div>
+        </div>
+        <p>
+          Adjust the paths based on your project structure. This ensures
+          Tailwind scans Streamdown's files for any utility classes used in the
+          component.
+        </p>
+      </>
+    ),
+  },
 ];
 
 export const FAQ = () => (
