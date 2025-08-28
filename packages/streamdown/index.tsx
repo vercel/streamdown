@@ -92,7 +92,7 @@ export const Streamdown = memo(
         <div className={cn('space-y-4', className)} {...props}>
           {blocks.map((block, index) => (
             <Block
-              allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
+              allowedImagePrefixes={allowedImagePrefixes ?? ['self']}
               allowedLinkPrefixes={allowedLinkPrefixes ?? ['*']}
               components={{
                 ...defaultComponents,
