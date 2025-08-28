@@ -14,20 +14,58 @@ export default function Page() {
   const [input, setInput] = useState('');
 
   return (
-    <div className="mx-auto flex h-screen max-w-xl flex-col divide-y divide-neutral-200 border-neutral-200 border-x">
-      <div className="flex-1 space-y-4 overflow-y-auto p-4">
-        {messages.map((message) => (
-          <div key={message.id}>
-            <span className="font-bold">
-              {message.role === 'user' ? 'User: ' : 'AI: '}
-            </span>
-            {message.parts.map((part, index) =>
-              part.type === 'text' ? (
-                <Streamdown key={index}>{part.text}</Streamdown>
-              ) : null
-            )}
-          </div>
-        ))}
+    <div className="mx-auto flex h-screen max-w-4xl flex-col divide-y border-x">
+      <div className="flex flex-1 divide-x overflow-hidden">
+        <div className="flex-1 space-y-4 overflow-y-auto bg-black p-4 text-white">
+          {messages.map((message) => (
+            <div key={message.id}>
+              <span className="font-bold">
+                {message.role === 'user' ? 'User: ' : 'AI: '}
+              </span>
+              {message.parts.map((part, index) => {
+                switch (part.type) {
+                  case 'text':
+                    return (
+                      <pre className="whitespace-pre-wrap" key={index}>
+                        {part.text}
+                      </pre>
+                    );
+                  case 'reasoning':
+                    return (
+                      <pre className="italic" key={index}>
+                        {part.text}
+                      </pre>
+                    );
+                  default:
+                    return null;
+                }
+              })}
+            </div>
+          ))}
+        </div>
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+          {messages.map((message) => (
+            <div key={message.id}>
+              <span className="font-bold">
+                {message.role === 'user' ? 'User: ' : 'AI: '}
+              </span>
+              {message.parts.map((part, index) => {
+                switch (part.type) {
+                  case 'text':
+                    return <Streamdown key={index}>{part.text}</Streamdown>;
+                  case 'reasoning':
+                    return (
+                      <p className="italic" key={part.text}>
+                        {part.text}
+                      </p>
+                    );
+                  default:
+                    return null;
+                }
+              })}
+            </div>
+          ))}
+        </div>
       </div>
       <form
         className="flex shrink-0 items-center gap-2 p-4"
