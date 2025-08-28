@@ -31,6 +31,9 @@ export const Styles = () => (
   <Section
     description="Streamdown comes with built-in Tailwind classes for common Markdown components — headings, lists, code blocks, and more."
     markdown={markdown}
+    streamdownProps={{
+      allowedImagePrefixes: ['https://placehold.co'],
+    }}
     title="Built-in typography styles"
   />
 );
