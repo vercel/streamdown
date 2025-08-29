@@ -74,12 +74,13 @@ export const CodeBlock = ({
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
   useEffect(() => {
+    mounted.current = true;
+
     highlightCode(code, language, [lightTheme, darkTheme], preClassName).then(
       ([light, dark]) => {
-        if (!mounted.current) {
+        if (mounted.current) {
           setHtml(light);
           setDarkHtml(dark);
-          mounted.current = true;
         }
       }
     );
