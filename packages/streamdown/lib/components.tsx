@@ -9,7 +9,7 @@ import { CodeBlock, CodeBlockCopyButton } from './code-block';
 import { Mermaid } from './mermaid';
 import { cn } from './utils';
 
-const LANGUAGE_RE = /language-([^\s]+)/;
+const LANGUAGE_REGEX = /language-([^\s]+)/;
 
 const CodeComponent = ({
   node,
@@ -35,8 +35,8 @@ const CodeComponent = ({
     );
   }
 
-  const match = className?.match(LANGUAGE_RE);
-  const language = (match?.at(1) ?? 'plaintext') as BundledLanguage;
+  const match = className?.match(LANGUAGE_REGEX);
+  const language = (match?.at(1) ?? '') as BundledLanguage;
 
   // Extract code content from children safely
   let code = '';
@@ -56,24 +56,27 @@ const CodeComponent = ({
     return (
       <div
         className={cn(
-          'group relative my-4 h-auto rounded-lg border p-4',
+          'group relative my-4 h-auto rounded-xl border p-4',
           className
         )}
         data-streamdown="mermaid-block"
       >
+        <div className="flex items-center justify-end">
+          <CodeBlockCopyButton code={code} />
+        </div>
         <Mermaid chart={code} />
-        <CodeBlockCopyButton code={code} />
       </div>
     );
   }
 
   return (
     <CodeBlock
-      className={cn('my-4 h-auto rounded-lg border p-4', className)}
+      className={cn('overflow-x-auto border-t', className)}
       code={code}
       data-language={language}
       data-streamdown="code-block"
       language={language}
+      preClassName="overflow-x-auto font-mono text-xs p-4 bg-muted/40"
     >
       <CodeBlockCopyButton />
     </CodeBlock>

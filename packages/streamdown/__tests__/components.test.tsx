@@ -183,14 +183,17 @@ describe('Markdown Components', () => {
           code
         </Code>
       );
-      // Block code renders a CodeBlock component, not a plain code element
-      const codeBlock = container.querySelector('[class*="my-4"]');
+
+      // Block code renders a CodeBlock component with copy button
+      const codeBlock = container.querySelector(
+        '[data-streamdown="code-block"]'
+      );
       expect(codeBlock).toBeTruthy();
-      expect(codeBlock?.className).toContain('my-4');
-      expect(codeBlock?.className).toContain('h-auto');
-      expect(codeBlock?.className).toContain('rounded-lg');
-      expect(codeBlock?.className).toContain('border');
-      expect(codeBlock?.className).toContain('p-4');
+      expect(codeBlock?.getAttribute('data-language')).toBe('');
+
+      // Should contain copy button
+      const copyButton = container.querySelector('button');
+      expect(copyButton).toBeTruthy();
     });
 
     it('should render pre with code block', () => {
@@ -199,7 +202,7 @@ describe('Markdown Components', () => {
         children: 'const x = 1;',
       });
       const { container } = render(<Pre node={null as any}>{codeElement}</Pre>);
-      // The pre component now just returns its children
+      // The pre component returns its children
       // The code element should be present as a child
       const code = container.querySelector('code');
       expect(code).toBeTruthy();
@@ -211,6 +214,7 @@ describe('Markdown Components', () => {
       // Test the code component directly since it handles language extraction
       const { container } = render(
         <Code
+          className="language-javascript"
           node={
             {
               position: {
@@ -219,14 +223,16 @@ describe('Markdown Components', () => {
               },
             } as any
           }
-          className="language-javascript"
         >
           const x = 1;
         </Code>
       );
-      // Code component with multi-line position renders a CodeBlock
-      const codeBlock = container.querySelector('[class*="my-4"]');
+      // Code component with multi-line position renders a CodeBlock with language
+      const codeBlock = container.querySelector(
+        '[data-streamdown="code-block"]'
+      );
       expect(codeBlock).toBeTruthy();
+      expect(codeBlock?.getAttribute('data-language')).toBe('javascript');
     });
 
     it('should extract code from children in pre component', () => {
@@ -234,8 +240,38 @@ describe('Markdown Components', () => {
       const { container } = render(
         <Pre node={null as any}>plain text code</Pre>
       );
-      // The pre component now just returns its children directly
+      // The pre component returns its children directly
       expect(container.textContent).toBe('plain text code');
+    });
+    it('should render mermaid block with Mermaid and copy button', async () => {
+      const { waitFor } = await import('@testing-library/react');
+      const Code = components.code!;
+      const { container } = render(
+        <Code
+          className="language-mermaid"
+          node={
+            {
+              position: {
+                start: { line: 1, column: 1 },
+                end: { line: 2, column: 10 },
+              },
+            } as any
+          }
+        >
+          {'graph TD; A-->B;'}
+        </Code>
+      );
+      const mermaidBlock = container.querySelector(
+        '[data-streamdown="mermaid-block"]'
+      );
+      expect(mermaidBlock).toBeTruthy();
+      // Wait for Mermaid chart to finish loading
+      await waitFor(() => {
+        expect(mermaidBlock?.textContent).not.toContain('Loading diagram...');
+      });
+      // Copy button should be present
+      const copyButton = mermaidBlock?.querySelector('button');
+      expect(copyButton).toBeTruthy();
     });
   });
 
