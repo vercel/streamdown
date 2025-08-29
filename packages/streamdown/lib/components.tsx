@@ -61,8 +61,10 @@ const CodeComponent = ({
         )}
         data-streamdown="mermaid-block"
       >
+        <div className="flex items-center justify-end">
+          <CodeBlockCopyButton code={code} />
+        </div>
         <Mermaid chart={code} />
-        <CodeBlockCopyButton code={code} />
       </div>
     );
   }
