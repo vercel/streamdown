@@ -1,5 +1,13 @@
 # streamdown
 
+## 1.1.7
+
+### Patch Changes
+
+- e7f0402: Redesign CodeBlock for improved UX
+- 6e0f722: use javascript regex engine for shiki
+- 6751cbb: fix katex post-processing
+
 ## 1.1.6
 
 ### Patch Changes
