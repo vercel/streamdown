@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckIcon, CopyIcon, RouteIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon } from 'lucide-react';
 import {
   type ComponentProps,
   createContext,
@@ -14,9 +14,12 @@ import { type BundledLanguage, type BundledTheme, codeToHtml } from 'shiki';
 import { ShikiThemeContext } from '../index';
 import { cn } from './utils';
 
+const PRE_TAG_REGEX = /<pre(\s|>)/;
+
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: BundledLanguage;
+  preClassName?: string;
 };
 
 type CodeBlockContextType = {
@@ -30,18 +33,31 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
 export async function highlightCode(
   code: string,
   language: BundledLanguage,
-  themes: [BundledTheme, BundledTheme]
+  themes: [BundledTheme, BundledTheme],
+  preClassName?: string
 ) {
-  return Promise.all([
-    await codeToHtml(code, {
-      lang: language,
-      theme: themes[0],
-    }),
-    await codeToHtml(code, {
-      lang: language,
-      theme: themes[1],
-    }),
+  const addPreClass = (html: string) => {
+    if (!preClassName) {
+      return html;
+    }
+    return html.replace(PRE_TAG_REGEX, `<pre class="${preClassName}"$1`);
+  };
+  const [light, dark] = await Promise.all([
+    codeToHtml(code, { lang: language, theme: themes[0] }),
+    codeToHtml(code, { lang: language, theme: themes[1] }),
   ]);
+  return [
+    removePreBackground(addPreClass(light)),
+    removePreBackground(addPreClass(dark)),
+  ];
+}
+
+// Remove background styles from <pre> tags (inline style)
+function removePreBackground(html: string) {
+  return html.replace(
+    /(<pre[^>]*)(style="[^"]*background[^";]*;?[^"]*")([^>]*>)/g,
+    '$1$3'
+  );
 }
 
 export const CodeBlock = ({
@@ -49,7 +65,8 @@ export const CodeBlock = ({
   language,
   className,
   children,
-  ...props
+  preClassName,
+  ...rest
 }: CodeBlockProps) => {
   const [html, setHtml] = useState<string>('');
   const [darkHtml, setDarkHtml] = useState<string>('');
@@ -57,12 +74,13 @@ export const CodeBlock = ({
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
   useEffect(() => {
-    highlightCode(code, language, [lightTheme, darkTheme]).then(
+    mounted.current = true;
+
+    highlightCode(code, language, [lightTheme, darkTheme], preClassName).then(
       ([light, dark]) => {
-        if (!mounted.current) {
+        if (mounted.current) {
           setHtml(light);
           setDarkHtml(dark);
-          mounted.current = true;
         }
       }
     );
@@ -70,30 +88,31 @@ export const CodeBlock = ({
     return () => {
       mounted.current = false;
     };
-  }, [code, language, lightTheme, darkTheme]);
+  }, [code, language, lightTheme, darkTheme, preClassName]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
-      <div className="group relative">
-        <div
-          className={cn(
-            'overflow-x-auto dark:hidden [&>pre]:bg-transparent!',
-            className
-          )}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-          dangerouslySetInnerHTML={{ __html: html }}
-          {...props}
-        />
-        <div
-          className={cn(
-            'hidden overflow-x-auto dark:block [&>pre]:bg-transparent!',
-            className
-          )}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-          dangerouslySetInnerHTML={{ __html: darkHtml }}
-          {...props}
-        />
-        {children}
+      <div className="my-4 w-full overflow-hidden rounded-xl border">
+        <div className="flex items-center justify-between bg-muted/80 p-3 text-muted-foreground text-xs">
+          <span className="ml-1 font-mono lowercase">{language}</span>
+          <div>{children}</div>
+        </div>
+        <div className="w-full">
+          <div className="min-w-full">
+            <div
+              className={cn('overflow-x-auto dark:hidden', className)}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+              dangerouslySetInnerHTML={{ __html: html }}
+              {...rest}
+            />
+            <div
+              className={cn('hidden overflow-x-auto dark:block', className)}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+              dangerouslySetInnerHTML={{ __html: darkHtml }}
+              {...rest}
+            />
+          </div>
+        </div>
       </div>
     </CodeBlockContext.Provider>
   );
@@ -138,47 +157,12 @@ export const CodeBlockCopyButton = ({
 
   return (
     <button
-      className={cn(
-        'absolute top-2 right-2 shrink-0 rounded-md p-3 opacity-0 transition-all',
-        'hover:bg-secondary group-hover:opacity-100',
-        className
-      )}
+      className={cn('text-muted-foreground', 'p-1 transition-all', className)}
       onClick={copyToClipboard}
       type="button"
       {...props}
     >
       {children ?? <Icon size={14} />}
-    </button>
-  );
-};
-
-export type CodeBlockRenderButtonProps = ComponentProps<'button'> & {
-  onRender?: (code: string) => void;
-};
-
-export const CodeBlockRenderButton = ({
-  onRender,
-  children,
-  className,
-  ...props
-}: CodeBlockRenderButtonProps) => {
-  const { code } = useContext(CodeBlockContext);
-
-  const handleRender = () => {
-    onRender?.(code);
-  };
-
-  return (
-    <button
-      className={cn(
-        'absolute top-2 right-12 shrink-0 rounded-md p-3 opacity-0 transition-all hover:bg-secondary group-hover:opacity-100',
-        className
-      )}
-      onClick={handleRender}
-      type="button"
-      {...props}
-    >
-      {children || <RouteIcon size={14} />}
     </button>
   );
 };
