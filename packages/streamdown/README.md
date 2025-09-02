@@ -17,8 +17,8 @@ Streamdown powers the [AI Elements Response](https://ai-sdk.dev/elements/compone
 - 🎨 **Unterminated block parsing** - Styles incomplete bold, italic, code, links, and headings
 - 📊 **GitHub Flavored Markdown** - Tables, task lists, and strikethrough support
 - 🔢 **Math rendering** - LaTeX equations via KaTeX
+- 📈 **Mermaid diagrams** - Render Mermaid diagrams as code blocks with a button to render them
 - 🎯 **Code syntax highlighting** - Beautiful code blocks with Shiki
-- 📈 **Mermaid diagrams** - Render flowcharts, sequence diagrams, and more
 - 🛡️ **Security-first** - Built on harden-react-markdown for safe rendering
 - ⚡ **Performance optimized** - Memoized rendering for efficient updates
 
@@ -28,7 +28,7 @@ Streamdown powers the [AI Elements Response](https://ai-sdk.dev/elements/compone
 npm i streamdown
 ```
 
-Then, update your Tailwind `globals.css` to include the following:
+Then, update your Tailwind `globals.css` to include the following.
 
 ```css
 @source "../node_modules/streamdown/dist/index.js";
@@ -45,7 +45,7 @@ import { Streamdown } from 'streamdown';
 
 export default function Page() {
   const markdown = "# Hello World\n\nThis is **streaming** markdown!";
-  
+
   return <Streamdown>{markdown}</Streamdown>;
 }
 ```
@@ -76,14 +76,14 @@ sequenceDiagram
     participant User
     participant API
     participant Database
-    
+
     User->>API: Request data
     API->>Database: Query
     Database-->>API: Results
     API-->>User: Response
 \`\`\`
   `;
-  
+
   return <Streamdown>{markdown}</Streamdown>;
 }
 ```
@@ -164,6 +164,9 @@ Streamdown is built as a monorepo with:
 ```bash
 # Install dependencies
 pnpm install
+
+# Build the streamdown package
+pnpm --filter streamdown build
 
 # Run development server
 pnpm dev
