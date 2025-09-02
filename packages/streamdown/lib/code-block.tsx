@@ -162,7 +162,7 @@ export const CodeBlockCopyButton = ({
       type="button"
       {...props}
     >
-      {children ?? <Icon size={18} />}
+      {children ?? <Icon size={14} />}
     </button>
   );
 };
