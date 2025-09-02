@@ -10,7 +10,12 @@ import {
   useRef,
   useState,
 } from 'react';
-import { type BundledLanguage, type BundledTheme, codeToHtml } from 'shiki';
+import {
+  type BundledLanguage,
+  type BundledTheme,
+  createHighlighter,
+} from 'shiki';
+import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 import { ShikiThemeContext } from '../index';
 import { cn } from './utils';
 
@@ -30,6 +35,18 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   code: '',
 });
 
+let highlighterCache: {
+  light: Awaited<ReturnType<typeof createHighlighter>> | null;
+  dark: Awaited<ReturnType<typeof createHighlighter>> | null;
+  lightTheme: BundledTheme | null;
+  darkTheme: BundledTheme | null;
+} = {
+  light: null,
+  dark: null,
+  lightTheme: null,
+  darkTheme: null,
+};
+
 export async function highlightCode(
   code: string,
   language: BundledLanguage,
@@ -42,10 +59,42 @@ export async function highlightCode(
     }
     return html.replace(PRE_TAG_REGEX, `<pre class="${preClassName}"$1`);
   };
-  const [light, dark] = await Promise.all([
-    codeToHtml(code, { lang: language, theme: themes[0] }),
-    codeToHtml(code, { lang: language, theme: themes[1] }),
-  ]);
+
+  const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
+
+  const [lightTheme, darkTheme] = themes;
+
+  if (!highlighterCache.light || highlighterCache.lightTheme !== lightTheme) {
+    highlighterCache.light = await createHighlighter({
+      themes: [lightTheme],
+      langs: [language],
+      engine: jsEngine,
+    });
+    highlighterCache.lightTheme = lightTheme;
+  } else {
+    await highlighterCache.light.loadLanguage(language);
+  }
+
+  if (!highlighterCache.dark || highlighterCache.darkTheme !== darkTheme) {
+    highlighterCache.dark = await createHighlighter({
+      themes: [darkTheme],
+      langs: [language],
+      engine: jsEngine,
+    });
+    highlighterCache.darkTheme = darkTheme;
+  } else {
+    await highlighterCache.dark.loadLanguage(language);
+  }
+
+  const light = highlighterCache.light.codeToHtml(code, {
+    lang: language,
+    theme: lightTheme,
+  });
+  const dark = highlighterCache.dark.codeToHtml(code, {
+    lang: language,
+    theme: darkTheme,
+  });
+
   return [
     removePreBackground(addPreClass(light)),
     removePreBackground(addPreClass(dark)),
