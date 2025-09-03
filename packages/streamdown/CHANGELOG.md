@@ -1,5 +1,13 @@
 # streamdown
 
+## 1.1.9
+
+### Patch Changes
+
+- 5a50f22: bump deps
+- 23d8efe: prevent copy event occurs too frequently
+- 4737c99: fix: long list items break to a new line
+
 ## 1.1.8
 
 ### Patch Changes
