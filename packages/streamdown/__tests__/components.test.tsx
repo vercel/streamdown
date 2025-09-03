@@ -325,7 +325,7 @@ describe("Markdown Components", () => {
       );
       const thead = container.querySelector("thead");
       expect(thead).toBeTruthy();
-      expect(thead?.className).toContain("bg-muted/50");
+      expect(thead?.className).toContain("bg-muted/80");
     });
 
     it("should render tbody with correct classes", () => {
@@ -341,6 +341,7 @@ describe("Markdown Components", () => {
       expect(tbody).toBeTruthy();
       expect(tbody?.className).toContain("divide-y");
       expect(tbody?.className).toContain("divide-border");
+      expect(tbody?.className).toContain("bg-muted/40");
     });
 
     it("should render tr with correct classes", () => {
@@ -361,6 +362,7 @@ describe("Markdown Components", () => {
       const { container } = render(<TH node={null as any}>Header</TH>);
       const th = container.querySelector("th");
       expect(th).toBeTruthy();
+      expect(th?.className).toContain("whitespace-nowrap");
       expect(th?.className).toContain("px-4");
       expect(th?.className).toContain("py-2");
       expect(th?.className).toContain("text-left");
