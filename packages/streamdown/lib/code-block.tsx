@@ -193,8 +193,16 @@ export const CodeBlock = ({
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
-      <div className="my-4 w-full overflow-hidden rounded-xl border">
-        <div className="flex items-center justify-between bg-muted/80 p-3 text-muted-foreground text-xs">
+      <div 
+        className="my-4 w-full overflow-hidden rounded-xl border"
+        data-code-block-container
+        data-language={language}
+      >
+        <div 
+          className="flex items-center justify-between bg-muted/80 p-3 text-muted-foreground text-xs"
+          data-code-block-header
+          data-language={language}
+        >
           <span className="ml-1 font-mono lowercase">{language}</span>
           <div>{children}</div>
         </div>
@@ -202,12 +210,16 @@ export const CodeBlock = ({
           <div className="min-w-full">
             <div
               className={cn('overflow-x-auto dark:hidden', className)}
+              data-code-block
+              data-language={language}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               dangerouslySetInnerHTML={{ __html: html }}
               {...rest}
             />
             <div
               className={cn('hidden overflow-x-auto dark:block', className)}
+              data-code-block
+              data-language={language}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               dangerouslySetInnerHTML={{ __html: darkHtml }}
               {...rest}
