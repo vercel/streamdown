@@ -258,7 +258,7 @@ export const CodeBlockCopyButton = ({
     }
 
     try {
-      if (isCopied) {
+      if (!isCopied) {
         await navigator.clipboard.writeText(code);
         setIsCopied(true);
         onCopy?.();
