@@ -79,10 +79,10 @@ class HighlighterManager {
     // Create or recreate dark highlighter if needed
     if (needsDarkRecreation) {
       // If recreating dark highlighter, load all previously loaded languages plus the new one
-      const langsToLoad = needsLanguageLoad 
+      const langsToLoad = needsLanguageLoad
         ? [...this.loadedLanguages, language]
         : Array.from(this.loadedLanguages);
-      
+
       this.darkHighlighter = await createHighlighter({
         themes: [darkTheme],
         langs: langsToLoad.length > 0 ? langsToLoad : [language],
@@ -193,12 +193,12 @@ export const CodeBlock = ({
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
-      <div 
+      <div
         className="my-4 w-full overflow-hidden rounded-xl border"
         data-code-block-container
         data-language={language}
       >
-        <div 
+        <div
           className="flex items-center justify-between bg-muted/80 p-3 text-muted-foreground text-xs"
           data-code-block-header
           data-language={language}
@@ -247,6 +247,7 @@ export const CodeBlockCopyButton = ({
   ...props
 }: CodeBlockCopyButtonProps & { code?: string }) => {
   const [isCopied, setIsCopied] = useState(false);
+  const timeoutRef = useRef(0);
   const contextCode = useContext(CodeBlockContext).code;
   const code = propCode ?? contextCode;
 
@@ -257,14 +258,25 @@ export const CodeBlockCopyButton = ({
     }
 
     try {
-      await navigator.clipboard.writeText(code);
-      setIsCopied(true);
-      onCopy?.();
-      setTimeout(() => setIsCopied(false), timeout);
+      if (!isCopied) {
+        await navigator.clipboard.writeText(code);
+        setIsCopied(true);
+        onCopy?.();
+        timeoutRef.current = window.setTimeout(
+          () => setIsCopied(false),
+          timeout
+        );
+      }
     } catch (error) {
       onError?.(error as Error);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const Icon = isCopied ? CheckIcon : CopyIcon;
 
