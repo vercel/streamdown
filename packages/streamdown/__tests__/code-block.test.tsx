@@ -2,6 +2,7 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react';
 import React from 'react';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { CodeBlock, CodeBlockCopyButton } from '../lib/code-block';
+import { ShikiThemeContext } from '../index';
 
 describe('CodeBlockCopyButton', () => {
   const originalClipboard = navigator.clipboard;
@@ -144,4 +145,90 @@ describe('CodeBlockCopyButton', () => {
     expect(svg).toBeTruthy();
   });
 
+});
+
+describe('CodeBlock with multiple languages', () => {
+  it('should render multiple code blocks with different languages simultaneously', async () => {
+    const pythonCode = "print('hello world!')";
+    const jsCode = "console.log('hello world!');";
+    
+    const { container } = render(
+      <ShikiThemeContext.Provider value={['github-light', 'github-dark']}>
+        <div>
+          <CodeBlock code={pythonCode} language="python" />
+          <CodeBlock code={jsCode} language="javascript" />
+        </div>
+      </ShikiThemeContext.Provider>
+    );
+
+    // Wait for both code blocks to render
+    await waitFor(() => {
+      const codeBlocks = container.querySelectorAll('.my-4');
+      expect(codeBlocks.length).toBe(2);
+      
+      // Check that both language labels are present
+      const languageLabels = container.querySelectorAll('.font-mono.lowercase');
+      expect(languageLabels.length).toBe(2);
+      expect(languageLabels[0].textContent).toBe('python');
+      expect(languageLabels[1].textContent).toBe('javascript');
+      
+      // Check that both code blocks have rendered content
+      const preElements = container.querySelectorAll('pre');
+      expect(preElements.length).toBeGreaterThan(0);
+    }, { timeout: 5000 });
+  });
+
+  it('should handle multiple instances of the same language', async () => {
+    const code1 = "const x = 1;";
+    const code2 = "const y = 2;";
+    
+    const { container } = render(
+      <ShikiThemeContext.Provider value={['github-light', 'github-dark']}>
+        <div>
+          <CodeBlock code={code1} language="javascript" />
+          <CodeBlock code={code2} language="javascript" />
+        </div>
+      </ShikiThemeContext.Provider>
+    );
+
+    await waitFor(() => {
+      const codeBlocks = container.querySelectorAll('.my-4');
+      expect(codeBlocks.length).toBe(2);
+      
+      // Both should be JavaScript
+      const languageLabels = container.querySelectorAll('.font-mono.lowercase');
+      expect(languageLabels.length).toBe(2);
+      expect(languageLabels[0].textContent).toBe('javascript');
+      expect(languageLabels[1].textContent).toBe('javascript');
+    }, { timeout: 5000 });
+  });
+
+  it('should handle rapid sequential rendering of different languages', async () => {
+    const languages: Array<{ code: string; lang: 'python' | 'javascript' | 'typescript' }> = [
+      { code: "print('Python')", lang: 'python' },
+      { code: "console.log('JS')", lang: 'javascript' },
+      { code: "const x: string = 'TS'", lang: 'typescript' },
+    ];
+
+    const { container } = render(
+      <ShikiThemeContext.Provider value={['github-light', 'github-dark']}>
+        <div>
+          {languages.map((item, index) => (
+            <CodeBlock key={index} code={item.code} language={item.lang} />
+          ))}
+        </div>
+      </ShikiThemeContext.Provider>
+    );
+
+    await waitFor(() => {
+      const codeBlocks = container.querySelectorAll('.my-4');
+      expect(codeBlocks.length).toBe(3);
+      
+      const languageLabels = container.querySelectorAll('.font-mono.lowercase');
+      expect(languageLabels.length).toBe(3);
+      expect(languageLabels[0].textContent).toBe('python');
+      expect(languageLabels[1].textContent).toBe('javascript');
+      expect(languageLabels[2].textContent).toBe('typescript');
+    }, { timeout: 5000 });
+  });
 });
