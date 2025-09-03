@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
-import { useState } from 'react';
-import { Streamdown } from 'streamdown';
+import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
+import { useState } from "react";
+import { Streamdown } from "streamdown";
 
 export default function Page() {
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      api: '/api/chat',
+      api: "/api/chat",
     }),
   });
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
 
   return (
     <div className="mx-auto flex h-screen max-w-4xl flex-col divide-y border-x">
@@ -20,17 +20,17 @@ export default function Page() {
           {messages.map((message) => (
             <div key={message.id}>
               <span className="font-bold">
-                {message.role === 'user' ? 'User: ' : 'AI: '}
+                {message.role === "user" ? "User: " : "AI: "}
               </span>
               {message.parts.map((part, index) => {
                 switch (part.type) {
-                  case 'text':
+                  case "text":
                     return (
                       <pre className="whitespace-pre-wrap" key={index}>
                         {part.text}
                       </pre>
                     );
-                  case 'reasoning':
+                  case "reasoning":
                     return (
                       <pre className="italic" key={index}>
                         {part.text}
@@ -47,13 +47,13 @@ export default function Page() {
           {messages.map((message) => (
             <div key={message.id}>
               <span className="font-bold">
-                {message.role === 'user' ? 'User: ' : 'AI: '}
+                {message.role === "user" ? "User: " : "AI: "}
               </span>
               {message.parts.map((part, index) => {
                 switch (part.type) {
-                  case 'text':
+                  case "text":
                     return <Streamdown key={index}>{part.text}</Streamdown>;
-                  case 'reasoning':
+                  case "reasoning":
                     return (
                       <p className="italic" key={part.text}>
                         {part.text}
@@ -73,20 +73,20 @@ export default function Page() {
           e.preventDefault();
           if (input.trim()) {
             sendMessage({ text: input });
-            setInput('');
+            setInput("");
           }
         }}
       >
         <input
           className="flex-1 rounded-md border border-neutral-200 p-2"
-          disabled={status !== 'ready'}
+          disabled={status !== "ready"}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Say something..."
           value={input}
         />
         <button
           className="shrink-0 rounded-md bg-blue-500 px-4 py-2 text-white"
-          disabled={status !== 'ready'}
+          disabled={status !== "ready"}
           type="submit"
         >
           Submit

@@ -1,4 +1,4 @@
-import { Section } from './section';
+import { Section } from "./section";
 
 export const MermaidDemo = () => {
   const mermaidExample = `Interactive diagram rendering with manual control. Click the copy icon next to any Mermaid diagram to copy the code to your clipboard.

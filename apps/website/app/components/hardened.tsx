@@ -1,4 +1,4 @@
-import { Section } from './section';
+import { Section } from "./section";
 
 const markdown = `
 Here are some links to potentially malicious sites (please don't actually click them):
@@ -14,7 +14,7 @@ export const HardenedMarkdown = () => (
     description={
       <>
         Streamdown ensures that untrusted markdown does not contain images from
-        and links to unexpected origins which might have been{' '}
+        and links to unexpected origins which might have been{" "}
         <a
           className="font-medium text-blue-600 underline"
           href="https://vercel.com/blog/building-secure-ai-agents"
@@ -28,8 +28,8 @@ export const HardenedMarkdown = () => (
     }
     markdown={markdown}
     streamdownProps={{
-      defaultOrigin: 'https://streamdown.vercel.app',
-      allowedLinkPrefixes: ['https://streamdown.vercel.app'],
+      defaultOrigin: "https://streamdown.vercel.app",
+      allowedLinkPrefixes: ["https://streamdown.vercel.app"],
     }}
     title="Built-in security hardening"
   />

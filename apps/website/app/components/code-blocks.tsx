@@ -1,4 +1,4 @@
-import { Section } from './section';
+import { Section } from "./section";
 
 const markdown = `
 \`\`\`tsx
@@ -26,7 +26,7 @@ export const CodeBlocks = () => (
   <Section
     description={
       <>
-        Streamdown uses{' '}
+        Streamdown uses{" "}
         <a
           className="underline"
           href="https://shiki.style/"
@@ -34,9 +34,9 @@ export const CodeBlocks = () => (
           target="_blank"
         >
           Shiki
-        </a>{' '}
+        </a>{" "}
         to highlight code blocks, and comes with a copy button so you can easily
-        copy the code.{' '}
+        copy the code.{" "}
         <span className="font-medium text-blue-600">
           Hover to reveal the copy button!
         </span>

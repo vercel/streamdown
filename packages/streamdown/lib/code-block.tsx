@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { CheckIcon, CopyIcon } from 'lucide-react';
+import { CheckIcon, CopyIcon } from "lucide-react";
 import {
   type ComponentProps,
   createContext,
@@ -9,15 +9,15 @@ import {
   useEffect,
   useRef,
   useState,
-} from 'react';
+} from "react";
 import {
   type BundledLanguage,
   type BundledTheme,
   createHighlighter,
-} from 'shiki';
-import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
-import { ShikiThemeContext } from '../index';
-import { cn } from './utils';
+} from "shiki";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+import { ShikiThemeContext } from "../index";
+import { cn } from "./utils";
 
 const PRE_TAG_REGEX = /<pre(\s|>)/;
 
@@ -32,15 +32,19 @@ type CodeBlockContextType = {
 };
 
 const CodeBlockContext = createContext<CodeBlockContextType>({
-  code: '',
+  code: "",
 });
 
 class HighlighterManager {
-  private lightHighlighter: Awaited<ReturnType<typeof createHighlighter>> | null = null;
-  private darkHighlighter: Awaited<ReturnType<typeof createHighlighter>> | null = null;
+  private lightHighlighter: Awaited<
+    ReturnType<typeof createHighlighter>
+  > | null = null;
+  private darkHighlighter: Awaited<
+    ReturnType<typeof createHighlighter>
+  > | null = null;
   private lightTheme: BundledTheme | null = null;
   private darkTheme: BundledTheme | null = null;
-  private loadedLanguages: Set<BundledLanguage> = new Set();
+  private readonly loadedLanguages: Set<BundledLanguage> = new Set();
   private initializationPromise: Promise<void> | null = null;
 
   private async ensureHighlightersInitialized(
@@ -51,8 +55,10 @@ class HighlighterManager {
     const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
 
     // Check if we need to recreate highlighters due to theme change
-    const needsLightRecreation = !this.lightHighlighter || this.lightTheme !== lightTheme;
-    const needsDarkRecreation = !this.darkHighlighter || this.darkTheme !== darkTheme;
+    const needsLightRecreation =
+      !this.lightHighlighter || this.lightTheme !== lightTheme;
+    const needsDarkRecreation =
+      !this.darkHighlighter || this.darkTheme !== darkTheme;
 
     if (needsLightRecreation || needsDarkRecreation) {
       // If themes changed, reset loaded languages
@@ -73,7 +79,7 @@ class HighlighterManager {
       this.loadedLanguages.add(language);
     } else if (needsLanguageLoad) {
       // Load the language if not already loaded
-      await this.lightHighlighter!.loadLanguage(language);
+      await this.lightHighlighter?.loadLanguage(language);
     }
 
     // Create or recreate dark highlighter if needed
@@ -91,7 +97,7 @@ class HighlighterManager {
       this.darkTheme = darkTheme;
     } else if (needsLanguageLoad) {
       // Load the language if not already loaded
-      await this.darkHighlighter!.loadLanguage(language);
+      await this.darkHighlighter?.loadLanguage(language);
     }
 
     // Mark language as loaded after both highlighters have it
@@ -112,7 +118,10 @@ class HighlighterManager {
     }
 
     // Initialize or load language
-    this.initializationPromise = this.ensureHighlightersInitialized(themes, language);
+    this.initializationPromise = this.ensureHighlightersInitialized(
+      themes,
+      language
+    );
     await this.initializationPromise;
     this.initializationPromise = null;
 
@@ -125,11 +134,11 @@ class HighlighterManager {
 
     const [lightTheme, darkTheme] = themes;
 
-    const light = this.lightHighlighter!.codeToHtml(code, {
+    const light = this.lightHighlighter?.codeToHtml(code, {
       lang: language,
       theme: lightTheme,
     });
-    const dark = this.darkHighlighter!.codeToHtml(code, {
+    const dark = this.darkHighlighter?.codeToHtml(code, {
       lang: language,
       theme: darkTheme,
     });
@@ -157,7 +166,7 @@ export async function highlightCode(
 function removePreBackground(html: string) {
   return html.replace(
     /(<pre[^>]*)(style="[^"]*background[^";]*;?[^"]*")([^>]*>)/g,
-    '$1$3'
+    "$1$3"
   );
 }
 
@@ -169,8 +178,8 @@ export const CodeBlock = ({
   preClassName,
   ...rest
 }: CodeBlockProps) => {
-  const [html, setHtml] = useState<string>('');
-  const [darkHtml, setDarkHtml] = useState<string>('');
+  const [html, setHtml] = useState<string>("");
+  const [darkHtml, setDarkHtml] = useState<string>("");
   const mounted = useRef(false);
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
@@ -209,19 +218,19 @@ export const CodeBlock = ({
         <div className="w-full">
           <div className="min-w-full">
             <div
-              className={cn('overflow-x-auto dark:hidden', className)}
-              data-code-block
-              data-language={language}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+              className={cn("overflow-x-auto dark:hidden", className)}
               dangerouslySetInnerHTML={{ __html: html }}
+              data-code-block
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+              data-language={language}
               {...rest}
             />
             <div
-              className={cn('hidden overflow-x-auto dark:block', className)}
-              data-code-block
-              data-language={language}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+              className={cn("hidden overflow-x-auto dark:block", className)}
               dangerouslySetInnerHTML={{ __html: darkHtml }}
+              data-code-block
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+              data-language={language}
               {...rest}
             />
           </div>
@@ -231,7 +240,7 @@ export const CodeBlock = ({
   );
 };
 
-export type CodeBlockCopyButtonProps = ComponentProps<'button'> & {
+export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;
@@ -252,8 +261,8 @@ export const CodeBlockCopyButton = ({
   const code = propCode ?? contextCode;
 
   const copyToClipboard = async () => {
-    if (typeof window === 'undefined' || !navigator?.clipboard?.writeText) {
-      onError?.(new Error('Clipboard API not available'));
+    if (typeof window === "undefined" || !navigator?.clipboard?.writeText) {
+      onError?.(new Error("Clipboard API not available"));
       return;
     }
 
@@ -282,7 +291,7 @@ export const CodeBlockCopyButton = ({
 
   return (
     <button
-      className={cn('text-muted-foreground', 'p-1 transition-all', className)}
+      className={cn("text-muted-foreground", "p-1 transition-all", className)}
       onClick={copyToClipboard}
       type="button"
       {...props}

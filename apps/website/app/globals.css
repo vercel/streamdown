@@ -119,8 +119,17 @@
     @apply bg-secondary dark:bg-background text-foreground;
   }
   .bg-dashed {
-    background-image: linear-gradient(45deg, var(--border) 12.5%, transparent 12.5%, transparent 50%, var(--border) 50%, var(--border) 62.5%, transparent 62.5%, transparent 100%);
-    background-size: .25rem .25rem;
+    background-image: linear-gradient(
+      45deg,
+      var(--border) 12.5%,
+      transparent 12.5%,
+      transparent 50%,
+      var(--border) 50%,
+      var(--border) 62.5%,
+      transparent 62.5%,
+      transparent 100%
+    );
+    background-size: 0.25rem 0.25rem;
   }
   @keyframes accordion-down {
     from {

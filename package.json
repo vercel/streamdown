@@ -15,13 +15,13 @@
     "changeset:publish": "pnpm build && changeset publish"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.0",
-    "@changesets/cli": "^2.27.1",
-    "turbo": "^2.5.5",
+    "@biomejs/biome": "2.2.2",
+    "@changesets/cli": "^2.29.6",
+    "turbo": "^2.5.6",
     "typescript": "5.9.2",
-    "ultracite": "5.1.6"
+    "ultracite": "5.3.3"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.15.1",
   "engines": {
     "node": ">=18"
   }

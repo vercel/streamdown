@@ -2,12 +2,12 @@ import {
   type DetailedHTMLProps,
   type HTMLAttributes,
   isValidElement,
-} from 'react';
-import type { ExtraProps, Options } from 'react-markdown';
-import type { BundledLanguage } from 'shiki';
-import { CodeBlock, CodeBlockCopyButton } from './code-block';
-import { Mermaid } from './mermaid';
-import { cn } from './utils';
+} from "react";
+import type { ExtraProps, Options } from "react-markdown";
+import type { BundledLanguage } from "shiki";
+import { CodeBlock, CodeBlockCopyButton } from "./code-block";
+import { Mermaid } from "./mermaid";
+import { cn } from "./utils";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
@@ -24,7 +24,7 @@ const CodeComponent = ({
     return (
       <code
         className={cn(
-          'rounded bg-muted px-1.5 py-0.5 font-mono text-sm',
+          "rounded bg-muted px-1.5 py-0.5 font-mono text-sm",
           className
         )}
         data-streamdown="inline-code"
@@ -36,27 +36,27 @@ const CodeComponent = ({
   }
 
   const match = className?.match(LANGUAGE_REGEX);
-  const language = (match?.at(1) ?? '') as BundledLanguage;
+  const language = (match?.at(1) ?? "") as BundledLanguage;
 
   // Extract code content from children safely
-  let code = '';
+  let code = "";
   if (
     isValidElement(children) &&
     children.props &&
-    typeof children.props === 'object' &&
-    'children' in children.props &&
-    typeof children.props.children === 'string'
+    typeof children.props === "object" &&
+    "children" in children.props &&
+    typeof children.props.children === "string"
   ) {
     code = children.props.children;
-  } else if (typeof children === 'string') {
+  } else if (typeof children === "string") {
     code = children;
   }
 
-  if (language === 'mermaid') {
+  if (language === "mermaid") {
     return (
       <div
         className={cn(
-          'group relative my-4 h-auto rounded-xl border p-4',
+          "group relative my-4 h-auto rounded-xl border p-4",
           className
         )}
         data-streamdown="mermaid-block"
@@ -71,7 +71,7 @@ const CodeComponent = ({
 
   return (
     <CodeBlock
-      className={cn('overflow-x-auto border-t', className)}
+      className={cn("overflow-x-auto border-t", className)}
       code={code}
       data-language={language}
       data-streamdown="code-block"
@@ -83,11 +83,11 @@ const CodeComponent = ({
   );
 };
 
-export const components: Options['components'] = {
+export const components: Options["components"] = {
   ol: ({ node, children, className, ...props }) => (
     <ol
       className={cn(
-        'ml-4 list-outside list-decimal whitespace-normal',
+        "ml-4 list-outside list-decimal whitespace-normal",
         className
       )}
       data-streamdown="ordered-list"
@@ -98,7 +98,7 @@ export const components: Options['components'] = {
   ),
   li: ({ node, children, className, ...props }) => (
     <li
-      className={cn('py-1', className)}
+      className={cn("py-1", className)}
       data-streamdown="list-item"
       {...props}
     >
@@ -107,7 +107,7 @@ export const components: Options['components'] = {
   ),
   ul: ({ node, children, className, ...props }) => (
     <ul
-      className={cn('ml-4 list-outside list-disc whitespace-normal', className)}
+      className={cn("ml-4 list-outside list-disc whitespace-normal", className)}
       data-streamdown="unordered-list"
       {...props}
     >
@@ -116,14 +116,14 @@ export const components: Options['components'] = {
   ),
   hr: ({ node, className, ...props }) => (
     <hr
-      className={cn('my-6 border-border', className)}
+      className={cn("my-6 border-border", className)}
       data-streamdown="horizontal-rule"
       {...props}
     />
   ),
   strong: ({ node, children, className, ...props }) => (
     <span
-      className={cn('font-semibold', className)}
+      className={cn("font-semibold", className)}
       data-streamdown="strong"
       {...props}
     >
@@ -131,11 +131,11 @@ export const components: Options['components'] = {
     </span>
   ),
   a: ({ node, children, className, href, ...props }) => {
-    const isIncomplete = href === 'streamdown:incomplete-link';
+    const isIncomplete = href === "streamdown:incomplete-link";
 
     return (
       <a
-        className={cn('font-medium text-primary underline', className)}
+        className={cn("font-medium text-primary underline", className)}
         data-incomplete={isIncomplete}
         data-streamdown="link"
         href={href}
@@ -149,7 +149,7 @@ export const components: Options['components'] = {
   },
   h1: ({ node, children, className, ...props }) => (
     <h1
-      className={cn('mt-6 mb-2 font-semibold text-3xl', className)}
+      className={cn("mt-6 mb-2 font-semibold text-3xl", className)}
       data-streamdown="heading-1"
       {...props}
     >
@@ -158,7 +158,7 @@ export const components: Options['components'] = {
   ),
   h2: ({ node, children, className, ...props }) => (
     <h2
-      className={cn('mt-6 mb-2 font-semibold text-2xl', className)}
+      className={cn("mt-6 mb-2 font-semibold text-2xl", className)}
       data-streamdown="heading-2"
       {...props}
     >
@@ -167,7 +167,7 @@ export const components: Options['components'] = {
   ),
   h3: ({ node, children, className, ...props }) => (
     <h3
-      className={cn('mt-6 mb-2 font-semibold text-xl', className)}
+      className={cn("mt-6 mb-2 font-semibold text-xl", className)}
       data-streamdown="heading-3"
       {...props}
     >
@@ -176,7 +176,7 @@ export const components: Options['components'] = {
   ),
   h4: ({ node, children, className, ...props }) => (
     <h4
-      className={cn('mt-6 mb-2 font-semibold text-lg', className)}
+      className={cn("mt-6 mb-2 font-semibold text-lg", className)}
       data-streamdown="heading-4"
       {...props}
     >
@@ -185,7 +185,7 @@ export const components: Options['components'] = {
   ),
   h5: ({ node, children, className, ...props }) => (
     <h5
-      className={cn('mt-6 mb-2 font-semibold text-base', className)}
+      className={cn("mt-6 mb-2 font-semibold text-base", className)}
       data-streamdown="heading-5"
       {...props}
     >
@@ -194,7 +194,7 @@ export const components: Options['components'] = {
   ),
   h6: ({ node, children, className, ...props }) => (
     <h6
-      className={cn('mt-6 mb-2 font-semibold text-sm', className)}
+      className={cn("mt-6 mb-2 font-semibold text-sm", className)}
       data-streamdown="heading-6"
       {...props}
     >
@@ -204,7 +204,7 @@ export const components: Options['components'] = {
   table: ({ node, children, className, ...props }) => (
     <div className="my-4 overflow-x-auto" data-streamdown="table-wrapper">
       <table
-        className={cn('w-full border-collapse border border-border', className)}
+        className={cn("w-full border-collapse border border-border", className)}
         data-streamdown="table"
         {...props}
       >
@@ -214,7 +214,7 @@ export const components: Options['components'] = {
   ),
   thead: ({ node, children, className, ...props }) => (
     <thead
-      className={cn('bg-muted/50', className)}
+      className={cn("bg-muted/50", className)}
       data-streamdown="table-header"
       {...props}
     >
@@ -223,7 +223,7 @@ export const components: Options['components'] = {
   ),
   tbody: ({ node, children, className, ...props }) => (
     <tbody
-      className={cn('divide-y divide-border', className)}
+      className={cn("divide-y divide-border", className)}
       data-streamdown="table-body"
       {...props}
     >
@@ -232,7 +232,7 @@ export const components: Options['components'] = {
   ),
   tr: ({ node, children, className, ...props }) => (
     <tr
-      className={cn('border-border border-b', className)}
+      className={cn("border-border border-b", className)}
       data-streamdown="table-row"
       {...props}
     >
@@ -241,7 +241,7 @@ export const components: Options['components'] = {
   ),
   th: ({ node, children, className, ...props }) => (
     <th
-      className={cn('px-4 py-2 text-left font-semibold text-sm', className)}
+      className={cn("px-4 py-2 text-left font-semibold text-sm", className)}
       data-streamdown="table-header-cell"
       {...props}
     >
@@ -250,7 +250,7 @@ export const components: Options['components'] = {
   ),
   td: ({ node, children, className, ...props }) => (
     <td
-      className={cn('px-4 py-2 text-sm', className)}
+      className={cn("px-4 py-2 text-sm", className)}
       data-streamdown="table-cell"
       {...props}
     >
@@ -260,7 +260,7 @@ export const components: Options['components'] = {
   blockquote: ({ node, children, className, ...props }) => (
     <blockquote
       className={cn(
-        'my-4 border-muted-foreground/30 border-l-4 pl-4 text-muted-foreground italic',
+        "my-4 border-muted-foreground/30 border-l-4 pl-4 text-muted-foreground italic",
         className
       )}
       data-streamdown="blockquote"
@@ -273,7 +273,7 @@ export const components: Options['components'] = {
   pre: ({ children }) => children,
   sup: ({ node, children, className, ...props }) => (
     <sup
-      className={cn('text-sm', className)}
+      className={cn("text-sm", className)}
       data-streamdown="superscript"
       {...props}
     >
@@ -282,7 +282,7 @@ export const components: Options['components'] = {
   ),
   sub: ({ node, children, className, ...props }) => (
     <sub
-      className={cn('text-sm', className)}
+      className={cn("text-sm", className)}
       data-streamdown="subscript"
       {...props}
     >

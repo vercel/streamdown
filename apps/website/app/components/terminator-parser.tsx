@@ -1,4 +1,4 @@
-import { Section } from './section';
+import { Section } from "./section";
 
 const markdown = `**This is a very long bold text that keeps going and going without a clear end, so you can see how unterminated bold blocks are handled by the renderer.**
 

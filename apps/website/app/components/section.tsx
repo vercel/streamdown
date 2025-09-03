@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { RefreshCcwIcon } from 'lucide-react';
-import { useInView } from 'motion/react';
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Streamdown, type StreamdownProps } from 'streamdown';
-import { Button } from '@/components/ui/button';
+import { RefreshCcwIcon } from "lucide-react";
+import { useInView } from "motion/react";
+import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import { Streamdown, type StreamdownProps } from "streamdown";
+import { Button } from "@/components/ui/button";
 
 const DEFAULT_SPEED = 100;
 
@@ -24,14 +24,14 @@ export const Section = ({
   streamdownProps,
   speed = DEFAULT_SPEED,
 }: SectionProps) => {
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState("");
   const [isAnimating, setIsAnimating] = useState(false);
   const [resetTrigger, setResetTrigger] = useState(0);
   const ref = useRef(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
   const tokens = useMemo(
-    () => markdown.split(' ').map((token) => `${token} `),
+    () => markdown.split(" ").map((token) => `${token} `),
     [markdown]
   );
 
@@ -47,9 +47,9 @@ export const Section = ({
     }
 
     // Reset content and start animation
-    setContent('');
+    setContent("");
     setIsAnimating(true);
-    let currentContent = '';
+    let currentContent = "";
     let index = 0;
 
     intervalRef.current = setInterval(() => {
@@ -123,7 +123,7 @@ export const Section = ({
             onClick={reset}
           >
             <RefreshCcwIcon
-              className={`size-4 ${isAnimating ? 'animate-spin' : ''}`}
+              className={`size-4 ${isAnimating ? "animate-spin" : ""}`}
             />
             Reset
           </Button>
