@@ -46,6 +46,14 @@ const handleIncompleteBold = (text: string): string => {
   const boldMatch = text.match(boldPattern);
 
   if (boldMatch) {
+    // Don't close if there's no meaningful content after the opening markers
+    // boldMatch[2] contains the content after **
+    // Check if content is only whitespace or other emphasis markers
+    const contentAfterMarker = boldMatch[2];
+    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+      return text;
+    }
+    
     const asteriskPairs = (text.match(/\*\*/g) || []).length;
     if (asteriskPairs % 2 === 1) {
       return `${text}**`;
@@ -60,6 +68,14 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   const italicMatch = text.match(italicPattern);
 
   if (italicMatch) {
+    // Don't close if there's no meaningful content after the opening markers
+    // italicMatch[2] contains the content after __
+    // Check if content is only whitespace or other emphasis markers
+    const contentAfterMarker = italicMatch[2];
+    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+      return text;
+    }
+    
     const underscorePairs = (text.match(/__/g) || []).length;
     if (underscorePairs % 2 === 1) {
       return `${text}__`;
@@ -119,6 +135,23 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   const singleAsteriskMatch = text.match(singleAsteriskPattern);
 
   if (singleAsteriskMatch) {
+    // Don't close if there's no meaningful content after the opening marker
+    // singleAsteriskMatch[2] contains the content after *
+    const contentAfterMarker = singleAsteriskMatch[2];
+    
+    // Only skip closing if the content is truly empty or contains ONLY whitespace/markers
+    // If there's any actual text content, we should close the marker
+    if (!contentAfterMarker || contentAfterMarker.trim() === '') {
+      return text;
+    }
+    
+    // Check if content contains any non-emphasis characters (actual text)
+    const hasTextContent = /[^\s_~*`]/.test(contentAfterMarker);
+    if (!hasTextContent) {
+      // Content is only whitespace and emphasis markers, don't close
+      return text;
+    }
+    
     const singleAsterisks = countSingleAsterisks(text);
     if (singleAsterisks % 2 === 1) {
       return `${text}*`;
@@ -189,6 +222,14 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
 
   if (singleUnderscoreMatch) {
+    // Don't close if there's no meaningful content after the opening marker
+    // singleUnderscoreMatch[2] contains the content after _
+    // Check if content is only whitespace or other emphasis markers
+    const contentAfterMarker = singleUnderscoreMatch[2];
+    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+      return text;
+    }
+    
     const singleUnderscores = countSingleUnderscores(text);
     if (singleUnderscores % 2 === 1) {
       return `${text}_`;
@@ -260,6 +301,14 @@ const handleIncompleteInlineCode = (text: string): string => {
   const inlineCodeMatch = text.match(inlineCodePattern);
 
   if (inlineCodeMatch && !insideIncompleteCodeBlock) {
+    // Don't close if there's no meaningful content after the opening marker
+    // inlineCodeMatch[2] contains the content after `
+    // Check if content is only whitespace or other emphasis markers
+    const contentAfterMarker = inlineCodeMatch[2];
+    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+      return text;
+    }
+    
     const singleBacktickCount = countSingleBackticks(text);
     if (singleBacktickCount % 2 === 1) {
       return `${text}\``;
@@ -274,6 +323,14 @@ const handleIncompleteStrikethrough = (text: string): string => {
   const strikethroughMatch = text.match(strikethroughPattern);
 
   if (strikethroughMatch) {
+    // Don't close if there's no meaningful content after the opening markers
+    // strikethroughMatch[2] contains the content after ~~
+    // Check if content is only whitespace or other emphasis markers
+    const contentAfterMarker = strikethroughMatch[2];
+    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+      return text;
+    }
+    
     const tildePairs = (text.match(/~~/g) || []).length;
     if (tildePairs % 2 === 1) {
       return `${text}~~`;
@@ -359,6 +416,14 @@ const handleIncompleteBoldItalic = (text: string): string => {
   const boldItalicMatch = text.match(boldItalicPattern);
 
   if (boldItalicMatch) {
+    // Don't close if there's no meaningful content after the opening markers
+    // boldItalicMatch[2] contains the content after ***
+    // Check if content is only whitespace or other emphasis markers
+    const contentAfterMarker = boldItalicMatch[2];
+    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+      return text;
+    }
+    
     const tripleAsteriskCount = countTripleAsterisks(text);
     if (tripleAsteriskCount % 2 === 1) {
       return `${text}***`;
