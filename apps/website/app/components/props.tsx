@@ -1,64 +1,64 @@
 const props = [
   {
-    name: 'children',
-    type: 'string',
+    name: "children",
+    type: "string",
     description:
-      'The markdown content to render. Can be a string of markdown or React nodes.',
+      "The markdown content to render. Can be a string of markdown or React nodes.",
   },
   {
-    name: 'parseIncompleteMarkdown',
-    type: 'boolean',
-    default: 'true',
+    name: "parseIncompleteMarkdown",
+    type: "boolean",
+    default: "true",
     description:
-      'Whether to parse and fix incomplete markdown syntax (e.g., unclosed code blocks or lists).',
+      "Whether to parse and fix incomplete markdown syntax (e.g., unclosed code blocks or lists).",
   },
   {
-    name: 'className',
-    type: 'string',
-    description: 'CSS class names to apply to the wrapper div element.',
+    name: "className",
+    type: "string",
+    description: "CSS class names to apply to the wrapper div element.",
   },
   {
-    name: 'components',
-    type: 'object',
+    name: "components",
+    type: "object",
     description:
-      'Custom React components to use for rendering markdown elements (e.g., custom heading, paragraph, code block components).',
+      "Custom React components to use for rendering markdown elements (e.g., custom heading, paragraph, code block components).",
   },
   {
-    name: 'allowedImagePrefixes',
-    type: 'string[]',
+    name: "allowedImagePrefixes",
+    type: "string[]",
     default: '["*"]',
     description:
       'Array of allowed URL prefixes for images. Use ["*"] to allow all images.',
   },
   {
-    name: 'allowedLinkPrefixes',
-    type: 'string[]',
+    name: "allowedLinkPrefixes",
+    type: "string[]",
     default: '["*"]',
     description:
       'Array of allowed URL prefixes for links. Use ["*"] to allow all links.',
   },
   {
-    name: 'defaultOrigin',
-    type: 'string',
-    description: 'Default origin to use for relative URLs in links and images.',
+    name: "defaultOrigin",
+    type: "string",
+    description: "Default origin to use for relative URLs in links and images.",
   },
   {
-    name: 'rehypePlugins',
-    type: 'array',
-    default: '[rehypeKatex]',
+    name: "rehypePlugins",
+    type: "array",
+    default: "[rehypeKatex]",
     description:
-      'Array of rehype plugins to use for processing HTML. Includes KaTeX for math rendering by default.',
+      "Array of rehype plugins to use for processing HTML. Includes KaTeX for math rendering by default.",
   },
   {
-    name: 'remarkPlugins',
-    type: 'array',
-    default: '[remarkGfm, remarkMath]',
+    name: "remarkPlugins",
+    type: "array",
+    default: "[remarkGfm, remarkMath]",
     description:
-      'Array of remark plugins to use for processing markdown. Includes GitHub Flavored Markdown and math support by default.',
+      "Array of remark plugins to use for processing markdown. Includes GitHub Flavored Markdown and math support by default.",
   },
   {
-    name: 'shikiTheme',
-    type: '[BundledTheme, BundledTheme] (from Shiki)',
+    name: "shikiTheme",
+    type: "[BundledTheme, BundledTheme] (from Shiki)",
     default: '["github-light", "github-dark"]',
     description:
       'The themes to use for code blocks. Defaults to ["github-light", "github-dark"].',
@@ -89,7 +89,7 @@ export const Props = () => (
           <p className="text-muted-foreground text-sm">{prop.description}</p>
           {prop.default && (
             <p className="text-muted-foreground text-xs">
-              Default:{' '}
+              Default:{" "}
               <code className="rounded bg-muted px-1">{prop.default}</code>
             </p>
           )}

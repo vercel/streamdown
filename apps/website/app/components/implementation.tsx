@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { CodeBlock, CodeBlockCopyButton } from '@/components/code-block';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CodeBlock, CodeBlockCopyButton } from "@/components/code-block";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const streamdownCode = `'use client';
 
@@ -112,7 +112,7 @@ export const Implementation = () => (
         challenges arise.
       </p>
       <p className="text-muted-foreground">
-        With{' '}
+        With{" "}
         <a
           className="font-medium text-blue-600 underline"
           href="https://ai-sdk.dev/elements"
@@ -129,7 +129,7 @@ export const Implementation = () => (
         designed for AI-powered streaming.
       </p>
       <p className="text-muted-foreground">
-        It powers the AI Elements{' '}
+        It powers the AI Elements{" "}
         <a
           className="font-medium text-blue-600 underline"
           href="https://ai-sdk.dev/elements/components/response"
@@ -137,7 +137,7 @@ export const Implementation = () => (
           target="_blank"
         >
           Response
-        </a>{' '}
+        </a>{" "}
         component, but you can install it as a standalone package if you want.
       </p>
     </div>

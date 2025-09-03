@@ -1,11 +1,11 @@
-import { ModeToggle } from '@/components/mode-toggle';
+import { ModeToggle } from "@/components/mode-toggle";
 
 export const Footer = () => (
   <footer className="px-4 py-8">
     <div className="flex items-center justify-between">
       <div className="text-muted-foreground text-sm">
         <p>
-          Made with 🖤 and 🤖 by{' '}
+          Made with 🖤 and 🤖 by{" "}
           <a
             className="font-medium text-blue-600 underline"
             href="https://vercel.com"
@@ -14,7 +14,7 @@ export const Footer = () => (
           >
             Vercel
           </a>
-          . View the{' '}
+          . View the{" "}
           <a
             className="font-medium text-blue-600 underline"
             href="https://github.com/vercel/streamdown"
