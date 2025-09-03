@@ -1,5 +1,12 @@
 # streamdown
 
+## 1.1.10
+
+### Patch Changes
+
+- 4459b14: apply whitespace-nowrap to th and match table colors with CodeBlock
+- 426c897: fix: parseIncompleteMarkdown Emphasis Character Block Issue
+
 ## 1.1.9
 
 ### Patch Changes
