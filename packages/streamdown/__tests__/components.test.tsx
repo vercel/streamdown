@@ -325,7 +325,7 @@ describe("Markdown Components", () => {
       );
       const thead = container.querySelector("thead");
       expect(thead).toBeTruthy();
-      expect(thead?.className).toContain("bg-muted/50");
+      expect(thead?.className).toContain("bg-muted/80");
     });
 
     it("should render tbody with correct classes", () => {
@@ -341,6 +341,7 @@ describe("Markdown Components", () => {
       expect(tbody).toBeTruthy();
       expect(tbody?.className).toContain("divide-y");
       expect(tbody?.className).toContain("divide-border");
+      expect(tbody?.className).toContain("bg-muted/40");
     });
 
     it("should render tr with correct classes", () => {
