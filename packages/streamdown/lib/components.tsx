@@ -86,7 +86,10 @@ const CodeComponent = ({
 export const components: Options['components'] = {
   ol: ({ node, children, className, ...props }) => (
     <ol
-      className={cn('ml-4 list-outside list-decimal', className)}
+      className={cn(
+        'ml-4 list-outside list-decimal whitespace-normal',
+        className
+      )}
       data-streamdown="ordered-list"
       {...props}
     >
@@ -104,7 +107,7 @@ export const components: Options['components'] = {
   ),
   ul: ({ node, children, className, ...props }) => (
     <ul
-      className={cn('ml-4 list-outside list-disc', className)}
+      className={cn('ml-4 list-outside list-disc whitespace-normal', className)}
       data-streamdown="unordered-list"
       {...props}
     >
