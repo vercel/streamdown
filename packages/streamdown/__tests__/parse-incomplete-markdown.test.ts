@@ -20,11 +20,11 @@ describe('parseIncompleteMarkdown', () => {
   });
 
   describe('link handling', () => {
-    it('should remove incomplete links', () => {
+    it('should preserve incomplete links with special marker', () => {
       expect(parseIncompleteMarkdown('Text with [incomplete link')).toBe(
-        'Text with '
+        'Text with [incomplete link](streamdown:incomplete-link)'
       );
-      expect(parseIncompleteMarkdown('Text [partial')).toBe('Text ');
+      expect(parseIncompleteMarkdown('Text [partial')).toBe('Text [partial](streamdown:incomplete-link)');
     });
 
     it('should keep complete links unchanged', () => {
@@ -269,9 +269,9 @@ describe('parseIncompleteMarkdown', () => {
       expect(parseIncompleteMarkdown(text)).toBe(text);
     });
 
-    it('should prioritize link/image removal over formatting completion', () => {
+    it('should prioritize link/image preservation over formatting completion', () => {
       expect(parseIncompleteMarkdown('Text with [link and **bold')).toBe(
-        'Text with '
+        'Text with [link and **bold](streamdown:incomplete-link)'
       );
     });
 
@@ -464,7 +464,7 @@ describe('parseIncompleteMarkdown', () => {
     });
 
     it('should handle partial link at chunk boundary', () => {
-      expect(parseIncompleteMarkdown('Check out [this lin')).toBe('Check out ');
+      expect(parseIncompleteMarkdown('Check out [this lin')).toBe('Check out [this lin](streamdown:incomplete-link)');
       // Links with partial URLs are kept as-is since they might be complete
       expect(parseIncompleteMarkdown('Visit [our site](https://exa')).toBe(
         'Visit [our site](https://exa'

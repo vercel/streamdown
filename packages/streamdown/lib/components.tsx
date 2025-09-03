@@ -127,18 +127,23 @@ export const components: Options['components'] = {
       {children}
     </span>
   ),
-  a: ({ node, children, className, href, ...props }) => (
-    <a
-      className={cn('font-medium text-primary underline', className)}
-      data-streamdown="link"
-      href={href}
-      rel="noreferrer"
-      target="_blank"
-      {...props}
-    >
-      {children}
-    </a>
-  ),
+  a: ({ node, children, className, href, ...props }) => {
+    const isIncomplete = href === 'streamdown:incomplete-link';
+
+    return (
+      <a
+        className={cn('font-medium text-primary underline', className)}
+        data-incomplete={isIncomplete}
+        data-streamdown="link"
+        href={href}
+        rel="noreferrer"
+        target="_blank"
+        {...props}
+      >
+        {children}
+      </a>
+    );
+  },
   h1: ({ node, children, className, ...props }) => (
     <h1
       className={cn('mt-6 mb-2 font-semibold text-3xl', className)}

@@ -6,22 +6,31 @@ const singleAsteriskPattern = /(\*)([^*]*?)$/;
 const singleUnderscorePattern = /(_)([^_]*?)$/;
 const inlineCodePattern = /(`)([^`]*?)$/;
 const strikethroughPattern = /(~~)([^~]*?)$/;
-// Removed inlineKatexPattern - no longer processing single dollar signs
-const blockKatexPattern = /(\$\$)([^$]*?)$/;
 
 // Helper function to check if we have a complete code block
 const hasCompleteCodeBlock = (text: string): boolean => {
   const tripleBackticks = (text.match(/```/g) || []).length;
-  return tripleBackticks > 0 && tripleBackticks % 2 === 0 && text.includes('\n');
+  return (
+    tripleBackticks > 0 && tripleBackticks % 2 === 0 && text.includes('\n')
+  );
 };
 
-// Handles incomplete links and images by removing them if not closed
+// Handles incomplete links and images by preserving them with a special marker
 const handleIncompleteLinksAndImages = (text: string): string => {
   const linkMatch = text.match(linkImagePattern);
 
   if (linkMatch) {
-    const startIndex = text.lastIndexOf(linkMatch[1]);
-    return text.substring(0, startIndex);
+    const isImage = linkMatch[1].startsWith('!');
+
+    // For images, we still remove them as they can't show skeleton
+    if (isImage) {
+      const startIndex = text.lastIndexOf(linkMatch[1]);
+      return text.substring(0, startIndex);
+    }
+
+    // For links, preserve the text and close the link with a
+    // special placeholder URL that indicates it's incomplete
+    return `${text}](streamdown:incomplete-link)`;
   }
 
   return text;
@@ -33,7 +42,7 @@ const handleIncompleteBold = (text: string): string => {
   if (hasCompleteCodeBlock(text)) {
     return text;
   }
-  
+
   const boldMatch = text.match(boldPattern);
 
   if (boldMatch) {
@@ -85,7 +94,10 @@ const countSingleAsterisks = (text: string): number => {
       }
       // Check if this asterisk is at the beginning of a line (with optional whitespace)
       const beforeAsterisk = text.substring(lineStartIndex, index);
-      if (beforeAsterisk.trim() === '' && (nextChar === ' ' || nextChar === '\t')) {
+      if (
+        beforeAsterisk.trim() === '' &&
+        (nextChar === ' ' || nextChar === '\t')
+      ) {
         // This is likely a list marker, don't count it
         return acc;
       }
@@ -103,7 +115,7 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   if (hasCompleteCodeBlock(text)) {
     return text;
   }
-  
+
   const singleAsteriskMatch = text.match(singleAsteriskPattern);
 
   if (singleAsteriskMatch) {
@@ -121,14 +133,14 @@ const isWithinMathBlock = (text: string, position: number): boolean => {
   // Count dollar signs before this position
   let inInlineMath = false;
   let inBlockMath = false;
-  
+
   for (let i = 0; i < text.length && i < position; i++) {
     // Skip escaped dollar signs
     if (text[i] === '\\' && text[i + 1] === '$') {
       i++; // Skip the next character
       continue;
     }
-    
+
     if (text[i] === '$') {
       // Check for block math ($$)
       if (text[i + 1] === '$') {
@@ -141,7 +153,7 @@ const isWithinMathBlock = (text: string, position: number): boolean => {
       }
     }
   }
-  
+
   return inInlineMath || inBlockMath;
 };
 
@@ -173,7 +185,7 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
   if (hasCompleteCodeBlock(text)) {
     return text;
   }
-  
+
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
 
   if (singleUnderscoreMatch) {
@@ -221,17 +233,21 @@ const handleIncompleteInlineCode = (text: string): string => {
     // Already complete inline triple backticks
     return text;
   }
-  
+
   // Check if we're inside a multi-line code block (complete or incomplete)
   const allTripleBackticks = (text.match(/```/g) || []).length;
   const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
-  
+
   // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
-  if (allTripleBackticks > 0 && allTripleBackticks % 2 === 0 && text.includes('\n')) {
+  if (
+    allTripleBackticks > 0 &&
+    allTripleBackticks % 2 === 0 &&
+    text.includes('\n')
+  ) {
     // We have complete multi-line code blocks, don't add any backticks
     return text;
   }
-  
+
   // Special case: if text ends with ```\n (triple backticks followed by newline)
   // This is actually a complete code block, not incomplete
   if (text.endsWith('```\n') || text.endsWith('```')) {
@@ -289,40 +305,32 @@ const countSingleDollarSigns = (text: string): number => {
 const handleIncompleteBlockKatex = (text: string): string => {
   // Count all $$ pairs in the text
   const dollarPairs = (text.match(/\$\$/g) || []).length;
-  
+
   // If we have an even number of $$, the block is complete
   if (dollarPairs % 2 === 0) {
     return text;
   }
-  
+
   // If we have an odd number, add closing $$
   // Check if this looks like a multi-line math block (contains newlines after opening $$)
   const firstDollarIndex = text.indexOf('$$');
-  const hasNewlineAfterStart = firstDollarIndex !== -1 && text.indexOf('\n', firstDollarIndex) !== -1;
-  
+  const hasNewlineAfterStart =
+    firstDollarIndex !== -1 && text.indexOf('\n', firstDollarIndex) !== -1;
+
   // For multi-line blocks, add newline before closing $$ if not present
   if (hasNewlineAfterStart && !text.endsWith('\n')) {
     return `${text}\n$$`;
   }
-  
+
   // For inline blocks or when already ending with newline, just add $$
   return `${text}$$`;
-};
-
-// Completes incomplete inline KaTeX formatting ($)
-// Note: Since we've disabled single dollar math delimiters in remarkMath,
-// we should not auto-complete single dollar signs as they're likely currency symbols
-const handleIncompleteInlineKatex = (text: string): string => {
-  // Don't process single dollar signs - they're likely currency symbols, not math
-  // Only process block math ($$) which is handled separately
-  return text;
 };
 
 // Counts triple asterisks that are not part of quadruple or more asterisks
 const countTripleAsterisks = (text: string): number => {
   let count = 0;
   const matches = text.match(/\*+/g) || [];
-  
+
   for (const match of matches) {
     // Count how many complete triple asterisks are in this sequence
     const asteriskCount = match.length;
@@ -331,7 +339,7 @@ const countTripleAsterisks = (text: string): number => {
       count += Math.floor(asteriskCount / 3);
     }
   }
-  
+
   return count;
 };
 
@@ -341,13 +349,13 @@ const handleIncompleteBoldItalic = (text: string): string => {
   if (hasCompleteCodeBlock(text)) {
     return text;
   }
-  
+
   // Don't process if text is only asterisks and has 4 or more consecutive asterisks
   // This prevents cases like **** from being treated as incomplete ***
   if (/^\*{4,}$/.test(text)) {
     return text;
   }
-  
+
   const boldItalicMatch = text.match(boldItalicPattern);
 
   if (boldItalicMatch) {
@@ -368,8 +376,16 @@ export const parseIncompleteMarkdown = (text: string): string => {
 
   let result = text;
 
-  // Handle incomplete links and images first (removes content)
-  result = handleIncompleteLinksAndImages(result);
+  // Handle incomplete links and images first
+  const processedResult = handleIncompleteLinksAndImages(result);
+  
+  // If we added an incomplete link marker, don't process other formatting
+  // as the content inside the link should be preserved as-is
+  if (processedResult.endsWith('](streamdown:incomplete-link)')) {
+    return processedResult;
+  }
+  
+  result = processedResult;
 
   // Handle various formatting completions
   // Handle triple asterisks first (most specific)
@@ -380,7 +396,7 @@ export const parseIncompleteMarkdown = (text: string): string => {
   result = handleIncompleteSingleUnderscoreItalic(result);
   result = handleIncompleteInlineCode(result);
   result = handleIncompleteStrikethrough(result);
-  
+
   // Handle KaTeX formatting (only block math with $$)
   result = handleIncompleteBlockKatex(result);
   // Note: We don't handle inline KaTeX with single $ as they're likely currency symbols
