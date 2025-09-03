@@ -544,7 +544,7 @@ describe("parseIncompleteMarkdown", () => {
   describe("mixed formatting scenarios", () => {
     it("should handle bold inside italic", () => {
       expect(parseIncompleteMarkdown("*italic with **bold")).toBe(
-        "*italic with **bold**"
+        "*italic with **bold***"
       );
     });
 

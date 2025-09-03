@@ -135,20 +135,25 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   const singleAsteriskMatch = text.match(singleAsteriskPattern);
 
   if (singleAsteriskMatch) {
-    // Don't close if there's no meaningful content after the opening marker
-    // singleAsteriskMatch[2] contains the content after *
-    const contentAfterMarker = singleAsteriskMatch[2];
+    // Find the first single asterisk position (not part of **)
+    let firstSingleAsteriskIndex = -1;
+    for (let i = 0; i < text.length; i++) {
+      if (text[i] === '*' && text[i-1] !== '*' && text[i+1] !== '*') {
+        firstSingleAsteriskIndex = i;
+        break;
+      }
+    }
     
-    // Only skip closing if the content is truly empty or contains ONLY whitespace/markers
-    // If there's any actual text content, we should close the marker
-    if (!contentAfterMarker || contentAfterMarker.trim() === '') {
+    if (firstSingleAsteriskIndex === -1) {
       return text;
     }
     
-    // Check if content contains any non-emphasis characters (actual text)
-    const hasTextContent = /[^\s_~*`]/.test(contentAfterMarker);
-    if (!hasTextContent) {
-      // Content is only whitespace and emphasis markers, don't close
+    // Get content after the first single asterisk
+    const contentAfterFirstAsterisk = text.substring(firstSingleAsteriskIndex + 1);
+    
+    // Check if there's meaningful content after the asterisk
+    // Don't close if content is only whitespace or emphasis markers
+    if (!contentAfterFirstAsterisk || /^[\s_~*`]*$/.test(contentAfterFirstAsterisk)) {
       return text;
     }
     
@@ -222,11 +227,25 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
 
   if (singleUnderscoreMatch) {
-    // Don't close if there's no meaningful content after the opening marker
-    // singleUnderscoreMatch[2] contains the content after _
-    // Check if content is only whitespace or other emphasis markers
-    const contentAfterMarker = singleUnderscoreMatch[2];
-    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+    // Find the first single underscore position (not part of __)
+    let firstSingleUnderscoreIndex = -1;
+    for (let i = 0; i < text.length; i++) {
+      if (text[i] === '_' && text[i-1] !== '_' && text[i+1] !== '_' && !isWithinMathBlock(text, i)) {
+        firstSingleUnderscoreIndex = i;
+        break;
+      }
+    }
+    
+    if (firstSingleUnderscoreIndex === -1) {
+      return text;
+    }
+    
+    // Get content after the first single underscore
+    const contentAfterFirstUnderscore = text.substring(firstSingleUnderscoreIndex + 1);
+    
+    // Check if there's meaningful content after the underscore
+    // Don't close if content is only whitespace or emphasis markers
+    if (!contentAfterFirstUnderscore || /^[\s_~*`]*$/.test(contentAfterFirstUnderscore)) {
       return text;
     }
     
