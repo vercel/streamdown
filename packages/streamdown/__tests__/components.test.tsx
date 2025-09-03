@@ -362,6 +362,7 @@ describe("Markdown Components", () => {
       const { container } = render(<TH node={null as any}>Header</TH>);
       const th = container.querySelector("th");
       expect(th).toBeTruthy();
+      expect(th?.className).toContain("whitespace-nowrap");
       expect(th?.className).toContain("px-4");
       expect(th?.className).toContain("py-2");
       expect(th?.className).toContain("text-left");
