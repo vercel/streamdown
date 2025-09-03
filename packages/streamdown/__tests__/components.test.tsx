@@ -126,6 +126,21 @@ describe('Markdown Components', () => {
       expect(link?.getAttribute('target')).toBe('_blank');
     });
 
+    it('should mark incomplete links with data attribute', () => {
+      const A = components.a!;
+      const { container } = render(
+        <A href="streamdown:incomplete-link" node={null as any}>
+          Incomplete link text
+        </A>
+      );
+      // Should render a normal anchor with data-incomplete attribute
+      const link = container.querySelector('a[data-streamdown="link"]');
+      expect(link).toBeTruthy();
+      expect(link?.getAttribute('data-incomplete')).toBe('true');
+      expect(link?.getAttribute('href')).toBe('streamdown:incomplete-link');
+      expect(link?.textContent).toBe('Incomplete link text');
+    });
+
     it('should render blockquote with correct classes', () => {
       const Blockquote = components.blockquote!;
       const { container } = render(
