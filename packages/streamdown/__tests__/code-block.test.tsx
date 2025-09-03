@@ -231,4 +231,31 @@ describe('CodeBlock with multiple languages', () => {
       expect(languageLabels[2].textContent).toBe('typescript');
     }, { timeout: 5000 });
   });
+
+  it('should have data attributes on container, header, and code block elements', async () => {
+    const { container } = render(
+      <ShikiThemeContext.Provider value={['github-light', 'github-dark']}>
+        <CodeBlock code="const x = 1;" language="javascript" />
+      </ShikiThemeContext.Provider>
+    );
+
+    await waitFor(() => {
+      // Check container has data attributes
+      const containerElement = container.querySelector('[data-code-block-container]');
+      expect(containerElement).toBeTruthy();
+      expect(containerElement?.getAttribute('data-language')).toBe('javascript');
+
+      // Check header has data attributes
+      const headerElement = container.querySelector('[data-code-block-header]');
+      expect(headerElement).toBeTruthy();
+      expect(headerElement?.getAttribute('data-language')).toBe('javascript');
+
+      // Check code block has data attributes
+      const codeBlockElements = container.querySelectorAll('[data-code-block]');
+      expect(codeBlockElements.length).toBeGreaterThan(0);
+      codeBlockElements.forEach(element => {
+        expect(element.getAttribute('data-language')).toBe('javascript');
+      });
+    }, { timeout: 5000 });
+  });
 });
