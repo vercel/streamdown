@@ -228,7 +228,7 @@ const handleIncompleteInlineCode = (text: string): string => {
   if (inlineTripleBacktickMatch && !text.includes("\n")) {
     // Check if it ends with exactly 2 backticks (incomplete)
     if (text.endsWith("``") && !text.endsWith("```")) {
-      return `${text}` + "`";
+      return `${text}\``;
     }
     // Already complete inline triple backticks
     return text;
@@ -262,7 +262,7 @@ const handleIncompleteInlineCode = (text: string): string => {
   if (inlineCodeMatch && !insideIncompleteCodeBlock) {
     const singleBacktickCount = countSingleBackticks(text);
     if (singleBacktickCount % 2 === 1) {
-      return `${text}` + "`";
+      return `${text}\``;
     }
   }
 
@@ -284,7 +284,7 @@ const handleIncompleteStrikethrough = (text: string): string => {
 };
 
 // Counts single dollar signs that are not part of double dollar signs and not escaped
-const countSingleDollarSigns = (text: string): number => {
+const _countSingleDollarSigns = (text: string): number => {
   return text.split("").reduce((acc, char, index) => {
     if (char === "$") {
       const prevChar = text[index - 1];

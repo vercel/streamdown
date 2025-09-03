@@ -13,7 +13,7 @@ test("happy path", async () => {
     CHANGED_FILES: ".changeset/some-happy-path.md",
   };
 
-  const readFile = mock.fn(async (path) => {
+  const readFile = mock.fn(async (_path) => {
     return "---\nai: patch\n@ai-sdk/provider: patch\n---\n## Test changeset";
   });
 
@@ -75,7 +75,7 @@ test("invalid .changeset file - no frontmatter", async () => {
     CHANGED_FILES: ".changeset/invalid-changeset-file.md",
   };
 
-  const readFile = mock.fn(async (path) => {
+  const readFile = mock.fn(async (_path) => {
     return "frontmatter missing";
   });
   await assert.rejects(

@@ -44,7 +44,7 @@ class HighlighterManager {
   > | null = null;
   private lightTheme: BundledTheme | null = null;
   private darkTheme: BundledTheme | null = null;
-  private loadedLanguages: Set<BundledLanguage> = new Set();
+  private readonly loadedLanguages: Set<BundledLanguage> = new Set();
   private initializationPromise: Promise<void> | null = null;
 
   private async ensureHighlightersInitialized(
@@ -79,7 +79,7 @@ class HighlighterManager {
       this.loadedLanguages.add(language);
     } else if (needsLanguageLoad) {
       // Load the language if not already loaded
-      await this.lightHighlighter!.loadLanguage(language);
+      await this.lightHighlighter?.loadLanguage(language);
     }
 
     // Create or recreate dark highlighter if needed
@@ -97,7 +97,7 @@ class HighlighterManager {
       this.darkTheme = darkTheme;
     } else if (needsLanguageLoad) {
       // Load the language if not already loaded
-      await this.darkHighlighter!.loadLanguage(language);
+      await this.darkHighlighter?.loadLanguage(language);
     }
 
     // Mark language as loaded after both highlighters have it
@@ -134,11 +134,11 @@ class HighlighterManager {
 
     const [lightTheme, darkTheme] = themes;
 
-    const light = this.lightHighlighter!.codeToHtml(code, {
+    const light = this.lightHighlighter?.codeToHtml(code, {
       lang: language,
       theme: lightTheme,
     });
-    const dark = this.darkHighlighter!.codeToHtml(code, {
+    const dark = this.darkHighlighter?.codeToHtml(code, {
       lang: language,
       theme: darkTheme,
     });

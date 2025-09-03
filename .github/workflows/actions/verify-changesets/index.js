@@ -20,8 +20,6 @@ if (import.meta.url.endsWith(process.argv[1])) {
       `## Changeset verification passed ✅\n\n${message || ""}`
     );
   } catch (error) {
-    // write error to summary
-    console.error(error.message);
     await fs.writeFile(
       process.env.GITHUB_STEP_SUMMARY,
       `## Changeset verification failed ❌
@@ -63,7 +61,9 @@ export async function verifyChangesets(
   // Iterate through all changed .changeset/*.md files
   for (const path of env.CHANGED_FILES.trim().split(" ")) {
     // ignore README.md file
-    if (path === ".changeset/README.md") continue;
+    if (path === ".changeset/README.md") {
+      continue;
+    }
 
     // Check if the file is a .changeset file
     if (!/^\.changeset\/[a-z-]+\.md/.test(path)) {

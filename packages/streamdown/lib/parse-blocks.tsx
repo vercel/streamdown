@@ -12,7 +12,7 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
 
     // Check if this is a standalone $$ that might be a closing delimiter
     if (currentBlock.trim() === "$$" && mergedBlocks.length > 0) {
-      const previousBlock = mergedBlocks[mergedBlocks.length - 1];
+      const previousBlock = mergedBlocks.at(-1);
 
       // Check if the previous block starts with $$ but doesn't end with $$
       const prevStartsWith$$ = previousBlock.trimStart().startsWith("$$");
@@ -27,7 +27,7 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
 
     // Check if current block ends with $$ and previous block started with $$ but didn't close
     if (mergedBlocks.length > 0 && currentBlock.trimEnd().endsWith("$$")) {
-      const previousBlock = mergedBlocks[mergedBlocks.length - 1];
+      const previousBlock = mergedBlocks.at(-1);
       const prevStartsWith$$ = previousBlock.trimStart().startsWith("$$");
       const prevDollarCount = (previousBlock.match(/\$\$/g) || []).length;
       const currDollarCount = (currentBlock.match(/\$\$/g) || []).length;

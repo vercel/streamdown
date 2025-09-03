@@ -1,5 +1,4 @@
-import { render, screen } from "@testing-library/react";
-import React from "react";
+import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 
@@ -16,7 +15,9 @@ vi.mock("react-markdown", () => ({
     ...props
   }: any) => {
     // Only render if children is provided
-    if (!children) return null;
+    if (!children) {
+      return null;
+    }
     return (
       <div data-testid="markdown" {...props}>
         {children}

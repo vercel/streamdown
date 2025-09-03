@@ -794,8 +794,8 @@ describe("parseIncompleteMarkdown", () => {
     });
 
     it("should handle very long text", () => {
-      const longText = "a".repeat(10_000) + " **bold";
-      const expected = "a".repeat(10_000) + " **bold**";
+      const longText = `${"a".repeat(10_000)} **bold`;
+      const expected = `${"a".repeat(10_000)} **bold**`;
       expect(parseIncompleteMarkdown(longText)).toBe(expected);
     });
 
