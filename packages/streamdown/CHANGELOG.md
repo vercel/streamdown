@@ -1,5 +1,14 @@
 # streamdown
 
+## 1.1.8
+
+### Patch Changes
+
+- 76b68bf: add more code block data attributes
+- faba69f: Support multiple simultaneous code blocks with different languages
+- bda3134: add rtl unit tests
+- f45ea6d: fix: links invisible while streaming
+
 ## 1.1.7
 
 ### Patch Changes
