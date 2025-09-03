@@ -214,7 +214,7 @@ export const components: Options["components"] = {
   ),
   thead: ({ node, children, className, ...props }) => (
     <thead
-      className={cn("bg-muted/50", className)}
+      className={cn("bg-muted/80", className)}
       data-streamdown="table-header"
       {...props}
     >
@@ -223,7 +223,7 @@ export const components: Options["components"] = {
   ),
   tbody: ({ node, children, className, ...props }) => (
     <tbody
-      className={cn("divide-y divide-border", className)}
+      className={cn("divide-y bg-muted/40 divide-border", className)}
       data-streamdown="table-body"
       {...props}
     >
@@ -241,7 +241,7 @@ export const components: Options["components"] = {
   ),
   th: ({ node, children, className, ...props }) => (
     <th
-      className={cn("px-4 py-2 text-left font-semibold text-sm", className)}
+      className={cn("whitespace-nowrap px-4 py-2 text-left font-semibold text-sm", className)}
       data-streamdown="table-header-cell"
       {...props}
     >
