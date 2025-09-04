@@ -5,9 +5,67 @@ import { useInView } from "motion/react";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Streamdown, type StreamdownProps } from "streamdown";
+import { chunkText } from "streamdown/lib/smooth-stream";
 import { Button } from "@/components/ui/button";
 
 const DEFAULT_SPEED = 100;
+type WordByWordStreamdownProps = {
+  markdown: string;
+  speed?: number;
+  streamdownProps?: StreamdownProps;
+  start?: boolean;
+  resetKey?: number;
+};
+
+const WordByWordStreamdown = ({
+  markdown,
+  speed = DEFAULT_SPEED,
+  streamdownProps,
+  start = true,
+  resetKey,
+}: WordByWordStreamdownProps) => {
+  const [content, setContent] = useState("");
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const chunks = useMemo(() => chunkText(markdown, "word"), [markdown]);
+
+  useEffect(() => {
+    if (!start) {
+      return;
+    }
+
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    setContent("");
+    let index = 0;
+    let current = "";
+
+    intervalRef.current = setInterval(() => {
+      if (index < chunks.length) {
+        current += chunks[index];
+        setContent(current);
+        index++;
+      } else {
+        if (intervalRef.current) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
+        }
+      }
+    }, speed);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [start, resetKey, speed, chunks]);
+
+  return <Streamdown {...streamdownProps}>{content}</Streamdown>;
+};
+
 
 type SectionProps = {
   title: string;
@@ -31,7 +89,7 @@ export const Section = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const tokens = useMemo(
-    () => markdown.split(" ").map((token) => `${token} `),
+    () => chunkText(markdown, "line"),
     [markdown]
   );
 
@@ -112,7 +170,13 @@ export const Section = ({
               With Streamdown
             </div>
             <div className="h-[400px] overflow-y-auto bg-background p-4">
-              <Streamdown {...streamdownProps}>{content}</Streamdown>
+              <WordByWordStreamdown
+                markdown={markdown}
+                speed={speed / 5}
+                streamdownProps={streamdownProps}
+                start={isInView || resetTrigger > 0}
+                resetKey={resetTrigger}
+              />
             </div>
           </div>
         </div>
