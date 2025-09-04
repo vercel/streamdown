@@ -67,7 +67,8 @@ function tableDataToMarkdown(data: TableData): string {
   const markdownRows: string[] = [];
 
   // Add headers
-  markdownRows.push(`| ${headers.join(" | ")} |`);
+  const escapedHeaders = headers.map(h => h.replace(/\|/g, '\\|'));
+  markdownRows.push(`| ${escapedHeaders.join(" | ")} |`);
 
   // Add separator row
   markdownRows.push(`| ${headers.map(() => "---").join(" | ")} |`);
