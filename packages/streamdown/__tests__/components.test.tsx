@@ -305,9 +305,14 @@ describe("Markdown Components", () => {
       const wrapper = container.querySelector("div");
       expect(wrapper).toBeTruthy();
       expect(wrapper?.className).toContain("my-4");
-      expect(wrapper?.className).toContain("overflow-x-auto");
+      expect(wrapper?.className).toContain("flex");
+      expect(wrapper?.className).toContain("flex-col");
+      
+      // The overflow-x-auto is on the inner div that wraps the table
+      const tableWrapper = wrapper?.querySelector("div.overflow-x-auto");
+      expect(tableWrapper).toBeTruthy();
 
-      const table = wrapper?.querySelector("table");
+      const table = tableWrapper?.querySelector("table");
       expect(table).toBeTruthy();
       expect(table?.className).toContain("w-full");
       expect(table?.className).toContain("border-collapse");
