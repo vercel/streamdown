@@ -166,7 +166,7 @@ export const TableCopyButton = ({
       className={cn("text-muted-foreground p-1 transition-all", className)}
       onClick={copyTableData}
       type="button"
-      title={`Copy table as ${format.toUpperCase()}`}
+      title={`Copy table as ${format}`}
     >
       {children ?? <Icon size={14} />}
     </button>
