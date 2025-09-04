@@ -106,7 +106,7 @@ export const TableCopyButton = ({
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
 
-  const copyTableData = async () => {
+  const copyTableData = async (event: React.MouseEvent<HTMLButtonElement>) => {
     if (typeof window === "undefined" || !navigator?.clipboard?.writeText) {
       onError?.(new Error("Clipboard API not available"));
       return;
@@ -115,7 +115,7 @@ export const TableCopyButton = ({
     try {
       if (!isCopied) {
         // Find the closest table element
-        const button = document.activeElement as HTMLElement;
+        const button = event.currentTarget;
         const tableWrapper = button.closest('[data-streamdown="table-wrapper"]');
         const tableElement = tableWrapper?.querySelector("table") as HTMLTableElement;
 
@@ -191,10 +191,10 @@ export const TableDownloadButton = ({
   format = "csv",
   filename,
 }: TableDownloadButtonProps) => {
-  const downloadTableData = () => {
+  const downloadTableData = (event: React.MouseEvent<HTMLButtonElement>) => {
     try {
       // Find the closest table element
-      const button = document.activeElement as HTMLElement;
+      const button = event.currentTarget;
       const tableWrapper = button.closest('[data-streamdown="table-wrapper"]');
       const tableElement = tableWrapper?.querySelector("table") as HTMLTableElement;
 
