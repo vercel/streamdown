@@ -7,6 +7,7 @@ import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
 import { CodeBlock, CodeBlockCopyButton } from "./code-block";
 import { Mermaid } from "./mermaid";
+import { TableCopyButton, TableDownloadDropdown } from "./table";
 import { cn } from "./utils";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
@@ -202,14 +203,20 @@ export const components: Options["components"] = {
     </h6>
   ),
   table: ({ node, children, className, ...props }) => (
-    <div className="my-4 overflow-x-auto" data-streamdown="table-wrapper">
-      <table
-        className={cn("w-full border-collapse border border-border", className)}
-        data-streamdown="table"
-        {...props}
-      >
-        {children}
-      </table>
+    <div className="my-4 flex flex-col space-y-2" data-streamdown="table-wrapper">
+      <div className="flex items-center justify-end gap-1">
+        <TableCopyButton />
+        <TableDownloadDropdown />
+      </div>
+      <div className="overflow-x-auto">
+        <table
+          className={cn("w-full border-collapse border border-border", className)}
+          data-streamdown="table"
+          {...props}
+        >
+          {children}
+        </table>
+      </div>
     </div>
   ),
   thead: ({ node, children, className, ...props }) => (
