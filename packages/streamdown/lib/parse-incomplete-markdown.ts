@@ -54,6 +54,25 @@ const handleIncompleteBold = (text: string): string => {
       return text;
     }
     
+    // Check if the bold marker is in a list item context
+    // Find the position of the matched bold marker
+    const markerIndex = text.lastIndexOf(boldMatch[1]);
+    const beforeMarker = text.substring(0, markerIndex);
+    const lastNewlineBeforeMarker = beforeMarker.lastIndexOf('\n');
+    const lineStart = lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
+    const lineBeforeMarker = text.substring(lineStart, markerIndex);
+    
+    // Check if this line is a list item with just the bold marker
+    if (/^[\s]*[-*+][\s]+$/.test(lineBeforeMarker)) {
+      // This is a list item with just emphasis markers
+      // Check if content after marker spans multiple lines
+      const hasNewlineInContent = contentAfterMarker.includes('\n');
+      if (hasNewlineInContent) {
+        // Don't complete if the content spans to another line
+        return text;
+      }
+    }
+    
     const asteriskPairs = (text.match(/\*\*/g) || []).length;
     if (asteriskPairs % 2 === 1) {
       return `${text}**`;
@@ -74,6 +93,25 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
     const contentAfterMarker = italicMatch[2];
     if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
       return text;
+    }
+    
+    // Check if the underscore marker is in a list item context
+    // Find the position of the matched underscore marker
+    const markerIndex = text.lastIndexOf(italicMatch[1]);
+    const beforeMarker = text.substring(0, markerIndex);
+    const lastNewlineBeforeMarker = beforeMarker.lastIndexOf('\n');
+    const lineStart = lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
+    const lineBeforeMarker = text.substring(lineStart, markerIndex);
+    
+    // Check if this line is a list item with just the underscore marker
+    if (/^[\s]*[-*+][\s]+$/.test(lineBeforeMarker)) {
+      // This is a list item with just emphasis markers
+      // Check if content after marker spans multiple lines
+      const hasNewlineInContent = contentAfterMarker.includes('\n');
+      if (hasNewlineInContent) {
+        // Don't complete if the content spans to another line
+        return text;
+      }
     }
     
     const underscorePairs = (text.match(/__/g) || []).length;
