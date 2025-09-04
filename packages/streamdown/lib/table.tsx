@@ -79,7 +79,8 @@ function tableDataToMarkdown(data: TableData): string {
     while (paddedRow.length < headers.length) {
       paddedRow.push("");
     }
-    markdownRows.push(`| ${paddedRow.join(" | ")} |`);
+    const escapedRow = paddedRow.map(cell => cell.replace(/\|/g, '\\|'));
+    markdownRows.push(`| ${escapedRow.join(" | ")} |`);
   });
 
   return markdownRows.join("\n");
