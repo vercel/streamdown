@@ -862,5 +862,31 @@ describe("parseIncompleteMarkdown", () => {
       expect(parseIncompleteMarkdown("**&lt;tag&gt;")).toBe("**&lt;tag&gt;**");
       expect(parseIncompleteMarkdown("`&amp;")).toBe("`&amp;`");
     });
+
+    it("should handle lists with emphasis character blocks (issue #97)", () => {
+      // Lists with just emphasis markers should not be auto-completed
+      expect(parseIncompleteMarkdown("- __")).toBe("- __");
+      expect(parseIncompleteMarkdown("- **")).toBe("- **");
+      expect(parseIncompleteMarkdown("- __\n- **")).toBe("- __\n- **");
+      expect(parseIncompleteMarkdown("\n- __\n- **")).toBe("\n- __\n- **");
+      
+      // Multiple list items with emphasis markers
+      expect(parseIncompleteMarkdown("* __\n* **")).toBe("* __\n* **");
+      expect(parseIncompleteMarkdown("+ __\n+ **")).toBe("+ __\n+ **");
+      
+      // List items with emphasis markers and text should still complete
+      expect(parseIncompleteMarkdown("- __ text after")).toBe("- __ text after__");
+      expect(parseIncompleteMarkdown("- ** text after")).toBe("- ** text after**");
+      
+      // Mixed list items
+      expect(parseIncompleteMarkdown("- __\n- Normal item\n- **")).toBe("- __\n- Normal item\n- **");
+      
+      // Lists with other emphasis markers
+      expect(parseIncompleteMarkdown("- ***")).toBe("- ***");
+      expect(parseIncompleteMarkdown("- *")).toBe("- *");
+      expect(parseIncompleteMarkdown("- _")).toBe("- _");
+      expect(parseIncompleteMarkdown("- ~~")).toBe("- ~~");
+      expect(parseIncompleteMarkdown("- `")).toBe("- `");
+    });
   });
 });
