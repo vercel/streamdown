@@ -154,22 +154,13 @@ class HighlighterManager {
 // Create a singleton instance of the highlighter manager
 const highlighterManager = new HighlighterManager();
 
-export async function highlightCode(
-  code: string,
-  language: BundledLanguage,
-  themes: [BundledTheme, BundledTheme],
-  preClassName?: string
-) {
-  return highlighterManager.highlightCode(code, language, themes, preClassName);
-}
-
 // Remove background styles from <pre> tags (inline style)
-function removePreBackground(html: string) {
+const removePreBackground = (html: string) => {
   return html.replace(
     /(<pre[^>]*)(style="[^"]*background[^";]*;?[^"]*")([^>]*>)/g,
     "$1$3"
   );
-}
+};
 
 export const CodeBlock = ({
   code,
@@ -187,14 +178,14 @@ export const CodeBlock = ({
   useEffect(() => {
     mounted.current = true;
 
-    highlightCode(code, language, [lightTheme, darkTheme], preClassName).then(
-      ([light, dark]) => {
+    highlighterManager
+      .highlightCode(code, language, [lightTheme, darkTheme], preClassName)
+      .then(([light, dark]) => {
         if (mounted.current) {
           setHtml(light);
           setDarkHtml(dark);
         }
-      }
-    );
+      });
 
     return () => {
       mounted.current = false;
@@ -220,17 +211,17 @@ export const CodeBlock = ({
           <div className="min-w-full">
             <div
               className={cn("overflow-x-auto dark:hidden", className)}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               dangerouslySetInnerHTML={{ __html: html }}
               data-code-block
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               data-language={language}
               {...rest}
             />
             <div
               className={cn("hidden overflow-x-auto dark:block", className)}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               dangerouslySetInnerHTML={{ __html: darkHtml }}
               data-code-block
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               data-language={language}
               {...rest}
             />
