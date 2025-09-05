@@ -3,14 +3,19 @@ import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
 import type { ExtraProps } from "react-markdown";
 import { cn } from "./utils";
 
+type ImageComponentProps = DetailedHTMLProps<
+  ImgHTMLAttributes<HTMLImageElement>,
+  HTMLImageElement
+> &
+  ExtraProps;
+
 export const ImageComponent = ({
   node,
   className,
   src,
   alt,
   ...props
-}: DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement> &
-  ExtraProps) => {
+}: ImageComponentProps) => {
   const downloadImage = async () => {
     if (!src) {
       return;
