@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon, CopyIcon } from "lucide-react";
+import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import {
   type ComponentProps,
   createContext,
@@ -213,7 +213,7 @@ export const CodeBlock = ({
           data-language={language}
         >
           <span className="ml-1 font-mono lowercase">{language}</span>
-          <div>{children}</div>
+          <div className="flex items-center gap-2">{children}</div>
         </div>
         <div className="w-full">
           <div className="min-w-full">
@@ -244,6 +244,59 @@ export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;
+};
+
+
+export type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
+  onDownload?: () => void;
+  onError?: (error: Error) => void;
+};
+
+export const CodeBlockDownloadButton = ({
+  onDownload,
+  onError,
+  children,
+  className,
+  code: propCode,
+  ...props
+}: CodeBlockDownloadButtonProps & { code?: string }) => {
+  const contextCode = useContext(CodeBlockContext).code;
+  const code = propCode ?? contextCode;
+
+  const downloadCode = async () => {
+    if (typeof window === "undefined") {
+      onError?.(new Error("Download not available"));
+      return;
+    }
+
+    try {
+      const blob = new Blob([code], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = 'file';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      onDownload?.();
+    } catch (error) {
+      onError?.(error as Error);
+    }
+  };
+
+  return (
+    <button
+      className={cn("text-muted-foreground cursor-pointer p-1 transition-all", className)}
+      onClick={downloadCode}
+      type="button"
+      title="Download file"
+      {...props}
+    >
+      {children ?? <DownloadIcon size={14} />}
+    </button>
+  );
 };
 
 export const CodeBlockCopyButton = ({
@@ -291,7 +344,7 @@ export const CodeBlockCopyButton = ({
 
   return (
     <button
-      className={cn("text-muted-foreground", "p-1 transition-all", className)}
+      className={cn("text-muted-foreground cursor-pointer p-1 transition-all", className)}
       onClick={copyToClipboard}
       type="button"
       {...props}
