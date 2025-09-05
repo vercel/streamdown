@@ -10,7 +10,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { save } from "save-file";
 import {
   type BundledLanguage,
   type BundledTheme,
@@ -18,7 +17,7 @@ import {
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import { ShikiThemeContext } from "../index";
-import { cn } from "./utils";
+import { cn, save } from "./utils";
 
 const PRE_TAG_REGEX = /<pre(\s|>)/;
 
@@ -571,10 +570,11 @@ export const CodeBlockDownloadButton = ({
       ? languageExtensionMap[language]
       : "txt";
   const filename = `file.${extension}`;
+  const mimeType = "text/plain";
 
-  const downloadCode = async () => {
+  const downloadCode = () => {
     try {
-      await save(code, filename);
+      save(filename, code, mimeType);
       onDownload?.();
     } catch (error) {
       onError?.(error as Error);

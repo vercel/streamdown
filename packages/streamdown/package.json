@@ -58,7 +58,6 @@
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
-    "save-file": "^2.3.1",
     "shiki": "^3.12.2",
     "tailwind-merge": "^3.3.1"
   }

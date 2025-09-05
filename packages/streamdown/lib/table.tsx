@@ -1,6 +1,6 @@
 import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { cn } from "./utils";
+import { cn, save } from "./utils";
 
 type TableData = {
   headers: string[];
@@ -13,20 +13,20 @@ function extractTableDataFromElement(tableElement: HTMLElement): TableData {
 
   // Extract headers
   const headerCells = tableElement.querySelectorAll("thead th");
-  headerCells.forEach((cell) => {
+  for (const cell of headerCells) {
     headers.push(cell.textContent?.trim() || "");
-  });
+  }
 
   // Extract rows
   const bodyRows = tableElement.querySelectorAll("tbody tr");
-  bodyRows.forEach((row) => {
+  for (const row of bodyRows) {
     const rowData: string[] = [];
     const cells = row.querySelectorAll("td");
-    cells.forEach((cell) => {
+    for (const cell of cells) {
       rowData.push(cell.textContent?.trim() || "");
-    });
+    }
     rows.push(rowData);
-  });
+  }
 
   return { headers, rows };
 }
@@ -50,9 +50,9 @@ function tableDataToCSV(data: TableData): string {
   }
 
   // Add data rows
-  rows.forEach((row) => {
+  for (const row of rows) {
     csvRows.push(row.map(escapeCSV).join(","));
-  });
+  }
 
   return csvRows.join("\n");
 }
@@ -74,7 +74,7 @@ function tableDataToMarkdown(data: TableData): string {
   markdownRows.push(`| ${headers.map(() => "---").join(" | ")} |`);
 
   // Add data rows
-  rows.forEach((row) => {
+  for (const row of rows) {
     // Pad row with empty strings if it's shorter than headers
     const paddedRow = [...row];
     while (paddedRow.length < headers.length) {
@@ -82,7 +82,7 @@ function tableDataToMarkdown(data: TableData): string {
     }
     const escapedRow = paddedRow.map((cell) => cell.replace(/\|/g, "\\|"));
     markdownRows.push(`| ${escapedRow.join(" | ")} |`);
-  });
+  }
 
   return markdownRows.join("\n");
 }
@@ -291,30 +291,15 @@ export const TableDownloadDropdown = ({
       }
 
       const tableData = extractTableDataFromElement(tableElement);
-      let content = "";
-      let mimeType = "";
+      const content =
+        format === "csv"
+          ? tableDataToCSV(tableData)
+          : tableDataToMarkdown(tableData);
+      const extension = format === "csv" ? "csv" : "md";
+      const filename = `table.${extension}`;
+      const mimeType = format === "csv" ? "text/csv" : "text/markdown";
 
-      switch (format) {
-        case "csv":
-          content = tableDataToCSV(tableData);
-          mimeType = "text/csv";
-          break;
-        case "markdown":
-          content = tableDataToMarkdown(tableData);
-          mimeType = "text/markdown";
-          break;
-      }
-
-      const blob = new Blob([content], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `table.${format === "csv" ? "csv" : "md"}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
+      save(filename, content, mimeType);
       setIsOpen(false);
       onDownload?.(format);
     } catch (error) {

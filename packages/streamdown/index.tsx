@@ -8,6 +8,8 @@ import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
 import "katex/dist/katex.min.css";
 import hardenReactMarkdownImport from "harden-react-markdown";
+import type { Options as RemarkGfmOptions } from "remark-gfm";
+import type { Options as RemarkMathOptions } from "remark-math";
 import { components as defaultComponents } from "./lib/components";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
@@ -44,6 +46,12 @@ type BlockProps = HardenReactMarkdownProps & {
   shouldParseIncompleteMarkdown: boolean;
 };
 
+const remarkMathOptions: RemarkMathOptions = {
+  singleDollarTextMath: false,
+};
+
+const remarkGfmOptions: RemarkGfmOptions = {};
+
 const Block = memo(
   ({ content, shouldParseIncompleteMarkdown, ...props }: BlockProps) => {
     const parsedContent = useMemo(
@@ -64,8 +72,8 @@ Block.displayName = "Block";
 export const Streamdown = memo(
   ({
     children,
-    allowedImagePrefixes,
-    allowedLinkPrefixes,
+    allowedImagePrefixes = ["*"],
+    allowedLinkPrefixes = ["*"],
     defaultOrigin,
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     components,
@@ -92,8 +100,8 @@ export const Streamdown = memo(
         <div className={cn("space-y-4", className)} {...props}>
           {blocks.map((block, index) => (
             <Block
-              allowedImagePrefixes={allowedImagePrefixes ?? ["*"]}
-              allowedLinkPrefixes={allowedLinkPrefixes ?? ["*"]}
+              allowedImagePrefixes={allowedImagePrefixes}
+              allowedLinkPrefixes={allowedLinkPrefixes}
               components={{
                 ...defaultComponents,
                 ...components,
@@ -104,8 +112,8 @@ export const Streamdown = memo(
               key={`${generatedId}-block_${index}`}
               rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
               remarkPlugins={[
-                remarkGfm,
-                [remarkMath, { singleDollarTextMath: false }],
+                [remarkGfm, remarkGfmOptions],
+                [remarkMath, remarkMathOptions],
                 ...(remarkPlugins ?? []),
               ]}
               shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
