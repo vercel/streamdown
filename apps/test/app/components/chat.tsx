@@ -89,7 +89,16 @@ export const Chat = ({ models }: ChatProps) => {
               {message.parts.map((part, index) => {
                 switch (part.type) {
                   case "text":
-                    return <Streamdown key={index}>{part.text}</Streamdown>;
+                    return (
+                      <Streamdown 
+                        key={index} 
+                        role={message.role}
+                        showMessageActions={true}
+                        isStreaming={status === "streaming" && message === messages[messages.length - 1]}
+                      >
+                        {part.text}
+                      </Streamdown>
+                    );
                   case "reasoning":
                     return (
                       <p className="italic" key={part.text}>

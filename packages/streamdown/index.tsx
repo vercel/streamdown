@@ -14,6 +14,13 @@ import { components as defaultComponents } from "./lib/components";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
+import { MessageCopyButton, MessageActions } from "./lib/message-actions";
+
+export {
+  MessageActions,
+  MessageCopyButton,
+  MessageExportDropdown,
+} from "./lib/message-actions";
 
 type HardenReactMarkdownProps = Options & {
   defaultOrigin?: string;
@@ -34,6 +41,9 @@ export type StreamdownProps = HardenReactMarkdownProps & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
+  role?: "system" | "user" | "assistant";
+  showMessageActions?: boolean;
+  isStreaming?: boolean;
 };
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
@@ -81,6 +91,9 @@ export const Streamdown = memo(
     remarkPlugins,
     className,
     shikiTheme = ["github-light", "github-dark"],
+    role,
+    showMessageActions = true,
+    isStreaming = false,
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
@@ -119,6 +132,19 @@ export const Streamdown = memo(
               shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
             />
           ))}
+          {showMessageActions && children && !isStreaming && (
+            <div className="flex justify-end pt-2">
+              {role === "user" ? (
+                <MessageCopyButton 
+                  content={typeof children === "string" ? children : ""} 
+                />
+              ) : role === "assistant" ? (
+                <MessageActions 
+                  content={typeof children === "string" ? children : ""} 
+                />
+              ) : null}
+            </div>
+          )}
         </div>
       </ShikiThemeContext.Provider>
     );
