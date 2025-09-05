@@ -169,7 +169,10 @@ export const TableCopyButton = ({
 
   return (
     <button
-      className={cn("p-1 text-muted-foreground transition-all", className)}
+      className={cn(
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
+        className
+      )}
       onClick={copyTableData}
       title={`Copy table as ${format}`}
       type="button"
@@ -250,7 +253,10 @@ export const TableDownloadButton = ({
 
   return (
     <button
-      className={cn("p-1 text-muted-foreground transition-all", className)}
+      className={cn(
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
+        className
+      )}
       onClick={downloadTableData}
       title={`Download table as ${format.toUpperCase()}`}
       type="button"
