@@ -343,7 +343,7 @@ export const TableDownloadDropdown = ({
         {children ?? <DownloadIcon size={14} />}
       </button>
       {isOpen && (
-        <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] rounded-md border border-border bg-popover shadow-lg">
+        <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] rounded-md border border-border bg-popover text-popover-foreground shadow-lg">
           <button
             className="w-full px-3 py-2 text-left text-sm text-popover-foreground transition-colors hover:bg-muted/40"
             onClick={() => downloadTableData("csv")}
