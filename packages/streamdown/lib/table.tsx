@@ -1,5 +1,6 @@
 import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import save from "save-file";
 import { cn } from "./utils";
 
 type TableData = {
@@ -291,27 +292,14 @@ export const TableDownloadDropdown = ({
       }
 
       const tableData = extractTableDataFromElement(tableElement);
-      let content = "";
-      let mimeType = "";
+      const content =
+        format === "csv"
+          ? tableDataToCSV(tableData)
+          : tableDataToMarkdown(tableData);
+      const extension = format === "csv" ? "csv" : "md";
+      const filename = `table.${extension}`;
 
-      if (format === "csv") {
-        content = tableDataToCSV(tableData);
-        mimeType = "text/csv";
-      } else if (format === "markdown") {
-        content = tableDataToMarkdown(tableData);
-        mimeType = "text/markdown";
-      }
-
-      const blob = new Blob([content], { type: mimeType });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `table.${format === "csv" ? "csv" : "md"}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
+      save(content, filename);
       setIsOpen(false);
       onDownload?.(format);
     } catch (error) {
