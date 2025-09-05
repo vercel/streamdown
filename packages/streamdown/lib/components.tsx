@@ -5,6 +5,7 @@ import {
 } from "react";
 import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
+import { ImageComponent } from "./image";
 import { CodeBlock, CodeBlockCopyButton, CodeBlockDownloadButton } from "./code-block";
 import { Mermaid } from "./mermaid";
 import { TableCopyButton, TableDownloadDropdown } from "./table";
@@ -85,6 +86,7 @@ const CodeComponent = ({
     </CodeBlock>
   );
 };
+
 
 export const components: Options["components"] = {
   ol: ({ node, children, className, ...props }) => (
@@ -279,6 +281,7 @@ export const components: Options["components"] = {
     </blockquote>
   ),
   code: CodeComponent,
+  img: ImageComponent,
   pre: ({ children }) => children,
   sup: ({ node, children, className, ...props }) => (
     <sup
