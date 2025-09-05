@@ -802,17 +802,17 @@ describe("parseIncompleteMarkdown", () => {
       expect(parseIncompleteMarkdown("_")).toBe("_");
       expect(parseIncompleteMarkdown("~~")).toBe("~~");
       expect(parseIncompleteMarkdown("`")).toBe("`");
-      
+
       // Multiple standalone markers on the same line
       expect(parseIncompleteMarkdown("** __")).toBe("** __");
       expect(parseIncompleteMarkdown("\n** __\n")).toBe("\n** __\n");
       expect(parseIncompleteMarkdown("* _ ~~ `")).toBe("* _ ~~ `");
-      
+
       // Standalone markers with only whitespace
       expect(parseIncompleteMarkdown("** ")).toBe("** ");
       expect(parseIncompleteMarkdown(" **")).toBe(" **");
       expect(parseIncompleteMarkdown("  **  ")).toBe("  **  ");
-      
+
       // But markers with actual content should still be closed
       expect(parseIncompleteMarkdown("**text")).toBe("**text**");
       expect(parseIncompleteMarkdown("__text")).toBe("__text__");
@@ -869,18 +869,24 @@ describe("parseIncompleteMarkdown", () => {
       expect(parseIncompleteMarkdown("- **")).toBe("- **");
       expect(parseIncompleteMarkdown("- __\n- **")).toBe("- __\n- **");
       expect(parseIncompleteMarkdown("\n- __\n- **")).toBe("\n- __\n- **");
-      
+
       // Multiple list items with emphasis markers
       expect(parseIncompleteMarkdown("* __\n* **")).toBe("* __\n* **");
       expect(parseIncompleteMarkdown("+ __\n+ **")).toBe("+ __\n+ **");
-      
+
       // List items with emphasis markers and text should still complete
-      expect(parseIncompleteMarkdown("- __ text after")).toBe("- __ text after__");
-      expect(parseIncompleteMarkdown("- ** text after")).toBe("- ** text after**");
-      
+      expect(parseIncompleteMarkdown("- __ text after")).toBe(
+        "- __ text after__"
+      );
+      expect(parseIncompleteMarkdown("- ** text after")).toBe(
+        "- ** text after**"
+      );
+
       // Mixed list items
-      expect(parseIncompleteMarkdown("- __\n- Normal item\n- **")).toBe("- __\n- Normal item\n- **");
-      
+      expect(parseIncompleteMarkdown("- __\n- Normal item\n- **")).toBe(
+        "- __\n- Normal item\n- **"
+      );
+
       // Lists with other emphasis markers
       expect(parseIncompleteMarkdown("- ***")).toBe("- ***");
       expect(parseIncompleteMarkdown("- *")).toBe("- *");

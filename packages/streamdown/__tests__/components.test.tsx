@@ -307,7 +307,7 @@ describe("Markdown Components", () => {
       expect(wrapper?.className).toContain("my-4");
       expect(wrapper?.className).toContain("flex");
       expect(wrapper?.className).toContain("flex-col");
-      
+
       // The overflow-x-auto is on the inner div that wraps the table
       const tableWrapper = wrapper?.querySelector("div.overflow-x-auto");
       expect(tableWrapper).toBeTruthy();

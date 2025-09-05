@@ -246,7 +246,6 @@ export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
   timeout?: number;
 };
 
-
 export type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
   onDownload?: () => void;
   onError?: (error: Error) => void;
@@ -270,11 +269,11 @@ export const CodeBlockDownloadButton = ({
     }
 
     try {
-      const blob = new Blob([code], { type: 'text/plain' });
+      const blob = new Blob([code], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = 'file';
+      a.download = "file";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -288,10 +287,13 @@ export const CodeBlockDownloadButton = ({
 
   return (
     <button
-      className={cn("text-muted-foreground cursor-pointer p-1 transition-all", className)}
+      className={cn(
+        "cursor-pointer p-1 text-muted-foreground transition-all",
+        className
+      )}
       onClick={downloadCode}
-      type="button"
       title="Download file"
+      type="button"
       {...props}
     >
       {children ?? <DownloadIcon size={14} />}
@@ -344,7 +346,10 @@ export const CodeBlockCopyButton = ({
 
   return (
     <button
-      className={cn("text-muted-foreground cursor-pointer p-1 transition-all", className)}
+      className={cn(
+        "cursor-pointer p-1 text-muted-foreground transition-all",
+        className
+      )}
       onClick={copyToClipboard}
       type="button"
       {...props}
