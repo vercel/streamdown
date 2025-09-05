@@ -4,10 +4,13 @@ import { convertToModelMessages, streamText, type UIMessage } from "ai";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json();
+  const { messages, model }: { messages: UIMessage[]; model: string } =
+    await req.json();
+
+  console.log("Running model:", model);
 
   const result = streamText({
-    model: "anthropic/claude-sonnet-4",
+    model,
     system: "You are a helpful assistant.",
     messages: convertToModelMessages(messages),
   });
