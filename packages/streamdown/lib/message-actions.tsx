@@ -50,6 +50,8 @@ export const MessageExportDropdown = ({ content, className }: MessageActionsProp
 
   const handlePdfExport = async () => {
     setIsExporting(true);
+    let tempDiv: HTMLDivElement | null = null;
+    
     try {
       // Import jsPDF and html2canvas dynamically to avoid bundle bloat
       const [{ default: jsPDF }, { default: html2canvas }] = await Promise.all([
@@ -58,7 +60,7 @@ export const MessageExportDropdown = ({ content, className }: MessageActionsProp
       ]);
 
       // Create a temporary container with the markdown rendered as HTML
-      const tempDiv = document.createElement("div");
+      tempDiv = document.createElement("div");
       tempDiv.style.cssText = `
         position: absolute;
         top: -10000px;
@@ -116,8 +118,6 @@ export const MessageExportDropdown = ({ content, className }: MessageActionsProp
         allowTaint: true
       });
 
-      document.body.removeChild(tempDiv);
-
       // Create PDF
       const pdf = new jsPDF({
         orientation: "portrait",
@@ -152,6 +152,10 @@ export const MessageExportDropdown = ({ content, className }: MessageActionsProp
     } catch (error) {
       console.error("Failed to export PDF:", error);
     } finally {
+      // Clean up temporary DOM element if it exists
+      if (tempDiv && tempDiv.parentNode) {
+        document.body.removeChild(tempDiv);
+      }
       setIsExporting(false);
       setIsOpen(false);
     }
