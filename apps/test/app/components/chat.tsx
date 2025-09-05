@@ -35,9 +35,9 @@ export const Chat = ({ models }: ChatProps) => {
   const [model, setModel] = useState(models[0].value);
 
   return (
-    <div className="mx-auto flex h-screen max-w-4xl flex-col divide-y border-x">
+    <div className="mx-auto flex h-screen max-w-4xl flex-col divide-y border-x bg-background">
       <div className="flex flex-1 divide-x overflow-hidden">
-        <div className="flex-1 space-y-4 overflow-y-auto bg-black p-4 text-white">
+        <div className="flex-1 space-y-4 overflow-y-auto bg-muted p-4 text-muted-foreground">
           {messages.map((message) => (
             <div key={message.id}>
               <span className="font-bold">
@@ -80,7 +80,7 @@ export const Chat = ({ models }: ChatProps) => {
             </div>
           ))}
         </div>
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        <div className="flex-1 space-y-4 overflow-y-auto bg-background p-4">
           {messages.map((message) => (
             <div key={message.id}>
               <span className="font-bold">
@@ -121,7 +121,7 @@ export const Chat = ({ models }: ChatProps) => {
         </div>
       </div>
       <form
-        className="grid shrink-0 items-center gap-2 divide-y p-4"
+        className="grid shrink-0 items-center gap-2 divide-y bg-background p-4"
         onSubmit={(e) => {
           e.preventDefault();
           if (input.trim()) {

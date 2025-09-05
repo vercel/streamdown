@@ -1,5 +1,6 @@
 import { gateway } from "@ai-sdk/gateway";
 import { Chat } from "./components/chat";
+import { ThemeSwitcher } from "./components/theme-switcher";
 
 export default async function Page() {
   const { models } = await gateway.getAvailableModels();
@@ -10,5 +11,12 @@ export default async function Page() {
       value: model.id,
     }));
 
-  return <Chat models={list} />;
+  return (
+    <div className="relative h-screen">
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeSwitcher />
+      </div>
+      <Chat models={list} />
+    </div>
+  );
 }
