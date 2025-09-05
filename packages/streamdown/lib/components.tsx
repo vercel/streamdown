@@ -5,8 +5,8 @@ import {
 } from "react";
 import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
-import { CodeBlock, CodeBlockCopyButton } from "./code-block";
 import { ImageComponent } from "./image";
+import { CodeBlock, CodeBlockCopyButton, CodeBlockDownloadButton } from "./code-block";
 import { Mermaid } from "./mermaid";
 import { TableCopyButton, TableDownloadDropdown } from "./table";
 import { cn } from "./utils";
@@ -63,7 +63,8 @@ const CodeComponent = ({
         )}
         data-streamdown="mermaid-block"
       >
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-end gap-2">
+          <CodeBlockDownloadButton code={code} />
           <CodeBlockCopyButton code={code} />
         </div>
         <Mermaid chart={code} />
@@ -80,6 +81,7 @@ const CodeComponent = ({
       language={language}
       preClassName="overflow-x-auto font-mono text-xs p-4 bg-muted/40"
     >
+      <CodeBlockDownloadButton />
       <CodeBlockCopyButton />
     </CodeBlock>
   );
