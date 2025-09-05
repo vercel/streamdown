@@ -1,7 +1,6 @@
 import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import save from "save-file";
-import { cn } from "./utils";
+import { cn, save } from "./utils";
 
 type TableData = {
   headers: string[];
@@ -298,8 +297,9 @@ export const TableDownloadDropdown = ({
           : tableDataToMarkdown(tableData);
       const extension = format === "csv" ? "csv" : "md";
       const filename = `table.${extension}`;
+      const mimeType = format === "csv" ? "text/csv" : "text/markdown";
 
-      save(content, filename);
+      save(filename, content, mimeType);
       setIsOpen(false);
       onDownload?.(format);
     } catch (error) {
