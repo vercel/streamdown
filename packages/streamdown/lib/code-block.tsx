@@ -1,6 +1,5 @@
 "use client";
 
-import { saveAs } from "file-saver";
 import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import {
   type ComponentProps,
@@ -11,6 +10,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { save } from "save-file";
 import {
   type BundledLanguage,
   type BundledTheme,
@@ -572,9 +572,9 @@ export const CodeBlockDownloadButton = ({
       : "txt";
   const filename = `file.${extension}`;
 
-  const downloadCode = () => {
+  const downloadCode = async () => {
     try {
-      saveAs(code, filename);
+      await save(code, filename);
       onDownload?.();
     } catch (error) {
       onError?.(error as Error);
