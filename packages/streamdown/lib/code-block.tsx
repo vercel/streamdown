@@ -584,7 +584,7 @@ export const CodeBlockDownloadButton = ({
   return (
     <button
       className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all",
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
         className
       )}
       onClick={downloadCode}
@@ -643,7 +643,7 @@ export const CodeBlockCopyButton = ({
   return (
     <button
       className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all",
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
         className
       )}
       onClick={copyToClipboard}
