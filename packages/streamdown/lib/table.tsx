@@ -294,15 +294,12 @@ export const TableDownloadDropdown = ({
       let content = "";
       let mimeType = "";
 
-      switch (format) {
-        case "csv":
-          content = tableDataToCSV(tableData);
-          mimeType = "text/csv";
-          break;
-        case "markdown":
-          content = tableDataToMarkdown(tableData);
-          mimeType = "text/markdown";
-          break;
+      if (format === "csv") {
+        content = tableDataToCSV(tableData);
+        mimeType = "text/csv";
+      } else if (format === "markdown") {
+        content = tableDataToMarkdown(tableData);
+        mimeType = "text/markdown";
       }
 
       const blob = new Blob([content], { type: mimeType });
