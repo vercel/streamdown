@@ -72,8 +72,8 @@ Block.displayName = "Block";
 export const Streamdown = memo(
   ({
     children,
-    allowedImagePrefixes,
-    allowedLinkPrefixes,
+    allowedImagePrefixes = ["*"],
+    allowedLinkPrefixes = ["*"],
     defaultOrigin,
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     components,
@@ -100,8 +100,8 @@ export const Streamdown = memo(
         <div className={cn("space-y-4", className)} {...props}>
           {blocks.map((block, index) => (
             <Block
-              allowedImagePrefixes={allowedImagePrefixes ?? ["*"]}
-              allowedLinkPrefixes={allowedLinkPrefixes ?? ["*"]}
+              allowedImagePrefixes={allowedImagePrefixes}
+              allowedLinkPrefixes={allowedLinkPrefixes}
               components={{
                 ...defaultComponents,
                 ...components,
