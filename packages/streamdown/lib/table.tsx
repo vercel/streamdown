@@ -67,7 +67,7 @@ function tableDataToMarkdown(data: TableData): string {
   const markdownRows: string[] = [];
 
   // Add headers
-  const escapedHeaders = headers.map(h => h.replace(/\|/g, '\\|'));
+  const escapedHeaders = headers.map((h) => h.replace(/\|/g, "\\|"));
   markdownRows.push(`| ${escapedHeaders.join(" | ")} |`);
 
   // Add separator row
@@ -80,7 +80,7 @@ function tableDataToMarkdown(data: TableData): string {
     while (paddedRow.length < headers.length) {
       paddedRow.push("");
     }
-    const escapedRow = paddedRow.map(cell => cell.replace(/\|/g, '\\|'));
+    const escapedRow = paddedRow.map((cell) => cell.replace(/\|/g, "\\|"));
     markdownRows.push(`| ${escapedRow.join(" | ")} |`);
   });
 
@@ -117,8 +117,12 @@ export const TableCopyButton = ({
       if (!isCopied) {
         // Find the closest table element
         const button = event.currentTarget;
-        const tableWrapper = button.closest('[data-streamdown="table-wrapper"]');
-        const tableElement = tableWrapper?.querySelector("table") as HTMLTableElement;
+        const tableWrapper = button.closest(
+          '[data-streamdown="table-wrapper"]'
+        );
+        const tableElement = tableWrapper?.querySelector(
+          "table"
+        ) as HTMLTableElement;
 
         if (!tableElement) {
           onError?.(new Error("Table not found"));
@@ -165,10 +169,10 @@ export const TableCopyButton = ({
 
   return (
     <button
-      className={cn("text-muted-foreground p-1 transition-all", className)}
+      className={cn("p-1 text-muted-foreground transition-all", className)}
       onClick={copyTableData}
-      type="button"
       title={`Copy table as ${format}`}
+      type="button"
     >
       {children ?? <Icon size={14} />}
     </button>
@@ -197,7 +201,9 @@ export const TableDownloadButton = ({
       // Find the closest table element
       const button = event.currentTarget;
       const tableWrapper = button.closest('[data-streamdown="table-wrapper"]');
-      const tableElement = tableWrapper?.querySelector("table") as HTMLTableElement;
+      const tableElement = tableWrapper?.querySelector(
+        "table"
+      ) as HTMLTableElement;
 
       if (!tableElement) {
         onError?.(new Error("Table not found"));
@@ -230,7 +236,7 @@ export const TableDownloadButton = ({
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `${filename || 'table'}.${extension}`;
+      a.download = `${filename || "table"}.${extension}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -244,10 +250,10 @@ export const TableDownloadButton = ({
 
   return (
     <button
-      className={cn("text-muted-foreground p-1 transition-all", className)}
+      className={cn("p-1 text-muted-foreground transition-all", className)}
       onClick={downloadTableData}
-      type="button"
       title={`Download table as ${format.toUpperCase()}`}
+      type="button"
     >
       {children ?? <DownloadIcon size={14} />}
     </button>
@@ -257,7 +263,7 @@ export const TableDownloadButton = ({
 export type TableDownloadDropdownProps = {
   children?: React.ReactNode;
   className?: string;
-  onDownload?: (format: 'csv' | 'markdown') => void;
+  onDownload?: (format: "csv" | "markdown") => void;
   onError?: (error: Error) => void;
 };
 
@@ -270,10 +276,14 @@ export const TableDownloadDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const downloadTableData = (format: 'csv' | 'markdown') => {
+  const downloadTableData = (format: "csv" | "markdown") => {
     try {
-      const tableWrapper = dropdownRef.current?.closest('[data-streamdown="table-wrapper"]');
-      const tableElement = tableWrapper?.querySelector("table") as HTMLTableElement;
+      const tableWrapper = dropdownRef.current?.closest(
+        '[data-streamdown="table-wrapper"]'
+      );
+      const tableElement = tableWrapper?.querySelector(
+        "table"
+      ) as HTMLTableElement;
 
       if (!tableElement) {
         onError?.(new Error("Table not found"));
@@ -294,12 +304,12 @@ export const TableDownloadDropdown = ({
           mimeType = "text/markdown";
           break;
       }
-      
+
       const blob = new Blob([content], { type: mimeType });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `table.${format === 'csv' ? 'csv' : 'md'}`;
+      a.download = `table.${format === "csv" ? "csv" : "md"}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -314,39 +324,42 @@ export const TableDownloadDropdown = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
   return (
-    <div ref={dropdownRef} className="relative">
+    <div className="relative" ref={dropdownRef}>
       <button
-        className={cn("text-muted-foreground p-1 transition-all", className)}
+        className={cn("p-1 text-muted-foreground transition-all", className)}
         onClick={() => setIsOpen(!isOpen)}
-        type="button"
         title="Download table"
+        type="button"
       >
         {children ?? <DownloadIcon size={14} />}
       </button>
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 bg-white border border-border rounded-md shadow-lg z-10 min-w-[120px]">
+        <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] rounded-md border border-border bg-white shadow-lg">
           <button
-            className="w-full text-left px-3 py-2 text-sm hover:bg-muted/40 transition-colors"
-            onClick={() => downloadTableData('csv')}
+            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            onClick={() => downloadTableData("csv")}
             type="button"
           >
             CSV
           </button>
           <button
-            className="w-full text-left px-3 py-2 text-sm hover:bg-muted/40 transition-colors"
-            onClick={() => downloadTableData('markdown')}
+            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            onClick={() => downloadTableData("markdown")}
             type="button"
           >
             Markdown

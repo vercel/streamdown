@@ -53,11 +53,12 @@
     "katex": "^0.16.22",
     "lucide-react": "^0.542.0",
     "marked": "^16.2.1",
-    "mermaid": "^11.10.1",
+    "mermaid": "^11.11.0",
     "react-markdown": "^10.1.0",
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "save-file": "^2.3.1",
     "shiki": "^3.12.2",
     "tailwind-merge": "^3.3.1"
   }

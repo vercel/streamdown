@@ -53,26 +53,27 @@ const handleIncompleteBold = (text: string): string => {
     if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
       return text;
     }
-    
+
     // Check if the bold marker is in a list item context
     // Find the position of the matched bold marker
     const markerIndex = text.lastIndexOf(boldMatch[1]);
     const beforeMarker = text.substring(0, markerIndex);
-    const lastNewlineBeforeMarker = beforeMarker.lastIndexOf('\n');
-    const lineStart = lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
+    const lastNewlineBeforeMarker = beforeMarker.lastIndexOf("\n");
+    const lineStart =
+      lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
     const lineBeforeMarker = text.substring(lineStart, markerIndex);
-    
+
     // Check if this line is a list item with just the bold marker
     if (/^[\s]*[-*+][\s]+$/.test(lineBeforeMarker)) {
       // This is a list item with just emphasis markers
       // Check if content after marker spans multiple lines
-      const hasNewlineInContent = contentAfterMarker.includes('\n');
+      const hasNewlineInContent = contentAfterMarker.includes("\n");
       if (hasNewlineInContent) {
         // Don't complete if the content spans to another line
         return text;
       }
     }
-    
+
     const asteriskPairs = (text.match(/\*\*/g) || []).length;
     if (asteriskPairs % 2 === 1) {
       return `${text}**`;
@@ -94,26 +95,27 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
     if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
       return text;
     }
-    
+
     // Check if the underscore marker is in a list item context
     // Find the position of the matched underscore marker
     const markerIndex = text.lastIndexOf(italicMatch[1]);
     const beforeMarker = text.substring(0, markerIndex);
-    const lastNewlineBeforeMarker = beforeMarker.lastIndexOf('\n');
-    const lineStart = lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
+    const lastNewlineBeforeMarker = beforeMarker.lastIndexOf("\n");
+    const lineStart =
+      lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
     const lineBeforeMarker = text.substring(lineStart, markerIndex);
-    
+
     // Check if this line is a list item with just the underscore marker
     if (/^[\s]*[-*+][\s]+$/.test(lineBeforeMarker)) {
       // This is a list item with just emphasis markers
       // Check if content after marker spans multiple lines
-      const hasNewlineInContent = contentAfterMarker.includes('\n');
+      const hasNewlineInContent = contentAfterMarker.includes("\n");
       if (hasNewlineInContent) {
         // Don't complete if the content spans to another line
         return text;
       }
     }
-    
+
     const underscorePairs = (text.match(/__/g) || []).length;
     if (underscorePairs % 2 === 1) {
       return `${text}__`;
@@ -176,25 +178,30 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
     // Find the first single asterisk position (not part of **)
     let firstSingleAsteriskIndex = -1;
     for (let i = 0; i < text.length; i++) {
-      if (text[i] === '*' && text[i-1] !== '*' && text[i+1] !== '*') {
+      if (text[i] === "*" && text[i - 1] !== "*" && text[i + 1] !== "*") {
         firstSingleAsteriskIndex = i;
         break;
       }
     }
-    
+
     if (firstSingleAsteriskIndex === -1) {
       return text;
     }
-    
+
     // Get content after the first single asterisk
-    const contentAfterFirstAsterisk = text.substring(firstSingleAsteriskIndex + 1);
-    
+    const contentAfterFirstAsterisk = text.substring(
+      firstSingleAsteriskIndex + 1
+    );
+
     // Check if there's meaningful content after the asterisk
     // Don't close if content is only whitespace or emphasis markers
-    if (!contentAfterFirstAsterisk || /^[\s_~*`]*$/.test(contentAfterFirstAsterisk)) {
+    if (
+      !contentAfterFirstAsterisk ||
+      /^[\s_~*`]*$/.test(contentAfterFirstAsterisk)
+    ) {
       return text;
     }
-    
+
     const singleAsterisks = countSingleAsterisks(text);
     if (singleAsterisks % 2 === 1) {
       return `${text}*`;
@@ -268,25 +275,35 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
     // Find the first single underscore position (not part of __)
     let firstSingleUnderscoreIndex = -1;
     for (let i = 0; i < text.length; i++) {
-      if (text[i] === '_' && text[i-1] !== '_' && text[i+1] !== '_' && !isWithinMathBlock(text, i)) {
+      if (
+        text[i] === "_" &&
+        text[i - 1] !== "_" &&
+        text[i + 1] !== "_" &&
+        !isWithinMathBlock(text, i)
+      ) {
         firstSingleUnderscoreIndex = i;
         break;
       }
     }
-    
+
     if (firstSingleUnderscoreIndex === -1) {
       return text;
     }
-    
+
     // Get content after the first single underscore
-    const contentAfterFirstUnderscore = text.substring(firstSingleUnderscoreIndex + 1);
-    
+    const contentAfterFirstUnderscore = text.substring(
+      firstSingleUnderscoreIndex + 1
+    );
+
     // Check if there's meaningful content after the underscore
     // Don't close if content is only whitespace or emphasis markers
-    if (!contentAfterFirstUnderscore || /^[\s_~*`]*$/.test(contentAfterFirstUnderscore)) {
+    if (
+      !contentAfterFirstUnderscore ||
+      /^[\s_~*`]*$/.test(contentAfterFirstUnderscore)
+    ) {
       return text;
     }
-    
+
     const singleUnderscores = countSingleUnderscores(text);
     if (singleUnderscores % 2 === 1) {
       return `${text}_`;
@@ -365,7 +382,7 @@ const handleIncompleteInlineCode = (text: string): string => {
     if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
       return text;
     }
-    
+
     const singleBacktickCount = countSingleBackticks(text);
     if (singleBacktickCount % 2 === 1) {
       return `${text}\``;
@@ -387,7 +404,7 @@ const handleIncompleteStrikethrough = (text: string): string => {
     if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
       return text;
     }
-    
+
     const tildePairs = (text.match(/~~/g) || []).length;
     if (tildePairs % 2 === 1) {
       return `${text}~~`;
@@ -480,7 +497,7 @@ const handleIncompleteBoldItalic = (text: string): string => {
     if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
       return text;
     }
-    
+
     const tripleAsteriskCount = countTripleAsterisks(text);
     if (tripleAsteriskCount % 2 === 1) {
       return `${text}***`;
