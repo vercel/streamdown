@@ -96,6 +96,22 @@ export const Chat = ({ models }: ChatProps) => {
                         {part.text}
                       </p>
                     );
+                  case "file":
+                    return (
+                      <div key={index}>
+                        {part.mediaType.startsWith("image") ? (
+                          <Image
+                            alt={part.filename ?? "An image attachment"}
+                            height={100}
+                            src={part.url}
+                            unoptimized
+                            width={100}
+                          />
+                        ) : (
+                          <div>File: {part.filename}</div>
+                        )}
+                      </div>
+                    );
                   default:
                     return null;
                 }
