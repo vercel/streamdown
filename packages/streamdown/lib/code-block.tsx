@@ -1,5 +1,6 @@
 "use client";
 
+import { saveAs } from "file-saver";
 import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import {
   type ComponentProps,
@@ -262,23 +263,9 @@ export const CodeBlockDownloadButton = ({
   const contextCode = useContext(CodeBlockContext).code;
   const code = propCode ?? contextCode;
 
-  const downloadCode = async () => {
-    if (typeof window === "undefined") {
-      onError?.(new Error("Download not available"));
-      return;
-    }
-
+  const downloadCode = () => {
     try {
-      const blob = new Blob([code], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "file";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
+      saveAs(code, "file.txt");
       onDownload?.();
     } catch (error) {
       onError?.(error as Error);
