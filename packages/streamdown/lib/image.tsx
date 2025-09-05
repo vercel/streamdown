@@ -1,7 +1,7 @@
 import { DownloadIcon } from "lucide-react";
 import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
 import type { ExtraProps } from "react-markdown";
-import { cn } from "./utils";
+import { cn, save } from "./utils";
 
 type ImageComponentProps = DetailedHTMLProps<
   ImgHTMLAttributes<HTMLImageElement>,
@@ -24,7 +24,6 @@ export const ImageComponent = ({
     try {
       const response = await fetch(src);
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
 
       // Extract filename from URL or use alt text with proper extension
       const urlPath = new URL(src, window.location.origin).pathname;
@@ -34,6 +33,7 @@ export const ImageComponent = ({
         originalFilename.split(".").pop()?.length! <= 4;
 
       let filename = "";
+
       if (hasExtension) {
         filename = originalFilename;
       } else {
@@ -57,13 +57,7 @@ export const ImageComponent = ({
         filename = `${baseName.replace(/\.[^/.]+$/, "")}.${extension}`;
       }
 
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      save(filename, blob, blob.type);
     } catch (error) {
       console.error("Failed to download image:", error);
     }
