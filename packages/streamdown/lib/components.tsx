@@ -68,7 +68,7 @@ const CodeComponent = ({
         data-streamdown="mermaid-block"
       >
         <div className="flex items-center justify-end gap-2">
-          <CodeBlockDownloadButton code={code} />
+          <CodeBlockDownloadButton code={code} language={language} />
           <CodeBlockCopyButton code={code} />
         </div>
         <Mermaid chart={code} />
@@ -85,7 +85,7 @@ const CodeComponent = ({
       language={language}
       preClassName="overflow-x-auto font-mono text-xs p-4 bg-muted/40"
     >
-      <CodeBlockDownloadButton />
+      <CodeBlockDownloadButton code={code} language={language} />
       <CodeBlockCopyButton />
     </CodeBlock>
   );
