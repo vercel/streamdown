@@ -332,7 +332,10 @@ export const TableDownloadDropdown = ({
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        className={cn("p-1 text-muted-foreground transition-all", className)}
+        className={cn(
+          "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
+          className
+        )}
         onClick={() => setIsOpen(!isOpen)}
         title="Download table"
         type="button"
