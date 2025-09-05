@@ -1,5 +1,5 @@
-import type { SVGProps } from 'react';
-import { Installer } from './installer';
+import type { SVGProps } from "react";
+import { Installer } from "./installer";
 
 const Vercel = (props: SVGProps<SVGSVGElement>) => (
   <svg

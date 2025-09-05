@@ -1,30 +1,28 @@
-'use client';
+"use client";
 
-import { track } from '@vercel/analytics/react';
-import { CheckIcon, CopyIcon } from 'lucide-react';
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { track } from "@vercel/analytics/react";
+import { CheckIcon, CopyIcon } from "lucide-react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
-const CODE = 'npx ai-elements add response';
-const CODE_SM = 'npx ai-elements@latest add response';
+const CODE = "npx ai-elements add response";
+const CODE_SM = "npx ai-elements@latest add response";
 const TIMEOUT = 2000;
 
 export const Installer = () => {
   const [isCopied, setIsCopied] = useState(false);
 
   const copyToClipboard = async () => {
-    if (typeof window === 'undefined' || !navigator.clipboard.writeText) {
+    if (typeof window === "undefined" || !navigator.clipboard.writeText) {
       return;
     }
 
     try {
       await navigator.clipboard.writeText(CODE);
       setIsCopied(true);
-      track('Copied installer code');
+      track("Copied installer code");
       setTimeout(() => setIsCopied(false), TIMEOUT);
-    } catch (error) {
-      console.error(error);
-    }
+    } catch (_error) {}
   };
 
   const Icon = isCopied ? CheckIcon : CopyIcon;

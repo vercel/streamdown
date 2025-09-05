@@ -1,17 +1,19 @@
-'use client';
+"use client";
 
-import { createContext, memo, useId, useMemo } from 'react';
-import ReactMarkdown, { type Options } from 'react-markdown';
-import rehypeKatex from 'rehype-katex';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import type { BundledTheme } from 'shiki';
-import 'katex/dist/katex.min.css';
-import hardenReactMarkdownImport from 'harden-react-markdown';
-import { components as defaultComponents } from './lib/components';
-import { parseMarkdownIntoBlocks } from './lib/parse-blocks';
-import { parseIncompleteMarkdown } from './lib/parse-incomplete-markdown';
-import { cn } from './lib/utils';
+import { createContext, memo, useId, useMemo } from "react";
+import ReactMarkdown, { type Options } from "react-markdown";
+import rehypeKatex from "rehype-katex";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import type { BundledTheme } from "shiki";
+import "katex/dist/katex.min.css";
+import hardenReactMarkdownImport from "harden-react-markdown";
+import type { Options as RemarkGfmOptions } from "remark-gfm";
+import type { Options as RemarkMathOptions } from "remark-math";
+import { components as defaultComponents } from "./lib/components";
+import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
+import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
+import { cn } from "./lib/utils";
 
 type HardenReactMarkdownProps = Options & {
   defaultOrigin?: string;
@@ -35,8 +37,8 @@ export type StreamdownProps = HardenReactMarkdownProps & {
 };
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
-  'github-light' as BundledTheme,
-  'github-dark' as BundledTheme,
+  "github-light" as BundledTheme,
+  "github-dark" as BundledTheme,
 ]);
 
 type BlockProps = HardenReactMarkdownProps & {
@@ -44,11 +46,17 @@ type BlockProps = HardenReactMarkdownProps & {
   shouldParseIncompleteMarkdown: boolean;
 };
 
+const remarkMathOptions: RemarkMathOptions = {
+  singleDollarTextMath: false,
+};
+
+const remarkGfmOptions: RemarkGfmOptions = {};
+
 const Block = memo(
   ({ content, shouldParseIncompleteMarkdown, ...props }: BlockProps) => {
     const parsedContent = useMemo(
       () =>
-        typeof content === 'string' && shouldParseIncompleteMarkdown
+        typeof content === "string" && shouldParseIncompleteMarkdown
           ? parseIncompleteMarkdown(content.trim())
           : content,
       [content, shouldParseIncompleteMarkdown]
@@ -59,37 +67,41 @@ const Block = memo(
   (prevProps, nextProps) => prevProps.content === nextProps.content
 );
 
-Block.displayName = 'Block';
+Block.displayName = "Block";
 
 export const Streamdown = memo(
   ({
     children,
-    allowedImagePrefixes,
-    allowedLinkPrefixes,
+    allowedImagePrefixes = ["*"],
+    allowedLinkPrefixes = ["*"],
     defaultOrigin,
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     components,
     rehypePlugins,
     remarkPlugins,
     className,
-    shikiTheme = ['github-light', 'github-dark'],
+    shikiTheme = ["github-light", "github-dark"],
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
     const generatedId = useId();
     const blocks = useMemo(
       () =>
-        parseMarkdownIntoBlocks(typeof children === 'string' ? children : ''),
+        parseMarkdownIntoBlocks(typeof children === "string" ? children : ""),
       [children]
+    );
+    const rehypeKatexPlugin = useMemo(
+      () => () => rehypeKatex({ errorColor: "var(--color-muted-foreground)" }),
+      []
     );
 
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
-        <div className={cn('space-y-4', className)} {...props}>
+        <div className={cn("space-y-4", className)} {...props}>
           {blocks.map((block, index) => (
             <Block
-              allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
-              allowedLinkPrefixes={allowedLinkPrefixes ?? ['*']}
+              allowedImagePrefixes={allowedImagePrefixes}
+              allowedLinkPrefixes={allowedLinkPrefixes}
               components={{
                 ...defaultComponents,
                 ...components,
@@ -98,8 +110,12 @@ export const Streamdown = memo(
               defaultOrigin={defaultOrigin}
               // biome-ignore lint/suspicious/noArrayIndexKey: "required"
               key={`${generatedId}-block_${index}`}
-              rehypePlugins={[rehypeKatex, ...(rehypePlugins ?? [])]}
-              remarkPlugins={[remarkGfm, remarkMath, ...(remarkPlugins ?? [])]}
+              rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
+              remarkPlugins={[
+                [remarkGfm, remarkGfmOptions],
+                [remarkMath, remarkMathOptions],
+                ...(remarkPlugins ?? []),
+              ]}
               shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
             />
           ))}
@@ -111,4 +127,4 @@ export const Streamdown = memo(
     prevProps.children === nextProps.children &&
     prevProps.shikiTheme === nextProps.shikiTheme
 );
-Streamdown.displayName = 'Streamdown';
+Streamdown.displayName = "Streamdown";

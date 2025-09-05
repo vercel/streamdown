@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: "required" */
 
-import { cn } from '@/lib/utils';
-import { Installer } from './installer';
+import { cn } from "@/lib/utils";
+import { Installer } from "./installer";
 
 const COLUMNS = 12;
 const LAST_COLUMN = COLUMNS - 1;
@@ -11,7 +11,7 @@ export const CallToAction = () => (
     <div className="hidden grid-cols-12 divide-x sm:grid">
       {new Array(COLUMNS).fill(0).map((_, index) => (
         <div
-          className={cn('aspect-square', index === LAST_COLUMN && 'border-r-0')}
+          className={cn("aspect-square", index === LAST_COLUMN && "border-r-0")}
           key={index}
         />
       ))}
@@ -35,7 +35,7 @@ export const CallToAction = () => (
     <div className="hidden grid-cols-12 divide-x sm:grid">
       {new Array(COLUMNS).fill(0).map((_, index) => (
         <div
-          className={cn('aspect-square', index === LAST_COLUMN && 'border-l-0')}
+          className={cn("aspect-square", index === LAST_COLUMN && "border-l-0")}
           key={index}
         />
       ))}
