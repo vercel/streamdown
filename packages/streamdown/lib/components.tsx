@@ -1,19 +1,22 @@
 import {
   type DetailedHTMLProps,
   type HTMLAttributes,
+  type ImgHTMLAttributes,
   isValidElement,
   type JSX,
   memo,
-} from 'react';
-import type { ExtraProps, Options } from 'react-markdown';
-import type { BundledLanguage } from 'shiki';
-import { CodeBlock, CodeBlockCopyButton } from './code-block';
-import { Mermaid } from './mermaid';
-import { cn } from './utils';
+} from "react";
+import type { ExtraProps, Options } from "react-markdown";
+import type { BundledLanguage } from "shiki";
 import {
-  CodeBlockDownloadButton
+  CodeBlock,
+  CodeBlockCopyButton,
+  CodeBlockDownloadButton,
 } from "./code-block";
+import { ImageComponent } from "./image";
+import { Mermaid } from "./mermaid";
 import { TableCopyButton, TableDownloadDropdown } from "./table";
+import { cn } from "./utils";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
@@ -61,10 +64,10 @@ function sameClassAndNode(
   );
 }
 
-type OlProps = WithNode<JSX.IntrinsicElements['ol']>;
+type OlProps = WithNode<JSX.IntrinsicElements["ol"]>;
 const MemoOl = memo<OlProps>(
   ({ children, className, ...props }: OlProps) => (
-   <ol
+    <ol
       className={cn(
         "ml-4 list-outside list-decimal whitespace-normal",
         className
@@ -77,13 +80,13 @@ const MemoOl = memo<OlProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoOl.displayName = 'MarkdownOl';
+MemoOl.displayName = "MarkdownOl";
 
-type LiProps = WithNode<JSX.IntrinsicElements['li']>;
+type LiProps = WithNode<JSX.IntrinsicElements["li"]>;
 
 const MemoLi = memo<LiProps>(
   ({ children, className, ...props }: LiProps) => (
-     <li
+    <li
       className={cn("py-1", className)}
       data-streamdown="list-item"
       {...props}
@@ -93,9 +96,9 @@ const MemoLi = memo<LiProps>(
   ),
   (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
 );
-MemoLi.displayName = 'MarkdownLi';
+MemoLi.displayName = "MarkdownLi";
 
-type UlProps = WithNode<JSX.IntrinsicElements['ul']>;
+type UlProps = WithNode<JSX.IntrinsicElements["ul"]>;
 const MemoUl = memo<UlProps>(
   ({ children, className, ...props }: UlProps) => (
     <ul
@@ -108,12 +111,12 @@ const MemoUl = memo<UlProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoUl.displayName = 'MarkdownUl';
+MemoUl.displayName = "MarkdownUl";
 
-type HrProps = WithNode<JSX.IntrinsicElements['hr']>;
+type HrProps = WithNode<JSX.IntrinsicElements["hr"]>;
 const MemoHr = memo<HrProps>(
   ({ className, ...props }: HrProps) => (
-   <hr
+    <hr
       className={cn("my-6 border-border", className)}
       data-streamdown="horizontal-rule"
       {...props}
@@ -121,9 +124,9 @@ const MemoHr = memo<HrProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoHr.displayName = 'MarkdownHr';
+MemoHr.displayName = "MarkdownHr";
 
-type StrongProps = WithNode<JSX.IntrinsicElements['span']>;
+type StrongProps = WithNode<JSX.IntrinsicElements["span"]>;
 const MemoStrong = memo<StrongProps>(
   ({ children, className, ...props }: StrongProps) => (
     <span
@@ -136,9 +139,9 @@ const MemoStrong = memo<StrongProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoStrong.displayName = 'MarkdownStrong';
+MemoStrong.displayName = "MarkdownStrong";
 
-type AProps = WithNode<JSX.IntrinsicElements['a']> & { href?: string };
+type AProps = WithNode<JSX.IntrinsicElements["a"]> & { href?: string };
 const MemoA = memo<AProps>(
   ({ children, className, href, ...props }: AProps) => {
     const isIncomplete = href === "streamdown:incomplete-link";
@@ -159,15 +162,15 @@ const MemoA = memo<AProps>(
   },
   (p, n) => sameClassAndNode(p, n) && p.href === n.href
 );
-MemoA.displayName = 'MarkdownA';
+MemoA.displayName = "MarkdownA";
 
 type HeadingProps<TTag extends keyof JSX.IntrinsicElements> = WithNode<
   JSX.IntrinsicElements[TTag]
 >;
 
-const MemoH1 = memo<HeadingProps<'h1'>>(
+const MemoH1 = memo<HeadingProps<"h1">>(
   ({ children, className, ...props }) => (
-     <h1
+    <h1
       className={cn("mt-6 mb-2 font-semibold text-3xl", className)}
       data-streamdown="heading-1"
       {...props}
@@ -177,9 +180,9 @@ const MemoH1 = memo<HeadingProps<'h1'>>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoH1.displayName = 'MarkdownH1';
+MemoH1.displayName = "MarkdownH1";
 
-const MemoH2 = memo<HeadingProps<'h2'>>(
+const MemoH2 = memo<HeadingProps<"h2">>(
   ({ children, className, ...props }) => (
     <h2
       className={cn("mt-6 mb-2 font-semibold text-2xl", className)}
@@ -191,11 +194,11 @@ const MemoH2 = memo<HeadingProps<'h2'>>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoH2.displayName = 'MarkdownH2';
+MemoH2.displayName = "MarkdownH2";
 
-const MemoH3 = memo<HeadingProps<'h3'>>(
+const MemoH3 = memo<HeadingProps<"h3">>(
   ({ children, className, ...props }) => (
-     <h3
+    <h3
       className={cn("mt-6 mb-2 font-semibold text-xl", className)}
       data-streamdown="heading-3"
       {...props}
@@ -205,9 +208,9 @@ const MemoH3 = memo<HeadingProps<'h3'>>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoH3.displayName = 'MarkdownH3';
+MemoH3.displayName = "MarkdownH3";
 
-const MemoH4 = memo<HeadingProps<'h4'>>(
+const MemoH4 = memo<HeadingProps<"h4">>(
   ({ children, className, ...props }) => (
     <h4
       className={cn("mt-6 mb-2 font-semibold text-lg", className)}
@@ -219,9 +222,9 @@ const MemoH4 = memo<HeadingProps<'h4'>>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoH4.displayName = 'MarkdownH4';
+MemoH4.displayName = "MarkdownH4";
 
-const MemoH5 = memo<HeadingProps<'h5'>>(
+const MemoH5 = memo<HeadingProps<"h5">>(
   ({ children, className, ...props }) => (
     <h5
       className={cn("mt-6 mb-2 font-semibold text-base", className)}
@@ -233,9 +236,9 @@ const MemoH5 = memo<HeadingProps<'h5'>>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoH5.displayName = 'MarkdownH5';
+MemoH5.displayName = "MarkdownH5";
 
-const MemoH6 = memo<HeadingProps<'h6'>>(
+const MemoH6 = memo<HeadingProps<"h6">>(
   ({ children, className, ...props }) => (
     <h6
       className={cn("mt-6 mb-2 font-semibold text-sm", className)}
@@ -247,12 +250,12 @@ const MemoH6 = memo<HeadingProps<'h6'>>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoH6.displayName = 'MarkdownH6';
+MemoH6.displayName = "MarkdownH6";
 
-type TableProps = WithNode<JSX.IntrinsicElements['table']>;
+type TableProps = WithNode<JSX.IntrinsicElements["table"]>;
 const MemoTable = memo<TableProps>(
   ({ children, className, ...props }: TableProps) => (
-     <div
+    <div
       className="my-4 flex flex-col space-y-2"
       data-streamdown="table-wrapper"
     >
@@ -276,12 +279,12 @@ const MemoTable = memo<TableProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoTable.displayName = 'MarkdownTable';
+MemoTable.displayName = "MarkdownTable";
 
-type TheadProps = WithNode<JSX.IntrinsicElements['thead']>;
+type TheadProps = WithNode<JSX.IntrinsicElements["thead"]>;
 const MemoThead = memo<TheadProps>(
   ({ children, className, ...props }: TheadProps) => (
-  <thead
+    <thead
       className={cn("bg-muted/80", className)}
       data-streamdown="table-header"
       {...props}
@@ -291,12 +294,12 @@ const MemoThead = memo<TheadProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoThead.displayName = 'MarkdownThead';
+MemoThead.displayName = "MarkdownThead";
 
-type TbodyProps = WithNode<JSX.IntrinsicElements['tbody']>;
+type TbodyProps = WithNode<JSX.IntrinsicElements["tbody"]>;
 const MemoTbody = memo<TbodyProps>(
   ({ children, className, ...props }: TbodyProps) => (
-   <tbody
+    <tbody
       className={cn("divide-y divide-border bg-muted/40", className)}
       data-streamdown="table-body"
       {...props}
@@ -306,12 +309,12 @@ const MemoTbody = memo<TbodyProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoTbody.displayName = 'MarkdownTbody';
+MemoTbody.displayName = "MarkdownTbody";
 
-type TrProps = WithNode<JSX.IntrinsicElements['tr']>;
+type TrProps = WithNode<JSX.IntrinsicElements["tr"]>;
 const MemoTr = memo<TrProps>(
   ({ children, className, ...props }: TrProps) => (
-      <tr
+    <tr
       className={cn("border-border border-b", className)}
       data-streamdown="table-row"
       {...props}
@@ -321,12 +324,12 @@ const MemoTr = memo<TrProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoTr.displayName = 'MarkdownTr';
+MemoTr.displayName = "MarkdownTr";
 
-type ThProps = WithNode<JSX.IntrinsicElements['th']>;
+type ThProps = WithNode<JSX.IntrinsicElements["th"]>;
 const MemoTh = memo<ThProps>(
   ({ children, className, ...props }: ThProps) => (
-     <th
+    <th
       className={cn(
         "whitespace-nowrap px-4 py-2 text-left font-semibold text-sm",
         className
@@ -339,9 +342,9 @@ const MemoTh = memo<ThProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoTh.displayName = 'MarkdownTh';
+MemoTh.displayName = "MarkdownTh";
 
-type TdProps = WithNode<JSX.IntrinsicElements['td']>;
+type TdProps = WithNode<JSX.IntrinsicElements["td"]>;
 const MemoTd = memo<TdProps>(
   ({ children, className, ...props }: TdProps) => (
     <td
@@ -354,12 +357,12 @@ const MemoTd = memo<TdProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoTd.displayName = 'MarkdownTd';
+MemoTd.displayName = "MarkdownTd";
 
-type BlockquoteProps = WithNode<JSX.IntrinsicElements['blockquote']>;
+type BlockquoteProps = WithNode<JSX.IntrinsicElements["blockquote"]>;
 const MemoBlockquote = memo<BlockquoteProps>(
   ({ children, className, ...props }: BlockquoteProps) => (
-     <blockquote
+    <blockquote
       className={cn(
         "my-4 border-muted-foreground/30 border-l-4 pl-4 text-muted-foreground italic",
         className
@@ -372,9 +375,9 @@ const MemoBlockquote = memo<BlockquoteProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoBlockquote.displayName = 'MarkdownBlockquote';
+MemoBlockquote.displayName = "MarkdownBlockquote";
 
-type SupProps = WithNode<JSX.IntrinsicElements['sup']>;
+type SupProps = WithNode<JSX.IntrinsicElements["sup"]>;
 const MemoSup = memo<SupProps>(
   ({ children, className, ...props }: SupProps) => (
     <sup
@@ -387,9 +390,9 @@ const MemoSup = memo<SupProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoSup.displayName = 'MarkdownSup';
+MemoSup.displayName = "MarkdownSup";
 
-type SubProps = WithNode<JSX.IntrinsicElements['sub']>;
+type SubProps = WithNode<JSX.IntrinsicElements["sub"]>;
 const MemoSub = memo<SubProps>(
   ({ children, className, ...props }: SubProps) => (
     <sub
@@ -402,7 +405,7 @@ const MemoSub = memo<SubProps>(
   ),
   (p, n) => sameClassAndNode(p, n)
 );
-MemoSub.displayName = 'MarkdownSub';
+MemoSub.displayName = "MarkdownSub";
 
 const CodeComponent = ({
   node,
@@ -484,9 +487,19 @@ const MemoCode = memo<
   CodeComponent,
   (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
 );
-MemoCode.displayName = 'MarkdownCode';
+MemoCode.displayName = "MarkdownCode";
 
-export const components: Options['components'] = {
+const MemoImg = memo<
+  DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement> &
+    ExtraProps
+>(
+  ImageComponent,
+  (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+);
+
+MemoImg.displayName = "MarkdownImg";
+
+export const components: Options["components"] = {
   ol: MemoOl,
   li: MemoLi,
   ul: MemoUl,
@@ -507,6 +520,7 @@ export const components: Options['components'] = {
   td: MemoTd,
   blockquote: MemoBlockquote,
   code: MemoCode,
+  img: ImageComponent,
   pre: ({ children }) => children,
   sup: MemoSup,
   sub: MemoSub,
