@@ -8,6 +8,8 @@ import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
 import "katex/dist/katex.min.css";
 import hardenReactMarkdownImport from "harden-react-markdown";
+import type { Options as RemarkGfmOptions } from "remark-gfm";
+import type { Options as RemarkMathOptions } from "remark-math";
 import { components as defaultComponents } from "./lib/components";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
@@ -43,6 +45,12 @@ type BlockProps = HardenReactMarkdownProps & {
   content: string;
   shouldParseIncompleteMarkdown: boolean;
 };
+
+const remarkMathOptions: RemarkMathOptions = {
+  singleDollarTextMath: false,
+};
+
+const remarkGfmOptions: RemarkGfmOptions = {};
 
 const Block = memo(
   ({ content, shouldParseIncompleteMarkdown, ...props }: BlockProps) => {
@@ -104,8 +112,8 @@ export const Streamdown = memo(
               key={`${generatedId}-block_${index}`}
               rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
               remarkPlugins={[
-                remarkGfm,
-                [remarkMath, { singleDollarTextMath: false }],
+                [remarkGfm, remarkGfmOptions],
+                [remarkMath, remarkMathOptions],
                 ...(remarkPlugins ?? []),
               ]}
               shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
