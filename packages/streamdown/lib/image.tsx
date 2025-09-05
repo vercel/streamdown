@@ -1,5 +1,6 @@
 import {
   type DetailedHTMLProps,
+  type ImgHTMLAttributes,
   useState,
 } from "react";
 import type { ExtraProps } from "react-markdown";
@@ -12,7 +13,7 @@ export const ImageComponent = ({
   src,
   alt,
   ...props
-}: DetailedHTMLProps<React.ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement> &
+}: DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement> &
   ExtraProps) => {
   const [isHovered, setIsHovered] = useState(false);
 
