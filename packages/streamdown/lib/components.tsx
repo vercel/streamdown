@@ -82,7 +82,7 @@ MemoOl.displayName = 'MarkdownOl';
 type LiProps = WithNode<JSX.IntrinsicElements['li']>;
 
 const MemoLi = memo<LiProps>(
-  ({ node, children, className, ...props }: LiProps) => (
+  ({ children, className, ...props }: LiProps) => (
      <li
       className={cn("py-1", className)}
       data-streamdown="list-item"
