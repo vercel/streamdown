@@ -1,5 +1,19 @@
 # streamdown
 
+## 1.2.0
+
+### Minor Changes
+
+- fa7733c: 1.2 cleanup
+
+### Patch Changes
+
+- bc3f423: handle lists with emphasis character blocks
+- 3fab433: feat: add table markdown copy and csv/markdown download options
+- c3a2eaa: misc fixes and improvements
+- 435a2c6: feat: add download functionality to code blocks
+- a4a10fc: feat: add image download functionality with hover controls
+
 ## 1.1.10
 
 ### Patch Changes
