@@ -2,6 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import Image from "next/image";
 import { useState } from "react";
 import { Streamdown } from "streamdown";
 
@@ -35,6 +36,22 @@ export default function Page() {
                       <pre className="italic" key={index}>
                         {part.text}
                       </pre>
+                    );
+                  case "file":
+                    return (
+                      <div key={index}>
+                        {part.mediaType.startsWith("image") ? (
+                          <Image
+                            alt={part.filename ?? "An image attachment"}
+                            height={100}
+                            src={part.url}
+                            unoptimized
+                            width={100}
+                          />
+                        ) : (
+                          <div>File: {part.filename}</div>
+                        )}
+                      </div>
                     );
                   default:
                     return null;
