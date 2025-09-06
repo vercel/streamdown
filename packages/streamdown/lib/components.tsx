@@ -520,7 +520,7 @@ export const components: Options["components"] = {
   td: MemoTd,
   blockquote: MemoBlockquote,
   code: MemoCode,
-  img: ImageComponent,
+  img: MemoImg,
   pre: ({ children }) => children,
   sup: MemoSup,
   sub: MemoSub,
