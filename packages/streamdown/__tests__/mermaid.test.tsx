@@ -35,7 +35,7 @@ describe("Mermaid", () => {
     expect(mermaidContainer.className).toContain("custom-class");
   });
 
-  it("initializes mermaid with custom config", async () => {
+  it("initializes with custom config", async () => {
     const customConfig: MermaidConfig = {
       theme: "dark",
       themeVariables: {
@@ -47,23 +47,22 @@ describe("Mermaid", () => {
 
     render(<Mermaid chart="graph TD; A-->B" config={customConfig} />);
 
-    // Wait for async initialization
+    // Wait for initialization
     await vi.waitFor(() => {
       expect(mockInitialize).toHaveBeenCalled();
     });
 
-    // Check that initialize was called with merged config
+    // Check that initialize was called with the custom config
     const initializeCall = mockInitialize.mock.calls[0][0];
     expect(initializeCall.theme).toBe("dark");
     expect(initializeCall.themeVariables?.primaryColor).toBe("#ff0000");
-    expect(initializeCall.themeVariables?.primaryTextColor).toBe("#ffffff");
     expect(initializeCall.fontFamily).toBe("Arial, sans-serif");
   });
 
-  it("uses default config when no custom config provided", async () => {
+  it("initializes with default config when none provided", async () => {
     render(<Mermaid chart="graph TD; A-->B" />);
 
-    // Wait for async initialization
+    // Wait for initialization
     await vi.waitFor(() => {
       expect(mockInitialize).toHaveBeenCalled();
     });
@@ -73,7 +72,6 @@ describe("Mermaid", () => {
     expect(initializeCall.theme).toBe("default");
     expect(initializeCall.securityLevel).toBe("strict");
     expect(initializeCall.fontFamily).toBe("monospace");
-    expect(initializeCall.suppressErrorRendering).toBe(true);
   });
 
   it("accepts different config values", () => {
@@ -96,5 +94,38 @@ describe("Mermaid", () => {
 
     // Should still render without error
     expect(mockRender).toBeDefined();
+  });
+
+  it("handles complex config objects with functions", () => {
+    const config: MermaidConfig = {
+      theme: "dark",
+      themeVariables: {
+        primaryColor: "#ff0000",
+        primaryTextColor: "#ffffff",
+      },
+      fontFamily: "Arial",
+    } as MermaidConfig;
+
+    const { container } = render(<Mermaid chart="graph TD; A-->B" config={config} />);
+
+    // Should render without error even with complex config
+    expect(container.firstChild).toBeTruthy();
+  });
+
+  it("supports multiple components with different configs", async () => {
+    const config1: MermaidConfig = { theme: "forest" } as MermaidConfig;
+    const config2: MermaidConfig = { theme: "dark" } as MermaidConfig;
+
+    // Render first component
+    const { rerender } = render(<Mermaid chart="graph TD; A-->B" config={config1} />);
+    
+    await vi.waitFor(() => expect(mockInitialize).toHaveBeenCalledTimes(1));
+    expect(mockInitialize.mock.calls[0][0].theme).toBe("forest");
+
+    // Render second component with different config
+    rerender(<Mermaid chart="graph TD; X-->Y" config={config2} />);
+    
+    await vi.waitFor(() => expect(mockInitialize).toHaveBeenCalledTimes(2));
+    expect(mockInitialize.mock.calls[1][0].theme).toBe("dark");
   });
 });

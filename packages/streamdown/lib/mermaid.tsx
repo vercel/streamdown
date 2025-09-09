@@ -2,9 +2,6 @@ import type { MermaidConfig } from "mermaid";
 import { useEffect, useState } from "react";
 import { cn } from "./utils";
 
-// Global mermaid initialization
-let mermaidInitialized = false;
-let currentMermaidConfig: MermaidConfig | null = null;
 
 const initializeMermaid = async (customConfig?: MermaidConfig) => {
   const defaultConfig: MermaidConfig = {
@@ -17,22 +14,13 @@ const initializeMermaid = async (customConfig?: MermaidConfig) => {
 
   const config = { ...defaultConfig, ...customConfig };
   
-  // Check if config has changed
-  const configChanged = JSON.stringify(config) !== JSON.stringify(currentMermaidConfig);
-  
-  if (!mermaidInitialized || configChanged) {
-    const mermaidModule = await import("mermaid");
-    const mermaid = mermaidModule.default;
-
-    mermaid.initialize(config);
-
-    mermaidInitialized = true;
-    currentMermaidConfig = config;
-    return mermaid;
-  }
-
   const mermaidModule = await import("mermaid");
-  return mermaidModule.default;
+  const mermaid = mermaidModule.default;
+
+  // Always reinitialize with the current config to support different configs per component
+  mermaid.initialize(config);
+
+  return mermaid;
 };
 
 type MermaidProps = {
