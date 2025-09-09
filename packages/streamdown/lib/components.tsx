@@ -2,9 +2,11 @@ import {
   type DetailedHTMLProps,
   type HTMLAttributes,
   isValidElement,
+  useContext,
 } from "react";
 import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
+import { MermaidConfigContext } from "../index";
 import {
   CodeBlock,
   CodeBlockCopyButton,
@@ -59,6 +61,7 @@ const CodeComponent = ({
   }
 
   if (language === "mermaid") {
+    const mermaidConfig = useContext(MermaidConfigContext);
     return (
       <div
         className={cn(
@@ -71,7 +74,7 @@ const CodeComponent = ({
           <CodeBlockDownloadButton code={code} language={language} />
           <CodeBlockCopyButton code={code} />
         </div>
-        <Mermaid chart={code} />
+        <Mermaid chart={code} config={mermaidConfig} />
       </div>
     );
   }

@@ -56,6 +56,7 @@ Streamdown supports Mermaid diagrams using the `mermaid` language identifier:
 
 ```tsx
 import { Streamdown } from 'streamdown';
+import type { MermaidConfig } from 'mermaid';
 
 export default function Page() {
   const markdown = `
@@ -84,7 +85,20 @@ sequenceDiagram
 \`\`\`
   `;
 
-  return <Streamdown>{markdown}</Streamdown>;
+  // Optional: Customize Mermaid theme and colors
+  const mermaidConfig: MermaidConfig = {
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#ff0000',
+      primaryTextColor: '#fff'
+    }
+  };
+
+  return (
+    <Streamdown mermaidConfig={mermaidConfig}>
+      {markdown}
+    </Streamdown>
+  );
 }
 ```
 
@@ -150,7 +164,8 @@ Streamdown accepts all the same props as react-markdown, plus additional streami
 | `allowedImagePrefixes` | `array` | `['*']` | Allowed image URL prefixes |
 | `allowedLinkPrefixes` | `array` | `['*']` | Allowed link URL prefixes |
 | `defaultOrigin` | `string` | - | Default origin to use for relative URLs in links and images |
-| `shikiTheme` | `BundledTheme` (from Shiki) | `github-light` | The theme to use for code blocks |
+| `shikiTheme` | `[BundledTheme, BundledTheme]` | `['github-light', 'github-dark']` | The light and dark themes to use for code blocks |
+| `mermaidConfig` | `MermaidConfig` | - | Custom configuration for Mermaid diagrams (theme, colors, etc.) |
 
 ## Architecture
 
