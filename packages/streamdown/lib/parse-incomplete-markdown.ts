@@ -283,6 +283,7 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
         text[i] === "_" &&
         text[i - 1] !== "_" &&
         text[i + 1] !== "_" &&
+        text[i - 1] !== "\\" &&
         !isWithinMathBlock(text, i)
       ) {
         // Check if underscore is word-internal (between word characters)
