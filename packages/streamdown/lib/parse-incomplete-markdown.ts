@@ -255,7 +255,7 @@ const countSingleUnderscores = (text: string): number => {
         return acc;
       }
       // Skip if underscore is word-internal (between word characters)
-      if (prevChar && nextChar && /\w/.test(prevChar) && /\w/.test(nextChar)) {
+      if (prevChar && nextChar && /[\p{L}\p{N}_]/u.test(prevChar) && /[\p{L}\p{N}_]/u.test(nextChar)) {
         return acc;
       }
       if (prevChar !== "_" && nextChar !== "_") {
@@ -292,8 +292,8 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
         if (
           prevChar &&
           nextChar &&
-          /\w/.test(prevChar) &&
-          /\w/.test(nextChar)
+          /[\p{L}\p{N}_]/u.test(prevChar) &&
+          /[\p{L}\p{N}_]/u.test(nextChar)
         ) {
           continue;
         }

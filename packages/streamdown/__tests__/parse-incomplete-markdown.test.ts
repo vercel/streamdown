@@ -208,6 +208,11 @@ describe("parseIncompleteMarkdown", () => {
         "\\_escaped\\_ _complete_ pair"
       );
     });
+
+    it("should handle underscores with unicode word characters", () => {
+      expect(parseIncompleteMarkdown("café_price")).toBe("café_price");
+      expect(parseIncompleteMarkdown("naïve_approach")).toBe("naïve_approach");
+    });
   });
 
   describe("inline code formatting (`)", () => {
