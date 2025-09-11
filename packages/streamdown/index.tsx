@@ -10,10 +10,13 @@ import "katex/dist/katex.min.css";
 import hardenReactMarkdownImport from "harden-react-markdown";
 import type { Options as RemarkGfmOptions } from "remark-gfm";
 import type { Options as RemarkMathOptions } from "remark-math";
+import type { MermaidConfig } from "mermaid";
 import { components as defaultComponents } from "./lib/components";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
+
+export type { MermaidConfig } from "mermaid";
 
 type HardenReactMarkdownProps = Options & {
   defaultOrigin?: string;
@@ -34,12 +37,15 @@ export type StreamdownProps = HardenReactMarkdownProps & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
+  mermaidConfig?: MermaidConfig;
 };
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
   "github-light" as BundledTheme,
   "github-dark" as BundledTheme,
 ]);
+
+export const MermaidConfigContext = createContext<MermaidConfig | undefined>(undefined);
 
 type BlockProps = HardenReactMarkdownProps & {
   content: string;
@@ -81,6 +87,7 @@ export const Streamdown = memo(
     remarkPlugins,
     className,
     shikiTheme = ["github-light", "github-dark"],
+    mermaidConfig,
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
@@ -97,29 +104,31 @@ export const Streamdown = memo(
 
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
-        <div className={cn("space-y-4", className)} {...props}>
-          {blocks.map((block, index) => (
-            <Block
-              allowedImagePrefixes={allowedImagePrefixes}
-              allowedLinkPrefixes={allowedLinkPrefixes}
-              components={{
-                ...defaultComponents,
-                ...components,
-              }}
-              content={block}
-              defaultOrigin={defaultOrigin}
-              // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-              key={`${generatedId}-block_${index}`}
-              rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
-              remarkPlugins={[
-                [remarkGfm, remarkGfmOptions],
-                [remarkMath, remarkMathOptions],
-                ...(remarkPlugins ?? []),
-              ]}
-              shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-            />
-          ))}
-        </div>
+        <MermaidConfigContext.Provider value={mermaidConfig}>
+          <div className={cn("space-y-4", className)} {...props}>
+            {blocks.map((block, index) => (
+              <Block
+                allowedImagePrefixes={allowedImagePrefixes}
+                allowedLinkPrefixes={allowedLinkPrefixes}
+                components={{
+                  ...defaultComponents,
+                  ...components,
+                }}
+                content={block}
+                defaultOrigin={defaultOrigin}
+                // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+                key={`${generatedId}-block_${index}`}
+                rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
+                remarkPlugins={[
+                  [remarkGfm, remarkGfmOptions],
+                  [remarkMath, remarkMathOptions],
+                  ...(remarkPlugins ?? []),
+                ]}
+                shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
+              />
+            ))}
+          </div>
+        </MermaidConfigContext.Provider>
       </ShikiThemeContext.Provider>
     );
   },

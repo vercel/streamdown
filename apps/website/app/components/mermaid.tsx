@@ -45,11 +45,15 @@ sequenceDiagram
     <Section
       description={
         <>
-          Streamdown supports Mermaid diagrams, streaming as code blocks with a
-          button to render them.
+          Streamdown supports Mermaid diagrams with customizable themes. Current theme is "base".
         </>
       }
       markdown={mermaidExample}
+      streamdownProps={{
+        mermaidConfig: {
+          theme: "base"
+        }
+      }}
       speed={60}
       title="Interactive Mermaid Diagrams"
     />

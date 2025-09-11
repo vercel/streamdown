@@ -63,6 +63,12 @@ const props = [
     description:
       'The themes to use for code blocks. Defaults to ["github-light", "github-dark"].',
   },
+  {
+    name: "mermaidConfig",
+    type: "MermaidConfig (from Mermaid)",
+    description:
+      "Custom configuration for Mermaid diagrams including theme, colors, fonts, and other rendering options. See Mermaid documentation for all available options.",
+  },
 ];
 
 export const Props = () => (
