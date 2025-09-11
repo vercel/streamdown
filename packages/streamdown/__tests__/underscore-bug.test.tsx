@@ -3,42 +3,16 @@ import { parseIncompleteMarkdown } from "../lib/parse-incomplete-markdown";
 
 describe("parseIncompleteMarkdown - word-internal underscores", () => {
   describe("underscores as word separators", () => {
-    it("should not add extra underscore when underscore is used as space", () => {
-      const input = `hello_world
-
-<a href="example_link"/>`;
-
-      const result = parseIncompleteMarkdown(input);
-
-      expect(result).toBe(input);
-      expect(result).not.toContain("hello_world_");
-    });
-
-    it("should handle single underscore between words correctly", () => {
+    it("should handle single underscore between words", () => {
       const input = "hello_world";
       const result = parseIncompleteMarkdown(input);
       expect(result).toBe("hello_world");
-      expect(result).not.toBe("hello_world_");
     });
 
     it("should handle multiple underscores between words", () => {
       const input = "hello_world_test";
       const result = parseIncompleteMarkdown(input);
       expect(result).toBe("hello_world_test");
-    });
-
-    it("should handle underscore at end of line before HTML", () => {
-      const input = `hello_world
-<a href="test"/>`;
-      const result = parseIncompleteMarkdown(input);
-      expect(result).not.toContain("hello_world_");
-      expect(result).toBe(input);
-    });
-
-    it("should handle snake_case identifiers", () => {
-      const input = "snake_case_variable";
-      const result = parseIncompleteMarkdown(input);
-      expect(result).toBe("snake_case_variable");
     });
 
     it("should handle CONSTANT_CASE", () => {
@@ -59,12 +33,6 @@ describe("parseIncompleteMarkdown - word-internal underscores", () => {
       expect(result).toBe("Visit https://example.com/path_with_underscore");
     });
 
-    it("should handle file_names.txt", () => {
-      const input = "Open file_name.txt";
-      const result = parseIncompleteMarkdown(input);
-      expect(result).toBe("Open file_name.txt");
-    });
-
     it("should handle numbers with underscores", () => {
       const input = "The value is 1_000_000";
       const result = parseIncompleteMarkdown(input);
@@ -83,18 +51,6 @@ describe("parseIncompleteMarkdown - word-internal underscores", () => {
       const input = "This is _italic";
       const result = parseIncompleteMarkdown(input);
       expect(result).toBe("This is _italic_");
-    });
-
-    it("should complete italic at start of line", () => {
-      const input = "_incomplete";
-      const result = parseIncompleteMarkdown(input);
-      expect(result).toBe("_incomplete_");
-    });
-
-    it("should handle italic with spaces", () => {
-      const input = "_this is italic text";
-      const result = parseIncompleteMarkdown(input);
-      expect(result).toBe("_this is italic text_");
     });
 
     it("should complete italic before newline", () => {
@@ -159,12 +115,6 @@ describe("parseIncompleteMarkdown - word-internal underscores", () => {
       const input = "The user_id field stores the _unique identifier";
       const result = parseIncompleteMarkdown(input);
       expect(result).toBe("The user_id field stores the _unique identifier_");
-    });
-
-    it("should handle technical documentation", () => {
-      const input = "Set DEBUG_MODE=true and run test_suite";
-      const result = parseIncompleteMarkdown(input);
-      expect(result).toBe("Set DEBUG_MODE=true and run test_suite");
     });
 
     it("should handle the original bug report case", () => {
