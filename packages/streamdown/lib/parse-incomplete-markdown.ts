@@ -286,12 +286,17 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
         !isWithinMathBlock(text, i)
       ) {
         // Check if underscore is word-internal (between word characters)
-        const prevChar = i > 0 ? text[i - 1] : '';
-        const nextChar = i < text.length - 1 ? text[i + 1] : '';
-        if (prevChar && nextChar && /\w/.test(prevChar) && /\w/.test(nextChar)) {
+        const prevChar = i > 0 ? text[i - 1] : "";
+        const nextChar = i < text.length - 1 ? text[i + 1] : "";
+        if (
+          prevChar &&
+          nextChar &&
+          /\w/.test(prevChar) &&
+          /\w/.test(nextChar)
+        ) {
           continue;
         }
-        
+
         firstSingleUnderscoreIndex = i;
         break;
       }
@@ -320,7 +325,10 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
       // If text ends with newline(s), insert underscore before them
       const trailingNewlineMatch = text.match(/\n+$/);
       if (trailingNewlineMatch) {
-        const textBeforeNewlines = text.slice(0, -trailingNewlineMatch[0].length);
+        const textBeforeNewlines = text.slice(
+          0,
+          -trailingNewlineMatch[0].length
+        );
         return `${textBeforeNewlines}_${trailingNewlineMatch[0]}`;
       }
       return `${text}_`;

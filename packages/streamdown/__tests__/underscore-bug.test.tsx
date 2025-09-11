@@ -7,9 +7,9 @@ describe("parseIncompleteMarkdown - word-internal underscores", () => {
       const input = `hello_world
 
 <a href="example_link"/>`;
-      
+
       const result = parseIncompleteMarkdown(input);
-      
+
       expect(result).toBe(input);
       expect(result).not.toContain("hello_world_");
     });
