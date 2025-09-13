@@ -105,7 +105,7 @@ class HighlighterManager {
 
       this.darkHighlighter = await createHighlighter({
         themes: [darkTheme],
-        langs: langsToLoad.length > 0 ? langsToLoad :  isLanguageSupported ? [language] : [],
+        langs: langsToLoad.length > 0 ? langsToLoad : isLanguageSupported ? [language] : [],
         engine: jsEngine,
       });
       this.darkTheme = darkTheme;
