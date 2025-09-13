@@ -46,7 +46,7 @@ class HighlighterManager {
   > | null = null;
   private lightTheme: BundledTheme | null = null;
   private darkTheme: BundledTheme | null = null;
-  private readonly loadedLanguages: Set<BundledLanguage | SpecialLanguage> = new Set();
+  private readonly loadedLanguages: Set<BundledLanguage> = new Set();
   private initializationPromise: Promise<void> | null = null;
 
 
@@ -60,7 +60,7 @@ class HighlighterManager {
 
   private async ensureHighlightersInitialized(
     themes: [BundledTheme, BundledTheme],
-    language: BundledLanguage | SpecialLanguage
+    language: BundledLanguage
   ): Promise<void> {
     const [lightTheme, darkTheme] = themes;
     const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
@@ -79,9 +79,6 @@ class HighlighterManager {
     // Check if we need to load the language
     const isLanguageSupported = this.isLanguageSupported(language);
     const needsLanguageLoad = !this.loadedLanguages.has(language) && isLanguageSupported;
-
-
-
 
     // Create or recreate light highlighter if needed
     if (needsLightRecreation) {
