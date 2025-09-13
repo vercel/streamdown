@@ -33,11 +33,18 @@ const hardenReactMarkdown =
 const HardenedMarkdown: ReturnType<typeof hardenReactMarkdown> =
   hardenReactMarkdown(ReactMarkdown);
 
+export type ControlsConfig = boolean | {
+  table?: boolean;
+  code?: boolean;
+  mermaid?: boolean;
+};
+
 export type StreamdownProps = HardenReactMarkdownProps & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
   mermaidConfig?: MermaidConfig;
+  showControls?: ControlsConfig;
 };
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
@@ -46,6 +53,8 @@ export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
 ]);
 
 export const MermaidConfigContext = createContext<MermaidConfig | undefined>(undefined);
+
+export const ControlsContext = createContext<ControlsConfig>(true);
 
 type BlockProps = HardenReactMarkdownProps & {
   content: string;
@@ -88,6 +97,7 @@ export const Streamdown = memo(
     className,
     shikiTheme = ["github-light", "github-dark"],
     mermaidConfig,
+    showControls = true,
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
@@ -105,29 +115,31 @@ export const Streamdown = memo(
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
         <MermaidConfigContext.Provider value={mermaidConfig}>
-          <div className={cn("space-y-4", className)} {...props}>
-            {blocks.map((block, index) => (
-              <Block
-                allowedImagePrefixes={allowedImagePrefixes}
-                allowedLinkPrefixes={allowedLinkPrefixes}
-                components={{
-                  ...defaultComponents,
-                  ...components,
-                }}
-                content={block}
-                defaultOrigin={defaultOrigin}
-                // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-                key={`${generatedId}-block_${index}`}
-                rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
-                remarkPlugins={[
-                  [remarkGfm, remarkGfmOptions],
-                  [remarkMath, remarkMathOptions],
-                  ...(remarkPlugins ?? []),
-                ]}
-                shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-              />
-            ))}
-          </div>
+          <ControlsContext.Provider value={showControls}>
+            <div className={cn("space-y-4", className)} {...props}>
+              {blocks.map((block, index) => (
+                <Block
+                  allowedImagePrefixes={allowedImagePrefixes}
+                  allowedLinkPrefixes={allowedLinkPrefixes}
+                  components={{
+                    ...defaultComponents,
+                    ...components,
+                  }}
+                  content={block}
+                  defaultOrigin={defaultOrigin}
+                  // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+                  key={`${generatedId}-block_${index}`}
+                  rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
+                  remarkPlugins={[
+                    [remarkGfm, remarkGfmOptions],
+                    [remarkMath, remarkMathOptions],
+                    ...(remarkPlugins ?? []),
+                  ]}
+                  shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
+                />
+              ))}
+            </div>
+          </ControlsContext.Provider>
         </MermaidConfigContext.Provider>
       </ShikiThemeContext.Provider>
     );

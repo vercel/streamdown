@@ -6,7 +6,7 @@ import {
 } from "react";
 import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
-import { MermaidConfigContext } from "../index";
+import { MermaidConfigContext, ControlsContext } from "../index";
 import {
   CodeBlock,
   CodeBlockCopyButton,
@@ -18,6 +18,14 @@ import { TableCopyButton, TableDownloadDropdown } from "./table";
 import { cn } from "./utils";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
+
+const shouldShowControls = (
+  config: boolean | { table?: boolean; code?: boolean; mermaid?: boolean },
+  type: "table" | "code" | "mermaid"
+): boolean => {
+  if (typeof config === "boolean") return config;
+  return config[type] !== false;
+};
 
 const CodeComponent = ({
   node,
@@ -62,6 +70,9 @@ const CodeComponent = ({
 
   if (language === "mermaid") {
     const mermaidConfig = useContext(MermaidConfigContext);
+    const controlsConfig = useContext(ControlsContext);
+    const showMermaidControls = shouldShowControls(controlsConfig, "mermaid");
+
     return (
       <div
         className={cn(
@@ -70,14 +81,19 @@ const CodeComponent = ({
         )}
         data-streamdown="mermaid-block"
       >
-        <div className="flex items-center justify-end gap-2">
-          <CodeBlockDownloadButton code={code} language={language} />
-          <CodeBlockCopyButton code={code} />
-        </div>
+        {showMermaidControls && (
+          <div className="flex items-center justify-end gap-2">
+            <CodeBlockDownloadButton code={code} language={language} />
+            <CodeBlockCopyButton code={code} />
+          </div>
+        )}
         <Mermaid chart={code} config={mermaidConfig} />
       </div>
     );
   }
+
+  const controlsConfig = useContext(ControlsContext);
+  const showCodeControls = shouldShowControls(controlsConfig, "code");
 
   return (
     <CodeBlock
@@ -88,9 +104,44 @@ const CodeComponent = ({
       language={language}
       preClassName="overflow-x-auto font-mono text-xs p-4 bg-muted/40"
     >
-      <CodeBlockDownloadButton code={code} language={language} />
-      <CodeBlockCopyButton />
+      {showCodeControls && (
+        <>
+          <CodeBlockDownloadButton code={code} language={language} />
+          <CodeBlockCopyButton />
+        </>
+      )}
     </CodeBlock>
+  );
+};
+
+const TableComponent = ({ node, children, className, ...props }: any) => {
+  const controlsConfig = useContext(ControlsContext);
+  const showTableControls = shouldShowControls(controlsConfig, "table");
+
+  return (
+    <div
+      className="my-4 flex flex-col space-y-2"
+      data-streamdown="table-wrapper"
+    >
+      {showTableControls && (
+        <div className="flex items-center justify-end gap-1">
+          <TableCopyButton />
+          <TableDownloadDropdown />
+        </div>
+      )}
+      <div className="overflow-x-auto">
+        <table
+          className={cn(
+            "w-full border-collapse border border-border",
+            className
+          )}
+          data-streamdown="table"
+          {...props}
+        >
+          {children}
+        </table>
+      </div>
+    </div>
   );
 };
 
@@ -212,29 +263,7 @@ export const components: Options["components"] = {
       {children}
     </h6>
   ),
-  table: ({ node, children, className, ...props }) => (
-    <div
-      className="my-4 flex flex-col space-y-2"
-      data-streamdown="table-wrapper"
-    >
-      <div className="flex items-center justify-end gap-1">
-        <TableCopyButton />
-        <TableDownloadDropdown />
-      </div>
-      <div className="overflow-x-auto">
-        <table
-          className={cn(
-            "w-full border-collapse border border-border",
-            className
-          )}
-          data-streamdown="table"
-          {...props}
-        >
-          {children}
-        </table>
-      </div>
-    </div>
-  ),
+  table: TableComponent,
   thead: ({ node, children, className, ...props }) => (
     <thead
       className={cn("bg-muted/80", className)}
