@@ -6,7 +6,7 @@ import {
 } from "react";
 import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
-import { MermaidConfigContext, ControlsContext } from "../index";
+import { ControlsContext, MermaidConfigContext } from "../index";
 import {
   CodeBlock,
   CodeBlockCopyButton,
@@ -22,8 +22,11 @@ const LANGUAGE_REGEX = /language-([^\s]+)/;
 const shouldShowControls = (
   config: boolean | { table?: boolean; code?: boolean; mermaid?: boolean },
   type: "table" | "code" | "mermaid"
-): boolean => {
-  if (typeof config === "boolean") return config;
+) => {
+  if (typeof config === "boolean") {
+    return config;
+  }
+
   return config[type] !== false;
 };
 

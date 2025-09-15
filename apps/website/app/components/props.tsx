@@ -70,7 +70,7 @@ const props = [
       "Custom configuration for Mermaid diagrams including theme, colors, fonts, and other rendering options. See Mermaid documentation for all available options.",
   },
   {
-    name: "showControls",
+    name: "controls",
     type: "boolean | { table?: boolean, code?: boolean, mermaid?: boolean }",
     default: "true",
     description:
