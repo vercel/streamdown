@@ -166,6 +166,7 @@ Streamdown accepts all the same props as react-markdown, plus additional streami
 | `defaultOrigin` | `string` | - | Default origin to use for relative URLs in links and images |
 | `shikiTheme` | `[BundledTheme, BundledTheme]` | `['github-light', 'github-dark']` | The light and dark themes to use for code blocks |
 | `mermaidConfig` | `MermaidConfig` | - | Custom configuration for Mermaid diagrams (theme, colors, etc.) |
+| `controls` | `boolean \| { table?: boolean, code?: boolean, mermaid?: boolean }` | `true` | Control visibility of copy/download buttons |
 
 ## Architecture
 

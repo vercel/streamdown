@@ -69,6 +69,13 @@ const props = [
     description:
       "Custom configuration for Mermaid diagrams including theme, colors, fonts, and other rendering options. See Mermaid documentation for all available options.",
   },
+  {
+    name: "controls",
+    type: "boolean | { table?: boolean, code?: boolean, mermaid?: boolean }",
+    default: "true",
+    description:
+      "Control the visibility of copy and download buttons. Can be a boolean to show/hide all controls, or an object to selectively control buttons for tables, code blocks, and Mermaid diagrams.",
+  },
 ];
 
 export const Props = () => (
