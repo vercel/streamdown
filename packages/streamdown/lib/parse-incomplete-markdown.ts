@@ -254,6 +254,10 @@ const countSingleUnderscores = (text: string): number => {
       if (isWithinMathBlock(text, index)) {
         return acc;
       }
+      // Skip if underscore is word-internal (between word characters)
+      if (prevChar && nextChar && /[\p{L}\p{N}_]/u.test(prevChar) && /[\p{L}\p{N}_]/u.test(nextChar)) {
+        return acc;
+      }
       if (prevChar !== "_" && nextChar !== "_") {
         return acc + 1;
       }
@@ -272,15 +276,28 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
 
   if (singleUnderscoreMatch) {
-    // Find the first single underscore position (not part of __)
+    // Find the first single underscore position (not part of __ and not word-internal)
     let firstSingleUnderscoreIndex = -1;
     for (let i = 0; i < text.length; i++) {
       if (
         text[i] === "_" &&
         text[i - 1] !== "_" &&
         text[i + 1] !== "_" &&
+        text[i - 1] !== "\\" &&
         !isWithinMathBlock(text, i)
       ) {
+        // Check if underscore is word-internal (between word characters)
+        const prevChar = i > 0 ? text[i - 1] : "";
+        const nextChar = i < text.length - 1 ? text[i + 1] : "";
+        if (
+          prevChar &&
+          nextChar &&
+          /[\p{L}\p{N}_]/u.test(prevChar) &&
+          /[\p{L}\p{N}_]/u.test(nextChar)
+        ) {
+          continue;
+        }
+
         firstSingleUnderscoreIndex = i;
         break;
       }
@@ -306,6 +323,15 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
 
     const singleUnderscores = countSingleUnderscores(text);
     if (singleUnderscores % 2 === 1) {
+      // If text ends with newline(s), insert underscore before them
+      const trailingNewlineMatch = text.match(/\n+$/);
+      if (trailingNewlineMatch) {
+        const textBeforeNewlines = text.slice(
+          0,
+          -trailingNewlineMatch[0].length
+        );
+        return `${textBeforeNewlines}_${trailingNewlineMatch[0]}`;
+      }
       return `${text}_`;
     }
   }

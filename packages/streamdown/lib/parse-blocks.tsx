@@ -1,7 +1,7 @@
-import { marked } from "marked";
+import { Lexer } from "marked";
 
 export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
-  const tokens = marked.use({ gfm: true }).lexer(markdown);
+  const tokens = Lexer.lex(markdown, { gfm: true });
   const blocks = tokens.map((token) => token.raw);
 
   // Post-process to merge consecutive blocks that are part of the same math block

@@ -1,36 +1,35 @@
+import type { MermaidConfig } from "mermaid";
 import { useEffect, useState } from "react";
 import { cn } from "./utils";
 
-// Global mermaid initialization
-let mermaidInitialized = false;
 
-const initializeMermaid = async () => {
-  if (!mermaidInitialized) {
-    const mermaidModule = await import("mermaid");
-    const mermaid = mermaidModule.default;
+const initializeMermaid = async (customConfig?: MermaidConfig) => {
+  const defaultConfig: MermaidConfig = {
+    startOnLoad: false,
+    theme: "default",
+    securityLevel: "strict",
+    fontFamily: "monospace",
+    suppressErrorRendering: true,
+  } as MermaidConfig;
 
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: "default",
-      securityLevel: "strict",
-      fontFamily: "monospace",
-      suppressErrorRendering: true,
-    });
-
-    mermaidInitialized = true;
-    return mermaid;
-  }
-
+  const config = { ...defaultConfig, ...customConfig };
+  
   const mermaidModule = await import("mermaid");
-  return mermaidModule.default;
+  const mermaid = mermaidModule.default;
+
+  // Always reinitialize with the current config to support different configs per component
+  mermaid.initialize(config);
+
+  return mermaid;
 };
 
 type MermaidProps = {
   chart: string;
   className?: string;
+  config?: MermaidConfig;
 };
 
-export const Mermaid = ({ chart, className }: MermaidProps) => {
+export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [svgContent, setSvgContent] = useState<string>("");
@@ -43,8 +42,8 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
         setError(null);
         setIsLoading(true);
 
-        // Initialize mermaid only once globally
-        const mermaid = await initializeMermaid();
+        // Initialize mermaid with optional custom config
+        const mermaid = await initializeMermaid(config);
 
         // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
         const chartHash = chart.split("").reduce((acc, char) => {
@@ -76,7 +75,7 @@ export const Mermaid = ({ chart, className }: MermaidProps) => {
     };
 
     renderChart();
-  }, [chart]);
+  }, [chart, config]);
 
   // Show loading only on initial load when we have no content
   if (isLoading && !svgContent && !lastValidSvg) {

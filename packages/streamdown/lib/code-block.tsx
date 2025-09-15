@@ -12,8 +12,10 @@ import {
 } from "react";
 import {
   type BundledLanguage,
+  bundledLanguages,
   type BundledTheme,
   createHighlighter,
+  SpecialLanguage,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import { ShikiThemeContext } from "../index";
@@ -47,6 +49,15 @@ class HighlighterManager {
   private readonly loadedLanguages: Set<BundledLanguage> = new Set();
   private initializationPromise: Promise<void> | null = null;
 
+
+  private isLanguageSupported(language: string): language is BundledLanguage {
+    return Object.hasOwn(bundledLanguages, language);
+  }
+
+  private getFallbackLanguage(): SpecialLanguage {
+    return 'text';
+  }
+
   private async ensureHighlightersInitialized(
     themes: [BundledTheme, BundledTheme],
     language: BundledLanguage
@@ -66,17 +77,20 @@ class HighlighterManager {
     }
 
     // Check if we need to load the language
-    const needsLanguageLoad = !this.loadedLanguages.has(language);
+    const isLanguageSupported = this.isLanguageSupported(language);
+    const needsLanguageLoad = !this.loadedLanguages.has(language) && isLanguageSupported;
 
     // Create or recreate light highlighter if needed
     if (needsLightRecreation) {
       this.lightHighlighter = await createHighlighter({
         themes: [lightTheme],
-        langs: [language],
+        langs: isLanguageSupported ? [language] : [],
         engine: jsEngine,
       });
       this.lightTheme = lightTheme;
-      this.loadedLanguages.add(language);
+      if (isLanguageSupported) {
+        this.loadedLanguages.add(language);
+      }
     } else if (needsLanguageLoad) {
       // Load the language if not already loaded
       await this.lightHighlighter?.loadLanguage(language);
@@ -86,12 +100,12 @@ class HighlighterManager {
     if (needsDarkRecreation) {
       // If recreating dark highlighter, load all previously loaded languages plus the new one
       const langsToLoad = needsLanguageLoad
-        ? [...this.loadedLanguages, language]
+        ? [...this.loadedLanguages].concat(isLanguageSupported ? [language] : [])
         : Array.from(this.loadedLanguages);
 
       this.darkHighlighter = await createHighlighter({
         themes: [darkTheme],
-        langs: langsToLoad.length > 0 ? langsToLoad : [language],
+        langs: langsToLoad.length > 0 ? langsToLoad : isLanguageSupported ? [language] : [],
         engine: jsEngine,
       });
       this.darkTheme = darkTheme;
@@ -106,6 +120,7 @@ class HighlighterManager {
     }
   }
 
+
   async highlightCode(
     code: string,
     language: BundledLanguage,
@@ -116,7 +131,6 @@ class HighlighterManager {
     if (this.initializationPromise) {
       await this.initializationPromise;
     }
-
     // Initialize or load language
     this.initializationPromise = this.ensureHighlightersInitialized(
       themes,
@@ -124,24 +138,28 @@ class HighlighterManager {
     );
     await this.initializationPromise;
     this.initializationPromise = null;
+    
+    const [lightTheme, darkTheme] = themes;
 
+    const lang = this.isLanguageSupported(language) ? language : this.getFallbackLanguage();
+
+    
+    const light = this.lightHighlighter?.codeToHtml(code, {
+      lang,
+      theme: lightTheme,
+    });
+
+    const dark = this.darkHighlighter?.codeToHtml(code, {
+      lang,
+      theme: darkTheme,
+    });
+    
+    
     const addPreClass = (html: string) => {
-      if (!preClassName) {
-        return html;
-      }
+      if (!preClassName) return html;
       return html.replace(PRE_TAG_REGEX, `<pre class="${preClassName}"$1`);
     };
 
-    const [lightTheme, darkTheme] = themes;
-
-    const light = this.lightHighlighter?.codeToHtml(code, {
-      lang: language,
-      theme: lightTheme,
-    });
-    const dark = this.darkHighlighter?.codeToHtml(code, {
-      lang: language,
-      theme: darkTheme,
-    });
 
     return [
       removePreBackground(addPreClass(light)),

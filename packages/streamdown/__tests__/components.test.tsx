@@ -119,6 +119,7 @@ describe("Markdown Components", () => {
       );
       const link = container.querySelector("a");
       expect(link).toBeTruthy();
+      expect(link?.className).toContain("wrap-anywhere");
       expect(link?.className).toContain("font-medium");
       expect(link?.className).toContain("text-primary");
       expect(link?.className).toContain("underline");

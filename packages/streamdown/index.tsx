@@ -8,12 +8,15 @@ import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
 import "katex/dist/katex.min.css";
 import hardenReactMarkdownImport from "harden-react-markdown";
+import type { MermaidConfig } from "mermaid";
 import type { Options as RemarkGfmOptions } from "remark-gfm";
 import type { Options as RemarkMathOptions } from "remark-math";
 import { components as defaultComponents } from "./lib/components";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
+
+export type { MermaidConfig } from "mermaid";
 
 type HardenReactMarkdownProps = Options & {
   defaultOrigin?: string;
@@ -30,16 +33,32 @@ const hardenReactMarkdown =
 const HardenedMarkdown: ReturnType<typeof hardenReactMarkdown> =
   hardenReactMarkdown(ReactMarkdown);
 
+export type ControlsConfig =
+  | boolean
+  | {
+      table?: boolean;
+      code?: boolean;
+      mermaid?: boolean;
+    };
+
 export type StreamdownProps = HardenReactMarkdownProps & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
+  mermaidConfig?: MermaidConfig;
+  controls?: ControlsConfig;
 };
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
   "github-light" as BundledTheme,
   "github-dark" as BundledTheme,
 ]);
+
+export const MermaidConfigContext = createContext<MermaidConfig | undefined>(
+  undefined
+);
+
+export const ControlsContext = createContext<ControlsConfig>(true);
 
 type BlockProps = HardenReactMarkdownProps & {
   content: string;
@@ -81,6 +100,8 @@ export const Streamdown = memo(
     remarkPlugins,
     className,
     shikiTheme = ["github-light", "github-dark"],
+    mermaidConfig,
+    controls = true,
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
@@ -97,29 +118,33 @@ export const Streamdown = memo(
 
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
-        <div className={cn("space-y-4", className)} {...props}>
-          {blocks.map((block, index) => (
-            <Block
-              allowedImagePrefixes={allowedImagePrefixes}
-              allowedLinkPrefixes={allowedLinkPrefixes}
-              components={{
-                ...defaultComponents,
-                ...components,
-              }}
-              content={block}
-              defaultOrigin={defaultOrigin}
-              // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-              key={`${generatedId}-block_${index}`}
-              rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
-              remarkPlugins={[
-                [remarkGfm, remarkGfmOptions],
-                [remarkMath, remarkMathOptions],
-                ...(remarkPlugins ?? []),
-              ]}
-              shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-            />
-          ))}
-        </div>
+        <MermaidConfigContext.Provider value={mermaidConfig}>
+          <ControlsContext.Provider value={controls}>
+            <div className={cn("space-y-4", className)} {...props}>
+              {blocks.map((block, index) => (
+                <Block
+                  allowedImagePrefixes={allowedImagePrefixes}
+                  allowedLinkPrefixes={allowedLinkPrefixes}
+                  components={{
+                    ...defaultComponents,
+                    ...components,
+                  }}
+                  content={block}
+                  defaultOrigin={defaultOrigin}
+                  // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+                  key={`${generatedId}-block_${index}`}
+                  rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
+                  remarkPlugins={[
+                    [remarkGfm, remarkGfmOptions],
+                    [remarkMath, remarkMathOptions],
+                    ...(remarkPlugins ?? []),
+                  ]}
+                  shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
+                />
+              ))}
+            </div>
+          </ControlsContext.Provider>
+        </MermaidConfigContext.Provider>
       </ShikiThemeContext.Provider>
     );
   },

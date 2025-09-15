@@ -5,9 +5,11 @@ import {
   isValidElement,
   type JSX,
   memo,
+  useContext,
 } from "react";
 import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
+import { ControlsContext, MermaidConfigContext } from "../index";
 import {
   CodeBlock,
   CodeBlockCopyButton,
@@ -63,6 +65,17 @@ function sameClassAndNode(
     prev.className === next.className && sameNodePosition(prev.node, next.node)
   );
 }
+
+const shouldShowControls = (
+  config: boolean | { table?: boolean; code?: boolean; mermaid?: boolean },
+  type: "table" | "code" | "mermaid"
+) => {
+  if (typeof config === "boolean") {
+    return config;
+  }
+
+  return config[type] !== false;
+};
 
 type OlProps = WithNode<JSX.IntrinsicElements["ol"]>;
 const MemoOl = memo<OlProps>(
@@ -148,7 +161,10 @@ const MemoA = memo<AProps>(
 
     return (
       <a
-        className={cn("font-medium text-primary underline", className)}
+        className={cn(
+          "wrap-anywhere font-medium text-primary underline",
+          className
+        )}
         data-incomplete={isIncomplete}
         data-streamdown="link"
         href={href}
@@ -254,29 +270,36 @@ MemoH6.displayName = "MarkdownH6";
 
 type TableProps = WithNode<JSX.IntrinsicElements["table"]>;
 const MemoTable = memo<TableProps>(
-  ({ children, className, ...props }: TableProps) => (
-    <div
-      className="my-4 flex flex-col space-y-2"
-      data-streamdown="table-wrapper"
-    >
-      <div className="flex items-center justify-end gap-1">
-        <TableCopyButton />
-        <TableDownloadDropdown />
+  ({ children, className, ...props }: TableProps) => {
+    const controlsConfig = useContext(ControlsContext);
+    const showTableControls = shouldShowControls(controlsConfig, "table");
+
+    return (
+      <div
+        className="my-4 flex flex-col space-y-2"
+        data-streamdown="table-wrapper"
+      >
+        {showTableControls && (
+          <div className="flex items-center justify-end gap-1">
+            <TableCopyButton />
+            <TableDownloadDropdown />
+          </div>
+        )}
+        <div className="overflow-x-auto">
+          <table
+            className={cn(
+              "w-full border-collapse border border-border",
+              className
+            )}
+            data-streamdown="table"
+            {...props}
+          >
+            {children}
+          </table>
+        </div>
       </div>
-      <div className="overflow-x-auto">
-        <table
-          className={cn(
-            "w-full border-collapse border border-border",
-            className
-          )}
-          data-streamdown="table"
-          {...props}
-        >
-          {children}
-        </table>
-      </div>
-    </div>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoTable.displayName = "MarkdownTable";
@@ -415,6 +438,8 @@ const CodeComponent = ({
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
   ExtraProps) => {
   const inline = node?.position?.start.line === node?.position?.end.line;
+  const mermaidConfig = useContext(MermaidConfigContext);
+  const controlsConfig = useContext(ControlsContext);
 
   if (inline) {
     return (
@@ -449,6 +474,8 @@ const CodeComponent = ({
   }
 
   if (language === "mermaid") {
+    const showMermaidControls = shouldShowControls(controlsConfig, "mermaid");
+
     return (
       <div
         className={cn(
@@ -457,14 +484,18 @@ const CodeComponent = ({
         )}
         data-streamdown="mermaid-block"
       >
-        <div className="flex items-center justify-end gap-2">
-          <CodeBlockDownloadButton code={code} language={language} />
-          <CodeBlockCopyButton code={code} />
-        </div>
-        <Mermaid chart={code} />
+        {showMermaidControls && (
+          <div className="flex items-center justify-end gap-2">
+            <CodeBlockDownloadButton code={code} language={language} />
+            <CodeBlockCopyButton code={code} />
+          </div>
+        )}
+        <Mermaid chart={code} config={mermaidConfig} />
       </div>
     );
   }
+
+  const showCodeControls = shouldShowControls(controlsConfig, "code");
 
   return (
     <CodeBlock
@@ -475,8 +506,12 @@ const CodeComponent = ({
       language={language}
       preClassName="overflow-x-auto font-mono text-xs p-4 bg-muted/40"
     >
-      <CodeBlockDownloadButton code={code} language={language} />
-      <CodeBlockCopyButton />
+      {showCodeControls && (
+        <>
+          <CodeBlockDownloadButton code={code} language={language} />
+          <CodeBlockCopyButton />
+        </>
+      )}
     </CodeBlock>
   );
 };

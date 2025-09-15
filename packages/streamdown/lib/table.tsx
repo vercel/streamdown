@@ -108,7 +108,7 @@ export const TableCopyButton = ({
   const timeoutRef = useRef(0);
 
   const copyTableData = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    if (typeof window === "undefined" || !navigator?.clipboard?.writeText) {
+    if (typeof window === "undefined" || !navigator?.clipboard?.write) {
       onError?.(new Error("Clipboard API not available"));
       return;
     }
@@ -130,23 +130,13 @@ export const TableCopyButton = ({
         }
 
         const tableData = extractTableDataFromElement(tableElement);
-        let content = "";
+        const clipboardItemData = new ClipboardItem({
+          "text/plain": format === "markdown"
+            ? tableDataToMarkdown(tableData) : tableDataToCSV(tableData),
+          "text/html": new Blob([tableElement.outerHTML], { type: "text/html" }),
+        });
 
-        switch (format) {
-          case "csv":
-            content = tableDataToCSV(tableData);
-            break;
-          case "markdown":
-            content = tableDataToMarkdown(tableData);
-            break;
-          case "text":
-            content = tableDataToCSV(tableData).replace(/,/g, "\t");
-            break;
-          default:
-            content = tableDataToCSV(tableData);
-        }
-
-        await navigator.clipboard.writeText(content);
+        await navigator.clipboard.write([clipboardItemData]);
         setIsCopied(true);
         onCopy?.();
         timeoutRef.current = window.setTimeout(
@@ -343,7 +333,7 @@ export const TableDownloadDropdown = ({
         {children ?? <DownloadIcon size={14} />}
       </button>
       {isOpen && (
-        <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] rounded-md border border-border bg-white shadow-lg">
+        <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] rounded-md border border-border bg-background shadow-lg">
           <button
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => downloadTableData("csv")}

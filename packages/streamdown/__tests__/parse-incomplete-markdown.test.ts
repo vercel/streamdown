@@ -190,6 +190,29 @@ describe("parseIncompleteMarkdown", () => {
         "some\\_text_with_underscores"
       );
     });
+
+    it("should handle mixed escaped and unescaped underscores correctly", () => {
+      expect(parseIncompleteMarkdown("\\_escaped\\_ and _unescaped")).toBe(
+        "\\_escaped\\_ and _unescaped_"
+      );
+
+      expect(parseIncompleteMarkdown("Start \\_escaped\\_ middle _incomplete")).toBe(
+        "Start \\_escaped\\_ middle _incomplete_"
+      );
+
+      expect(parseIncompleteMarkdown("\\_fully\\_escaped\\_")).toBe(
+        "\\_fully\\_escaped\\_"
+      );
+
+      expect(parseIncompleteMarkdown("\\_escaped\\_ _complete_ pair")).toBe(
+        "\\_escaped\\_ _complete_ pair"
+      );
+    });
+
+    it("should handle underscores with unicode word characters", () => {
+      expect(parseIncompleteMarkdown("café_price")).toBe("café_price");
+      expect(parseIncompleteMarkdown("naïve_approach")).toBe("naïve_approach");
+    });
   });
 
   describe("inline code formatting (`)", () => {
