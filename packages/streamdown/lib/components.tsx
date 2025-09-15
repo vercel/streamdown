@@ -146,7 +146,10 @@ export const components: Options["components"] = {
 
     return (
       <a
-        className={cn("font-medium text-primary underline", className)}
+        className={cn(
+          "wrap-anywhere font-medium text-primary underline",
+          className
+        )}
         data-incomplete={isIncomplete}
         data-streamdown="link"
         href={href}
