@@ -38,6 +38,8 @@ const CodeComponent = ({
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
   ExtraProps) => {
   const inline = node?.position?.start.line === node?.position?.end.line;
+  const mermaidConfig = useContext(MermaidConfigContext);
+  const controlsConfig = useContext(ControlsContext);
 
   if (inline) {
     return (
@@ -72,8 +74,6 @@ const CodeComponent = ({
   }
 
   if (language === "mermaid") {
-    const mermaidConfig = useContext(MermaidConfigContext);
-    const controlsConfig = useContext(ControlsContext);
     const showMermaidControls = shouldShowControls(controlsConfig, "mermaid");
 
     return (
@@ -95,7 +95,6 @@ const CodeComponent = ({
     );
   }
 
-  const controlsConfig = useContext(ControlsContext);
   const showCodeControls = shouldShowControls(controlsConfig, "code");
 
   return (
