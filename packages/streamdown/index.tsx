@@ -3,6 +3,7 @@
 import { createContext, memo, useId, useMemo } from "react";
 import ReactMarkdown, { type Options } from "react-markdown";
 import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
@@ -133,7 +134,11 @@ export const Streamdown = memo(
                   defaultOrigin={defaultOrigin}
                   // biome-ignore lint/suspicious/noArrayIndexKey: "required"
                   key={`${generatedId}-block_${index}`}
-                  rehypePlugins={[rehypeKatexPlugin, ...(rehypePlugins ?? [])]}
+                  rehypePlugins={[
+                    rehypeRaw,
+                    rehypeKatexPlugin,
+                    ...(rehypePlugins ?? []),
+                  ]}
                   remarkPlugins={[
                     [remarkGfm, remarkGfmOptions],
                     [remarkMath, remarkMathOptions],
