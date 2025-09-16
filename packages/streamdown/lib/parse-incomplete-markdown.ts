@@ -255,7 +255,12 @@ const countSingleUnderscores = (text: string): number => {
         return acc;
       }
       // Skip if underscore is word-internal (between word characters)
-      if (prevChar && nextChar && /[\p{L}\p{N}_]/u.test(prevChar) && /[\p{L}\p{N}_]/u.test(nextChar)) {
+      if (
+        prevChar &&
+        nextChar &&
+        /[\p{L}\p{N}_]/u.test(prevChar) &&
+        /[\p{L}\p{N}_]/u.test(nextChar)
+      ) {
         return acc;
       }
       if (prevChar !== "_" && nextChar !== "_") {

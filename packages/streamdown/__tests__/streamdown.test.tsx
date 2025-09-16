@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
 import type { MermaidConfig } from "mermaid";
+import { describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 
 // Mock the dependencies
@@ -241,9 +241,7 @@ And an incomplete [link
     } as MermaidConfig;
 
     const { container } = render(
-      <Streamdown mermaidConfig={mermaidConfig}>
-        Test content
-      </Streamdown>
+      <Streamdown mermaidConfig={mermaidConfig}>Test content</Streamdown>
     );
 
     // Just verify it renders without error when mermaidConfig is provided
@@ -251,11 +249,7 @@ And an incomplete [link
   });
 
   it("should render without mermaidConfig", () => {
-    const { container } = render(
-      <Streamdown>
-        Test content
-      </Streamdown>
-    );
+    const { container } = render(<Streamdown>Test content</Streamdown>);
 
     // Just verify it renders without error when mermaidConfig is not provided
     expect(container.firstElementChild).toBeTruthy();
