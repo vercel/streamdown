@@ -7,12 +7,14 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   // Post-process to merge consecutive blocks that are part of the same math block
   const mergedBlocks: string[] = [];
 
-  for (let i = 0; i < blocks.length; i++) {
-    const currentBlock = blocks[i];
-
+  for (const currentBlock of blocks) {
     // Check if this is a standalone $$ that might be a closing delimiter
     if (currentBlock.trim() === "$$" && mergedBlocks.length > 0) {
       const previousBlock = mergedBlocks.at(-1);
+
+      if (!previousBlock) {
+        continue;
+      }
 
       // Check if the previous block starts with $$ but doesn't end with $$
       const prevStartsWith$$ = previousBlock.trimStart().startsWith("$$");
@@ -28,6 +30,11 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
     // Check if current block ends with $$ and previous block started with $$ but didn't close
     if (mergedBlocks.length > 0 && currentBlock.trimEnd().endsWith("$$")) {
       const previousBlock = mergedBlocks.at(-1);
+
+      if (!previousBlock) {
+        continue;
+      }
+
       const prevStartsWith$$ = previousBlock.trimStart().startsWith("$$");
       const prevDollarCount = (previousBlock.match(/\$\$/g) || []).length;
       const currDollarCount = (currentBlock.match(/\$\$/g) || []).length;
