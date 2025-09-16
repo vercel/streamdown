@@ -1,5 +1,34 @@
 # streamdown
 
+## 1.3.0
+
+### Minor Changes
+
+- 73b17a4: Add controls prop to control copy/download button visibility.
+- 64b5afa: feat: memoize components to prevent child re-renders
+- d2edc90: feat: add custom Mermaid configuration support
+
+### Patch Changes
+
+- f34c039: fix: <br> in markdown tables from gpt-oss seem encoded or printed to output
+- 11b347e: `fix: fallback to plain text when unsupported language is passed to Shiki, preventing runtime errors`
+- 266fa2b: Fix word-internal underscores being incorrectly treated as incomplete markdown
+
+  Previously, underscores used as word separators (e.g., `hello_world`, `snake_case`) were incorrectly identified as incomplete italic markdown, causing an extra underscore to be appended. This fix:
+
+  - Detects when underscores are between word characters and treats them as literals
+  - Preserves the streaming markdown completion for genuine incomplete italics (e.g., `_italic text`)
+  - Correctly handles trailing newlines when completing italic formatting
+
+  Fixes the issue where `hello_world` would become `hello_world_` when `parseIncompleteMarkdown` was enabled.
+
+- 0ebf67d: misc 1.3 fixes and cleanup
+- d29281e: Fix the background color of `TableDropDownMenu` from `bg-white` to `bg-background`
+- 333df85: Update moduleResolution in tsconfig.json to bundler
+- d583b1f: import `Lexer` only for possible tree-shaking
+- 20330ba: add table text/html copy so that it can be recognized as table format in applications like Excel
+- 7ae9881: fix: long link text overflows (#139)
+
 ## 1.2.0
 
 ### Minor Changes
