@@ -162,7 +162,9 @@ class HighlighterManager {
     });
 
     const addPreClass = (html: string) => {
-      if (!preClassName) return html;
+      if (!preClassName) {
+        return html;
+      }
       return html.replace(PRE_TAG_REGEX, `<pre class="${preClassName}"$1`);
     };
 
