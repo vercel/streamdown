@@ -12,10 +12,10 @@ import {
 } from "react";
 import {
   type BundledLanguage,
-  bundledLanguages,
   type BundledTheme,
+  bundledLanguages,
   createHighlighter,
-  SpecialLanguage,
+  type SpecialLanguage,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import { ShikiThemeContext } from "../index";
@@ -49,13 +49,12 @@ class HighlighterManager {
   private readonly loadedLanguages: Set<BundledLanguage> = new Set();
   private initializationPromise: Promise<void> | null = null;
 
-
   private isLanguageSupported(language: string): language is BundledLanguage {
     return Object.hasOwn(bundledLanguages, language);
   }
 
   private getFallbackLanguage(): SpecialLanguage {
-    return 'text';
+    return "text";
   }
 
   private async ensureHighlightersInitialized(
@@ -78,7 +77,8 @@ class HighlighterManager {
 
     // Check if we need to load the language
     const isLanguageSupported = this.isLanguageSupported(language);
-    const needsLanguageLoad = !this.loadedLanguages.has(language) && isLanguageSupported;
+    const needsLanguageLoad =
+      !this.loadedLanguages.has(language) && isLanguageSupported;
 
     // Create or recreate light highlighter if needed
     if (needsLightRecreation) {
@@ -100,12 +100,19 @@ class HighlighterManager {
     if (needsDarkRecreation) {
       // If recreating dark highlighter, load all previously loaded languages plus the new one
       const langsToLoad = needsLanguageLoad
-        ? [...this.loadedLanguages].concat(isLanguageSupported ? [language] : [])
+        ? [...this.loadedLanguages].concat(
+            isLanguageSupported ? [language] : []
+          )
         : Array.from(this.loadedLanguages);
 
       this.darkHighlighter = await createHighlighter({
         themes: [darkTheme],
-        langs: langsToLoad.length > 0 ? langsToLoad : isLanguageSupported ? [language] : [],
+        langs:
+          langsToLoad.length > 0
+            ? langsToLoad
+            : isLanguageSupported
+              ? [language]
+              : [],
         engine: jsEngine,
       });
       this.darkTheme = darkTheme;
@@ -119,7 +126,6 @@ class HighlighterManager {
       this.loadedLanguages.add(language);
     }
   }
-
 
   async highlightCode(
     code: string,
@@ -138,12 +144,13 @@ class HighlighterManager {
     );
     await this.initializationPromise;
     this.initializationPromise = null;
-    
+
     const [lightTheme, darkTheme] = themes;
 
-    const lang = this.isLanguageSupported(language) ? language : this.getFallbackLanguage();
+    const lang = this.isLanguageSupported(language)
+      ? language
+      : this.getFallbackLanguage();
 
-    
     const light = this.lightHighlighter?.codeToHtml(code, {
       lang,
       theme: lightTheme,
@@ -153,13 +160,13 @@ class HighlighterManager {
       lang,
       theme: darkTheme,
     });
-    
-    
+
     const addPreClass = (html: string) => {
-      if (!preClassName) return html;
+      if (!preClassName) {
+        return html;
+      }
       return html.replace(PRE_TAG_REGEX, `<pre class="${preClassName}"$1`);
     };
-
 
     return [
       removePreBackground(addPreClass(light)),

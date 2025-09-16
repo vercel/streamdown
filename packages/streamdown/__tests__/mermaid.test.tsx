@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MermaidConfig } from "mermaid";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Mermaid } from "../lib/mermaid";
 
 // Mock mermaid
@@ -79,7 +79,9 @@ describe("Mermaid", () => {
       theme: "forest",
     } as MermaidConfig;
 
-    const { rerender } = render(<Mermaid chart="graph TD; A-->B" config={config1} />);
+    const { rerender } = render(
+      <Mermaid chart="graph TD; A-->B" config={config1} />
+    );
 
     // Should render without error
     expect(mockRender).toBeDefined();
@@ -106,7 +108,9 @@ describe("Mermaid", () => {
       fontFamily: "Arial",
     } as MermaidConfig;
 
-    const { container } = render(<Mermaid chart="graph TD; A-->B" config={config} />);
+    const { container } = render(
+      <Mermaid chart="graph TD; A-->B" config={config} />
+    );
 
     // Should render without error even with complex config
     expect(container.firstChild).toBeTruthy();
@@ -117,14 +121,16 @@ describe("Mermaid", () => {
     const config2: MermaidConfig = { theme: "dark" } as MermaidConfig;
 
     // Render first component
-    const { rerender } = render(<Mermaid chart="graph TD; A-->B" config={config1} />);
-    
+    const { rerender } = render(
+      <Mermaid chart="graph TD; A-->B" config={config1} />
+    );
+
     await vi.waitFor(() => expect(mockInitialize).toHaveBeenCalledTimes(1));
     expect(mockInitialize.mock.calls[0][0].theme).toBe("forest");
 
     // Render second component with different config
     rerender(<Mermaid chart="graph TD; X-->Y" config={config2} />);
-    
+
     await vi.waitFor(() => expect(mockInitialize).toHaveBeenCalledTimes(2));
     expect(mockInitialize.mock.calls[1][0].theme).toBe("dark");
   });

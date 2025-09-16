@@ -196,9 +196,9 @@ describe("parseIncompleteMarkdown", () => {
         "\\_escaped\\_ and _unescaped_"
       );
 
-      expect(parseIncompleteMarkdown("Start \\_escaped\\_ middle _incomplete")).toBe(
-        "Start \\_escaped\\_ middle _incomplete_"
-      );
+      expect(
+        parseIncompleteMarkdown("Start \\_escaped\\_ middle _incomplete")
+      ).toBe("Start \\_escaped\\_ middle _incomplete_");
 
       expect(parseIncompleteMarkdown("\\_fully\\_escaped\\_")).toBe(
         "\\_fully\\_escaped\\_"

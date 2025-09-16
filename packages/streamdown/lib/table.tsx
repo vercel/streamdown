@@ -131,9 +131,13 @@ export const TableCopyButton = ({
 
         const tableData = extractTableDataFromElement(tableElement);
         const clipboardItemData = new ClipboardItem({
-          "text/plain": format === "markdown"
-            ? tableDataToMarkdown(tableData) : tableDataToCSV(tableData),
-          "text/html": new Blob([tableElement.outerHTML], { type: "text/html" }),
+          "text/plain":
+            format === "markdown"
+              ? tableDataToMarkdown(tableData)
+              : tableDataToCSV(tableData),
+          "text/html": new Blob([tableElement.outerHTML], {
+            type: "text/html",
+          }),
         });
 
         await navigator.clipboard.write([clipboardItemData]);

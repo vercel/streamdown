@@ -2,7 +2,6 @@ import type { MermaidConfig } from "mermaid";
 import { useEffect, useState } from "react";
 import { cn } from "./utils";
 
-
 const initializeMermaid = async (customConfig?: MermaidConfig) => {
   const defaultConfig: MermaidConfig = {
     startOnLoad: false,
@@ -13,7 +12,7 @@ const initializeMermaid = async (customConfig?: MermaidConfig) => {
   } as MermaidConfig;
 
   const config = { ...defaultConfig, ...customConfig };
-  
+
   const mermaidModule = await import("mermaid");
   const mermaid = mermaidModule.default;
 
