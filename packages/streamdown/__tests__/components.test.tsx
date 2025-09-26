@@ -18,7 +18,6 @@ describe("Markdown Components", () => {
       expect(ol?.className).toContain("ml-4");
       expect(ol?.className).toContain("list-decimal");
       expect(ol?.className).toContain("list-outside");
-	  console.log(ol?.getAttribute("node"))
     });
 
     it("should render unordered list with correct classes", () => {
