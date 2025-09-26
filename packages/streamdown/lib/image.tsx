@@ -14,7 +14,7 @@ export const ImageComponent = ({
   className,
   src,
   alt,
-  ...props
+  ...htmlProps
 }: ImageComponentProps) => {
   const downloadImage = async () => {
     if (!src) {
@@ -79,7 +79,7 @@ export const ImageComponent = ({
         className={cn("max-w-full rounded-lg", className)}
         data-streamdown="image"
         src={src}
-        {...props}
+        {...htmlProps}
       />
       <div className="pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block" />
       <button
