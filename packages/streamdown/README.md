@@ -160,7 +160,7 @@ Streamdown accepts all the same props as react-markdown, plus additional streami
 | `className` | `string` | - | CSS class for the container |
 | `components` | `object` | - | Custom component overrides |
 | `remarkPlugins` | `array` | `[remarkGfm, remarkMath]` | Remark plugins to use |
-| `rehypePlugins` | `array` | `[rehypeKatex]` | Rehype plugins to use |
+| `rehypePlugins` | `array` | `[rehypeRaw, rehypeKatex]` | Rehype plugins to use |
 | `allowedImagePrefixes` | `array` | `['*']` | Allowed image URL prefixes |
 | `allowedLinkPrefixes` | `array` | `['*']` | Allowed link URL prefixes |
 | `defaultOrigin` | `string` | - | Default origin to use for relative URLs in links and images |
