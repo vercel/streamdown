@@ -45,7 +45,7 @@ const props = [
   {
     name: "rehypePlugins",
     type: "array",
-    default: "[rehypeKatex]",
+    default: "[rehypeRaw, rehypeKatex]",
     description:
       "Array of rehype plugins to use for processing HTML. Includes KaTeX for math rendering by default.",
   },
