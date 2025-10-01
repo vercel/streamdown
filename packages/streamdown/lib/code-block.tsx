@@ -267,7 +267,7 @@ export const CodeBlock = ({
           <div className={css({ minW: 'full' })}>
             <div
               className={cx(
-                css({ overflowX: 'auto', _dark: { display: 'none' } }),
+                css({ overflowX: 'auto', _osDark: { display: 'none' } }),
                 className,
               )}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
@@ -281,7 +281,7 @@ export const CodeBlock = ({
                 css({
                   display: 'none',
                   overflowX: 'auto',
-                  _dark: { display: 'block' },
+                  _osDark: { display: 'block' },
                 }),
                 className,
               )}
