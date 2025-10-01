@@ -662,7 +662,7 @@ export const CodeBlockDownloadButton = ({
         className,
       )}
       onClick={downloadCode}
-      title="Download file"
+      title="Скачать файл"
       type="button"
       {...props}
     >

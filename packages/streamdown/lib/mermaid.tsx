@@ -1,19 +1,19 @@
-import type { MermaidConfig } from "mermaid";
-import { useEffect, useState } from "react";
-import { cn } from "./utils";
+import { css, cx } from '@rolder/ss-react/css';
+import type { MermaidConfig } from 'mermaid';
+import { useEffect, useState } from 'react';
 
 const initializeMermaid = async (customConfig?: MermaidConfig) => {
   const defaultConfig: MermaidConfig = {
     startOnLoad: false,
-    theme: "default",
-    securityLevel: "strict",
-    fontFamily: "monospace",
+    theme: 'default',
+    securityLevel: 'strict',
+    fontFamily: 'monospace',
     suppressErrorRendering: true,
   } as MermaidConfig;
 
   const config = { ...defaultConfig, ...customConfig };
 
-  const mermaidModule = await import("mermaid");
+  const mermaidModule = await import('mermaid');
   const mermaid = mermaidModule.default;
 
   // Always reinitialize with the current config to support different configs per component
@@ -31,8 +31,8 @@ type MermaidProps = {
 export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [svgContent, setSvgContent] = useState<string>("");
-  const [lastValidSvg, setLastValidSvg] = useState<string>("");
+  const [svgContent, setSvgContent] = useState<string>('');
+  const [lastValidSvg, setLastValidSvg] = useState<string>('');
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"
   useEffect(() => {
@@ -45,8 +45,7 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
         const mermaid = await initializeMermaid(config);
 
         // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
-        const chartHash = chart.split("").reduce((acc, char) => {
-          // biome-ignore lint/suspicious/noBitwiseOperators: "Required for Mermaid"
+        const chartHash = chart.split('').reduce((acc, char) => {
           return ((acc << 5) - acc + char.charCodeAt(0)) | 0;
         }, 0);
         const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
@@ -65,7 +64,7 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
           const errorMessage =
             err instanceof Error
               ? err.message
-              : "Failed to render Mermaid chart";
+              : 'Failed to render Mermaid chart';
           setError(errorMessage);
         }
       } finally {
@@ -79,10 +78,31 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   // Show loading only on initial load when we have no content
   if (isLoading && !svgContent && !lastValidSvg) {
     return (
-      <div className={cn("my-4 flex justify-center p-4", className)}>
-        <div className="flex items-center space-x-2 text-muted-foreground">
-          <div className="h-4 w-4 animate-spin rounded-full border-current border-b-2" />
-          <span className="text-sm">Loading diagram...</span>
+      <div
+        className={cx(
+          css({ my: 4, display: 'flex', justifyContent: 'center', p: 4 }),
+          className,
+        )}
+      >
+        {/*"flex items-center space-x-2 text-muted-foreground"*/}
+        <div
+          className={css({
+            display: 'flex',
+            alignItems: 'center',
+            spaceX: 2,
+            color: 'text.muted',
+          })}
+        >
+          <div
+            className={css({
+              boxSize: '4',
+              animation: 'spin',
+              rounded: 'full',
+              borderColor: 'currentColor',
+              borderBottomWidth: '2px',
+            })}
+          />
+          <span className={css({ textStyle: 'p4' })}>Loading diagram...</span>
         </div>
       </div>
     );
@@ -92,17 +112,51 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   if (error && !svgContent && !lastValidSvg) {
     return (
       <div
-        className={cn(
-          "rounded-lg border border-red-200 bg-red-50 p-4",
-          className
+        className={cx(
+          // 'rounded-lg border border-red-200 bg-red-50 p-4',
+          css({
+            rounded: 'lg',
+            borderWidth: '1px',
+            borderColor: 'error',
+            bg: 'error.bg',
+            p: 4,
+          }),
+          className,
         )}
       >
-        <p className="font-mono text-red-700 text-sm">Mermaid Error: {error}</p>
-        <details className="mt-2">
-          <summary className="cursor-pointer text-red-600 text-xs">
+        {/*"font-mono text-red-700 text-sm"*/}
+        <p
+          className={css({
+            fontFamily: 'mono',
+            color: 'error',
+            textStyle: 'p4',
+          })}
+        >
+          Mermaid Error: {error}
+        </p>
+        <details className={css({ mt: 2 })}>
+          {/*"cursor-pointer text-red-600 text-xs"*/}
+          <summary
+            className={css({
+              cursor: 'pointer',
+              color: 'error',
+              textStyle: 'p4',
+            })}
+          >
             Show Code
           </summary>
-          <pre className="mt-2 overflow-x-auto rounded bg-red-100 p-2 text-red-800 text-xs">
+          {/*"mt-2 overflow-x-auto rounded bg-red-100 p-2 text-red-800 text-xs"*/}
+          <pre
+            className={css({
+              mt: 2,
+              overflowX: 'auto',
+              rounded: 'md',
+              bg: 'error.bg',
+              p: 2,
+              color: 'error',
+              textStyle: 'p4',
+            })}
+          >
             {chart}
           </pre>
         </details>
@@ -116,7 +170,10 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   return (
     <div
       aria-label="Mermaid chart"
-      className={cn("my-4 flex justify-center", className)}
+      className={cx(
+        css({ my: 4, display: 'flex', justifyContent: 'center' }),
+        className,
+      )}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
       dangerouslySetInnerHTML={{ __html: displaySvg }}
       role="img"
