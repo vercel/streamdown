@@ -10,7 +10,15 @@ import {
   useRef,
   useState,
 } from "react";
-import { type BundledLanguage, codeToHtml } from "shiki";
+import {
+  bundledLanguages,
+  getSingletonHighlighter,
+  type BundledLanguage,
+  type Highlighter,
+  type SpecialLanguage,
+} from "shiki";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+import { useShikiHighlighter } from "react-shiki";
 import { cn } from "@/lib/utils";
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
@@ -26,17 +34,25 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   code: "",
 });
 
-export async function highlightCode(code: string, language: BundledLanguage) {
-  return Promise.all([
-    await codeToHtml(code, {
-      lang: language,
-      theme: "github-light",
-    }),
-    await codeToHtml(code, {
-      lang: language,
-      theme: "github-dark",
-    }),
-  ]);
+// Get singleton highlighter with JavaScript engine (PR #77)
+async function getWebsiteHighlighter(
+  lang: BundledLanguage | SpecialLanguage
+): Promise<Highlighter> {
+  const highlighter = await getSingletonHighlighter({
+    themes: ["github-light", "github-dark"],
+    langs: [],
+    engine: createJavaScriptRegexEngine({ forgiving: true }),
+  });
+
+  // Load the language if it's a bundled language
+  if (lang !== "text" && Object.hasOwn(bundledLanguages, lang)) {
+    const loadedLanguages = highlighter.getLoadedLanguages();
+    if (!loadedLanguages.includes(lang)) {
+      await highlighter.loadLanguage(lang as BundledLanguage);
+    }
+  }
+
+  return highlighter;
 }
 
 export const CodeBlock = ({
@@ -46,43 +62,52 @@ export const CodeBlock = ({
   children,
   ...props
 }: CodeBlockProps) => {
-  const [html, setHtml] = useState<string>("");
-  const [darkHtml, setDarkHtml] = useState<string>("");
+  const [highlighter, setHighlighter] = useState<Highlighter | undefined>(
+    undefined
+  );
   const mounted = useRef(false);
 
+  // Check if language is supported
+  const isLanguageSupported = (lang: string): lang is BundledLanguage => {
+    return Object.hasOwn(bundledLanguages, lang);
+  };
+
+  const langToUse = isLanguageSupported(language)
+    ? language
+    : ("text" as SpecialLanguage);
+
   useEffect(() => {
-    highlightCode(code, language).then(([light, dark]) => {
-      if (!mounted.current) {
-        setHtml(light);
-        setDarkHtml(dark);
-        mounted.current = true;
+    mounted.current = true;
+    getWebsiteHighlighter(langToUse).then((h) => {
+      if (mounted.current) {
+        setHighlighter(h);
       }
     });
 
     return () => {
       mounted.current = false;
     };
-  }, [code, language]);
+  }, [langToUse]);
+
+  // Use react-shiki with singleton highlighter
+  const html = useShikiHighlighter(
+    code,
+    langToUse,
+    { light: "github-light", dark: "github-dark" },
+    {
+      highlighter,
+      defaultColor: "light-dark()",
+      outputFormat: "html",
+    }
+  );
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
       <div className="group relative">
         <div
-          className={cn(
-            "overflow-x-auto dark:hidden [&>pre]:bg-transparent!",
-            className
-          )}
+          className={cn("overflow-x-auto [&>pre]:bg-transparent!", className)}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-          dangerouslySetInnerHTML={{ __html: html }}
-          {...props}
-        />
-        <div
-          className={cn(
-            "hidden overflow-x-auto dark:block [&>pre]:bg-transparent!",
-            className
-          )}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-          dangerouslySetInnerHTML={{ __html: darkHtml }}
+          dangerouslySetInnerHTML={{ __html: (html as string) || "" }}
           {...props}
         />
         {children}
