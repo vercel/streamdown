@@ -2,26 +2,27 @@
 
 import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import {
-  type ComponentProps,
   createContext,
-  type HTMLAttributes,
   useContext,
   useEffect,
   useRef,
   useState,
+  type ComponentProps,
+  type HTMLAttributes,
 } from "react";
 import {
-  type BundledLanguage,
-  type BundledTheme,
   bundledLanguages,
   createHighlighter,
+  type BundledLanguage,
+  type BundledTheme,
+  type Highlighter,
   type SpecialLanguage,
 } from "shiki";
+import type { ShikiTransformer } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-import { ShikiThemeContext, StreamdownRuntimeContext } from "../index";
+import { useShikiHighlighter } from "react-shiki";
+import { ShikiThemeContext } from "../index";
 import { cn, save } from "./utils";
-
-const PRE_TAG_REGEX = /<pre(\s|>)/;
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
@@ -37,143 +38,66 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   code: "",
 });
 
-class HighlighterManager {
-  private lightHighlighter: Awaited<
-    ReturnType<typeof createHighlighter>
-  > | null = null;
-  private darkHighlighter: Awaited<
-    ReturnType<typeof createHighlighter>
-  > | null = null;
-  private lightTheme: BundledTheme | null = null;
-  private darkTheme: BundledTheme | null = null;
-  private readonly loadedLanguages: Set<BundledLanguage> = new Set();
-  private initializationPromise: Promise<void> | null = null;
-
-  private isLanguageSupported(language: string): language is BundledLanguage {
-    return Object.hasOwn(bundledLanguages, language);
-  }
-
-  private getFallbackLanguage(): SpecialLanguage {
-    return "text";
-  }
-
-  private async ensureHighlightersInitialized(
-    themes: [BundledTheme, BundledTheme],
-    language: BundledLanguage
-  ): Promise<void> {
-    const [lightTheme, darkTheme] = themes;
-    const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
-
-    // Check if we need to recreate highlighters due to theme change
-    const needsLightRecreation =
-      !this.lightHighlighter || this.lightTheme !== lightTheme;
-    const needsDarkRecreation =
-      !this.darkHighlighter || this.darkTheme !== darkTheme;
-
-    if (needsLightRecreation || needsDarkRecreation) {
-      // If themes changed, reset loaded languages
-      this.loadedLanguages.clear();
+// Custom transformers for Streamdown requirements
+const createPreClassTransformer = (className?: string): ShikiTransformer => ({
+  name: "streamdown:pre-class",
+  pre(node) {
+    if (className) {
+      const existingClasses = node.properties?.className || [];
+      const classes = Array.isArray(existingClasses)
+        ? existingClasses
+        : [existingClasses];
+      node.properties = {
+        ...node.properties,
+        className: [
+          ...classes.filter(
+            (c): c is string | number =>
+              typeof c === "string" || typeof c === "number"
+          ),
+          className,
+        ],
+      };
     }
+  },
+});
 
-    // Check if we need to load the language
-    const isLanguageSupported = this.isLanguageSupported(language);
-    const needsLanguageLoad =
-      !this.loadedLanguages.has(language) && isLanguageSupported;
-
-    // Create or recreate light highlighter if needed
-    if (needsLightRecreation) {
-      this.lightHighlighter = await createHighlighter({
-        themes: [lightTheme],
-        langs: isLanguageSupported ? [language] : [],
-        engine: jsEngine,
-      });
-      this.lightTheme = lightTheme;
-      if (isLanguageSupported) {
-        this.loadedLanguages.add(language);
+const removeBackgroundTransformer: ShikiTransformer = {
+  name: "streamdown:remove-background",
+  pre(node) {
+    if (node.properties?.style) {
+      if (typeof node.properties.style === "string") {
+        node.properties.style = node.properties.style
+          .replace(/background[^;]*;?/g, "")
+          .trim();
+      } else if (
+        typeof node.properties.style === "object" &&
+        node.properties.style !== null &&
+        !Array.isArray(node.properties.style)
+      ) {
+        // Handle object style (if present)
+        const styleObj = node.properties.style as Record<
+          string,
+          string | undefined
+        >;
+        // biome-ignore lint/performance/noDelete: needed to remove style properties
+        delete styleObj.background;
+        // biome-ignore lint/performance/noDelete: needed to remove style properties
+        delete styleObj.backgroundColor;
       }
-    } else if (needsLanguageLoad) {
-      // Load the language if not already loaded
-      await this.lightHighlighter?.loadLanguage(language);
     }
+  },
+};
 
-    // Create or recreate dark highlighter if needed
-    if (needsDarkRecreation) {
-      // If recreating dark highlighter, load all previously loaded languages plus the new one
-      const langsToLoad = needsLanguageLoad
-        ? [...this.loadedLanguages].concat(
-            isLanguageSupported ? [language] : []
-          )
-        : Array.from(this.loadedLanguages);
-
-      this.darkHighlighter = await createHighlighter({
-        themes: [darkTheme],
-        langs:
-          langsToLoad.length > 0
-            ? langsToLoad
-            : isLanguageSupported
-              ? [language]
-              : [],
-        engine: jsEngine,
-      });
-      this.darkTheme = darkTheme;
-    } else if (needsLanguageLoad) {
-      // Load the language if not already loaded
-      await this.darkHighlighter?.loadLanguage(language);
-    }
-
-    // Mark language as loaded after both highlighters have it
-    if (needsLanguageLoad) {
-      this.loadedLanguages.add(language);
-    }
-  }
-
-  async highlightCode(
-    code: string,
-    language: BundledLanguage,
-    themes: [BundledTheme, BundledTheme],
-    preClassName?: string
-  ): Promise<[string, string]> {
-    // Ensure only one initialization happens at a time
-    if (this.initializationPromise) {
-      await this.initializationPromise;
-    }
-    // Initialize or load language
-    this.initializationPromise = this.ensureHighlightersInitialized(
-      themes,
-      language
-    );
-    await this.initializationPromise;
-    this.initializationPromise = null;
-
-    const [lightTheme, darkTheme] = themes;
-
-    const lang = this.isLanguageSupported(language)
-      ? language
-      : this.getFallbackLanguage();
-
-    const light = this.lightHighlighter?.codeToHtml(code, {
-      lang,
-      theme: lightTheme,
-    });
-
-    const dark = this.darkHighlighter?.codeToHtml(code, {
-      lang,
-      theme: darkTheme,
-    });
-
-    const addPreClass = (html: string) => {
-      if (!preClassName) {
-        return html;
-      }
-      return html.replace(PRE_TAG_REGEX, `<pre class="${preClassName}"$1`);
-    };
-
-    return [addPreClass(light), addPreClass(dark)];
-  }
+// Create highlighter with themes
+async function createStreamdownHighlighter(
+  themes: [BundledTheme, BundledTheme]
+): Promise<Highlighter> {
+  return await createHighlighter({
+    themes, // Load both themes
+    langs: [], // Languages will be loaded dynamically by Shiki as needed
+    engine: createJavaScriptRegexEngine({ forgiving: true }),
+  });
 }
-
-// Create a singleton instance of the highlighter manager
-const highlighterManager = new HighlighterManager();
 
 export const CodeBlock = ({
   code,
@@ -183,28 +107,52 @@ export const CodeBlock = ({
   preClassName,
   ...rest
 }: CodeBlockProps) => {
-  const [html, setHtml] = useState<string>("");
-  const [darkHtml, setDarkHtml] = useState<string>("");
-  const mounted = useRef(false);
+  const [highlighter, setHighlighter] = useState<Highlighter | undefined>(
+    undefined
+  );
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
+  const mounted = useRef(false);
 
+  // Initialize highlighter with themes
   useEffect(() => {
     mounted.current = true;
-
-    highlighterManager
-      .highlightCode(code, language, [lightTheme, darkTheme], preClassName)
-      .then(([light, dark]) => {
-        if (mounted.current) {
-          setHtml(light);
-          setDarkHtml(dark);
-        }
-      });
+    createStreamdownHighlighter([lightTheme, darkTheme]).then((h) => {
+      if (mounted.current) {
+        setHighlighter(h);
+      }
+    });
 
     return () => {
       mounted.current = false;
     };
-  }, [code, language, lightTheme, darkTheme, preClassName]);
+  }, [lightTheme, darkTheme]);
 
+  // Check if language is supported
+  const isLanguageSupported = (lang: string): lang is BundledLanguage => {
+    return Object.hasOwn(bundledLanguages, lang);
+  };
+
+  const langToUse = isLanguageSupported(language)
+    ? language
+    : ("text" as SpecialLanguage);
+
+  // Use react-shiki hook with our custom highlighter
+  const html = useShikiHighlighter(
+    code,
+    langToUse,
+    { light: lightTheme, dark: darkTheme },
+    {
+      highlighter,
+      defaultColor: "light-dark()",
+      outputFormat: "html",
+      transformers: [
+        createPreClassTransformer(preClassName),
+        removeBackgroundTransformer,
+      ],
+    }
+  );
+
+  // Always render the full structure, with empty HTML if highlighter not ready
   return (
     <CodeBlockContext.Provider value={{ code }}>
       <div
@@ -223,17 +171,9 @@ export const CodeBlock = ({
         <div className="w-full">
           <div className="min-w-full">
             <div
-              className={cn("overflow-x-auto dark:hidden", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: html }}
-              data-code-block
-              data-language={language}
-              {...rest}
-            />
-            <div
-              className={cn("hidden overflow-x-auto dark:block", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: darkHtml }}
+              className={cn("overflow-x-auto", className)}
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: needed for syntax highlighting
+              dangerouslySetInnerHTML={{ __html: (html as string) || "" }}
               data-code-block
               data-language={language}
               {...rest}
@@ -577,8 +517,7 @@ export const CodeBlockDownloadButton = ({
   code?: string;
   language?: BundledLanguage;
 }) => {
-  const { code: contextCode } = useContext(CodeBlockContext);
-  const { isAnimating } = useContext(StreamdownRuntimeContext);
+  const contextCode = useContext(CodeBlockContext).code;
   const code = propCode ?? contextCode;
   const extension =
     language && language in languageExtensionMap
@@ -599,10 +538,9 @@ export const CodeBlockDownloadButton = ({
   return (
     <button
       className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
         className
       )}
-      disabled={isAnimating}
       onClick={downloadCode}
       title="Download file"
       type="button"
@@ -624,8 +562,7 @@ export const CodeBlockCopyButton = ({
 }: CodeBlockCopyButtonProps & { code?: string }) => {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
-  const { code: contextCode } = useContext(CodeBlockContext);
-  const { isAnimating } = useContext(StreamdownRuntimeContext);
+  const contextCode = useContext(CodeBlockContext).code;
   const code = propCode ?? contextCode;
 
   const copyToClipboard = async () => {
@@ -660,10 +597,9 @@ export const CodeBlockCopyButton = ({
   return (
     <button
       className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
         className
       )}
-      disabled={isAnimating}
       onClick={copyToClipboard}
       type="button"
       {...props}
