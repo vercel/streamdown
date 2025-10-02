@@ -313,4 +313,40 @@ describe("CodeBlock with multiple languages", () => {
       { timeout: 5000 }
     );
   });
+
+  it("should actually highlight code with syntax colors", async () => {
+    const jsCode = "const x = 1;";
+    const { container } = render(
+      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+        <CodeBlock code={jsCode} language="javascript" />
+      </ShikiThemeContext.Provider>
+    );
+
+    await waitFor(
+      () => {
+        // Check for shiki-themed pre element with CSS variables
+        const pre = container.querySelector("pre.shiki");
+        expect(pre).toBeTruthy();
+        expect(pre).toHaveClass("shiki-themes");
+
+        // Verify CSS variables for multi-theme support
+        const style = pre?.getAttribute("style");
+        expect(style).toBeTruthy();
+        expect(style).toContain("--shiki-light");
+        expect(style).toContain("--shiki-dark");
+
+        // Verify actual syntax highlighting tokens exist
+        // Code should be wrapped in span elements (tokens)
+        const tokens = container.querySelectorAll("pre.shiki span.line span");
+        expect(tokens.length).toBeGreaterThan(0);
+
+        // At least one token should have style attribute with color
+        const tokensWithStyle = Array.from(tokens).filter(
+          (token) => token.getAttribute("style")
+        );
+        expect(tokensWithStyle.length).toBeGreaterThan(0);
+      },
+      { timeout: 5000 }
+    );
+  });
 });
