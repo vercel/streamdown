@@ -12,7 +12,7 @@ import {
 } from "react";
 import {
   bundledLanguages,
-  createHighlighter,
+  getSingletonHighlighter,
   type BundledLanguage,
   type BundledTheme,
   type Highlighter,
@@ -88,15 +88,26 @@ const removeBackgroundTransformer: ShikiTransformer = {
   },
 };
 
-// Create highlighter with themes
-async function createStreamdownHighlighter(
-  themes: [BundledTheme, BundledTheme]
+// Get singleton highlighter with themes
+async function getStreamdownHighlighter(
+  themes: [BundledTheme, BundledTheme],
+  lang: BundledLanguage | SpecialLanguage
 ): Promise<Highlighter> {
-  return await createHighlighter({
+  const highlighter = await getSingletonHighlighter({
     themes, // Load both themes
-    langs: [], // Languages will be loaded dynamically by Shiki as needed
+    langs: [], // Languages will be loaded dynamically
     engine: createJavaScriptRegexEngine({ forgiving: true }),
   });
+
+  // Load the language if it's a bundled language
+  if (lang !== "text" && Object.hasOwn(bundledLanguages, lang)) {
+    const loadedLanguages = highlighter.getLoadedLanguages();
+    if (!loadedLanguages.includes(lang)) {
+      await highlighter.loadLanguage(lang as BundledLanguage);
+    }
+  }
+
+  return highlighter;
 }
 
 export const CodeBlock = ({
@@ -107,25 +118,11 @@ export const CodeBlock = ({
   preClassName,
   ...rest
 }: CodeBlockProps) => {
+  const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
   const [highlighter, setHighlighter] = useState<Highlighter | undefined>(
     undefined
   );
-  const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
   const mounted = useRef(false);
-
-  // Initialize highlighter with themes
-  useEffect(() => {
-    mounted.current = true;
-    createStreamdownHighlighter([lightTheme, darkTheme]).then((h) => {
-      if (mounted.current) {
-        setHighlighter(h);
-      }
-    });
-
-    return () => {
-      mounted.current = false;
-    };
-  }, [lightTheme, darkTheme]);
 
   // Check if language is supported
   const isLanguageSupported = (lang: string): lang is BundledLanguage => {
@@ -136,7 +133,21 @@ export const CodeBlock = ({
     ? language
     : ("text" as SpecialLanguage);
 
-  // Use react-shiki hook with our custom highlighter
+  // Get singleton highlighter with current themes and load language
+  useEffect(() => {
+    mounted.current = true;
+    getStreamdownHighlighter([lightTheme, darkTheme], langToUse).then((h) => {
+      if (mounted.current) {
+        setHighlighter(h);
+      }
+    });
+
+    return () => {
+      mounted.current = false;
+    };
+  }, [lightTheme, darkTheme, langToUse]);
+
+  // Use react-shiki hook with our singleton highlighter
   const html = useShikiHighlighter(
     code,
     langToUse,
