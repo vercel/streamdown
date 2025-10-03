@@ -116,7 +116,7 @@ const MemoLi = memo<LiProps>(
           },
           '& > *': {
             verticalAlign: 'middle',
-            mb: '4px',
+            mb: 1,
           },
         }),
         className,
