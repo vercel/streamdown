@@ -1,6 +1,8 @@
 'use client';
 
-import { css, cx } from '@rolder/ss-react/css';
+import { Box, HStack } from '@rolder/ss-react/jsx';
+import { paper } from '@rolder/ss-react/recipes';
+import { IconButton, Text } from '@rolder/ui-kit-react';
 import { IconCheck, IconCopy, IconDownload } from '@tabler/icons-react';
 import {
   type ComponentProps,
@@ -219,81 +221,56 @@ export const CodeBlock = ({
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
-      <div
-        className={css({
-          my: 4,
-          w: 'full',
-          overflow: 'hidden',
-          rounded: 'xl',
-          borderWidth: '1px',
-          borderColor: 'border',
-        })}
+      <Box
+        my={4}
+        w="full"
+        overflow="hidden"
+        className={paper()}
         data-code-block-container
         data-language={language}
       >
-        <div
-          // className="flex items-center justify-between bg-muted/80 p-3 text-muted-foreground text-xs"
-          className={css({
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            bg: 'bg.muted/80',
-            p: 3,
-            textStyle: 'p4',
-          })}
+        <HStack
+          justify="space-between"
+          px={3}
+          py={2}
+          bg="bg.raised"
           data-code-block-header
           data-language={language}
         >
-          <span
-            className={css({
-              ml: 1,
-              fontFamily: 'mono',
-              textTransform: 'lowercase',
-            })}
-          >
-            {language}
-          </span>
-          <div
-            className={css({
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-            })}
-          >
-            {children}
-          </div>
-        </div>
-        <div className={css({ w: 'full' })}>
-          <div className={css({ minW: 'full' })}>
-            <div
-              className={cx(
-                css({ overflowX: 'auto', _osDark: { display: 'none' } }),
-                className,
-              )}
+          <Text.P4 semimuted>{language}</Text.P4>
+
+          <HStack gap={2}>{children}</HStack>
+        </HStack>
+        <Box w="full">
+          <Box minW="full">
+            <Box
+              overflowX="auto"
+              _dark={{ display: 'none' }}
+              borderTopWidth="1px"
+              borderColor="border"
+              className={className}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               dangerouslySetInnerHTML={{ __html: html }}
               data-code-block
               data-language={language}
               {...rest}
             />
-            <div
-              className={cx(
-                css({
-                  display: 'none',
-                  overflowX: 'auto',
-                  _osDark: { display: 'block' },
-                }),
-                className,
-              )}
+            <Box
+              display="none"
+              overflowX="auto"
+              _osDark={{ display: 'block' }}
+              borderTopWidth="1px"
+              borderColor="border"
+              className={className}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               dangerouslySetInnerHTML={{ __html: darkHtml }}
               data-code-block
               data-language={language}
               {...rest}
             />
-          </div>
-        </div>
-      </div>
+          </Box>
+        </Box>
+      </Box>
     </CodeBlockContext.Provider>
   );
 };
@@ -649,25 +626,16 @@ export const CodeBlockDownloadButton = ({
   };
 
   return (
-    <button
-      className={cx(
-        // 'cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground',
-        css({
-          cursor: 'pointer',
-          p: 1,
-          color: 'text.muted',
-          transition: 'all',
-          _hover: { color: 'text' },
-        }),
-        className,
-      )}
+    <IconButton
+      size="xs"
+      _hover={{ bg: 'bg.accent' }}
+      _active={{ bg: 'icon.bg.active!' }}
       onClick={downloadCode}
       title="Скачать файл"
-      type="button"
       {...props}
     >
-      {children ?? <IconDownload size={14} />}
-    </button>
+      {children ?? <IconDownload />}
+    </IconButton>
   );
 };
 
@@ -715,23 +683,16 @@ export const CodeBlockCopyButton = ({
   const Icon = isCopied ? IconCheck : IconCopy;
 
   return (
-    <button
-      className={cx(
-        //'cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground',
-        css({
-          cursor: 'pointer',
-          p: 1,
-          color: 'text.muted',
-          transition: 'all',
-          _hover: { color: 'text' },
-        }),
-        className,
-      )}
+    <IconButton
+      size="xs"
+      _hover={{ bg: 'bg.accent' }}
+      _active={{ bg: 'icon.bg.active!' }}
+      transition="all"
       onClick={copyToClipboard}
-      type="button"
+      title="Скопировать в буфер"
       {...props}
     >
-      {children ?? <Icon size={14} />}
-    </button>
+      {children ?? <Icon />}
+    </IconButton>
   );
 };

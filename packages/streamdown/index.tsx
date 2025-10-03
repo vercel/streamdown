@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import type { BundledTheme } from 'shiki';
 import 'katex/dist/katex.min.css';
-import { css, cx } from '@rolder/ss-react/css';
+import { Box } from '@rolder/ss-react/jsx';
 import hardenReactMarkdownImport from 'harden-react-markdown';
 import type { MermaidConfig } from 'mermaid';
 import type { Options as RemarkGfmOptions } from 'remark-gfm';
@@ -123,7 +123,7 @@ export const Streamdown = memo(
       <ShikiThemeContext.Provider value={shikiTheme}>
         <MermaidConfigContext.Provider value={mermaidConfig}>
           <ControlsContext.Provider value={controls}>
-            <div className={cx(css({ spaceY: 4 }), className)} {...props}>
+            <Box spaceY={4} className={className} {...props}>
               {blocks.map((block, index) => (
                 <Block
                   allowedImagePrefixes={allowedImagePrefixes}
@@ -149,7 +149,7 @@ export const Streamdown = memo(
                   shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
                 />
               ))}
-            </div>
+            </Box>
           </ControlsContext.Provider>
         </MermaidConfigContext.Provider>
       </ShikiThemeContext.Provider>

@@ -72,7 +72,10 @@ export const ImageComponent = ({
 
   return (
     <div
-      className="group relative my-4 inline-block"
+      className={cx(
+        'group',
+        css({ pos: 'relative', my: 4, display: 'inline-block' }),
+      )}
       data-streamdown="image-wrapper"
     >
       <img

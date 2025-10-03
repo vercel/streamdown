@@ -32,7 +32,8 @@
     "@rsbuild/core": "~1.5.13",
     "@rsbuild/plugin-react": "^1.4.1",
     "@rslib/core": "^0.15.0",
-    "@rolder/ss-react": "workspace:*"
+    "@rolder/ss-react": "workspace:*",
+    "@rolder/ui-kit-react": "workspace:*"
   },
   "peerDependencies": {
     "react": "^19.1.1",

@@ -1,4 +1,6 @@
 import { css, cx } from '@rolder/ss-react/css';
+import { Divider, VStack } from '@rolder/ss-react/jsx';
+import { Text } from '@rolder/ui-kit-react';
 import {
   type DetailedHTMLProps,
   type HTMLAttributes,
@@ -105,7 +107,20 @@ type LiProps = WithNode<JSX.IntrinsicElements['li']>;
 const MemoLi = memo<LiProps>(
   ({ children, className, ...props }: LiProps) => (
     <li
-      className={cx(css({ py: 1 }), className)}
+      className={cx(
+        css({
+          py: 1,
+          '& > input[type="checkbox"]': {
+            boxSize: '4',
+            mr: 1,
+          },
+          '& > *': {
+            verticalAlign: 'middle',
+            mb: '4px',
+          },
+        }),
+        className,
+      )}
       data-streamdown="list-item"
       {...props}
     >
@@ -121,7 +136,11 @@ const MemoUl = memo<UlProps>(
   ({ children, className, ...props }: UlProps) => (
     <ul
       className={cx(
-        css({ ml: 4, listStyleType: 'disc', whiteSpace: 'normal' }),
+        css({
+          ml: 4,
+          listStyleType: 'disc',
+          whiteSpace: 'normal',
+        }),
         className,
       )}
       data-streamdown="unordered-list"
@@ -136,12 +155,8 @@ MemoUl.displayName = 'MarkdownUl';
 
 type HrProps = WithNode<JSX.IntrinsicElements['hr']>;
 const MemoHr = memo<HrProps>(
-  ({ className, ...props }: HrProps) => (
-    <hr
-      className={cx(css({ my: 6, borderColor: 'border' }), className)}
-      data-streamdown="horizontal-rule"
-      {...props}
-    />
+  (props: HrProps) => (
+    <Divider data-streamdown="horizontal-rule" color="border" {...props} />
   ),
   (p, n) => sameClassAndNode(p, n),
 );
@@ -170,20 +185,16 @@ const MemoA = memo<AProps>(
     return (
       <a
         className={cx(
-          // 'wrap-anywhere font-medium text-primary underline',
           css({
             overflowWrap: 'anywhere',
             fontWeight: '500',
-            color: 'fg',
+            color: 'text.accent',
             textDecoration: 'underline',
           }),
           className,
         )}
         data-incomplete={isIncomplete}
         data-streamdown="link"
-        href={href}
-        rel="noreferrer"
-        target="_blank"
         {...props}
       >
         {children}
@@ -199,108 +210,48 @@ type HeadingProps<TTag extends keyof JSX.IntrinsicElements> = WithNode<
 >;
 
 const MemoH1 = memo<HeadingProps<'h1'>>(
-  ({ children, className, ...props }) => (
-    <h1
-      className={cx(
-        //'mt-6 mb-2 font-semibold text-3xl',
-        css({ mt: 6, mb: 2, fontWeight: '500', textStyle: 'h1' }),
-        className,
-      )}
-      data-streamdown="heading-1"
-      {...props}
-    >
-      {children}
-    </h1>
+  (props) => (
+    <Text.H1 mt={6} mb={2} medium data-streamdown="heading-1" {...props} />
   ),
   (p, n) => sameClassAndNode(p, n),
 );
 MemoH1.displayName = 'MarkdownH1';
 
 const MemoH2 = memo<HeadingProps<'h2'>>(
-  ({ children, className, ...props }) => (
-    <h2
-      className={cx(
-        //'mt-6 mb-2 font-semibold text-2xl'
-        css({ mt: 6, mb: 2, fontWeight: '500', textStyle: 'h2' }),
-        className,
-      )}
-      data-streamdown="heading-2"
-      {...props}
-    >
-      {children}
-    </h2>
+  (props) => (
+    <Text.H2 mt={6} mb={2} medium data-streamdown="heading-2" {...props} />
   ),
   (p, n) => sameClassAndNode(p, n),
 );
 MemoH2.displayName = 'MarkdownH2';
 
 const MemoH3 = memo<HeadingProps<'h3'>>(
-  ({ children, className, ...props }) => (
-    <h3
-      className={cx(
-        //'mt-6 mb-2 font-semibold text-xl'
-        css({ mt: 6, mb: 2, fontWeight: '500', textStyle: 'h3' }),
-        className,
-      )}
-      data-streamdown="heading-3"
-      {...props}
-    >
-      {children}
-    </h3>
+  (props) => (
+    <Text.H3 mt={6} mb={2} medium data-streamdown="heading-3" {...props} />
   ),
   (p, n) => sameClassAndNode(p, n),
 );
 MemoH3.displayName = 'MarkdownH3';
 
 const MemoH4 = memo<HeadingProps<'h4'>>(
-  ({ children, className, ...props }) => (
-    <h4
-      className={cx(
-        //'mt-6 mb-2 font-semibold text-lg',
-        css({ mt: 6, mb: 2, fontWeight: '500', textStyle: 'p2' }),
-        className,
-      )}
-      data-streamdown="heading-4"
-      {...props}
-    >
-      {children}
-    </h4>
+  (props) => (
+    <Text.P2 mt={6} mb={2} medium data-streamdown="heading-4" {...props} />
   ),
   (p, n) => sameClassAndNode(p, n),
 );
 MemoH4.displayName = 'MarkdownH4';
 
 const MemoH5 = memo<HeadingProps<'h5'>>(
-  ({ children, className, ...props }) => (
-    <h5
-      className={cx(
-        // 'mt-6 mb-2 font-semibold text-base',
-        css({ mt: 6, mb: 2, fontWeight: '500', textStyle: 'p3' }),
-        className,
-      )}
-      data-streamdown="heading-5"
-      {...props}
-    >
-      {children}
-    </h5>
+  (props) => (
+    <Text.P3 mt={6} mb={2} medium data-streamdown="heading-5" {...props} />
   ),
   (p, n) => sameClassAndNode(p, n),
 );
 MemoH5.displayName = 'MarkdownH5';
 
 const MemoH6 = memo<HeadingProps<'h6'>>(
-  ({ children, className, ...props }) => (
-    <h6
-      className={cx(
-        // 'mt-6 mb-2 font-semibold text-sm',
-        css({ mt: 6, mb: 2, fontWeight: '500', textStyle: 'p4' }),
-        className,
-      )}
-      data-streamdown="heading-6"
-      {...props}
-    >
-      {children}
-    </h6>
+  (props) => (
+    <Text.P4 mt={6} mb={2} medium data-streamdown="heading-6" {...props} />
   ),
   (p, n) => sameClassAndNode(p, n),
 );
@@ -313,14 +264,16 @@ const MemoTable = memo<TableProps>(
     const showTableControls = shouldShowControls(controlsConfig, 'table');
 
     return (
-      <div
+      <VStack
+        my={4}
+        spaceY={2}
         //className="my-4 flex flex-col space-y-2"
-        className={css({
-          my: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          spaceY: 2,
-        })}
+        // className={css({
+        //   my: 4,
+        //   display: 'flex',
+        //   flexDirection: 'column',
+        //   spaceY: 2,
+        // })}
         data-streamdown="table-wrapper"
       >
         {showTableControls && (
@@ -353,7 +306,7 @@ const MemoTable = memo<TableProps>(
             {children}
           </table>
         </div>
-      </div>
+      </VStack>
     );
   },
   (p, n) => sameClassAndNode(p, n),
@@ -599,21 +552,16 @@ const CodeComponent = ({
 
   return (
     <CodeBlock
-      className={cx(
-        css({ overflowX: 'auto', borderTopWidth: '1px' }),
-        className,
-      )}
+      className={className}
       code={code}
       data-language={language}
       data-streamdown="code-block"
       language={language}
-      //"overflow-x-auto font-mono text-xs p-4 bg-muted/40"
       preClassName={css({
         overflowX: 'auto',
         fontFamily: 'mono',
         textStyle: 'p5',
         p: 4,
-        bg: 'bg/40',
       })}
     >
       {showCodeControls && (
