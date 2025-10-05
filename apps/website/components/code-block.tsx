@@ -6,19 +6,14 @@ import {
   createContext,
   type HTMLAttributes,
   useContext,
-  useEffect,
-  useRef,
   useState,
 } from "react";
 import {
   bundledLanguages,
-  getSingletonHighlighter,
   type BundledLanguage,
-  type Highlighter,
   type SpecialLanguage,
 } from "shiki";
-import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-import { useShikiHighlighter } from "react-shiki";
+import { createJavaScriptRegexEngine, useShikiHighlighter } from "react-shiki";
 import { cn } from "@/lib/utils";
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
@@ -34,27 +29,6 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
   code: "",
 });
 
-// Get singleton highlighter with JavaScript engine (PR #77)
-async function getWebsiteHighlighter(
-  lang: BundledLanguage | SpecialLanguage
-): Promise<Highlighter> {
-  const highlighter = await getSingletonHighlighter({
-    themes: ["github-light", "github-dark"],
-    langs: [],
-    engine: createJavaScriptRegexEngine({ forgiving: true }),
-  });
-
-  // Load the language if it's a bundled language
-  if (lang !== "text" && Object.hasOwn(bundledLanguages, lang)) {
-    const loadedLanguages = highlighter.getLoadedLanguages();
-    if (!loadedLanguages.includes(lang)) {
-      await highlighter.loadLanguage(lang as BundledLanguage);
-    }
-  }
-
-  return highlighter;
-}
-
 export const CodeBlock = ({
   code,
   language,
@@ -62,12 +36,6 @@ export const CodeBlock = ({
   children,
   ...props
 }: CodeBlockProps) => {
-  const [highlighter, setHighlighter] = useState<Highlighter | undefined>(
-    undefined
-  );
-  const mounted = useRef(false);
-
-  // Check if language is supported
   const isLanguageSupported = (lang: string): lang is BundledLanguage => {
     return Object.hasOwn(bundledLanguages, lang);
   };
@@ -76,28 +44,14 @@ export const CodeBlock = ({
     ? language
     : ("text" as SpecialLanguage);
 
-  useEffect(() => {
-    mounted.current = true;
-    getWebsiteHighlighter(langToUse).then((h) => {
-      if (mounted.current) {
-        setHighlighter(h);
-      }
-    });
-
-    return () => {
-      mounted.current = false;
-    };
-  }, [langToUse]);
-
-  // Use react-shiki with singleton highlighter
   const html = useShikiHighlighter(
     code,
     langToUse,
     { light: "github-light", dark: "github-dark" },
     {
-      highlighter,
-      defaultColor: "light-dark()",
       outputFormat: "html",
+      defaultColor: "light-dark()",
+      engine: createJavaScriptRegexEngine({ forgiving: true }),
     }
   );
 
