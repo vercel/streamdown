@@ -1,18 +1,57 @@
 import { Lexer } from "marked";
+import type { Token } from "marked";
 
 export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   const tokens = Lexer.lex(markdown, { gfm: true });
-  const blocks = tokens.map((token) => token.raw);
 
-  // Post-process to merge consecutive blocks that are part of the same math block
+  // Post-process to merge consecutive blocks that belong together
   const mergedBlocks: string[] = [];
+  const htmlStack: string[] = []; // Track opening HTML tags
 
-  for (const currentBlock of blocks) {
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    const currentBlock = token.raw;
+
+    // Check if we're inside an HTML block
+    if (htmlStack.length > 0) {
+      // We're inside an HTML block, merge with the previous block
+      mergedBlocks[mergedBlocks.length - 1] += currentBlock;
+
+      // Check if this token closes an HTML tag
+      if (token.type === "html") {
+        const closingTagMatch = currentBlock.match(/<\/(\w+)>/);
+        if (closingTagMatch) {
+          const closingTag = closingTagMatch[1];
+          // Check if this closes the most recent opening tag
+          if (htmlStack[htmlStack.length - 1] === closingTag) {
+            htmlStack.pop();
+          }
+        }
+      }
+      continue;
+    }
+
+    // Check if this is an opening HTML block tag
+    if (token.type === "html" && token.block) {
+      const openingTagMatch = currentBlock.match(/<(\w+)[\s>]/);
+      if (openingTagMatch) {
+        const tagName = openingTagMatch[1];
+        // Check if this is a self-closing tag or if there's a closing tag in the same block
+        const hasClosingTag = currentBlock.includes(`</${tagName}>`);
+        if (!hasClosingTag) {
+          // This is an opening tag without a closing tag in the same block
+          htmlStack.push(tagName);
+        }
+      }
+    }
+
+    // Math block merging logic (existing)
     // Check if this is a standalone $$ that might be a closing delimiter
     if (currentBlock.trim() === "$$" && mergedBlocks.length > 0) {
       const previousBlock = mergedBlocks.at(-1);
 
       if (!previousBlock) {
+        mergedBlocks.push(currentBlock);
         continue;
       }
 
@@ -32,6 +71,7 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
       const previousBlock = mergedBlocks.at(-1);
 
       if (!previousBlock) {
+        mergedBlocks.push(currentBlock);
         continue;
       }
 
