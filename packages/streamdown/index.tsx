@@ -8,8 +8,8 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
 import "katex/dist/katex.min.css";
-import hardenReactMarkdownImport from "harden-react-markdown";
 import type { MermaidConfig } from "mermaid";
+import { harden } from "rehype-harden";
 import type { Options as RemarkGfmOptions } from "remark-gfm";
 import type { Options as RemarkMathOptions } from "remark-math";
 import { components as defaultComponents } from "./lib/components";
@@ -19,21 +19,6 @@ import { cn } from "./lib/utils";
 
 export type { MermaidConfig } from "mermaid";
 
-type HardenReactMarkdownProps = Options & {
-  defaultOrigin?: string;
-  allowedLinkPrefixes?: string[];
-  allowedImagePrefixes?: string[];
-};
-
-// Handle both ESM and CJS imports
-const hardenReactMarkdown =
-  // biome-ignore lint/suspicious/noExplicitAny: "this is needed."
-  (hardenReactMarkdownImport as any).default || hardenReactMarkdownImport;
-
-// Create a hardened version of ReactMarkdown
-const HardenedMarkdown: ReturnType<typeof hardenReactMarkdown> =
-  hardenReactMarkdown(ReactMarkdown);
-
 export type ControlsConfig =
   | boolean
   | {
@@ -42,7 +27,10 @@ export type ControlsConfig =
       mermaid?: boolean;
     };
 
-export type StreamdownProps = HardenReactMarkdownProps & {
+export type StreamdownProps = Options & {
+  allowedImagePrefixes?: string[];
+  allowedLinkPrefixes?: string[];
+  defaultOrigin?: string;
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
@@ -61,7 +49,7 @@ export const MermaidConfigContext = createContext<MermaidConfig | undefined>(
 
 export const ControlsContext = createContext<ControlsConfig>(true);
 
-type BlockProps = HardenReactMarkdownProps & {
+type BlockProps = Options & {
   content: string;
   shouldParseIncompleteMarkdown: boolean;
 };
@@ -82,7 +70,7 @@ const Block = memo(
       [content, shouldParseIncompleteMarkdown]
     );
 
-    return <HardenedMarkdown {...props}>{parsedContent}</HardenedMarkdown>;
+    return <ReactMarkdown {...props}>{parsedContent}</ReactMarkdown>;
   },
   (prevProps, nextProps) => prevProps.content === nextProps.content
 );
@@ -117,6 +105,14 @@ export const Streamdown = memo(
       () => () => rehypeKatex({ errorColor: "var(--color-muted-foreground)" }),
       []
     );
+    const hardenOptions = useMemo(
+      () => ({
+        allowedImagePrefixes,
+        allowedLinkPrefixes,
+        defaultOrigin,
+      }),
+      [allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin]
+    );
 
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
@@ -125,19 +121,17 @@ export const Streamdown = memo(
             <div className={cn("space-y-4", className)} {...props}>
               {blocks.map((block, index) => (
                 <Block
-                  allowedImagePrefixes={allowedImagePrefixes}
-                  allowedLinkPrefixes={allowedLinkPrefixes}
                   components={{
                     ...defaultComponents,
                     ...components,
                   }}
                   content={block}
-                  defaultOrigin={defaultOrigin}
                   // biome-ignore lint/suspicious/noArrayIndexKey: "required"
                   key={`${generatedId}-block_${index}`}
                   rehypePlugins={[
                     rehypeRaw,
                     rehypeKatexPlugin,
+                    [harden, hardenOptions],
                     ...(rehypePlugins ?? []),
                   ]}
                   remarkPlugins={[

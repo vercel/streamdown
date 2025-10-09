@@ -19,7 +19,7 @@ Streamdown powers the [AI Elements Response](https://ai-sdk.dev/elements/compone
 - 🔢 **Math rendering** - LaTeX equations via KaTeX
 - 📈 **Mermaid diagrams** - Render Mermaid diagrams as code blocks with a button to render them
 - 🎯 **Code syntax highlighting** - Beautiful code blocks with Shiki
-- 🛡️ **Security-first** - Built on harden-react-markdown for safe rendering
+- 🛡️ **Security-first** - Built with rehype-harden for safe rendering
 - ⚡ **Performance optimized** - Memoized rendering for efficient updates
 
 ## Installation

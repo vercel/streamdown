@@ -2,11 +2,6 @@ import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 
-// Mock the dependencies
-vi.mock("harden-react-markdown", () => ({
-  default: (Component: any) => Component,
-}));
-
 describe("HTML Block Elements with Multiline Content - #164", () => {
   it("should render multiline content inside details element", () => {
     const content = `<details>
