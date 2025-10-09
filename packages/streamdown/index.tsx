@@ -19,6 +19,8 @@ import { cn } from "./lib/utils";
 
 export type { MermaidConfig } from "mermaid";
 
+export type HardenOptions = Parameters<typeof harden>[0];
+
 export type ControlsConfig =
   | boolean
   | {
@@ -28,9 +30,7 @@ export type ControlsConfig =
     };
 
 export type StreamdownProps = Options & {
-  allowedImagePrefixes?: string[];
-  allowedLinkPrefixes?: string[];
-  defaultOrigin?: string;
+  hardenOptions?: HardenOptions;
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
@@ -80,9 +80,11 @@ Block.displayName = "Block";
 export const Streamdown = memo(
   ({
     children,
-    allowedImagePrefixes = ["*"],
-    allowedLinkPrefixes = ["*"],
-    defaultOrigin,
+    hardenOptions = {
+      allowedImagePrefixes: ["*"],
+      allowedLinkPrefixes: ["*"],
+      defaultOrigin: undefined,
+    },
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     components,
     rehypePlugins,
@@ -104,14 +106,6 @@ export const Streamdown = memo(
     const rehypeKatexPlugin = useMemo(
       () => () => rehypeKatex({ errorColor: "var(--color-muted-foreground)" }),
       []
-    );
-    const hardenOptions = useMemo(
-      () => ({
-        allowedImagePrefixes,
-        allowedLinkPrefixes,
-        defaultOrigin,
-      }),
-      [allowedImagePrefixes, allowedLinkPrefixes, defaultOrigin]
     );
 
     return (

@@ -24,24 +24,11 @@ const props = [
       "Custom React components to use for rendering markdown elements (e.g., custom heading, paragraph, code block components).",
   },
   {
-    name: "allowedImagePrefixes",
-    type: "string[]",
-    default: '["*"]',
+    name: "hardenOptions",
+    type: "HardenOptions (from rehype-harden)",
+    default: `{ allowedImagePrefixes: ["*"], allowedLinkPrefixes: ["*"], defaultOrigin: undefined }`,
     description:
-      "Array of allowed prefixes for image URLs. Images with URLs not matching these prefixes will be blocked. Use ['*'] to allow all images.",
-  },
-  {
-    name: "allowedLinkPrefixes",
-    type: "string[]",
-    default: '["*"]',
-    description:
-      "Array of allowed prefixes for link URLs. Links with URLs not matching these prefixes will be blocked. Use ['*'] to allow all links.",
-  },
-  {
-    name: "defaultOrigin",
-    type: "string",
-    description:
-      "The default origin to use for relative URLs. If not specified, relative URLs will not be transformed.",
+      "Options to pass to the rehype-harden plugin for security hardening.",
   },
   {
     name: "rehypePlugins",
