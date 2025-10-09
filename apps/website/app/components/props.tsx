@@ -28,19 +28,20 @@ const props = [
     type: "string[]",
     default: '["*"]',
     description:
-      'Array of allowed URL prefixes for images. Use ["*"] to allow all images.',
+      "Array of allowed prefixes for image URLs. Images with URLs not matching these prefixes will be blocked. Use ['*'] to allow all images.",
   },
   {
     name: "allowedLinkPrefixes",
     type: "string[]",
     default: '["*"]',
     description:
-      'Array of allowed URL prefixes for links. Use ["*"] to allow all links.',
+      "Array of allowed prefixes for link URLs. Links with URLs not matching these prefixes will be blocked. Use ['*'] to allow all links.",
   },
   {
     name: "defaultOrigin",
     type: "string",
-    description: "Default origin to use for relative URLs in links and images.",
+    description:
+      "The default origin to use for relative URLs. If not specified, relative URLs will not be transformed.",
   },
   {
     name: "rehypePlugins",

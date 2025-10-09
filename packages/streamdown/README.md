@@ -160,10 +160,10 @@ Streamdown accepts all the same props as react-markdown, plus additional streami
 | `className` | `string` | - | CSS class for the container |
 | `components` | `object` | - | Custom component overrides |
 | `remarkPlugins` | `array` | `[remarkGfm, remarkMath]` | Remark plugins to use |
-| `rehypePlugins` | `array` | `[rehypeRaw, rehypeKatex]` | Rehype plugins to use |
-| `allowedImagePrefixes` | `array` | `['*']` | Allowed image URL prefixes |
-| `allowedLinkPrefixes` | `array` | `['*']` | Allowed link URL prefixes |
-| `defaultOrigin` | `string` | - | Default origin to use for relative URLs in links and images |
+| `rehypePlugins` | `array` | `[rehypeRaw, rehypeKatex, rehypeHarden]` | Rehype plugins to use |
+| `allowedImagePrefixes` | `string[]` | `["*"]` | Array of allowed prefixes for image URLs. Use `["*"]` to allow all images |
+| `allowedLinkPrefixes` | `string[]` | `["*"]` | Array of allowed prefixes for link URLs. Use `["*"]` to allow all links |
+| `defaultOrigin` | `string` | - | Default origin for relative URLs |
 | `shikiTheme` | `[BundledTheme, BundledTheme]` | `['github-light', 'github-dark']` | The light and dark themes to use for code blocks |
 | `mermaidConfig` | `MermaidConfig` | - | Custom configuration for Mermaid diagrams (theme, colors, etc.) |
 | `controls` | `boolean \| { table?: boolean, code?: boolean, mermaid?: boolean }` | `true` | Control visibility of copy/download buttons |
