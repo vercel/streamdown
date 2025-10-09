@@ -497,22 +497,20 @@ describe("parseIncompleteMarkdown", () => {
       );
     });
 
-    it("should handle partial link at chunk boundary", () => {
+    it("should handle partial link at chunk boundary - #165", () => {
       expect(parseIncompleteMarkdown("Check out [this lin")).toBe(
         "Check out [this lin](streamdown:incomplete-link)"
       );
-      // Links with partial URLs are kept as-is since they might be complete
+      // Links with partial URLs should now be completed with placeholder
       expect(parseIncompleteMarkdown("Visit [our site](https://exa")).toBe(
-        "Visit [our site](https://exa"
+        "Visit [our site](streamdown:incomplete-link)"
       );
     });
 
     it("should handle partial image at chunk boundary", () => {
       expect(parseIncompleteMarkdown("See ![the diag")).toBe("See ");
-      // Images with partial URLs are kept as-is since they might be complete
-      expect(parseIncompleteMarkdown("![logo](./assets/log")).toBe(
-        "![logo](./assets/log"
-      );
+      // Images with partial URLs should be removed (images can't show skeleton)
+      expect(parseIncompleteMarkdown("![logo](./assets/log")).toBe("");
     });
 
     it("should handle nested formatting cut mid-stream", () => {

@@ -17,6 +17,32 @@ const hasCompleteCodeBlock = (text: string): boolean => {
 
 // Handles incomplete links and images by preserving them with a special marker
 const handleIncompleteLinksAndImages = (text: string): string => {
+  // First check for incomplete URLs: [text](partial-url or ![text](partial-url without closing )
+  // Pattern: !?[text](url-without-closing-paren at end of string
+  const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\]\(([^)]+)$/;
+  const incompleteLinkUrlMatch = text.match(incompleteLinkUrlPattern);
+
+  if (incompleteLinkUrlMatch) {
+    const isImage = incompleteLinkUrlMatch[1] === "!";
+    const linkText = incompleteLinkUrlMatch[2];
+    const partialUrl = incompleteLinkUrlMatch[3];
+
+    // Find the start position of this link/image pattern
+    const matchStart = text.lastIndexOf(
+      `${isImage ? "!" : ""}[${linkText}](${partialUrl}`
+    );
+    const beforeLink = text.substring(0, matchStart);
+
+    if (isImage) {
+      // For images with incomplete URLs, remove them entirely
+      return beforeLink;
+    }
+
+    // For links with incomplete URLs, replace the URL with placeholder and close it
+    return `${beforeLink}[${linkText}](streamdown:incomplete-link)`;
+  }
+
+  // Then check for incomplete link text: [partial-text without closing ]
   const linkMatch = text.match(linkImagePattern);
 
   if (linkMatch) {
