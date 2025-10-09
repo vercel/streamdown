@@ -79,14 +79,14 @@ const shouldShowControls = (
 
 type OlProps = WithNode<JSX.IntrinsicElements["ol"]>;
 const MemoOl = memo<OlProps>(
-  ({ children, className, node, ...htmlProps }: OlProps) => (
+  ({ children, className, node, ...props }: OlProps) => (
     <ol
       className={cn(
         "ml-4 list-outside list-decimal whitespace-normal",
         className
       )}
       data-streamdown="ordered-list"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </ol>
@@ -98,11 +98,11 @@ MemoOl.displayName = "MarkdownOl";
 type LiProps = WithNode<JSX.IntrinsicElements["li"]>;
 
 const MemoLi = memo<LiProps>(
-  ({ children, className, node, ...htmlProps }: LiProps) => (
+  ({ children, className, node, ...props }: LiProps) => (
     <li
       className={cn("py-1", className)}
       data-streamdown="list-item"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </li>
@@ -113,11 +113,11 @@ MemoLi.displayName = "MarkdownLi";
 
 type UlProps = WithNode<JSX.IntrinsicElements["ul"]>;
 const MemoUl = memo<UlProps>(
-  ({ children, className, node, ...htmlProps }: UlProps) => (
+  ({ children, className, node, ...props }: UlProps) => (
     <ul
       className={cn("ml-4 list-outside list-disc whitespace-normal", className)}
       data-streamdown="unordered-list"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </ul>
@@ -128,11 +128,11 @@ MemoUl.displayName = "MarkdownUl";
 
 type HrProps = WithNode<JSX.IntrinsicElements["hr"]>;
 const MemoHr = memo<HrProps>(
-  ({ className, node, ...htmlProps }: HrProps) => (
+  ({ className, node, ...props }: HrProps) => (
     <hr
       className={cn("my-6 border-border", className)}
       data-streamdown="horizontal-rule"
-      {...htmlProps}
+      {...props}
     />
   ),
   (p, n) => sameClassAndNode(p, n)
@@ -141,11 +141,11 @@ MemoHr.displayName = "MarkdownHr";
 
 type StrongProps = WithNode<JSX.IntrinsicElements["span"]>;
 const MemoStrong = memo<StrongProps>(
-  ({ children, className, node, ...htmlProps }: StrongProps) => (
+  ({ children, className, node, ...props }: StrongProps) => (
     <span
       className={cn("font-semibold", className)}
       data-streamdown="strong"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </span>
@@ -156,7 +156,7 @@ MemoStrong.displayName = "MarkdownStrong";
 
 type AProps = WithNode<JSX.IntrinsicElements["a"]> & { href?: string };
 const MemoA = memo<AProps>(
-  ({ children, className, href, node, ...htmlProps }: AProps) => {
+  ({ children, className, href, node, ...props }: AProps) => {
     const isIncomplete = href === "streamdown:incomplete-link";
 
     return (
@@ -170,7 +170,7 @@ const MemoA = memo<AProps>(
         href={href}
         rel="noreferrer"
         target="_blank"
-        {...htmlProps}
+        {...props}
       >
         {children}
       </a>
@@ -185,11 +185,11 @@ type HeadingProps<TTag extends keyof JSX.IntrinsicElements> = WithNode<
 >;
 
 const MemoH1 = memo<HeadingProps<"h1">>(
-  ({ children, className, node, ...htmlProps }) => (
+  ({ children, className, node, ...props }) => (
     <h1
       className={cn("mt-6 mb-2 font-semibold text-3xl", className)}
       data-streamdown="heading-1"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </h1>
@@ -199,11 +199,11 @@ const MemoH1 = memo<HeadingProps<"h1">>(
 MemoH1.displayName = "MarkdownH1";
 
 const MemoH2 = memo<HeadingProps<"h2">>(
-  ({ children, className, node, ...htmlProps }) => (
+  ({ children, className, node, ...props }) => (
     <h2
       className={cn("mt-6 mb-2 font-semibold text-2xl", className)}
       data-streamdown="heading-2"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </h2>
@@ -213,11 +213,11 @@ const MemoH2 = memo<HeadingProps<"h2">>(
 MemoH2.displayName = "MarkdownH2";
 
 const MemoH3 = memo<HeadingProps<"h3">>(
-  ({ children, className, node, ...htmlProps }) => (
+  ({ children, className, node, ...props }) => (
     <h3
       className={cn("mt-6 mb-2 font-semibold text-xl", className)}
       data-streamdown="heading-3"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </h3>
@@ -227,11 +227,11 @@ const MemoH3 = memo<HeadingProps<"h3">>(
 MemoH3.displayName = "MarkdownH3";
 
 const MemoH4 = memo<HeadingProps<"h4">>(
-  ({ children, className, node, ...htmlProps }) => (
+  ({ children, className, node, ...props }) => (
     <h4
       className={cn("mt-6 mb-2 font-semibold text-lg", className)}
       data-streamdown="heading-4"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </h4>
@@ -241,11 +241,11 @@ const MemoH4 = memo<HeadingProps<"h4">>(
 MemoH4.displayName = "MarkdownH4";
 
 const MemoH5 = memo<HeadingProps<"h5">>(
-  ({ children, className, node, ...htmlProps }) => (
+  ({ children, className, node, ...props }) => (
     <h5
       className={cn("mt-6 mb-2 font-semibold text-base", className)}
       data-streamdown="heading-5"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </h5>
@@ -255,11 +255,11 @@ const MemoH5 = memo<HeadingProps<"h5">>(
 MemoH5.displayName = "MarkdownH5";
 
 const MemoH6 = memo<HeadingProps<"h6">>(
-  ({ children, className, node, ...htmlProps }) => (
+  ({ children, className, node, ...props }) => (
     <h6
       className={cn("mt-6 mb-2 font-semibold text-sm", className)}
       data-streamdown="heading-6"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </h6>
@@ -270,7 +270,7 @@ MemoH6.displayName = "MarkdownH6";
 
 type TableProps = WithNode<JSX.IntrinsicElements["table"]>;
 const MemoTable = memo<TableProps>(
-  ({ children, className, node, ...htmlProps }: TableProps) => {
+  ({ children, className, node, ...props }: TableProps) => {
     const controlsConfig = useContext(ControlsContext);
     const showTableControls = shouldShowControls(controlsConfig, "table");
 
@@ -292,7 +292,7 @@ const MemoTable = memo<TableProps>(
               className
             )}
             data-streamdown="table"
-            {...htmlProps}
+            {...props}
           >
             {children}
           </table>
@@ -306,11 +306,11 @@ MemoTable.displayName = "MarkdownTable";
 
 type TheadProps = WithNode<JSX.IntrinsicElements["thead"]>;
 const MemoThead = memo<TheadProps>(
-  ({ children, className, node, ...htmlProps }: TheadProps) => (
+  ({ children, className, node, ...props }: TheadProps) => (
     <thead
       className={cn("bg-muted/80", className)}
       data-streamdown="table-header"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </thead>
@@ -321,11 +321,11 @@ MemoThead.displayName = "MarkdownThead";
 
 type TbodyProps = WithNode<JSX.IntrinsicElements["tbody"]>;
 const MemoTbody = memo<TbodyProps>(
-  ({ children, className, node, ...htmlProps }: TbodyProps) => (
+  ({ children, className, node, ...props }: TbodyProps) => (
     <tbody
       className={cn("divide-y divide-border bg-muted/40", className)}
       data-streamdown="table-body"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </tbody>
@@ -336,11 +336,11 @@ MemoTbody.displayName = "MarkdownTbody";
 
 type TrProps = WithNode<JSX.IntrinsicElements["tr"]>;
 const MemoTr = memo<TrProps>(
-  ({ children, className, node, ...htmlProps }: TrProps) => (
+  ({ children, className, node, ...props }: TrProps) => (
     <tr
       className={cn("border-border border-b", className)}
       data-streamdown="table-row"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </tr>
@@ -351,14 +351,14 @@ MemoTr.displayName = "MarkdownTr";
 
 type ThProps = WithNode<JSX.IntrinsicElements["th"]>;
 const MemoTh = memo<ThProps>(
-  ({ children, className, node, ...htmlProps }: ThProps) => (
+  ({ children, className, node, ...props }: ThProps) => (
     <th
       className={cn(
         "whitespace-nowrap px-4 py-2 text-left font-semibold text-sm",
         className
       )}
       data-streamdown="table-header-cell"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </th>
@@ -369,11 +369,11 @@ MemoTh.displayName = "MarkdownTh";
 
 type TdProps = WithNode<JSX.IntrinsicElements["td"]>;
 const MemoTd = memo<TdProps>(
-  ({ children, className, node, ...htmlProps }: TdProps) => (
+  ({ children, className, node, ...props }: TdProps) => (
     <td
       className={cn("px-4 py-2 text-sm", className)}
       data-streamdown="table-cell"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </td>
@@ -384,14 +384,14 @@ MemoTd.displayName = "MarkdownTd";
 
 type BlockquoteProps = WithNode<JSX.IntrinsicElements["blockquote"]>;
 const MemoBlockquote = memo<BlockquoteProps>(
-  ({ children, className, node, ...htmlProps }: BlockquoteProps) => (
+  ({ children, className, node, ...props }: BlockquoteProps) => (
     <blockquote
       className={cn(
         "my-4 border-muted-foreground/30 border-l-4 pl-4 text-muted-foreground italic",
         className
       )}
       data-streamdown="blockquote"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </blockquote>
@@ -402,11 +402,11 @@ MemoBlockquote.displayName = "MarkdownBlockquote";
 
 type SupProps = WithNode<JSX.IntrinsicElements["sup"]>;
 const MemoSup = memo<SupProps>(
-  ({ children, className, node, ...htmlProps }: SupProps) => (
+  ({ children, className, node, ...props }: SupProps) => (
     <sup
       className={cn("text-sm", className)}
       data-streamdown="superscript"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </sup>
@@ -417,11 +417,11 @@ MemoSup.displayName = "MarkdownSup";
 
 type SubProps = WithNode<JSX.IntrinsicElements["sub"]>;
 const MemoSub = memo<SubProps>(
-  ({ children, className, node, ...htmlProps }: SubProps) => (
+  ({ children, className, node, ...props }: SubProps) => (
     <sub
       className={cn("text-sm", className)}
       data-streamdown="subscript"
-      {...htmlProps}
+      {...props}
     >
       {children}
     </sub>
@@ -434,7 +434,7 @@ const CodeComponent = ({
   node,
   className,
   children,
-  ...htmlProps
+  ...props
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
   ExtraProps) => {
   const inline = node?.position?.start.line === node?.position?.end.line;
@@ -449,7 +449,7 @@ const CodeComponent = ({
           className
         )}
         data-streamdown="inline-code"
-        {...htmlProps}
+        {...props}
       >
         {children}
       </code>
