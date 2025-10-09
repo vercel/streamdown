@@ -84,32 +84,16 @@ describe("Streamdown Component", () => {
     expect(wrapper?.getAttribute("data-custom")).toBe("value");
   });
 
-  it("should use default allowed prefixes when not specified", () => {
-    const { container } = render(<Streamdown>Content</Streamdown>);
-    // These props are passed to child Block components, not to the wrapper div
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
-  });
+  it("should accept custom hardenOptions", () => {
+    const customOptions = {
+      allowedImagePrefixes: ["https://"],
+      allowedLinkPrefixes: ["https://", "mailto:"],
+      defaultOrigin: "https://example.com",
+    };
 
-  it("should use custom allowed prefixes when specified", () => {
     const { container } = render(
-      <Streamdown
-        allowedImagePrefixes={["https://", "http://"]}
-        allowedLinkPrefixes={["https://", "mailto:"]}
-      >
-        Content
-      </Streamdown>
+      <Streamdown hardenOptions={customOptions}>Content</Streamdown>
     );
-    // These props are passed to child Block components, not to the wrapper div
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
-  });
-
-  it("should pass defaultOrigin prop", () => {
-    const { container } = render(
-      <Streamdown defaultOrigin="https://example.com">Content</Streamdown>
-    );
-    // This prop is passed to child Block components, not to the wrapper div
     const markdown = container.querySelector('[data-testid="markdown"]');
     expect(markdown).toBeTruthy();
   });
