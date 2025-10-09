@@ -814,7 +814,7 @@ describe("parseIncompleteMarkdown", () => {
       expect(parseIncompleteMarkdown("``")).toBe("``");
     });
 
-    it("should handle standalone emphasis characters (issue #90)", () => {
+    it("should handle standalone emphasis characters (#90)", () => {
       // Standalone markers should not be auto-closed
       expect(parseIncompleteMarkdown("**")).toBe("**");
       expect(parseIncompleteMarkdown("__")).toBe("__");
@@ -884,7 +884,7 @@ describe("parseIncompleteMarkdown", () => {
       expect(parseIncompleteMarkdown("`&amp;")).toBe("`&amp;`");
     });
 
-    it("should handle lists with emphasis character blocks (issue #97)", () => {
+    it("should handle lists with emphasis character blocks (#97)", () => {
       // Lists with just emphasis markers should not be auto-completed
       expect(parseIncompleteMarkdown("- __")).toBe("- __");
       expect(parseIncompleteMarkdown("- **")).toBe("- **");
