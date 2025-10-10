@@ -1,3 +1,7 @@
+"use client";
+
+import { harden } from "rehype-harden";
+import { defaultRehypePlugins } from "streamdown";
 import { Section } from "./section";
 
 const markdown = `
@@ -28,10 +32,17 @@ export const HardenedMarkdown = () => (
     }
     markdown={markdown}
     streamdownProps={{
-      hardenOptions: {
-        defaultOrigin: "https://streamdown.vercel.app",
-        allowedLinkPrefixes: ["https://streamdown.vercel.app"],
-      },
+      rehypePlugins: [
+        defaultRehypePlugins.raw,
+        defaultRehypePlugins.katex,
+        [
+          harden,
+          {
+            defaultOrigin: "https://streamdown.vercel.app",
+            allowedLinkPrefixes: ["https://streamdown.vercel.app"],
+          },
+        ],
+      ],
     }}
     title="Built-in security hardening"
   />
