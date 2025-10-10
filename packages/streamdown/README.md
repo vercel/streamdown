@@ -19,7 +19,7 @@ Streamdown powers the [AI Elements Response](https://ai-sdk.dev/elements/compone
 - 🔢 **Math rendering** - LaTeX equations via KaTeX
 - 📈 **Mermaid diagrams** - Render Mermaid diagrams as code blocks with a button to render them
 - 🎯 **Code syntax highlighting** - Beautiful code blocks with Shiki
-- 🛡️ **Security-first** - Built on harden-react-markdown for safe rendering
+- 🛡️ **Security-first** - Built with rehype-harden for safe rendering
 - ⚡ **Performance optimized** - Memoized rendering for efficient updates
 
 ## Installation
@@ -160,10 +160,8 @@ Streamdown accepts all the same props as react-markdown, plus additional streami
 | `className` | `string` | - | CSS class for the container |
 | `components` | `object` | - | Custom component overrides |
 | `remarkPlugins` | `array` | `[remarkGfm, remarkMath]` | Remark plugins to use |
-| `rehypePlugins` | `array` | `[rehypeRaw, rehypeKatex]` | Rehype plugins to use |
-| `allowedImagePrefixes` | `array` | `['*']` | Allowed image URL prefixes |
-| `allowedLinkPrefixes` | `array` | `['*']` | Allowed link URL prefixes |
-| `defaultOrigin` | `string` | - | Default origin to use for relative URLs in links and images |
+| `rehypePlugins` | `array` | `[rehypeRaw, rehypeKatex, rehypeHarden]` | Rehype plugins to use |
+| `hardenOptions` | `HardenOptions (from rehype-harden)` | `{ allowedImagePrefixes: ["*"], allowedLinkPrefixes: ["*"], defaultOrigin: undefined }` | Options to pass to the rehype-harden plugin for security hardening |
 | `shikiTheme` | `[BundledTheme, BundledTheme]` | `['github-light', 'github-dark']` | The light and dark themes to use for code blocks |
 | `mermaidConfig` | `MermaidConfig` | - | Custom configuration for Mermaid diagrams (theme, colors, etc.) |
 | `controls` | `boolean \| { table?: boolean, code?: boolean, mermaid?: boolean }` | `true` | Control visibility of copy/download buttons |

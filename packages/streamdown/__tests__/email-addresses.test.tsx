@@ -26,10 +26,6 @@ vi.mock("react-markdown", () => ({
   },
 }));
 
-vi.mock("harden-react-markdown", () => ({
-  default: (Component: any) => Component,
-}));
-
 vi.mock("rehype-katex", () => ({
   default: () => {},
 }));

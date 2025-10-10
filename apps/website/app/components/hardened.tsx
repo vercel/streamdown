@@ -28,8 +28,10 @@ export const HardenedMarkdown = () => (
     }
     markdown={markdown}
     streamdownProps={{
-      defaultOrigin: "https://streamdown.vercel.app",
-      allowedLinkPrefixes: ["https://streamdown.vercel.app"],
+      hardenOptions: {
+        defaultOrigin: "https://streamdown.vercel.app",
+        allowedLinkPrefixes: ["https://streamdown.vercel.app"],
+      },
     }}
     title="Built-in security hardening"
   />
