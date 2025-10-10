@@ -103,7 +103,6 @@ export const Streamdown = memo(
     components,
     rehypePlugins = Object.values(defaultRehypePlugins),
     remarkPlugins = Object.values(defaultRemarkPlugins),
-    remarkRehypeOptions,
     className,
     shikiTheme = ["github-light", "github-dark"],
     mermaidConfig,
@@ -124,7 +123,7 @@ export const Streamdown = memo(
         <MermaidConfigContext.Provider value={mermaidConfig}>
           <ControlsContext.Provider value={controls}>
             <StreamdownRuntimeContext.Provider value={{ isAnimating }}>
-              <div className={cn("space-y-4", className)} {...props}>
+              <div className={cn("space-y-4", className)}>
                 {blocks.map((block, index) => (
                   <Block
                     components={{
@@ -136,10 +135,10 @@ export const Streamdown = memo(
                     key={`${generatedId}-block_${index}`}
                     rehypePlugins={rehypePlugins}
                     remarkPlugins={remarkPlugins}
-                    remarkRehypeOptions={remarkRehypeOptions}
                     shouldParseIncompleteMarkdown={
                       shouldParseIncompleteMarkdown
                     }
+                    {...props}
                   />
                 ))}
               </div>
