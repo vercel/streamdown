@@ -167,6 +167,7 @@ Streamdown accepts all the same props as react-markdown, plus additional streami
 | `shikiTheme` | `[BundledTheme, BundledTheme]` | `['github-light', 'github-dark']` | The light and dark themes to use for code blocks |
 | `mermaidConfig` | `MermaidConfig` | - | Custom configuration for Mermaid diagrams (theme, colors, etc.) |
 | `controls` | `boolean \| { table?: boolean, code?: boolean, mermaid?: boolean }` | `true` | Control visibility of copy/download buttons |
+| `isAnimating` | `boolean` | `false` | Whether the component is currently animating. This is used to disable the copy and download buttons when the component is animating. |
 
 ## Architecture
 
