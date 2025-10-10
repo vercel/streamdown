@@ -10,6 +10,7 @@ import type { BundledTheme } from "shiki";
 import "katex/dist/katex.min.css";
 import type { MermaidConfig } from "mermaid";
 import { harden } from "rehype-harden";
+import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
@@ -33,6 +34,24 @@ export type StreamdownProps = Options & {
   controls?: ControlsConfig;
   isAnimating?: boolean;
 };
+
+export const defaultRehypePlugins: Record<string, Pluggable> = {
+  harden: [
+    harden,
+    {
+      allowedImagePrefixes: ["*"],
+      allowedLinkPrefixes: ["*"],
+      defaultOrigin: undefined,
+    },
+  ],
+  rehypeRaw,
+  rehypeKatex: [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }],
+} as const;
+
+export const defaultRemarkPlugins: Record<string, Pluggable> = {
+  remarkGfm: [remarkGfm, {}],
+  remarkMath: [remarkMath, { singleDollarTextMath: false }],
+} as const;
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
   "github-light" as BundledTheme,
@@ -81,22 +100,8 @@ export const Streamdown = memo(
     children,
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     components,
-    rehypePlugins = [
-      [
-        harden,
-        {
-          allowedImagePrefixes: ["*"],
-          allowedLinkPrefixes: ["*"],
-          defaultOrigin: undefined,
-        },
-      ],
-      rehypeRaw,
-      [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }],
-    ],
-    remarkPlugins = [
-      [remarkGfm, {}],
-      [remarkMath, { singleDollarTextMath: false }],
-    ],
+    rehypePlugins = Object.values(defaultRehypePlugins),
+    remarkPlugins = Object.values(defaultRemarkPlugins),
     remarkRehypeOptions,
     className,
     shikiTheme = ["github-light", "github-dark"],

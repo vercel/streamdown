@@ -1,4 +1,5 @@
 import { harden } from "rehype-harden";
+import { defaultRehypePlugins } from "streamdown";
 import { Section } from "./section";
 
 const markdown = `
@@ -30,6 +31,8 @@ export const HardenedMarkdown = () => (
     markdown={markdown}
     streamdownProps={{
       rehypePlugins: [
+        defaultRehypePlugins.rehypeRaw,
+        defaultRehypePlugins.rehypeKatex,
         [
           harden,
           {

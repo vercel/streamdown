@@ -29,14 +29,14 @@ const props = [
     default:
       '[[harden, { allowedImagePrefixes: ["*"], allowedLinkPrefixes: ["*"], defaultOrigin: undefined }], rehypeRaw, [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }]]',
     description:
-      "Array of rehype plugins to use for processing HTML. Includes rehype-harden for security, rehype-raw for HTML support, and rehype-katex for math rendering by default.",
+      "Array of rehype plugins to use for processing HTML. Includes rehype-harden for security, rehype-raw for HTML support, and rehype-katex for math rendering by default. You can import defaultRehypePlugins to access individual default plugins when overriding.",
   },
   {
     name: "remarkPlugins",
     type: "array",
     default: "[[remarkGfm, {}], [remarkMath, { singleDollarTextMath: false }]]",
     description:
-      "Array of remark plugins to use for processing markdown. Includes GitHub Flavored Markdown and math support by default.",
+      "Array of remark plugins to use for processing markdown. Includes GitHub Flavored Markdown and math support by default. You can import defaultRemarkPlugins to access individual default plugins when overriding.",
   },
   {
     name: "shikiTheme",

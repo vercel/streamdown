@@ -149,6 +149,51 @@ export default function Page() {
 }
 ```
 
+### Customizing Plugins
+
+When you need to override the default plugins (e.g., to configure security settings), you can import the default plugin configurations and selectively modify them:
+
+```tsx
+import { Streamdown, defaultRehypePlugins } from 'streamdown';
+import { harden } from 'rehype-harden';
+
+export default function Page() {
+  const markdown = `
+[Safe link](https://example.com)
+[Unsafe link](https://malicious-site.com)
+  `;
+
+  return (
+    <Streamdown
+      rehypePlugins={[
+        defaultRehypePlugins.rehypeRaw,
+        defaultRehypePlugins.rehypeKatex,
+        [
+          harden,
+          {
+            defaultOrigin: 'https://example.com',
+            allowedLinkPrefixes: ['https://example.com'],
+          },
+        ],
+      ]}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+The `defaultRehypePlugins` and `defaultRemarkPlugins` exports provide access to:
+
+**defaultRehypePlugins:**
+- `harden` - Security hardening with rehype-harden (configured with wildcard permissions by default)
+- `rehypeRaw` - HTML support
+- `rehypeKatex` - Math rendering with KaTeX
+
+**defaultRemarkPlugins:**
+- `remarkGfm` - GitHub Flavored Markdown support
+- `remarkMath` - Math syntax support
+
 ## Props
 
 Streamdown accepts all the same props as react-markdown, plus additional streaming-specific options:
