@@ -430,6 +430,128 @@ const MemoSub = memo<SubProps>(
 );
 MemoSub.displayName = "MarkdownSub";
 
+type SectionProps = WithNode<JSX.IntrinsicElements["section"]>;
+const MemoSection = memo<SectionProps>(
+  ({ children, className, node, ...props }: SectionProps) => {
+    // Check if this is a footnotes section
+    const isFootnotesSection = "data-footnotes" in props;
+
+    if (isFootnotesSection) {
+      // Filter out empty footnote list items (those with only the backref link)
+      // This happens during streaming when footnote definitions haven't fully arrived
+
+      // Helper to check if a node is empty (only contains backref)
+      const isEmptyFootnote = (listItem: React.ReactNode): boolean => {
+        if (!isValidElement(listItem)) return false;
+
+        const itemChildren = Array.isArray(listItem.props.children)
+          ? listItem.props.children
+          : [listItem.props.children];
+
+        // Check if all children are either whitespace or backref links
+        let hasContent = false;
+        let hasBackref = false;
+
+        for (const itemChild of itemChildren) {
+          if (!itemChild) continue;
+
+          if (typeof itemChild === 'string') {
+            // If there's non-whitespace text, it has content
+            if (itemChild.trim() !== '') {
+              hasContent = true;
+            }
+          } else if (isValidElement(itemChild)) {
+            // Check if it's a backref link
+            if (itemChild.props?.["data-footnote-backref"] !== undefined) {
+              hasBackref = true;
+            } else {
+              // It's some other element (like <p>), which means it has content
+              // But we need to check if the <p> has actual content
+              const grandChildren = Array.isArray(itemChild.props.children)
+                ? itemChild.props.children
+                : [itemChild.props.children];
+
+              for (const grandChild of grandChildren) {
+                if (typeof grandChild === 'string' && grandChild.trim() !== '') {
+                  hasContent = true;
+                  break;
+                } else if (isValidElement(grandChild)) {
+                  // If it's not a backref link, it's content
+                  if (grandChild.props?.["data-footnote-backref"] === undefined) {
+                    hasContent = true;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // It's empty if it only has a backref and no other content
+        return hasBackref && !hasContent;
+      };
+
+      // Process children to filter out empty footnotes
+      const processedChildren = Array.isArray(children)
+        ? children.map((child) => {
+            if (!isValidElement(child)) return child;
+
+            // If this is an <ol> containing footnote list items
+            if (child.type === MemoOl) {
+              const listChildren = Array.isArray(child.props.children)
+                ? child.props.children
+                : [child.props.children];
+
+              const filteredListChildren = listChildren.filter(
+                (listItem: React.ReactNode) => !isEmptyFootnote(listItem)
+              );
+
+              // If all footnotes are empty, return null
+              if (filteredListChildren.length === 0) {
+                return null;
+              }
+
+              // Clone the <ol> with filtered children
+              return {
+                ...child,
+                props: {
+                  ...child.props,
+                  children: filteredListChildren,
+                },
+              };
+            }
+
+            return child;
+          })
+        : children;
+
+      // Check if we filtered out all content
+      const hasAnyContent = Array.isArray(processedChildren)
+        ? processedChildren.some((child) => child !== null)
+        : processedChildren !== null;
+
+      if (!hasAnyContent) {
+        return null;
+      }
+
+      return (
+        <section className={className} {...props}>
+          {processedChildren}
+        </section>
+      );
+    }
+
+    // For non-footnotes sections, render normally
+    return (
+      <section className={className} {...props}>
+        {children}
+      </section>
+    );
+  },
+  (p, n) => sameClassAndNode(p, n)
+);
+MemoSection.displayName = "MarkdownSection";
+
 const CodeComponent = ({
   node,
   className,
@@ -594,4 +716,5 @@ export const components: Options["components"] = {
   sup: MemoSup,
   sub: MemoSub,
   p: MemoParagraph,
+  section: MemoSection,
 };
