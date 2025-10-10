@@ -2,6 +2,18 @@ import { Lexer } from "marked";
 import type { Token } from "marked";
 
 export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
+  // Check if the markdown contains footnotes (references or definitions)
+  // Footnote references: [^1], [^label], etc.
+  // Footnote definitions: [^1]: text, [^label]: text, etc.
+  const hasFootnoteReference = /\[\^[^\]]+\](?!:)/.test(markdown);
+  const hasFootnoteDefinition = /\[\^[^\]]+\]:/.test(markdown);
+
+  // If footnotes are present, return the entire document as a single block
+  // This ensures footnote references and definitions remain in the same mdast tree
+  if (hasFootnoteReference || hasFootnoteDefinition) {
+    return [markdown];
+  }
+
   const tokens = Lexer.lex(markdown, { gfm: true });
 
   // Post-process to merge consecutive blocks that belong together
