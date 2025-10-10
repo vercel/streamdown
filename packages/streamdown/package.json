@@ -55,7 +55,7 @@
     "marked": "^16.2.1",
     "mermaid": "^11.11.0",
     "react-markdown": "^10.1.0",
-    "rehype-harden": "^1.1.4",
+    "rehype-harden": "^1.1.5",
     "rehype-katex": "^7.0.1",
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
