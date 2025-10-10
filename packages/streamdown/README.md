@@ -166,8 +166,8 @@ export default function Page() {
   return (
     <Streamdown
       rehypePlugins={[
-        defaultRehypePlugins.rehypeRaw,
-        defaultRehypePlugins.rehypeKatex,
+        defaultRehypePlugins.raw,
+        defaultRehypePlugins.katex,
         [
           harden,
           {
@@ -187,12 +187,12 @@ The `defaultRehypePlugins` and `defaultRemarkPlugins` exports provide access to:
 
 **defaultRehypePlugins:**
 - `harden` - Security hardening with rehype-harden (configured with wildcard permissions by default)
-- `rehypeRaw` - HTML support
-- `rehypeKatex` - Math rendering with KaTeX
+- `raw` - HTML support
+- `katex` - Math rendering with KaTeX
 
 **defaultRemarkPlugins:**
-- `remarkGfm` - GitHub Flavored Markdown support
-- `remarkMath` - Math syntax support
+- `gfm` - GitHub Flavored Markdown support
+- `math` - Math syntax support
 
 ## Props
 

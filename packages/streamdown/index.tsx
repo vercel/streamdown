@@ -44,13 +44,13 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
       defaultOrigin: undefined,
     },
   ],
-  rehypeRaw,
-  rehypeKatex: [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }],
+  raw: rehypeRaw,
+  katex: [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }],
 } as const;
 
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
-  remarkGfm: [remarkGfm, {}],
-  remarkMath: [remarkMath, { singleDollarTextMath: false }],
+  gfm: [remarkGfm, {}],
+  math: [remarkMath, { singleDollarTextMath: false }],
 } as const;
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
