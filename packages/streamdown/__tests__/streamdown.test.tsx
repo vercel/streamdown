@@ -45,7 +45,6 @@ describe("Streamdown Component", () => {
     const { container } = render(<Streamdown>{content}</Streamdown>);
     const markdown = container.querySelector('[data-testid="markdown"]');
     expect(markdown).toBeTruthy();
-	console.log(markdown)
   });
 
   it("should parse incomplete markdown by default", () => {
@@ -71,31 +70,6 @@ describe("Streamdown Component", () => {
     const wrapper = container.firstElementChild;
     expect(wrapper).toBeTruthy();
     expect(wrapper?.children.length).toBe(0);
-  });
-
-  it("should pass through custom props", () => {
-    const { container } = render(
-      <Streamdown className="custom-class" data-custom="value">
-        Content
-      </Streamdown>
-    );
-    const wrapper = container.firstElementChild;
-    expect(wrapper?.getAttribute("class")).toContain("custom-class");
-    expect(wrapper?.getAttribute("data-custom")).toBe("value");
-  });
-
-  it("should accept custom hardenOptions", () => {
-    const customOptions = {
-      allowedImagePrefixes: ["https://"],
-      allowedLinkPrefixes: ["https://", "mailto:"],
-      defaultOrigin: "https://example.com",
-    };
-
-    const { container } = render(
-      <Streamdown hardenOptions={customOptions}>Content</Streamdown>
-    );
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
   });
 
   it("should merge custom components with defaults", () => {

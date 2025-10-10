@@ -28,11 +28,8 @@ $$`;
 
     // Check how the content is split into blocks
     const blocks = parseMarkdownIntoBlocks(content);
-    console.log("Number of blocks:", blocks.length);
-    blocks.forEach((block, i) => {
-      console.log(`Block ${i}:`, JSON.stringify(block));
-      const parsed = parseIncompleteMarkdown(block);
-      console.log(`Block ${i} after parsing:`, JSON.stringify(parsed));
+    blocks.forEach((block) => {
+      parseIncompleteMarkdown(block);
     });
 
     const { container } = render(
@@ -42,17 +39,6 @@ $$`;
     // Check that the LaTeX is rendered correctly
     const katexElements = container.querySelectorAll(".katex");
     const katexErrors = container.querySelectorAll(".katex-error");
-
-    console.log("HTML output:", container.innerHTML);
-    console.log("KaTeX elements found:", katexElements.length);
-    console.log("KaTeX errors found:", katexErrors.length);
-
-    if (katexErrors.length > 0) {
-      katexErrors.forEach((error) => {
-        console.log("Error:", error.getAttribute("title"));
-        console.log("Error content:", error.textContent);
-      });
-    }
 
     expect(katexElements.length).toBeGreaterThan(0);
     expect(katexErrors.length).toBe(0);
@@ -79,7 +65,6 @@ c
 \\end{bmatrix}`;
 
     const blocks = parseMarkdownIntoBlocks(content);
-    console.log("Incomplete - Number of blocks:", blocks.length);
 
     const { container } = render(
       <Streamdown parseIncompleteMarkdown={true}>{content}</Streamdown>
