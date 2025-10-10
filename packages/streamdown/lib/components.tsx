@@ -455,9 +455,9 @@ const MemoSection = memo<SectionProps>(
         for (const itemChild of itemChildren) {
           if (!itemChild) continue;
 
-          if (typeof itemChild === 'string') {
+          if (typeof itemChild === "string") {
             // If there's non-whitespace text, it has content
-            if (itemChild.trim() !== '') {
+            if (itemChild.trim() !== "") {
               hasContent = true;
             }
           } else if (isValidElement(itemChild)) {
@@ -472,12 +472,18 @@ const MemoSection = memo<SectionProps>(
                 : [itemChild.props.children];
 
               for (const grandChild of grandChildren) {
-                if (typeof grandChild === 'string' && grandChild.trim() !== '') {
+                if (
+                  typeof grandChild === "string" &&
+                  grandChild.trim() !== ""
+                ) {
                   hasContent = true;
                   break;
-                } else if (isValidElement(grandChild)) {
+                }
+                if (isValidElement(grandChild)) {
                   // If it's not a backref link, it's content
-                  if (grandChild.props?.["data-footnote-backref"] === undefined) {
+                  if (
+                    grandChild.props?.["data-footnote-backref"] === undefined
+                  ) {
                     hasContent = true;
                     break;
                   }
@@ -675,7 +681,8 @@ const MemoParagraph = memo<ParagraphProps>(
     if (
       validChildren.length === 1 &&
       isValidElement(validChildren[0]) &&
-      (validChildren[0].props as { node?: MarkdownNode }).node?.tagName === "img"
+      (validChildren[0].props as { node?: MarkdownNode }).node?.tagName ===
+        "img"
     ) {
       return <>{children}</>;
     }

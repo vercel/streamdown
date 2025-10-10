@@ -9,20 +9,20 @@ describe("Node Attribute Fix", () => {
     type: "element",
     tagName: "ul",
     properties: {
-      className: ["test-class"]
+      className: ["test-class"],
     },
     children: [
       {
         type: "element",
         tagName: "li",
         properties: {},
-        children: [{ type: "text", value: "Item 1" }]
-      }
+        children: [{ type: "text", value: "Item 1" }],
+      },
     ],
     position: {
       start: { line: 1, column: 1, offset: 0 },
-      end: { line: 3, column: 1, offset: 15 }
-    }
+      end: { line: 3, column: 1, offset: 15 },
+    },
   };
 
   describe("List Components - No node attribute in HTML", () => {
@@ -34,14 +34,14 @@ describe("Node Attribute Fix", () => {
           <li>Item 2</li>
         </OL>
       );
-      
+
       const ol = container.querySelector("ol");
       expect(ol).toBeTruthy();
-      
+
       // ✅ Verify node attribute is NOT present
       expect(ol?.getAttribute("node")).toBeNull();
       expect(ol?.hasAttribute("node")).toBe(false);
-      
+
       // ✅ Verify correct attributes ARE present
       expect(ol?.getAttribute("data-streamdown")).toBe("ordered-list");
       expect(ol?.className).toContain("ml-4");
@@ -55,14 +55,14 @@ describe("Node Attribute Fix", () => {
           <li>Item 2</li>
         </UL>
       );
-      
+
       const ul = container.querySelector("ul");
       expect(ul).toBeTruthy();
-      
+
       // ✅ Verify node attribute is NOT present
       expect(ul?.getAttribute("node")).toBeNull();
       expect(ul?.hasAttribute("node")).toBe(false);
-      
+
       // ✅ Verify correct attributes ARE present
       expect(ul?.getAttribute("data-streamdown")).toBe("unordered-list");
       expect(ul?.className).toContain("list-disc");
@@ -73,14 +73,14 @@ describe("Node Attribute Fix", () => {
       const { container } = render(
         <LI node={mockHastNode as any}>List item content</LI>
       );
-      
+
       const li = container.querySelector("li");
       expect(li).toBeTruthy();
-      
+
       // ✅ Verify node attribute is NOT present
       expect(li?.getAttribute("node")).toBeNull();
       expect(li?.hasAttribute("node")).toBe(false);
-      
+
       // ✅ Verify correct attributes ARE present
       expect(li?.getAttribute("data-streamdown")).toBe("list-item");
       expect(li?.className).toContain("py-1");
@@ -93,14 +93,14 @@ describe("Node Attribute Fix", () => {
       const { container } = render(
         <H1 node={mockHastNode as any}>Heading 1</H1>
       );
-      
+
       const h1 = container.querySelector("h1");
       expect(h1).toBeTruthy();
-      
+
       // ✅ Verify node attribute is NOT present
       expect(h1?.getAttribute("node")).toBeNull();
       expect(h1?.hasAttribute("node")).toBe(false);
-      
+
       // ✅ Verify correct attributes ARE present
       expect(h1?.getAttribute("data-streamdown")).toBe("heading-1");
       expect(h1?.className).toContain("text-3xl");
@@ -111,14 +111,14 @@ describe("Node Attribute Fix", () => {
       const { container } = render(
         <H2 node={mockHastNode as any}>Heading 2</H2>
       );
-      
+
       const h2 = container.querySelector("h2");
       expect(h2).toBeTruthy();
-      
+
       // ✅ Verify node attribute is NOT present
       expect(h2?.getAttribute("node")).toBeNull();
       expect(h2?.hasAttribute("node")).toBe(false);
-      
+
       // ✅ Verify correct attributes ARE present
       expect(h2?.getAttribute("data-streamdown")).toBe("heading-2");
       expect(h2?.className).toContain("text-2xl");
@@ -129,14 +129,14 @@ describe("Node Attribute Fix", () => {
       const { container } = render(
         <H3 node={mockHastNode as any}>Heading 3</H3>
       );
-      
+
       const h3 = container.querySelector("h3");
       expect(h3).toBeTruthy();
-      
+
       // ✅ Verify node attribute is NOT present
       expect(h3?.getAttribute("node")).toBeNull();
       expect(h3?.hasAttribute("node")).toBe(false);
-      
+
       // ✅ Verify correct attributes ARE present
       expect(h3?.getAttribute("data-streamdown")).toBe("heading-3");
       expect(h3?.className).toContain("text-xl");
@@ -151,14 +151,14 @@ describe("Node Attribute Fix", () => {
           Link text
         </A>
       );
-      
+
       const a = container.querySelector("a");
       expect(a).toBeTruthy();
-      
+
       // ✅ Verify node attribute is NOT present
       expect(a?.getAttribute("node")).toBeNull();
       expect(a?.hasAttribute("node")).toBe(false);
-      
+
       // ✅ Verify correct attributes ARE present
       expect(a?.getAttribute("data-streamdown")).toBe("link");
       expect(a?.getAttribute("href")).toBe("https://example.com");
@@ -170,20 +170,20 @@ describe("Node Attribute Fix", () => {
     it("should NOT render node attribute in IMG element", () => {
       const IMG = components.img!;
       const { container } = render(
-        <IMG 
-          src="https://example.com/image.png" 
+        <IMG
           alt="Test image"
           node={mockHastNode as any}
+          src="https://example.com/image.png"
         />
       );
-      
+
       const img = container.querySelector("img");
       expect(img).toBeTruthy();
-      
+
       // ✅ Verify node attribute is NOT present
       expect(img?.getAttribute("node")).toBeNull();
       expect(img?.hasAttribute("node")).toBe(false);
-      
+
       // ✅ Verify correct attributes ARE present
       expect(img?.getAttribute("data-streamdown")).toBe("image");
       expect(img?.getAttribute("src")).toBe("https://example.com/image.png");
@@ -195,25 +195,27 @@ describe("Node Attribute Fix", () => {
     it("should NOT render node attribute in inline CODE element", () => {
       const Code = components.code!;
       const { container } = render(
-        <Code 
-          node={{
-            position: {
-              start: { line: 1, column: 1 },
-              end: { line: 1, column: 10 }, // Same line = inline
-            },
-          } as any}
+        <Code
+          node={
+            {
+              position: {
+                start: { line: 1, column: 1 },
+                end: { line: 1, column: 10 }, // Same line = inline
+              },
+            } as any
+          }
         >
           inline code
         </Code>
       );
-      
+
       const code = container.querySelector("code");
       expect(code).toBeTruthy();
-      
+
       // ✅ Verify node attribute is NOT present
       expect(code?.getAttribute("node")).toBeNull();
       expect(code?.hasAttribute("node")).toBe(false);
-      
+
       // ✅ Verify correct attributes ARE present
       expect(code?.getAttribute("data-streamdown")).toBe("inline-code");
       expect(code?.className).toContain("font-mono");
@@ -229,8 +231,18 @@ describe("Node Attribute Fix", () => {
         { name: "h1", component: components.h1!, element: "h1" },
         { name: "h2", component: components.h2!, element: "h2" },
         { name: "h3", component: components.h3!, element: "h3" },
-        { name: "a", component: components.a!, element: "a", props: { href: "https://example.com" } },
-        { name: "img", component: components.img!, element: "img", props: { src: "test.png", alt: "test" } },
+        {
+          name: "a",
+          component: components.a!,
+          element: "a",
+          props: { href: "https://example.com" },
+        },
+        {
+          name: "img",
+          component: components.img!,
+          element: "img",
+          props: { src: "test.png", alt: "test" },
+        },
       ];
 
       testComponents.forEach(({ name, component, element, props = {} }) => {
@@ -243,13 +255,13 @@ describe("Node Attribute Fix", () => {
 
         const domElement = container.querySelector(element);
         expect(domElement, `${name} component should render`).toBeTruthy();
-        
+
         // 🎯 The critical test: NO node attribute should exist
         expect(
-          domElement?.getAttribute("node"), 
+          domElement?.getAttribute("node"),
           `${name} component should NOT have node attribute`
         ).toBeNull();
-        
+
         expect(
           domElement?.hasAttribute("node"),
           `${name} component should NOT have node attribute`
@@ -266,7 +278,7 @@ describe("Node Attribute Fix", () => {
     it("should verify component still receives node prop internally (for memoization)", () => {
       // This test ensures we didn't break the internal node usage
       const UL = components.ul!;
-      
+
       // First render
       const { container, rerender } = render(
         <UL node={mockHastNode as any}>
@@ -286,7 +298,7 @@ describe("Node Attribute Fix", () => {
 
       const ul2 = container.querySelector("ul");
       expect(ul2).toBeTruthy();
-      
+
       // Component should still work and not have node attribute
       expect(ul2?.getAttribute("node")).toBeNull();
       expect(ul2?.getAttribute("data-streamdown")).toBe("unordered-list");

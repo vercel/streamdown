@@ -1,5 +1,5 @@
-import { Lexer } from "marked";
 import type { Token } from "marked";
+import { Lexer } from "marked";
 
 export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   // Check if the markdown contains footnotes (references or definitions)

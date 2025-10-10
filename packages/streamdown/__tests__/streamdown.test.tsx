@@ -45,7 +45,7 @@ describe("Streamdown Component", () => {
     const { container } = render(<Streamdown>{content}</Streamdown>);
     const markdown = container.querySelector('[data-testid="markdown"]');
     expect(markdown).toBeTruthy();
-	console.log(markdown)
+    console.log(markdown);
   });
 
   it("should parse incomplete markdown by default", () => {

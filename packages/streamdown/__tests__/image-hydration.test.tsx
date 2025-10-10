@@ -33,18 +33,21 @@ describe("Image hydration error fix", () => {
   });
 
   it("should render normal paragraph text correctly", () => {
-    const markdown = `This is a normal paragraph with text.`;
+    const markdown = "This is a normal paragraph with text.";
 
     const { container } = render(<Streamdown>{markdown}</Streamdown>);
 
     // Find the paragraph
     const paragraph = container.querySelector("p");
     expect(paragraph).toBeTruthy();
-    expect(paragraph?.textContent).toBe("This is a normal paragraph with text.");
+    expect(paragraph?.textContent).toBe(
+      "This is a normal paragraph with text."
+    );
   });
 
   it("should handle images mixed with text in a paragraph", () => {
-    const markdown = `This is text with ![Image](https://example.com/image.png) inline.`;
+    const markdown =
+      "This is text with ![Image](https://example.com/image.png) inline.";
 
     const { container } = render(<Streamdown>{markdown}</Streamdown>);
 

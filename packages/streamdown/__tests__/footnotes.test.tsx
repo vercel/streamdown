@@ -130,9 +130,7 @@ GFM extends standard Markdown with powerful features[^1]. Here's a comprehensive
 
     // Check that footnote text is present in the HTML
     const html = container.innerHTML;
-    expect(html).toContain(
-      "GitHub Flavored Markdown is a strict superset"
-    );
+    expect(html).toContain("GitHub Flavored Markdown is a strict superset");
     expect(html).toContain("Modern AI models provide more intelligent");
   });
 
