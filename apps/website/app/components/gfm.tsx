@@ -2,7 +2,7 @@ import { Section } from "./section";
 
 const markdown = `# GitHub Flavored Markdown Features
 
-GFM extends standard Markdown with powerful features[^1]. Here's a comprehensive demo:
+GFM extends standard Markdown with powerful features. Here's a comprehensive demo:
 
 ## Tables
 
@@ -21,10 +21,7 @@ GFM extends standard Markdown with powerful features[^1]. Here's a comprehensive
 
 ## Strikethrough
 
-~~Old approach~~ → New approach with AI models[^2]
-
-[^1]: GitHub Flavored Markdown is a strict superset of CommonMark, maintained by GitHub.
-[^2]: Modern AI models provide more intelligent and context-aware solutions.
+~~Old approach~~ → New approach with AI models
 `;
 
 export const GitHubFlavoredMarkdown = () => (
