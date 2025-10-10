@@ -16,10 +16,6 @@ import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
 
 export type { MermaidConfig } from "mermaid";
-export type { Options as RemarkGfmOptions } from "remark-gfm";
-export type { Options as RemarkMathOptions } from "remark-math";
-
-export type HardenOptions = Parameters<typeof harden>[0];
 
 export type ControlsConfig =
   | boolean
@@ -30,7 +26,6 @@ export type ControlsConfig =
     };
 
 export type StreamdownProps = Options & {
-  hardenOptions?: HardenOptions;
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
