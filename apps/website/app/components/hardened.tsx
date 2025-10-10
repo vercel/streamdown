@@ -1,3 +1,5 @@
+"use client";
+
 import { harden } from "rehype-harden";
 import { defaultRehypePlugins } from "streamdown";
 import { Section } from "./section";
