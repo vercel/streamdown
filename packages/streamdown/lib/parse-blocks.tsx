@@ -5,8 +5,9 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   // Check if the markdown contains footnotes (references or definitions)
   // Footnote references: [^1], [^label], etc.
   // Footnote definitions: [^1]: text, [^label]: text, etc.
-  const hasFootnoteReference = /\[\^[^\]]+\](?!:)/.test(markdown);
-  const hasFootnoteDefinition = /\[\^[^\]]+\]:/.test(markdown);
+  // Use atomic groups or possessive quantifiers to prevent backtracking
+  const hasFootnoteReference = /\[\^[^\]\s]{1,200}\](?!:)/.test(markdown);
+  const hasFootnoteDefinition = /\[\^[^\]\s]{1,200}\]:/.test(markdown);
 
   // If footnotes are present, return the entire document as a single block
   // This ensures footnote references and definitions remain in the same mdast tree
