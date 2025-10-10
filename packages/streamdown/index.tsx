@@ -40,6 +40,7 @@ export type StreamdownProps = Options & {
   controls?: ControlsConfig;
   remarkMathOptions?: RemarkMathOptions;
   remarkGfmOptions?: RemarkGfmOptions;
+  isAnimating?: boolean;
 };
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
@@ -52,6 +53,15 @@ export const MermaidConfigContext = createContext<MermaidConfig | undefined>(
 );
 
 export const ControlsContext = createContext<ControlsConfig>(true);
+
+export type StreamdownRuntimeContextType = {
+  isAnimating: boolean;
+};
+
+export const StreamdownRuntimeContext =
+  createContext<StreamdownRuntimeContextType>({
+    isAnimating: false,
+  });
 
 type BlockProps = Options & {
   content: string;
@@ -94,6 +104,7 @@ export const Streamdown = memo(
     controls = true,
     remarkMathOptions = { singleDollarTextMath: false },
     remarkGfmOptions = {},
+    isAnimating = false,
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
@@ -112,32 +123,36 @@ export const Streamdown = memo(
       <ShikiThemeContext.Provider value={shikiTheme}>
         <MermaidConfigContext.Provider value={mermaidConfig}>
           <ControlsContext.Provider value={controls}>
-            <div className={cn("space-y-4", className)} {...props}>
-              {blocks.map((block, index) => (
-                <Block
-                  components={{
-                    ...defaultComponents,
-                    ...components,
-                  }}
-                  content={block}
-                  // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-                  key={`${generatedId}-block_${index}`}
-                  rehypePlugins={[
-                    rehypeRaw,
-                    rehypeKatexPlugin,
-                    [harden, hardenOptions],
-                    ...(rehypePlugins ?? []),
-                  ]}
-                  remarkPlugins={[
-                    [remarkGfm, remarkGfmOptions],
-                    [remarkMath, remarkMathOptions],
-                    ...(remarkPlugins ?? []),
-                  ]}
-                  remarkRehypeOptions={remarkRehypeOptions}
-                  shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-                />
-              ))}
-            </div>
+            <StreamdownRuntimeContext.Provider value={{ isAnimating }}>
+              <div className={cn("space-y-4", className)} {...props}>
+                {blocks.map((block, index) => (
+                  <Block
+                    components={{
+                      ...defaultComponents,
+                      ...components,
+                    }}
+                    content={block}
+                    // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+                    key={`${generatedId}-block_${index}`}
+                    rehypePlugins={[
+                      rehypeRaw,
+                      rehypeKatexPlugin,
+                      [harden, hardenOptions],
+                      ...(rehypePlugins ?? []),
+                    ]}
+                    remarkPlugins={[
+                      [remarkGfm, remarkGfmOptions],
+                      [remarkMath, remarkMathOptions],
+                      ...(remarkPlugins ?? []),
+                    ]}
+                    remarkRehypeOptions={remarkRehypeOptions}
+                    shouldParseIncompleteMarkdown={
+                      shouldParseIncompleteMarkdown
+                    }
+                  />
+                ))}
+              </div>
+            </StreamdownRuntimeContext.Provider>
           </ControlsContext.Provider>
         </MermaidConfigContext.Provider>
       </ShikiThemeContext.Provider>
@@ -145,6 +160,7 @@ export const Streamdown = memo(
   },
   (prevProps, nextProps) =>
     prevProps.children === nextProps.children &&
-    prevProps.shikiTheme === nextProps.shikiTheme
+    prevProps.shikiTheme === nextProps.shikiTheme &&
+    prevProps.isAnimating === nextProps.isAnimating
 );
 Streamdown.displayName = "Streamdown";

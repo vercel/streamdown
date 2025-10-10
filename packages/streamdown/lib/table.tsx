@@ -1,5 +1,6 @@
 import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
+import { StreamdownRuntimeContext } from "../index";
 import { cn, save } from "./utils";
 
 type TableData = {
@@ -106,6 +107,7 @@ export const TableCopyButton = ({
 }: TableCopyButtonProps) => {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
+  const { isAnimating } = useContext(StreamdownRuntimeContext);
 
   const copyTableData = async (event: React.MouseEvent<HTMLButtonElement>) => {
     if (typeof window === "undefined" || !navigator?.clipboard?.write) {
@@ -164,9 +166,10 @@ export const TableCopyButton = ({
   return (
     <button
       className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
+      disabled={isAnimating}
       onClick={copyTableData}
       title={`Copy table as ${format}`}
       type="button"
@@ -193,6 +196,8 @@ export const TableDownloadButton = ({
   format = "csv",
   filename,
 }: TableDownloadButtonProps) => {
+  const { isAnimating } = useContext(StreamdownRuntimeContext);
+
   const downloadTableData = (event: React.MouseEvent<HTMLButtonElement>) => {
     try {
       // Find the closest table element
@@ -248,9 +253,10 @@ export const TableDownloadButton = ({
   return (
     <button
       className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
+      disabled={isAnimating}
       onClick={downloadTableData}
       title={`Download table as ${format.toUpperCase()}`}
       type="button"
@@ -275,6 +281,7 @@ export const TableDownloadDropdown = ({
 }: TableDownloadDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { isAnimating } = useContext(StreamdownRuntimeContext);
 
   const downloadTableData = (format: "csv" | "markdown") => {
     try {
@@ -327,9 +334,10 @@ export const TableDownloadDropdown = ({
     <div className="relative" ref={dropdownRef}>
       <button
         className={cn(
-          "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
+          "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
+        disabled={isAnimating}
         onClick={() => setIsOpen(!isOpen)}
         title="Download table"
         type="button"

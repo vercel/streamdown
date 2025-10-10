@@ -18,7 +18,7 @@ import {
   type SpecialLanguage,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-import { ShikiThemeContext } from "../index";
+import { ShikiThemeContext, StreamdownRuntimeContext } from "../index";
 import { cn, save } from "./utils";
 
 const PRE_TAG_REGEX = /<pre(\s|>)/;
@@ -588,7 +588,8 @@ export const CodeBlockDownloadButton = ({
   code?: string;
   language?: BundledLanguage;
 }) => {
-  const contextCode = useContext(CodeBlockContext).code;
+  const { code: contextCode } = useContext(CodeBlockContext);
+  const { isAnimating } = useContext(StreamdownRuntimeContext);
   const code = propCode ?? contextCode;
   const extension =
     language && language in languageExtensionMap
@@ -609,9 +610,10 @@ export const CodeBlockDownloadButton = ({
   return (
     <button
       className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
+      disabled={isAnimating}
       onClick={downloadCode}
       title="Download file"
       type="button"
@@ -633,7 +635,8 @@ export const CodeBlockCopyButton = ({
 }: CodeBlockCopyButtonProps & { code?: string }) => {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
-  const contextCode = useContext(CodeBlockContext).code;
+  const { code: contextCode } = useContext(CodeBlockContext);
+  const { isAnimating } = useContext(StreamdownRuntimeContext);
   const code = propCode ?? contextCode;
 
   const copyToClipboard = async () => {
@@ -668,9 +671,10 @@ export const CodeBlockCopyButton = ({
   return (
     <button
       className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
+      disabled={isAnimating}
       onClick={copyToClipboard}
       type="button"
       {...props}
