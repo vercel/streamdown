@@ -18,6 +18,8 @@ import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
 
 export type { MermaidConfig } from "mermaid";
+export type { Options as RemarkGfmOptions } from "remark-gfm";
+export type { Options as RemarkMathOptions } from "remark-math";
 
 export type HardenOptions = Parameters<typeof harden>[0];
 
@@ -36,6 +38,8 @@ export type StreamdownProps = Options & {
   shikiTheme?: [BundledTheme, BundledTheme];
   mermaidConfig?: MermaidConfig;
   controls?: ControlsConfig;
+  remarkMathOptions?: RemarkMathOptions;
+  remarkGfmOptions?: RemarkGfmOptions;
 };
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
@@ -53,12 +57,6 @@ type BlockProps = Options & {
   content: string;
   shouldParseIncompleteMarkdown: boolean;
 };
-
-const remarkMathOptions: RemarkMathOptions = {
-  singleDollarTextMath: false,
-};
-
-const remarkGfmOptions: RemarkGfmOptions = {};
 
 const Block = memo(
   ({ content, shouldParseIncompleteMarkdown, ...props }: BlockProps) => {
@@ -94,6 +92,8 @@ export const Streamdown = memo(
     shikiTheme = ["github-light", "github-dark"],
     mermaidConfig,
     controls = true,
+    remarkMathOptions = { singleDollarTextMath: false },
+    remarkGfmOptions = {},
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
