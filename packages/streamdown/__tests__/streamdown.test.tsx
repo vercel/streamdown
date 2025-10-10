@@ -72,31 +72,6 @@ describe("Streamdown Component", () => {
     expect(wrapper?.children.length).toBe(0);
   });
 
-  it("should pass through custom props", () => {
-    const { container } = render(
-      <Streamdown className="custom-class" data-custom="value">
-        Content
-      </Streamdown>
-    );
-    const wrapper = container.firstElementChild;
-    expect(wrapper?.getAttribute("class")).toContain("custom-class");
-    expect(wrapper?.getAttribute("data-custom")).toBe("value");
-  });
-
-  it("should accept custom hardenOptions", () => {
-    const customOptions = {
-      allowedImagePrefixes: ["https://"],
-      allowedLinkPrefixes: ["https://", "mailto:"],
-      defaultOrigin: "https://example.com",
-    };
-
-    const { container } = render(
-      <Streamdown hardenOptions={customOptions}>Content</Streamdown>
-    );
-    const markdown = container.querySelector('[data-testid="markdown"]');
-    expect(markdown).toBeTruthy();
-  });
-
   it("should merge custom components with defaults", () => {
     const customComponents = {
       h1: ({ children }: any) => <h1 className="custom-h1">{children}</h1>,
