@@ -10,8 +10,6 @@ import type { BundledTheme } from "shiki";
 import "katex/dist/katex.min.css";
 import type { MermaidConfig } from "mermaid";
 import { harden } from "rehype-harden";
-import type { Options as RemarkGfmOptions } from "remark-gfm";
-import type { Options as RemarkMathOptions } from "remark-math";
 import { components as defaultComponents } from "./lib/components";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
@@ -38,8 +36,6 @@ export type StreamdownProps = Options & {
   shikiTheme?: [BundledTheme, BundledTheme];
   mermaidConfig?: MermaidConfig;
   controls?: ControlsConfig;
-  remarkMathOptions?: RemarkMathOptions;
-  remarkGfmOptions?: RemarkGfmOptions;
   isAnimating?: boolean;
 };
 
@@ -88,22 +84,29 @@ Block.displayName = "Block";
 export const Streamdown = memo(
   ({
     children,
-    hardenOptions = {
-      allowedImagePrefixes: ["*"],
-      allowedLinkPrefixes: ["*"],
-      defaultOrigin: undefined,
-    },
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     components,
-    rehypePlugins,
-    remarkPlugins,
+    rehypePlugins = [
+      [
+        harden,
+        {
+          allowedImagePrefixes: ["*"],
+          allowedLinkPrefixes: ["*"],
+          defaultOrigin: undefined,
+        },
+      ],
+      rehypeRaw,
+      [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }],
+    ],
+    remarkPlugins = [
+      [remarkGfm, {}],
+      [remarkMath, { singleDollarTextMath: false }],
+    ],
     remarkRehypeOptions,
     className,
     shikiTheme = ["github-light", "github-dark"],
     mermaidConfig,
     controls = true,
-    remarkMathOptions = { singleDollarTextMath: false },
-    remarkGfmOptions = {},
     isAnimating = false,
     ...props
   }: StreamdownProps) => {
@@ -113,10 +116,6 @@ export const Streamdown = memo(
       () =>
         parseMarkdownIntoBlocks(typeof children === "string" ? children : ""),
       [children]
-    );
-    const rehypeKatexPlugin = useMemo(
-      () => () => rehypeKatex({ errorColor: "var(--color-muted-foreground)" }),
-      []
     );
 
     return (
@@ -134,17 +133,6 @@ export const Streamdown = memo(
                     content={block}
                     // biome-ignore lint/suspicious/noArrayIndexKey: "required"
                     key={`${generatedId}-block_${index}`}
-                    rehypePlugins={[
-                      rehypeRaw,
-                      rehypeKatexPlugin,
-                      [harden, hardenOptions],
-                      ...(rehypePlugins ?? []),
-                    ]}
-                    remarkPlugins={[
-                      [remarkGfm, remarkGfmOptions],
-                      [remarkMath, remarkMathOptions],
-                      ...(remarkPlugins ?? []),
-                    ]}
                     remarkRehypeOptions={remarkRehypeOptions}
                     shouldParseIncompleteMarkdown={
                       shouldParseIncompleteMarkdown
