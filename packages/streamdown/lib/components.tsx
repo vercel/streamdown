@@ -534,6 +534,40 @@ const MemoImg = memo<
 
 MemoImg.displayName = "MarkdownImg";
 
+type ParagraphProps = WithNode<JSX.IntrinsicElements["p"]>;
+const MemoParagraph = memo<ParagraphProps>(
+  ({ children, className, node, ...props }: ParagraphProps) => {
+    // Check if the paragraph contains only an image element
+    // If so, render the image directly without the <p> wrapper to avoid hydration errors
+    // (since our ImageComponent returns a <div>, which cannot be nested inside <p>)
+
+    // Handle both array and single child cases
+    const childArray = Array.isArray(children) ? children : [children];
+
+    // Filter out null/undefined/empty values
+    const validChildren = childArray.filter(
+      (child) => child !== null && child !== undefined && child !== ""
+    );
+
+    // Check if there's exactly one child and it's an img element
+    if (
+      validChildren.length === 1 &&
+      isValidElement(validChildren[0]) &&
+      (validChildren[0].props as { node?: MarkdownNode }).node?.tagName === "img"
+    ) {
+      return <>{children}</>;
+    }
+
+    return (
+      <p className={className} {...props}>
+        {children}
+      </p>
+    );
+  },
+  (p, n) => sameClassAndNode(p, n)
+);
+MemoParagraph.displayName = "MarkdownParagraph";
+
 export const components: Options["components"] = {
   ol: MemoOl,
   li: MemoLi,
@@ -559,4 +593,5 @@ export const components: Options["components"] = {
   pre: ({ children }) => children,
   sup: MemoSup,
   sub: MemoSub,
+  p: MemoParagraph,
 };
