@@ -24,39 +24,19 @@ const props = [
       "Custom React components to use for rendering markdown elements (e.g., custom heading, paragraph, code block components).",
   },
   {
-    name: "hardenOptions",
-    type: "HardenOptions (from rehype-harden)",
-    default: `{ allowedImagePrefixes: ["*"], allowedLinkPrefixes: ["*"], defaultOrigin: undefined }`,
-    description:
-      "Options to pass to the rehype-harden plugin for security hardening.",
-  },
-  {
     name: "rehypePlugins",
     type: "array",
-    default: "[rehypeRaw, rehypeKatex]",
+    default:
+      '[[harden, { allowedImagePrefixes: ["*"], allowedLinkPrefixes: ["*"], defaultOrigin: undefined }], rehypeRaw, [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }]]',
     description:
-      "Array of rehype plugins to use for processing HTML. Includes KaTeX for math rendering by default.",
+      "Array of rehype plugins to use for processing HTML. Includes rehype-harden for security, rehype-raw for HTML support, and rehype-katex for math rendering by default.",
   },
   {
     name: "remarkPlugins",
     type: "array",
-    default: "[remarkGfm, remarkMath]",
+    default: "[[remarkGfm, {}], [remarkMath, { singleDollarTextMath: false }]]",
     description:
       "Array of remark plugins to use for processing markdown. Includes GitHub Flavored Markdown and math support by default.",
-  },
-  {
-    name: "remarkGfmOptions",
-    type: "RemarkGfmOptions (from remark-gfm)",
-    default: "{}",
-    description:
-      "Options to pass to the remark-gfm plugin for configuring GitHub Flavored Markdown features.",
-  },
-  {
-    name: "remarkMathOptions",
-    type: "RemarkMathOptions (from remark-math)",
-    default: "{ singleDollarTextMath: false }",
-    description:
-      "Options to pass to the remark-math plugin for configuring math rendering. By default, single dollar signs are not treated as math delimiters.",
   },
   {
     name: "shikiTheme",
