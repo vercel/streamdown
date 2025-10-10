@@ -42,6 +42,7 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
       allowedImagePrefixes: ["*"],
       allowedLinkPrefixes: ["*"],
       defaultOrigin: undefined,
+      allowDataImages: true,
     },
   ],
   raw: rehypeRaw,
