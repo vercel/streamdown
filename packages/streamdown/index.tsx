@@ -92,6 +92,7 @@ export const Streamdown = memo(
       allowedImagePrefixes: ["*"],
       allowedLinkPrefixes: ["*"],
       defaultOrigin: undefined,
+      allowDataImages: true,
     },
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     components,
