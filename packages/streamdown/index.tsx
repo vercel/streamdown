@@ -132,7 +132,7 @@ export const Streamdown = memo(
                     }}
                     content={block}
                     // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-                    key={`${generatedId}-block_${index}`}
+                    key={`${generatedId}-block-${index}`}
                     rehypePlugins={rehypePlugins}
                     remarkPlugins={remarkPlugins}
                     shouldParseIncompleteMarkdown={
