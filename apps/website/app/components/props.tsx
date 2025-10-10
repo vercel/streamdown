@@ -45,6 +45,20 @@ const props = [
       "Array of remark plugins to use for processing markdown. Includes GitHub Flavored Markdown and math support by default.",
   },
   {
+    name: "remarkGfmOptions",
+    type: "RemarkGfmOptions (from remark-gfm)",
+    default: "{}",
+    description:
+      "Options to pass to the remark-gfm plugin for configuring GitHub Flavored Markdown features.",
+  },
+  {
+    name: "remarkMathOptions",
+    type: "RemarkMathOptions (from remark-math)",
+    default: "{ singleDollarTextMath: false }",
+    description:
+      "Options to pass to the remark-math plugin for configuring math rendering. By default, single dollar signs are not treated as math delimiters.",
+  },
+  {
     name: "shikiTheme",
     type: "[BundledTheme, BundledTheme] (from Shiki)",
     default: '["github-light", "github-dark"]',
