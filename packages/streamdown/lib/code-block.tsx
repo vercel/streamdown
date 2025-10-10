@@ -168,23 +168,12 @@ class HighlighterManager {
       return html.replace(PRE_TAG_REGEX, `<pre class="${preClassName}"$1`);
     };
 
-    return [
-      removePreBackground(addPreClass(light)),
-      removePreBackground(addPreClass(dark)),
-    ];
+    return [addPreClass(light), addPreClass(dark)];
   }
 }
 
 // Create a singleton instance of the highlighter manager
 const highlighterManager = new HighlighterManager();
-
-// Remove background styles from <pre> tags (inline style)
-const removePreBackground = (html: string) => {
-  return html.replace(
-    /(<pre[^>]*)(style="[^"]*background[^";]*;?[^"]*")([^>]*>)/g,
-    "$1$3"
-  );
-};
 
 export const CodeBlock = ({
   code,
