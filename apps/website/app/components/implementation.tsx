@@ -18,7 +18,7 @@ export default function Page() {
       {messages.map(message => (
         <div key={message.id}>
           {message.parts.filter(part => part.type === 'text').map((part, index) => (
-            <Streamdown key={index}>{part.text}</Streamdown>
+            <Streamdown isAnimating={status === 'streaming'} key={index}>{part.text}</Streamdown>
           ))}
         </div>
       ))}
@@ -62,7 +62,7 @@ export default function Page() {
       {messages.map(message => (
         <div key={message.id}>
           {message.parts.filter(part => part.type === 'text').map((part, index) => (
-            <Response key={index}>{part.text}</Response>
+            <Response isAnimating={status === 'streaming'} key={index}>{part.text}</Response>
           ))}
         </div>
       ))}

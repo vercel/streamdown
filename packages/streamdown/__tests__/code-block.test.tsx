@@ -39,6 +39,11 @@ describe("CodeBlockCopyButton", () => {
     const button = container.querySelector("button");
     expect(button).toBeTruthy();
 
+    // Wait for button to be enabled (code highlighting to complete)
+    await waitFor(() => {
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
     fireEvent.click(button!);
 
     await waitFor(() => {
@@ -57,6 +62,12 @@ describe("CodeBlockCopyButton", () => {
     );
 
     const button = container.querySelector("button");
+
+    // Wait for button to be enabled (code highlighting to complete)
+    await waitFor(() => {
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
     fireEvent.click(button!);
 
     await waitFor(() => {
@@ -86,6 +97,11 @@ describe("CodeBlockCopyButton", () => {
 
     const button = container.querySelector("button");
 
+    // Wait for button to be enabled (code highlighting to complete)
+    await waitFor(() => {
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
     await act(async () => {
       fireEvent.click(button!);
     });
@@ -112,6 +128,12 @@ describe("CodeBlockCopyButton", () => {
     );
 
     const button = container.querySelector("button");
+
+    // Wait for button to be enabled (code highlighting to complete)
+    await waitFor(() => {
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
     fireEvent.click(button!);
 
     await waitFor(() => {
@@ -120,8 +142,6 @@ describe("CodeBlockCopyButton", () => {
   });
 
   it("should reset icon after timeout", async () => {
-    vi.useFakeTimers();
-
     const { container } = render(
       <CodeBlock code="const x = 1;" language="javascript">
         <CodeBlockCopyButton timeout={1000} />
@@ -129,6 +149,13 @@ describe("CodeBlockCopyButton", () => {
     );
 
     const button = container.querySelector("button");
+
+    // Wait for button to be enabled (code highlighting to complete)
+    await waitFor(() => {
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
+    vi.useFakeTimers();
 
     await act(async () => {
       fireEvent.click(button!);

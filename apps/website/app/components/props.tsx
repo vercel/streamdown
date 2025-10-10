@@ -78,6 +78,13 @@ const props = [
     description:
       "Control the visibility of copy and download buttons. Can be a boolean to show/hide all controls, or an object to selectively control buttons for tables, code blocks, and Mermaid diagrams.",
   },
+  {
+    name: "isAnimating",
+    type: "boolean",
+    default: "false",
+    description:
+      "Whether the component is currently animating. This is used to disable the copy and download buttons when the component is animating.",
+  },
 ];
 
 export const Props = () => (
