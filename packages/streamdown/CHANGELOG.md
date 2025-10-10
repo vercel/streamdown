@@ -1,5 +1,28 @@
 # streamdown
 
+## 1.4.0
+
+### Minor Changes
+
+- 6c6f507: migrate from harden-react-markdown to rehype-harden
+
+### Patch Changes
+
+- d0444a3: Add support for isAnimating
+- 7a7464f: Correctly passes through remark rehype options into react-markdown. Previously this was ignored
+- c68ebd6: Support incomplete URL parsing for links
+- 0bfca42: 1.4 fixes and cleanup
+- 6c0672b: Fix footnotes parsing
+- 239e41d: fix: Block-level Markdown escapes <details> containers when paragraphs/blank lines are present
+- 7cd5048: Add support for remarkMathOptions and remarkGfmOptions props
+- f5d6cd6: Remove options props, make plugins fully customizable
+- 699622f: Allow base64 images
+- 38ad1ed: Fix node="[object Object]" HTML attribute bug. Fixed AST node objects being passed as HTML attributes by explicitly filtering out the node prop from component props before spreading to HTML elements.
+- 21a7031: Fix themed backgrounds for code blocks
+- 04f6f3a: Extract images from paragraph tags
+- 3c780b4: Fit footnotes rendering
+- 20ca02d: fixed email addresses being rendered as blocked link
+
 ## 1.3.0
 
 ### Minor Changes
