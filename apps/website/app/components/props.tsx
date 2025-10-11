@@ -39,6 +39,13 @@ const props = [
       "Array of remark plugins to use for processing markdown. Includes GitHub Flavored Markdown and math support by default. You can import defaultRemarkPlugins to access individual default plugins when overriding.",
   },
   {
+    name: "extraIncompleteHandles",
+    type: "array",
+    default: "[handleIncompleteStrikethrough, handleIncompleteBlockKatex]",
+    description:
+      "The unterminated Markdown blocks handles based on the syntax supported by the remarkPlugins.",
+  },
+  {
     name: "shikiTheme",
     type: "[BundledTheme, BundledTheme] (from Shiki)",
     default: '["github-light", "github-dark"]',

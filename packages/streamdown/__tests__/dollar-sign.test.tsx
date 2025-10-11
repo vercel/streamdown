@@ -1,6 +1,16 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Streamdown } from "../index";
+import remarkMath from "remark-math";
+import type { Pluggable } from "unified";
+import {
+  Streamdown,
+  defaultRemarkPlugins,
+} from "../index";
+import {
+  handleIncompleteStrikethrough,
+  handleIncompleteInlineKatex,
+  handleIncompleteBlockKatex,
+} from "../lib/parse-incomplete-markdown";
 
 describe("Dollar sign handling", () => {
   it("should not render dollar amounts as math", () => {
@@ -87,5 +97,26 @@ describe("Dollar sign handling", () => {
 
     const text = container.textContent;
     expect(text).toContain("$99.99");
+  });
+
+  it("should handle escaped dollar signs and normal single dollar inline math with extra handleIncompleteInlineKatex", () => {
+    const content = "The price is \\$50 and math is $E = mc^2";
+    const extraIncompleteHandles = [
+      handleIncompleteStrikethrough,
+      handleIncompleteInlineKatex,
+      handleIncompleteBlockKatex,
+    ];
+    const remarkPlugins: Pluggable[] = [
+      defaultRemarkPlugins.gfm,
+      [remarkMath, { singleDollarTextMath: true }],
+    ];
+    const { container } = render(<Streamdown remarkPlugins={remarkPlugins} extraIncompleteHandles={extraIncompleteHandles}>{content}</Streamdown>);
+
+    const katexElements = container.querySelectorAll(".katex");
+    expect(katexElements.length).toBe(1);
+
+    // Check that dollar amounts are preserved
+    const text = container.textContent;
+    expect(text).toContain("$50");
   });
 });

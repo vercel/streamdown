@@ -206,6 +206,7 @@ Streamdown accepts all the same props as react-markdown, plus additional streami
 | `components` | `object` | - | Custom component overrides |
 | `rehypePlugins` | `array` | `[[harden, { allowedImagePrefixes: ["*"], allowedLinkPrefixes: ["*"], defaultOrigin: undefined }], rehypeRaw, [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }]]` | Rehype plugins to use. Includes rehype-harden for security, rehype-raw for HTML support, and rehype-katex for math rendering by default |
 | `remarkPlugins` | `array` | `[[remarkGfm, {}], [remarkMath, { singleDollarTextMath: false }]]` | Remark plugins to use. Includes GitHub Flavored Markdown and math support by default |
+| `extraIncompleteHandles` | `array` | `[handleIncompleteStrikethrough, handleIncompleteBlockKatex]` | The unterminated Markdown blocks handles based on the syntax supported by the remarkPlugins. |
 | `shikiTheme` | `[BundledTheme, BundledTheme]` | `['github-light', 'github-dark']` | The light and dark themes to use for code blocks |
 | `mermaidConfig` | `MermaidConfig` | - | Custom configuration for Mermaid diagrams (theme, colors, etc.) |
 | `controls` | `boolean \| { table?: boolean, code?: boolean, mermaid?: boolean }` | `true` | Control visibility of copy/download buttons |

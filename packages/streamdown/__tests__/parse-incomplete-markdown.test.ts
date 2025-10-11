@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { parseIncompleteMarkdown } from "../lib/parse-incomplete-markdown";
+import {
+  type IncompleteHandle,
+  parseIncompleteMarkdown as parseIncompleteMarkdownWithoutDefaultExtraIncompleteHandles,
+  handleIncompleteStrikethrough,
+  handleIncompleteInlineKatex,
+  handleIncompleteBlockKatex,
+} from "../lib/parse-incomplete-markdown";
+
+const parseIncompleteMarkdown = (text: string, extraIncompleteHandles: IncompleteHandle[] = []): string => {
+  return parseIncompleteMarkdownWithoutDefaultExtraIncompleteHandles(text, [handleIncompleteStrikethrough, handleIncompleteBlockKatex, ...extraIncompleteHandles]);
+}
 
 describe("parseIncompleteMarkdown", () => {
   describe("basic input handling", () => {
@@ -355,15 +365,24 @@ describe("parseIncompleteMarkdown", () => {
       expect(parseIncompleteMarkdown("$incomplete")).toBe("$incomplete");
     });
 
+    it("should complete single dollar signs with extra handleIncompleteInlineKatex", () => {
+      expect(parseIncompleteMarkdown("Text with $formula", [handleIncompleteInlineKatex])).toBe(
+        "Text with $formula$"
+      );
+      expect(parseIncompleteMarkdown("$incomplete", [handleIncompleteInlineKatex])).toBe("$incomplete$");
+    });
+
     it("should keep text with paired dollar signs unchanged", () => {
       // Even paired dollar signs are preserved but not treated as math
       const text = "Text with $x^2 + y^2 = z^2$";
       expect(parseIncompleteMarkdown(text)).toBe(text);
+      expect(parseIncompleteMarkdown(text, [handleIncompleteInlineKatex])).toBe(text);
     });
 
     it("should handle multiple inline KaTeX sections", () => {
       const text = "$a = 1$ and $b = 2$";
       expect(parseIncompleteMarkdown(text)).toBe(text);
+      expect(parseIncompleteMarkdown(text, [handleIncompleteInlineKatex])).toBe(text);
     });
 
     it("should NOT complete odd number of dollar signs", () => {
@@ -385,9 +404,17 @@ describe("parseIncompleteMarkdown", () => {
       expect(parseIncompleteMarkdown("$x + y = z")).toBe("$x + y = z");
     });
 
+    it("should complete dollar sign at start of text with extra handleIncompleteInlineKatex", () => {
+      expect(parseIncompleteMarkdown("$x + y = z", [handleIncompleteInlineKatex])).toBe("$x + y = z$");
+    });
+
     it("should handle escaped dollar signs", () => {
       const text = "Price is \\$100";
       expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
+
+    it("should NOT complete escaped single dollar signs with extra handleIncompleteInlineKatex", () => {
+      expect(parseIncompleteMarkdown("\\$3 dollar", [handleIncompleteInlineKatex])).toBe("\\$3 dollar");
     });
 
     it("should handle multiple consecutive dollar signs correctly", () => {

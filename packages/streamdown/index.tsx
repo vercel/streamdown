@@ -13,7 +13,12 @@ import { harden } from "rehype-harden";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
-import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
+import {
+  type IncompleteHandle,
+  parseIncompleteMarkdown,
+  handleIncompleteStrikethrough,
+  handleIncompleteBlockKatex,
+} from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
 
 export type { MermaidConfig } from "mermaid";
@@ -30,6 +35,7 @@ export type StreamdownProps = Options & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
+  extraIncompleteHandles?: IncompleteHandle[];
   mermaidConfig?: MermaidConfig;
   controls?: ControlsConfig;
   isAnimating?: boolean;
@@ -54,6 +60,11 @@ export const defaultRemarkPlugins: Record<string, Pluggable> = {
   math: [remarkMath, { singleDollarTextMath: false }],
 } as const;
 
+const defaultExtraIncompleteHandles = [
+  handleIncompleteStrikethrough,
+  handleIncompleteBlockKatex,
+];
+
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
   "github-light" as BundledTheme,
   "github-dark" as BundledTheme,
@@ -76,17 +87,18 @@ export const StreamdownRuntimeContext =
 
 type BlockProps = Options & {
   content: string;
+  extraIncompleteHandles: IncompleteHandle[];
   shouldParseIncompleteMarkdown: boolean;
 };
 
 const Block = memo(
-  ({ content, shouldParseIncompleteMarkdown, ...props }: BlockProps) => {
+  ({ content, shouldParseIncompleteMarkdown, extraIncompleteHandles, ...props }: BlockProps) => {
     const parsedContent = useMemo(
       () =>
         typeof content === "string" && shouldParseIncompleteMarkdown
-          ? parseIncompleteMarkdown(content.trim())
+          ? parseIncompleteMarkdown(content.trim(), extraIncompleteHandles)
           : content,
-      [content, shouldParseIncompleteMarkdown]
+      [content, shouldParseIncompleteMarkdown, extraIncompleteHandles]
     );
 
     return <ReactMarkdown {...props}>{parsedContent}</ReactMarkdown>;
@@ -103,6 +115,7 @@ export const Streamdown = memo(
     components,
     rehypePlugins = Object.values(defaultRehypePlugins),
     remarkPlugins = Object.values(defaultRemarkPlugins),
+    extraIncompleteHandles = defaultExtraIncompleteHandles,
     className,
     shikiTheme = ["github-light", "github-dark"],
     mermaidConfig,
@@ -138,6 +151,7 @@ export const Streamdown = memo(
                     shouldParseIncompleteMarkdown={
                       shouldParseIncompleteMarkdown
                     }
+                    extraIncompleteHandles={extraIncompleteHandles}
                     {...props}
                   />
                 ))}
