@@ -349,4 +349,176 @@ describe("CodeBlock with multiple languages", () => {
       { timeout: 5000 }
     );
   });
+
+  it("should remove background styles from pre element", async () => {
+    const { container } = render(
+      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+        <CodeBlock code="const x = 1;" language="javascript" />
+      </ShikiThemeContext.Provider>
+    );
+
+    await waitFor(
+      () => {
+        const pre = container.querySelector("pre.shiki");
+        expect(pre).toBeTruthy();
+
+        const style = pre?.getAttribute("style");
+        expect(style).toBeTruthy();
+
+        // Should NOT contain ANY background properties
+        expect(style).not.toMatch(/background[^;]*;?/);
+        expect(style).not.toMatch(/background-color/);
+        expect(style).not.toMatch(/background-image/);
+        expect(style).not.toMatch(/background:/);
+
+        // Should still have CSS variables for theming (proves we didn't remove all styles)
+        expect(style).toContain("--shiki-light");
+        expect(style).toContain("--shiki-dark");
+
+        // Verify it actually has syntax highlighting tokens
+        const tokens = pre.querySelectorAll("span.line span");
+        expect(tokens.length).toBeGreaterThan(0);
+      },
+      { timeout: 5000 }
+    );
+  });
+
+  it("should apply preClassName to pre element", async () => {
+    const { container } = render(
+      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+        <CodeBlock
+          code="const x = 1;"
+          language="javascript"
+          preClassName="custom-pre-class"
+        />
+      </ShikiThemeContext.Provider>
+    );
+
+    await waitFor(
+      () => {
+        const pre = container.querySelector("pre.shiki");
+        expect(pre).toBeTruthy();
+
+        // Verify the actual class attribute contains our custom class
+        const classAttr = pre?.getAttribute("class");
+        expect(classAttr).toContain("custom-pre-class");
+        expect(classAttr).toContain("shiki");
+
+        // Also use toHaveClass for convenience
+        expect(pre).toHaveClass("custom-pre-class");
+        expect(pre).toHaveClass("shiki");
+        expect(pre).toHaveClass("shiki-themes");
+
+        // Verify highlighting actually happened (not just an empty pre)
+        const code = pre?.querySelector("code");
+        expect(code).toBeTruthy();
+        expect(code?.textContent).toContain("const x = 1");
+      },
+      { timeout: 5000 }
+    );
+  });
+
+  it("should handle preClassName with multiple existing classes", async () => {
+    const { container } = render(
+      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+        <CodeBlock
+          code="const x = 1;"
+          language="javascript"
+          preClassName="my-custom-class another-class"
+        />
+      </ShikiThemeContext.Provider>
+    );
+
+    await waitFor(
+      () => {
+        const pre = container.querySelector("pre.shiki");
+        expect(pre).toBeTruthy();
+
+        // Should merge all classes
+        expect(pre?.className).toContain("shiki");
+        expect(pre?.className).toContain("my-custom-class another-class");
+      },
+      { timeout: 5000 }
+    );
+  });
+
+  it("should work without preClassName (transformer handles undefined)", async () => {
+    const { container } = render(
+      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+        <CodeBlock
+          code="const x = 1;"
+          language="javascript"
+          // NO preClassName prop
+        />
+      </ShikiThemeContext.Provider>
+    );
+
+    await waitFor(
+      () => {
+        const pre = container.querySelector("pre.shiki");
+        expect(pre).toBeTruthy();
+
+        // Should only have Shiki's classes
+        const classAttr = pre?.getAttribute("class");
+        expect(classAttr).toContain("shiki");
+        expect(classAttr).not.toContain("undefined");
+        expect(classAttr).not.toContain("null");
+
+        // Highlighting should still work
+        const tokens = pre?.querySelectorAll("span.line span");
+        expect(tokens.length).toBeGreaterThan(0);
+      },
+      { timeout: 5000 }
+    );
+  });
+
+  it("should produce valid HTML with transformers applied (integration test)", async () => {
+    const { container } = render(
+      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+        <CodeBlock
+          code="function hello() { return 'world'; }"
+          language="javascript"
+          preClassName="test-class"
+        />
+      </ShikiThemeContext.Provider>
+    );
+
+    await waitFor(
+      () => {
+        const pre = container.querySelector("pre");
+        expect(pre).toBeTruthy();
+
+        // Get actual rendered HTML
+        const preHTML = pre?.outerHTML;
+        expect(preHTML).toBeTruthy();
+
+        // Verify structure: pre > code > span.line > span (tokens)
+        expect(preHTML).toContain("<pre");
+        expect(preHTML).toContain("<code");
+        expect(preHTML).toContain('class="line"');
+
+        // Verify transformers worked
+        expect(preHTML).toContain("test-class"); // preClassName transformer
+        expect(preHTML).not.toContain("background:"); // background removal transformer
+        expect(preHTML).not.toContain("background-color:"); // background removal transformer
+
+        // Verify CSS variables are present (not removed by background transformer)
+        expect(preHTML).toContain("--shiki-light");
+        expect(preHTML).toContain("--shiki-dark");
+
+        // Verify actual syntax highlighting happened
+        expect(preHTML).toContain("function");
+        expect(preHTML).toContain("hello");
+        expect(preHTML).toContain("return");
+        expect(preHTML).toContain("world");
+
+        // Log for manual verification (can be removed in production)
+        console.log("\n=== INTEGRATION TEST: Rendered HTML ===");
+        console.log("Pre classes:", pre?.getAttribute("class"));
+        console.log("Pre style (first 200 chars):", pre?.getAttribute("style")?.substring(0, 200));
+        console.log("Token count:", pre?.querySelectorAll("span.line span").length);
+      },
+      { timeout: 5000 }
+    );
+  });
 });

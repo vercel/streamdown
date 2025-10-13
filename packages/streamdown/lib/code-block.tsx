@@ -2,22 +2,19 @@
 
 import { CheckIcon, CopyIcon, DownloadIcon } from "lucide-react";
 import {
-  createContext,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
   type ComponentProps,
+  createContext,
   type HTMLAttributes,
+  useContext,
+  useState,
 } from "react";
+import { createJavaScriptRegexEngine, useShikiHighlighter } from "react-shiki";
 import {
-  bundledLanguages,
   type BundledLanguage,
+  bundledLanguages,
   type SpecialLanguage,
 } from "shiki";
 import type { ShikiTransformer } from "shiki/core";
-import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-import { useShikiHighlighter } from "react-shiki";
 import { ShikiThemeContext } from "../index";
 import { cn, save } from "./utils";
 
@@ -36,54 +33,59 @@ const CodeBlockContext = createContext<CodeBlockContextType>({
 });
 
 // shiki transformers for background removal and pre class injection
+// operates on AST, more reliable than regex
 const createPreClassTransformer = (className?: string): ShikiTransformer => ({
   name: "streamdown:pre-class",
   pre(node) {
-    if (className) {
-      const existingClasses = node.properties?.className || [];
-      const classes = Array.isArray(existingClasses)
-        ? existingClasses
-        : [existingClasses];
-      node.properties = {
-        ...node.properties,
-        className: [
-          ...classes.filter(
-            (c): c is string | number =>
-              typeof c === "string" || typeof c === "number"
-          ),
-          className,
-        ],
-      };
+    if (!className) {
+      return;
+    }
+
+    const existingClass = node.properties?.class;
+    if (typeof existingClass === "string") {
+      node.properties.class = `${existingClass} ${className}`;
+    } else {
+      node.properties.class = className;
     }
   },
 });
 
+// original implementation removed the entire style attribute, didn't
+// support use of Shiki's native dark mode/multi-theme support
+// this parses AST with more targeted regex to only remove background* properties
 const removeBackgroundTransformer: ShikiTransformer = {
   name: "streamdown:remove-background",
   pre(node) {
-    if (node.properties?.style) {
-      if (typeof node.properties.style === "string") {
-        node.properties.style = node.properties.style
-          .replace(/background[^;]*;?/g, "")
-          .trim();
-      } else if (
-        typeof node.properties.style === "object" &&
-        node.properties.style !== null &&
-        !Array.isArray(node.properties.style)
-      ) {
-        // Handle object style (if present)
-        const styleObj = node.properties.style as Record<
-          string,
-          string | undefined
-        >;
-        // biome-ignore lint/performance/noDelete: needed to remove style properties
-        delete styleObj.background;
-        // biome-ignore lint/performance/noDelete: needed to remove style properties
-        delete styleObj.backgroundColor;
-      }
+    const style = node.properties?.style;
+    if (typeof style === "string") {
+      node.properties.style = style.replace(/background[^;]*;?/g, "").trim();
     }
   },
 };
+
+// draft of approach without transformers
+// const processedHtml = useMemo(() => {
+//   if (!rawHtml || typeof rawHtml !== 'string') return "";
+//   return addPreClassToHtml(
+//     removeBackgroundFromHtml(rawHtml),
+//     preClassName
+//   );
+// }, [rawHtml, preClassName]);
+//
+// const removeBackgroundFromHtml = (html: string) =>
+//   html.replace(/style="([^"]*)"/g, (_, styles) => {
+//     const cleaned = styles.replace(/background[^;]*;?/g, '').trim();
+//     return cleaned ? `style="${cleaned}"` : '';
+//   });
+//
+// const addPreClassToHtml = (html: string, className?: string) => {
+//   if (!className) return html;
+//   return html.replace(
+//     /<pre(\s+class="([^"]*)")?/,
+//     (_, __, existing) =>
+//       `<pre class="${existing ? `${existing} ${className}` : className}"`
+//   );
+// };
 
 export const CodeBlock = ({
   code,
@@ -95,7 +97,6 @@ export const CodeBlock = ({
 }: CodeBlockProps) => {
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
-  // Check if language is supported
   const isLanguageSupported = (lang: string): lang is BundledLanguage => {
     return Object.hasOwn(bundledLanguages, lang);
   };
@@ -104,6 +105,8 @@ export const CodeBlock = ({
     ? language
     : ("text" as SpecialLanguage);
 
+  // no longer uses two highlighter for light/dark. relies on shiki's native multi-theme and light-dark() support
+  // WARN: BREAKING - does not automatically work for class based dark mode when color-scheme is not set
   const html = useShikiHighlighter(
     code,
     langToUse,
@@ -111,7 +114,7 @@ export const CodeBlock = ({
     {
       outputFormat: "html",
       defaultColor: "light-dark()",
-      engine: createJavaScriptRegexEngine({ forgiving: true }),
+      engine: createJavaScriptRegexEngine({ forgiving: true }), // PR #77 - js engine prevents csp errors
       transformers: [
         createPreClassTransformer(preClassName),
         removeBackgroundTransformer,
@@ -119,7 +122,6 @@ export const CodeBlock = ({
     }
   );
 
-  // Always render the full structure, with empty HTML if highlighter not ready
   return (
     <CodeBlockContext.Provider value={{ code }}>
       <div
@@ -139,7 +141,7 @@ export const CodeBlock = ({
           <div className="min-w-full">
             <div
               className={cn("overflow-x-auto", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: needed for syntax highlighting
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: needed for html output
               dangerouslySetInnerHTML={{ __html: (html as string) || "" }}
               data-code-block
               data-language={language}
