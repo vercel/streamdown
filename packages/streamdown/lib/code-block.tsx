@@ -530,7 +530,6 @@ export const CodeBlockCopyButton = ({
   ...props
 }: CodeBlockCopyButtonProps & { code?: string }) => {
   const [isCopied, setIsCopied] = useState(false);
-  const timeoutRef = useRef(0);
   const contextCode = useContext(CodeBlockContext).code;
   const code = propCode ?? contextCode;
 
@@ -545,21 +544,12 @@ export const CodeBlockCopyButton = ({
         await navigator.clipboard.writeText(code);
         setIsCopied(true);
         onCopy?.();
-        timeoutRef.current = window.setTimeout(
-          () => setIsCopied(false),
-          timeout
-        );
+        setTimeout(() => setIsCopied(false), timeout);
       }
     } catch (error) {
       onError?.(error as Error);
     }
   };
-
-  useEffect(() => {
-    return () => {
-      window.clearTimeout(timeoutRef.current);
-    };
-  }, []);
 
   const Icon = isCopied ? CheckIcon : CopyIcon;
 

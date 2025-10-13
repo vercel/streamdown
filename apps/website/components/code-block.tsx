@@ -94,10 +94,12 @@ export const CodeBlockCopyButton = ({
     }
 
     try {
-      await navigator.clipboard.writeText(code);
-      setIsCopied(true);
-      onCopy?.();
-      setTimeout(() => setIsCopied(false), timeout);
+      if (!isCopied) {
+        await navigator.clipboard.writeText(code);
+        setIsCopied(true);
+        onCopy?.();
+        setTimeout(() => setIsCopied(false), timeout);
+      }
     } catch (error) {
       onError?.(error as Error);
     }
