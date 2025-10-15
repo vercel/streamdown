@@ -6,6 +6,9 @@ const singleAsteriskPattern = /(\*)([^*]*?)$/;
 const singleUnderscorePattern = /(_)([^_]*?)$/;
 const inlineCodePattern = /(`)([^`]*?)$/;
 const strikethroughPattern = /(~~)([^~]*?)$/;
+const inlineKatexPattern = /(\$)([^$]*?)$/;
+
+export type IncompleteHandle = (text: string) => string;
 
 // Helper function to check if we have a complete code block
 const hasCompleteCodeBlock = (text: string): boolean => {
@@ -450,7 +453,7 @@ const handleIncompleteInlineCode = (text: string): string => {
 };
 
 // Completes incomplete strikethrough formatting (~~)
-const handleIncompleteStrikethrough = (text: string): string => {
+export const handleIncompleteStrikethrough = (text: string): string => {
   const strikethroughMatch = text.match(strikethroughPattern);
 
   if (strikethroughMatch) {
@@ -472,7 +475,7 @@ const handleIncompleteStrikethrough = (text: string): string => {
 };
 
 // Counts single dollar signs that are not part of double dollar signs and not escaped
-const _countSingleDollarSigns = (text: string): number => {
+const countSingleDollarSigns = (text: string): number => {
   return text.split("").reduce((acc, char, index) => {
     if (char === "$") {
       const prevChar = text[index - 1];
@@ -489,8 +492,26 @@ const _countSingleDollarSigns = (text: string): number => {
   }, 0);
 };
 
+export const handleIncompleteInlineKatex = (text: string): string => {
+  // Don't process if inside a complete code block
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+
+  const inlineKatexMatch = text.match(inlineKatexPattern);
+
+  if (inlineKatexMatch) {
+    const singleDollars = countSingleDollarSigns(text);
+    if (singleDollars % 2 === 1) {
+      return `${text}$`;
+    }
+  }
+
+  return text;
+};
+
 // Completes incomplete block KaTeX formatting ($$)
-const handleIncompleteBlockKatex = (text: string): string => {
+export const handleIncompleteBlockKatex = (text: string): string => {
   // Count all $$ pairs in the text
   const dollarPairs = (text.match(/\$\$/g) || []).length;
 
@@ -565,7 +586,7 @@ const handleIncompleteBoldItalic = (text: string): string => {
 };
 
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
-export const parseIncompleteMarkdown = (text: string): string => {
+export const parseIncompleteMarkdown = (text: string, extraIncompleteHandles: IncompleteHandle[] = []): string => {
   if (!text || typeof text !== "string") {
     return text;
   }
@@ -591,11 +612,10 @@ export const parseIncompleteMarkdown = (text: string): string => {
   result = handleIncompleteSingleAsteriskItalic(result);
   result = handleIncompleteSingleUnderscoreItalic(result);
   result = handleIncompleteInlineCode(result);
-  result = handleIncompleteStrikethrough(result);
 
-  // Handle KaTeX formatting (only block math with $$)
-  result = handleIncompleteBlockKatex(result);
-  // Note: We don't handle inline KaTeX with single $ as they're likely currency symbols
+  extraIncompleteHandles.forEach(handle => {
+    result = handle(result);
+  })
 
   return result;
 };
