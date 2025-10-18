@@ -197,7 +197,6 @@ export const TableDownloadButton = ({
   filename,
 }: TableDownloadButtonProps) => {
   const { isAnimating } = useContext(StreamdownRuntimeContext);
-
   const downloadTableData = (event: React.MouseEvent<HTMLButtonElement>) => {
     try {
       // Find the closest table element

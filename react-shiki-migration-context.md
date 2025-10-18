@@ -56,7 +56,42 @@ async function getStreamdownHighlighter(themes, lang) {
 
 ---
 
-## 4. Testing
+## 4. Further Simplification (react-shiki 0.9.0)
+
+**Migration to react-shiki 0.9.0**: Upgraded from 0.8.0 to leverage new `engine` parameter support, eliminating custom highlighter creation.
+
+**Before (0.8.0)**:
+```typescript
+// Create custom highlighter to use JS engine
+const highlighter = await getSingletonHighlighter({
+  themes: [lightTheme, darkTheme],
+  langs: [],
+  engine: createJavaScriptRegexEngine({ forgiving: true }),
+});
+
+// Manually load language
+if (!highlighter.getLoadedLanguages().includes(lang)) {
+  await highlighter.loadLanguage(lang);
+}
+
+// Pass custom highlighter
+useShikiHighlighter(code, lang, themes, { highlighter });
+```
+
+**After (0.9.0)**:
+```typescript
+// Just pass engine as an option - react-shiki handles the rest!
+useShikiHighlighter(code, lang, themes, {
+  engine: createJavaScriptRegexEngine({ forgiving: true }),
+  transformers: [...],
+});
+```
+
+**Improvements**: No highlighter state management, no manual language loading, no custom highlighter creation. React-shiki's internal factory handles everything. ~30 lines → ~15 lines of highlighter-related code.
+
+---
+
+## 5. Testing
 
 **All 253 package tests passing**: Multi-language rendering, concurrent blocks, component functionality, data attributes, language fallback.
 
@@ -64,12 +99,57 @@ async function getStreamdownHighlighter(themes, lang) {
 
 ---
 
+## 6. v1.4 Integration (October 2025)
+
+**Integrated Features**:
+- `isAnimating` prop to disable copy/download buttons during streaming
+- rehype-harden plugin system (replaced harden-react-markdown wrapper)
+- Exported `defaultRehypePlugins` and `defaultRemarkPlugins` for customization
+- Proper timeout cleanup with `useRef` in button components
+- StreamdownRuntimeContext for runtime state management
+
+**Breaking Changes from v1.3**:
+- `allowedImagePrefixes`, `allowedLinkPrefixes`, `defaultOrigin` props removed → use `rehypePlugins` with harden config
+- Props now passed directly to ReactMarkdown instead of through wrapper
+
+**Migration Path**:
+```typescript
+// v1.3 (deprecated)
+<Streamdown
+  allowedImagePrefixes={["https://cdn.example.com"]}
+  allowedLinkPrefixes={["https://example.com"]}
+/>
+
+// v1.4+ (recommended)
+import { defaultRehypePlugins } from 'streamdown';
+import { harden } from 'rehype-harden';
+
+<Streamdown
+  rehypePlugins={[
+    [harden, {
+      allowedImagePrefixes: ["https://cdn.example.com"],
+      allowedLinkPrefixes: ["https://example.com"],
+      defaultOrigin: undefined,
+      allowDataImages: true,
+    }],
+    ...Object.values(defaultRehypePlugins).filter(p => p[0] !== harden),
+  ]}
+/>
+```
+
+**Testing**: All 258 package tests passing ✅
+
+---
+
 ## Architecture
 
-| Aspect | Original | Migrated |
-|--------|----------|----------|
-| Highlighters | Dual instances | Singleton |
-| HTML output | Two (light/dark) | One + CSS variables |
-| Theme switching | DOM visibility | `color-scheme` / `light-dark()` |
-| Languages | Manual `Set` + sync | Shiki Registry |
-| Code | ~100 lines | ~30 lines |
+| Aspect | Original | Migrated (0.8.0) | Optimized (0.9.0) | Integrated (v1.4) |
+|--------|----------|------------------|-------------------|-------------------|
+| Highlighters | Dual instances | Singleton (custom) | Singleton (react-shiki managed) | Singleton (react-shiki managed) |
+| HTML output | Two (light/dark) | One + CSS variables | One + CSS variables | One + CSS variables |
+| Theme switching | DOM visibility | `color-scheme` / `light-dark()` | `color-scheme` / `light-dark()` | `color-scheme` / `light-dark()` |
+| Language loading | Manual `Set` + sync | Manual on-demand | Automatic (react-shiki) | Automatic (react-shiki) |
+| Highlighter creation | Manual dual | Manual singleton | react-shiki factory | react-shiki factory |
+| Streaming UX | N/A | N/A | N/A | Disabled buttons during streaming |
+| Plugin System | harden-react-markdown | harden-react-markdown | harden-react-markdown | rehype-harden + exports |
+| Code complexity | ~100 lines | ~30 lines | ~15 lines | ~20 lines (w/ runtime context) |

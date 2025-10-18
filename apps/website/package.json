@@ -21,7 +21,7 @@
     "react": "19.1.1",
     "react-dom": "19.1.1",
     "react-markdown": "^10.1.0",
-    "react-shiki": "^0.8.0",
+    "react-shiki": "^0.9.0",
     "rehype-harden": "^1.1.5",
     "shiki": "^3.12.2",
     "streamdown": "workspace:*",

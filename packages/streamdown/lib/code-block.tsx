@@ -6,6 +6,8 @@ import {
   createContext,
   type HTMLAttributes,
   useContext,
+  useEffect,
+  useRef,
   useState,
 } from "react";
 import { createJavaScriptRegexEngine, useShikiHighlighter } from "react-shiki";
@@ -15,7 +17,7 @@ import {
   type SpecialLanguage,
 } from "shiki";
 import type { ShikiTransformer } from "shiki/core";
-import { ShikiThemeContext } from "../index";
+import { ShikiThemeContext, StreamdownRuntimeContext } from "../index";
 import { cn, save } from "./utils";
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
@@ -487,6 +489,7 @@ export const CodeBlockDownloadButton = ({
   language?: BundledLanguage;
 }) => {
   const contextCode = useContext(CodeBlockContext).code;
+  const { isAnimating } = useContext(StreamdownRuntimeContext);
   const code = propCode ?? contextCode;
   const extension =
     language && language in languageExtensionMap
@@ -507,9 +510,10 @@ export const CodeBlockDownloadButton = ({
   return (
     <button
       className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
+      disabled={isAnimating}
       onClick={downloadCode}
       title="Download file"
       type="button"
@@ -530,7 +534,9 @@ export const CodeBlockCopyButton = ({
   ...props
 }: CodeBlockCopyButtonProps & { code?: string }) => {
   const [isCopied, setIsCopied] = useState(false);
+  const timeoutRef = useRef(0);
   const contextCode = useContext(CodeBlockContext).code;
+  const { isAnimating } = useContext(StreamdownRuntimeContext);
   const code = propCode ?? contextCode;
 
   const copyToClipboard = async () => {
@@ -544,21 +550,31 @@ export const CodeBlockCopyButton = ({
         await navigator.clipboard.writeText(code);
         setIsCopied(true);
         onCopy?.();
-        setTimeout(() => setIsCopied(false), timeout);
+        timeoutRef.current = window.setTimeout(
+          () => setIsCopied(false),
+          timeout
+        );
       }
     } catch (error) {
       onError?.(error as Error);
     }
   };
 
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   const Icon = isCopied ? CheckIcon : CopyIcon;
 
   return (
     <button
       className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground",
+        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
+      disabled={isAnimating}
       onClick={copyToClipboard}
       type="button"
       {...props}
