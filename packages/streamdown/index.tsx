@@ -16,6 +16,8 @@ import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
 
+export { defaultUrlTransform } from "react-markdown";
+
 export type { MermaidConfig } from "mermaid";
 
 export type ControlsConfig =
@@ -108,6 +110,7 @@ export const Streamdown = memo(
     mermaidConfig,
     controls = true,
     isAnimating = false,
+    urlTransform = (value) => value,
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
@@ -138,6 +141,7 @@ export const Streamdown = memo(
                     shouldParseIncompleteMarkdown={
                       shouldParseIncompleteMarkdown
                     }
+                    urlTransform={urlTransform}
                     {...props}
                   />
                 ))}
