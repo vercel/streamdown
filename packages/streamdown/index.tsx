@@ -1,13 +1,12 @@
 "use client";
 
-import { createContext, memo, useId, useMemo } from "react";
+import { createContext, memo, useEffect, useId, useMemo } from "react";
 import ReactMarkdown, { type Options } from "react-markdown";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
-import "katex/dist/katex.min.css";
 import type { MermaidConfig } from "mermaid";
 import { harden } from "rehype-harden";
 import type { Pluggable } from "unified";
@@ -120,6 +119,13 @@ export const Streamdown = memo(
         parseMarkdownIntoBlocks(typeof children === "string" ? children : ""),
       [children]
     );
+
+    useEffect(() => {
+      if (Array.isArray(rehypePlugins) && rehypePlugins.some(plugin => Array.isArray(plugin) ? plugin[0] === rehypeKatex : plugin === rehypeKatex)) {
+        // @ts-ignore
+        import("katex/dist/katex.min.css");
+      }
+    }, []);
 
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
