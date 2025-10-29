@@ -80,8 +80,50 @@ class HighlighterManager {
     const needsLanguageLoad =
       !this.loadedLanguages.has(language) && isLanguageSupported;
 
-    // Create or recreate light highlighter if needed
-    if (needsLightRecreation) {
+    // Initialize light highlighter
+    await this.initializeLightHighlighter({
+      lightTheme,
+      jsEngine,
+      language,
+      isLanguageSupported,
+      needsRecreation: needsLightRecreation,
+      needsLanguageLoad,
+    });
+
+    // Initialize dark highlighter
+    await this.initializeDarkHighlighter({
+      darkTheme,
+      jsEngine,
+      language,
+      isLanguageSupported,
+      needsRecreation: needsDarkRecreation,
+      needsLanguageLoad,
+    });
+
+    // Mark language as loaded after both highlighters have it
+    if (needsLanguageLoad) {
+      this.loadedLanguages.add(language);
+    }
+  }
+
+  private async initializeLightHighlighter(options: {
+    lightTheme: BundledTheme;
+    jsEngine: ReturnType<typeof createJavaScriptRegexEngine>;
+    language: BundledLanguage;
+    isLanguageSupported: boolean;
+    needsRecreation: boolean;
+    needsLanguageLoad: boolean;
+  }): Promise<void> {
+    const {
+      lightTheme,
+      jsEngine,
+      language,
+      isLanguageSupported,
+      needsRecreation,
+      needsLanguageLoad,
+    } = options;
+
+    if (needsRecreation) {
       this.lightHighlighter = await createHighlighter({
         themes: [lightTheme],
         langs: isLanguageSupported ? [language] : [],
@@ -95,24 +137,36 @@ class HighlighterManager {
       // Load the language if not already loaded
       await this.lightHighlighter?.loadLanguage(language);
     }
+  }
 
-    // Create or recreate dark highlighter if needed
-    if (needsDarkRecreation) {
+  private async initializeDarkHighlighter(options: {
+    darkTheme: BundledTheme;
+    jsEngine: ReturnType<typeof createJavaScriptRegexEngine>;
+    language: BundledLanguage;
+    isLanguageSupported: boolean;
+    needsRecreation: boolean;
+    needsLanguageLoad: boolean;
+  }): Promise<void> {
+    const {
+      darkTheme,
+      jsEngine,
+      language,
+      isLanguageSupported,
+      needsRecreation,
+      needsLanguageLoad,
+    } = options;
+
+    if (needsRecreation) {
       // If recreating dark highlighter, load all previously loaded languages plus the new one
-      const langsToLoad = needsLanguageLoad
-        ? [...this.loadedLanguages].concat(
-            isLanguageSupported ? [language] : []
-          )
-        : Array.from(this.loadedLanguages);
+      const langsToLoad = this.getLanguagesToLoad(
+        language,
+        isLanguageSupported,
+        needsLanguageLoad
+      );
 
       this.darkHighlighter = await createHighlighter({
         themes: [darkTheme],
-        langs:
-          langsToLoad.length > 0
-            ? langsToLoad
-            : isLanguageSupported
-              ? [language]
-              : [],
+        langs: langsToLoad,
         engine: jsEngine,
       });
       this.darkTheme = darkTheme;
@@ -120,11 +174,30 @@ class HighlighterManager {
       // Load the language if not already loaded
       await this.darkHighlighter?.loadLanguage(language);
     }
+  }
 
-    // Mark language as loaded after both highlighters have it
+  private getLanguagesToLoad(
+    language: BundledLanguage,
+    isLanguageSupported: boolean,
+    needsLanguageLoad: boolean
+  ): BundledLanguage[] {
     if (needsLanguageLoad) {
-      this.loadedLanguages.add(language);
+      const loaded = [...this.loadedLanguages];
+      if (isLanguageSupported) {
+        loaded.push(language);
+      }
+      return loaded;
     }
+
+    if (this.loadedLanguages.size > 0) {
+      return Array.from(this.loadedLanguages);
+    }
+
+    if (isLanguageSupported) {
+      return [language];
+    }
+
+    return [];
   }
 
   async highlightCode(
@@ -151,15 +224,17 @@ class HighlighterManager {
       ? language
       : this.getFallbackLanguage();
 
-    const light = this.lightHighlighter?.codeToHtml(code, {
-      lang,
-      theme: lightTheme,
-    });
+    const light =
+      this.lightHighlighter?.codeToHtml(code, {
+        lang,
+        theme: lightTheme,
+      }) ?? "";
 
-    const dark = this.darkHighlighter?.codeToHtml(code, {
-      lang,
-      theme: darkTheme,
-    });
+    const dark =
+      this.darkHighlighter?.codeToHtml(code, {
+        lang,
+        theme: darkTheme,
+      }) ?? "";
 
     const addPreClass = (html: string) => {
       if (!preClassName) {

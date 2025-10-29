@@ -44,22 +44,23 @@ export const Chat = ({ models }: ChatProps) => {
                 {message.role === "user" ? "User: " : "AI: "}
               </span>
               {message.parts.map((part, index) => {
+                const partKey = `${message.id}-${index}`;
                 switch (part.type) {
                   case "text":
                     return (
-                      <pre className="whitespace-pre-wrap" key={index}>
+                      <pre className="whitespace-pre-wrap" key={partKey}>
                         {part.text}
                       </pre>
                     );
                   case "reasoning":
                     return (
-                      <pre className="italic" key={index}>
+                      <pre className="italic" key={partKey}>
                         {part.text}
                       </pre>
                     );
                   case "file":
                     return (
-                      <div key={index}>
+                      <div key={partKey}>
                         {part.mediaType.startsWith("image") ? (
                           <Image
                             alt={part.filename ?? "An image attachment"}
@@ -87,12 +88,13 @@ export const Chat = ({ models }: ChatProps) => {
                 {message.role === "user" ? "User: " : "AI: "}
               </span>
               {message.parts.map((part, index) => {
+                const partKey = `${message.id}-${index}`;
                 switch (part.type) {
                   case "text":
                     return (
                       <Streamdown
                         isAnimating={status === "streaming"}
-                        key={index}
+                        key={partKey}
                       >
                         {part.text}
                       </Streamdown>
@@ -105,7 +107,7 @@ export const Chat = ({ models }: ChatProps) => {
                     );
                   case "file":
                     return (
-                      <div key={index}>
+                      <div key={partKey}>
                         {part.mediaType.startsWith("image") ? (
                           <Image
                             alt={part.filename ?? "An image attachment"}

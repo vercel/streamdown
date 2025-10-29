@@ -13,7 +13,7 @@ test("happy path", async () => {
     CHANGED_FILES: ".changeset/some-happy-path.md",
   };
 
-  const readFile = mock.fn(async (_path) => {
+  const readFile = mock.fn((_path) => {
     return "---\nai: patch\n@ai-sdk/provider: patch\n---\n## Test changeset";
   });
 
@@ -36,7 +36,9 @@ test("ignores .changeset/README.md", async () => {
     CHANGED_FILES: ".changeset/README.md",
   };
 
-  const readFile = mock.fn(() => {});
+  const readFile = mock.fn(() => {
+    // This mock should not be called
+  });
 
   await verifyChangesets(event, env, readFile);
 
@@ -53,7 +55,9 @@ test("invalid file - not a .changeset file", async () => {
     CHANGED_FILES: ".changeset/not-a-changeset-file.txt",
   };
 
-  const readFile = mock.fn(() => {});
+  const readFile = mock.fn(() => {
+    // This mock should not be called
+  });
 
   await assert.rejects(
     () => verifyChangesets(event, env, readFile),
@@ -75,7 +79,7 @@ test("invalid .changeset file - no frontmatter", async () => {
     CHANGED_FILES: ".changeset/invalid-changeset-file.md",
   };
 
-  const readFile = mock.fn(async (_path) => {
+  const readFile = mock.fn((_path) => {
     return "frontmatter missing";
   });
   await assert.rejects(
@@ -102,7 +106,7 @@ test("minor update", async () => {
     CHANGED_FILES: ".changeset/patch-update.md .changeset/minor-update.md",
   };
 
-  const readFile = mock.fn(async (path) => {
+  const readFile = mock.fn((path) => {
     if (path.endsWith("patch-update.md")) {
       return "---\nai: patch\n---\n## Test changeset";
     }
@@ -148,7 +152,7 @@ test('minor update - with "minor" label', async () => {
     CHANGED_FILES: ".changeset/patch-update.md .changeset/minor-update.md",
   };
 
-  const readFile = mock.fn(async (path) => {
+  const readFile = mock.fn((path) => {
     if (path.endsWith("patch-update.md")) {
       return "---\nai: patch\n---\n## Test changeset";
     }
@@ -177,7 +181,7 @@ test('major update - with "major" label', async () => {
     CHANGED_FILES: ".changeset/patch-update.md .changeset/major-update.md",
   };
 
-  const readFile = mock.fn(async (path) => {
+  const readFile = mock.fn((path) => {
     if (path.endsWith("patch-update.md")) {
       return "---\nai: patch\n---\n## Test changeset";
     }
