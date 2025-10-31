@@ -1,4 +1,4 @@
-import { css, cx } from '@rolder/ss-react/css';
+import { alpha, Box, Image, UnstyledButton } from '@mantine/core';
 import { IconDownload } from '@tabler/icons-react';
 import type { DetailedHTMLProps, ImgHTMLAttributes } from 'react';
 import type { ExtraProps } from 'react-markdown';
@@ -71,53 +71,64 @@ export const ImageComponent = ({
   }
 
   return (
-    <div
-      className={cx(
-        'group',
-        css({ pos: 'relative', my: 4, display: 'inline-block' }),
-      )}
+    <Box
+      pos="relative"
+      my="md"
+      display="inline-block"
+      className="group"
       data-streamdown="image-wrapper"
     >
-      <img
+      <Image
         alt={alt}
-        className={cx(css({ maxW: 'full', rounded: 'lg' }), className)}
+        className={className}
+        // className={cx(css({ maxW: 'full', rounded: 'lg' }), className)}
         data-streamdown="image"
         src={src}
         {...props}
       />
-      <div className="pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block" />
-      <button
-        className={cx(
-          // 'bg-background/90 shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-background',
-          // 'opacity-0 group-hover:opacity-100',
-          css({
-            pos: 'absolute',
-            right: 2,
-            bottom: 2,
-            display: 'flex',
-            boxSize: '8',
-            cursor: 'pointer',
-            alignItems: 'center',
-            justifyContent: 'center',
-            rounded: 'md',
-            borderWidth: '1px',
-            borderColor: 'border',
-            bg: 'bg/90',
-            shadow: 'low',
-            backdropBlur: 'sm',
-            transition: 'all',
-            transitionDuration: '200ms',
-            _hover: { bg: 'bg' },
-            opacity: 0,
-            _groupHover: { opacity: 100 },
-          }),
-        )}
+      {/*<div className="pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block" />*/}
+      <Box
+        pos="absolute"
+        display="none"
+        bg={alpha('black', 0.1)}
+        style={{
+          pointerEvents: 'none',
+          boxShadow:
+            'inset 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)',
+        }}
+      />
+      <UnstyledButton
+        // className={cx(
+        //   // 'bg-background/90 shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-background',
+        //   // 'opacity-0 group-hover:opacity-100',
+        //   css({
+        //     pos: 'absolute',
+        //     right: 2,
+        //     bottom: 2,
+        //     display: 'flex',
+        //     boxSize: '8',
+        //     cursor: 'pointer',
+        //     alignItems: 'center',
+        //     justifyContent: 'center',
+        //     rounded: 'md',
+        //     borderWidth: '1px',
+        //     borderColor: 'border',
+        //     bg: 'bg/90',
+        //     shadow: 'low',
+        //     backdropBlur: 'sm',
+        //     transition: 'all',
+        //     transitionDuration: '200ms',
+        //     _hover: { bg: 'bg' },
+        //     opacity: 0,
+        //     _groupHover: { opacity: 100 },
+        //   }),
+        // )}
         onClick={downloadImage}
         title="Скачать изображение"
         type="button"
       >
         <IconDownload size={14} />
-      </button>
-    </div>
+      </UnstyledButton>
+    </Box>
   );
 };

@@ -1,4 +1,3 @@
-import { css, cx } from '@rolder/ss-react/css';
 import type { MermaidConfig } from 'mermaid';
 import { useEffect, useState } from 'react';
 
@@ -79,30 +78,38 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   if (isLoading && !svgContent && !lastValidSvg) {
     return (
       <div
-        className={cx(
-          css({ my: 4, display: 'flex', justifyContent: 'center', p: 4 }),
-          className,
-        )}
+        className={className}
+        // className={cx(
+        //   css({ my: 4, display: 'flex', justifyContent: 'center', p: 4 }),
+        //   className,
+        // )}
       >
         {/*"flex items-center space-x-2 text-muted-foreground"*/}
         <div
-          className={css({
-            display: 'flex',
-            alignItems: 'center',
-            spaceX: 2,
-            color: 'text.muted',
-          })}
+          className={className}
+          // className={css({
+          //   display: 'flex',
+          //   alignItems: 'center',
+          //   spaceX: 2,
+          //   color: 'text.muted',
+          // })}
         >
           <div
-            className={css({
-              boxSize: '4',
-              animation: 'spin',
-              rounded: 'full',
-              borderColor: 'currentColor',
-              borderBottomWidth: '2px',
-            })}
+            className={className}
+            // className={css({
+            //   boxSize: '4',
+            //   animation: 'spin',
+            //   rounded: 'full',
+            //   borderColor: 'currentColor',
+            //   borderBottomWidth: '2px',
+            // })}
           />
-          <span className={css({ textStyle: 'p4' })}>Loading diagram...</span>
+          <span
+            className={className}
+            // className={css({ textStyle: 'p4' })}
+          >
+            Loading diagram...
+          </span>
         </div>
       </div>
     );
@@ -112,50 +119,56 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   if (error && !svgContent && !lastValidSvg) {
     return (
       <div
-        className={cx(
-          // 'rounded-lg border border-red-200 bg-red-50 p-4',
-          css({
-            rounded: 'lg',
-            borderWidth: '1px',
-            borderColor: 'error',
-            bg: 'error.bg',
-            p: 4,
-          }),
-          className,
-        )}
+        className={className}
+        // className={cx(
+        // 'rounded-lg border border-red-200 bg-red-50 p-4',
+        //   css({
+        //     rounded: 'lg',
+        //     borderWidth: '1px',
+        //     borderColor: 'error',
+        //     bg: 'error.bg',
+        //     p: 4,
+        //   }),
+        //   className,
+        // )}
       >
         {/*"font-mono text-red-700 text-sm"*/}
         <p
-          className={css({
-            fontFamily: 'mono',
-            color: 'error',
-            textStyle: 'p4',
-          })}
+
+        // className={css({
+        //   fontFamily: 'mono',
+        //   color: 'error',
+        //   textStyle: 'p4',
+        // })}
         >
           Mermaid Error: {error}
         </p>
-        <details className={css({ mt: 2 })}>
+        <details
+
+        // className={css({ mt: 2 })}
+        >
           {/*"cursor-pointer text-red-600 text-xs"*/}
           <summary
-            className={css({
-              cursor: 'pointer',
-              color: 'error',
-              textStyle: 'p4',
-            })}
+
+          // className={css({
+          //   cursor: 'pointer',
+          //   color: 'error',
+          //   textStyle: 'p4',
+          // })}
           >
             Show Code
           </summary>
           {/*"mt-2 overflow-x-auto rounded bg-red-100 p-2 text-red-800 text-xs"*/}
           <pre
-            className={css({
-              mt: 2,
-              overflowX: 'auto',
-              rounded: 'md',
-              bg: 'error.bg',
-              p: 2,
-              color: 'error',
-              textStyle: 'p4',
-            })}
+          // className={css({
+          //   mt: 2,
+          //   overflowX: 'auto',
+          //   rounded: 'md',
+          //   bg: 'error.bg',
+          //   p: 2,
+          //   color: 'error',
+          //   textStyle: 'p4',
+          // })}
           >
             {chart}
           </pre>
@@ -170,10 +183,11 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   return (
     <div
       aria-label="Mermaid chart"
-      className={cx(
-        css({ my: 4, display: 'flex', justifyContent: 'center' }),
-        className,
-      )}
+      className={className}
+      // className={cx(
+      //   css({ my: 4, display: 'flex', justifyContent: 'center' }),
+      //   className,
+      // )}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
       dangerouslySetInnerHTML={{ __html: displaySvg }}
       role="img"

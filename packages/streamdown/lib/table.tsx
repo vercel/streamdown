@@ -1,4 +1,4 @@
-import { css, cx } from '@rolder/ss-react/css';
+import { Button } from '@mantine/core';
 import { IconCheck, IconCopy, IconDownload } from '@tabler/icons-react';
 import { useEffect, useRef, useState } from 'react';
 import { save } from './utils';
@@ -163,24 +163,17 @@ export const TableCopyButton = ({
   const Icon = isCopied ? IconCheck : IconCopy;
 
   return (
-    <button
-      className={cx(
-        // 'cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground',
-        css({
-          cursor: 'pointer',
-          p: 1,
-          color: 'text.muted',
-          transition: 'all',
-          _hover: { color: 'text' },
-        }),
-        className,
-      )}
+    <Button
+      size="xs"
+      // _hover={{ bg: 'bg.accent' }}
+      // _active={{ bg: 'icon.bg.active!' }}
+      // transition="all"
       onClick={copyTableData}
       title={`Скопировать таблицу как ${format}`}
-      type="button"
+      className={className}
     >
-      {children ?? <Icon size={14} />}
-    </button>
+      {children ?? <Icon />}
+    </Button>
   );
 };
 
@@ -255,17 +248,18 @@ export const TableDownloadButton = ({
 
   return (
     <button
-      className={cx(
-        // 'cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground',
-        css({
-          cursor: 'pointer',
-          p: 1,
-          color: 'text.muted',
-          transition: 'all',
-          _hover: { color: 'text' },
-        }),
-        className,
-      )}
+      className={className}
+      // className={cx(
+      //   // 'cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground',
+      //   css({
+      //     cursor: 'button',
+      //     p: '1',
+      //     c: 'fg.muted',
+      //     transition: 'all',
+      //     _hover: { c: 'fg' },
+      //   }),
+      //   className,
+      // )}
       onClick={downloadTableData}
       title={`Скопировать таблицу как ${format.toUpperCase()}`}
       type="button"
@@ -339,19 +333,23 @@ export const TableDownloadDropdown = ({
   }, []);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div
+      // className={css({ pos: 'relative' })}
+      ref={dropdownRef}
+    >
       <button
-        className={cx(
-          'cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground',
-          css({
-            cursor: 'pointer',
-            p: 1,
-            color: 'text.muted',
-            transition: 'all',
-            _hover: { color: 'text' },
-          }),
-          className,
-        )}
+        className={className}
+        // className={cx(
+        //   // 'cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground',
+        //   css({
+        //     cursor: 'pointer',
+        //     p: 1,
+        //     color: 'text.muted',
+        //     transition: 'all',
+        //     _hover: { color: 'text' },
+        //   }),
+        //   className,
+        // )}
         onClick={() => setIsOpen(!isOpen)}
         title="Скопировать таблицу"
         type="button"
@@ -361,30 +359,30 @@ export const TableDownloadDropdown = ({
       {isOpen && (
         //"absolute top-full right-0 z-10 mt-1 min-w-[120px] rounded-md border border-border bg-background shadow-lg"
         <div
-          className={css({
-            pos: 'absolute',
-            top: 'full',
-            right: 0,
-            zIndex: 10,
-            mt: 1,
-            minW: '120px',
-            rounded: 'md',
-            borderColor: 'border',
-            bg: 'bg',
-            shadow: 'lg',
-          })}
+        // className={css({
+        //   pos: 'absolute',
+        //   top: 'full',
+        //   right: 0,
+        //   zIndex: 10,
+        //   mt: 1,
+        //   minW: '120px',
+        //   rounded: 'md',
+        //   borderColor: 'border',
+        //   bg: 'bg',
+        //   shadow: 'lg',
+        // })}
         >
           {/*"w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"*/}
           <button
-            className={css({
-              w: 'full',
-              px: 3,
-              py: 2,
-              textAlign: 'left',
-              textStyle: 'p4',
-              transition: 'colors',
-              _hover: { bg: 'bg/40' },
-            })}
+            // className={css({
+            //   w: 'full',
+            //   px: 3,
+            //   py: 2,
+            //   textAlign: 'left',
+            //   textStyle: 'p4',
+            //   transition: 'colors',
+            //   _hover: { bg: 'bg/40' },
+            // })}
             onClick={() => downloadTableData('csv')}
             type="button"
           >
@@ -392,15 +390,15 @@ export const TableDownloadDropdown = ({
           </button>
           <button
             //"w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
-            className={css({
-              w: 'full',
-              px: 3,
-              py: 2,
-              textAlign: 'left',
-              textStyle: 'p4',
-              transition: 'colors',
-              _hover: { bg: 'bg/40' },
-            })}
+            // className={css({
+            //   w: 'full',
+            //   px: 3,
+            //   py: 2,
+            //   textAlign: 'left',
+            //   textStyle: 'p4',
+            //   transition: 'colors',
+            //   _hover: { bg: 'bg/40' },
+            // })}
             onClick={() => downloadTableData('markdown')}
             type="button"
           >

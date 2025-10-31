@@ -1,0 +1,13 @@
+mark {
+  color: var(--mantine-color-black);
+  padding: 0 0.15rem 0 0.15rem;
+
+  @mixin where-light {
+    background-color: var(--mantine-color-yellow-2);
+  }
+
+  @mixin where-dark {
+    background-color: var(--mantine-color-yellow-5);
+  }
+}
+

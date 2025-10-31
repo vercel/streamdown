@@ -4,7 +4,7 @@ import { defineConfig } from '@rslib/core';
 export default defineConfig({
   source: {
     entry: {
-      index: ['./index.tsx'],
+      index: ['./index.tsx', './index.css', './lib/**'],
     },
   },
   lib: [
@@ -16,7 +16,7 @@ export default defineConfig({
   ],
   output: {
     target: 'web',
-    externals: ['react', 'react-dom', '@rolder/ss-react'],
+    externals: ['react', 'react-dom'],
   },
   plugins: [pluginReact()],
 });

@@ -16,5 +16,12 @@
     "noEmit": true
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "build", "dist"]
+  "exclude": [
+    "node_modules",
+    "build",
+    "dist",
+    "__tests__/**/*.*",
+    "rslib.config.ts",
+    "vitest.config.ts"
+  ]
 }
