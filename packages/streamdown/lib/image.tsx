@@ -1,7 +1,8 @@
-import { DownloadIcon } from "lucide-react";
-import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
-import type { ExtraProps } from "react-markdown";
-import { cn, save } from "./utils";
+import { alpha, Box, Image, UnstyledButton } from '@mantine/core';
+import { IconDownload } from '@tabler/icons-react';
+import type { DetailedHTMLProps, ImgHTMLAttributes } from 'react';
+import type { ExtraProps } from 'react-markdown';
+import { save } from './utils';
 
 type ImageComponentProps = DetailedHTMLProps<
   ImgHTMLAttributes<HTMLImageElement>,
@@ -27,39 +28,41 @@ export const ImageComponent = ({
 
       // Extract filename from URL or use alt text with proper extension
       const urlPath = new URL(src, window.location.origin).pathname;
-      const originalFilename = urlPath.split("/").pop() || "";
+      const originalFilename = urlPath.split('/').pop() || '';
+      const extension = originalFilename.split('.').pop();
       const hasExtension =
-        originalFilename.includes(".") &&
-        originalFilename.split(".").pop()?.length! <= 4;
+        originalFilename.includes('.') &&
+        extension != null &&
+        extension.length <= 4;
 
-      let filename = "";
+      let filename = '';
 
       if (hasExtension) {
         filename = originalFilename;
       } else {
         // Determine extension from blob type
         const mimeType = blob.type;
-        let extension = "png"; // default
+        let extension = 'png'; // default
 
-        if (mimeType.includes("jpeg") || mimeType.includes("jpg")) {
-          extension = "jpg";
-        } else if (mimeType.includes("png")) {
-          extension = "png";
-        } else if (mimeType.includes("svg")) {
-          extension = "svg";
-        } else if (mimeType.includes("gif")) {
-          extension = "gif";
-        } else if (mimeType.includes("webp")) {
-          extension = "webp";
+        if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
+          extension = 'jpg';
+        } else if (mimeType.includes('png')) {
+          extension = 'png';
+        } else if (mimeType.includes('svg')) {
+          extension = 'svg';
+        } else if (mimeType.includes('gif')) {
+          extension = 'gif';
+        } else if (mimeType.includes('webp')) {
+          extension = 'webp';
         }
 
-        const baseName = alt || originalFilename || "image";
-        filename = `${baseName.replace(/\.[^/.]+$/, "")}.${extension}`;
+        const baseName = alt || originalFilename || 'image';
+        filename = `${baseName.replace(/\.[^/.]+$/, '')}.${extension}`;
       }
 
       save(filename, blob, blob.type);
     } catch (error) {
-      console.error("Failed to download image:", error);
+      console.error('Failed to download image:', error);
     }
   };
 
@@ -68,31 +71,64 @@ export const ImageComponent = ({
   }
 
   return (
-    <div
-      className="group relative my-4 inline-block"
+    <Box
+      pos="relative"
+      my="md"
+      display="inline-block"
+      className="group"
       data-streamdown="image-wrapper"
     >
-      {/** biome-ignore lint/nursery/useImageSize: "unknown size" */}
-      {/** biome-ignore lint/performance/noImgElement: "streamdown is framework-agnostic" */}
-      <img
+      <Image
         alt={alt}
-        className={cn("max-w-full rounded-lg", className)}
+        className={className}
+        // className={cx(css({ maxW: 'full', rounded: 'lg' }), className)}
         data-streamdown="image"
         src={src}
         {...props}
       />
-      <div className="pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block" />
-      <button
-        className={cn(
-          "absolute right-2 bottom-2 flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-border bg-background/90 shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-background",
-          "opacity-0 group-hover:opacity-100"
-        )}
+      {/*<div className="pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block" />*/}
+      <Box
+        pos="absolute"
+        display="none"
+        bg={alpha('black', 0.1)}
+        style={{
+          pointerEvents: 'none',
+          boxShadow:
+            'inset 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)',
+        }}
+      />
+      <UnstyledButton
+        // className={cx(
+        //   // 'bg-background/90 shadow-sm backdrop-blur-sm transition-all duration-200 hover:bg-background',
+        //   // 'opacity-0 group-hover:opacity-100',
+        //   css({
+        //     pos: 'absolute',
+        //     right: 2,
+        //     bottom: 2,
+        //     display: 'flex',
+        //     boxSize: '8',
+        //     cursor: 'pointer',
+        //     alignItems: 'center',
+        //     justifyContent: 'center',
+        //     rounded: 'md',
+        //     borderWidth: '1px',
+        //     borderColor: 'border',
+        //     bg: 'bg/90',
+        //     shadow: 'low',
+        //     backdropBlur: 'sm',
+        //     transition: 'all',
+        //     transitionDuration: '200ms',
+        //     _hover: { bg: 'bg' },
+        //     opacity: 0,
+        //     _groupHover: { opacity: 100 },
+        //   }),
+        // )}
         onClick={downloadImage}
-        title="Download image"
+        title="Скачать изображение"
         type="button"
       >
-        <DownloadIcon size={14} />
-      </button>
-    </div>
+        <IconDownload size={14} />
+      </UnstyledButton>
+    </Box>
   );
 };

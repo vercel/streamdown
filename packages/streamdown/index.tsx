@@ -1,23 +1,25 @@
-"use client";
+'use client';
 
-import { createContext, memo, useId, useMemo } from "react";
-import ReactMarkdown, { type Options } from "react-markdown";
-import rehypeKatex from "rehype-katex";
-import rehypeRaw from "rehype-raw";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import type { BundledTheme } from "shiki";
-import "katex/dist/katex.min.css";
-import hardenReactMarkdownImport from "harden-react-markdown";
-import type { MermaidConfig } from "mermaid";
-import type { Options as RemarkGfmOptions } from "remark-gfm";
-import type { Options as RemarkMathOptions } from "remark-math";
-import { components as defaultComponents } from "./lib/components";
-import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
-import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
-import { cn } from "./lib/utils";
+import { Box } from '@mantine/core';
+import hardenReactMarkdownImport from 'harden-react-markdown';
+import type { MermaidConfig } from 'mermaid';
+import { createContext, memo, useId, useMemo } from 'react';
+import ReactMarkdown, { type Options } from 'react-markdown';
+import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
+import type { Options as RemarkGfmOptions } from 'remark-gfm';
+import remarkGfm from 'remark-gfm';
+import type { Options as RemarkMathOptions } from 'remark-math';
+import remarkMath from 'remark-math';
+import type { BundledTheme } from 'shiki';
+import { components as defaultComponents } from './lib/components';
+import { parseMarkdownIntoBlocks } from './lib/parse-blocks';
+import { parseIncompleteMarkdown } from './lib/parse-incomplete-markdown';
 
-export type { MermaidConfig } from "mermaid";
+import 'katex/dist/katex.min.css';
+import './index.css';
+
+export type { MermaidConfig } from 'mermaid';
 
 type HardenReactMarkdownProps = Options & {
   defaultOrigin?: string;
@@ -51,12 +53,12 @@ export type StreamdownProps = HardenReactMarkdownProps & {
 };
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
-  "github-light" as BundledTheme,
-  "github-dark" as BundledTheme,
+  'github-light' as BundledTheme,
+  'github-dark' as BundledTheme,
 ]);
 
 export const MermaidConfigContext = createContext<MermaidConfig | undefined>(
-  undefined
+  undefined,
 );
 
 export const ControlsContext = createContext<ControlsConfig>(true);
@@ -76,31 +78,31 @@ const Block = memo(
   ({ content, shouldParseIncompleteMarkdown, ...props }: BlockProps) => {
     const parsedContent = useMemo(
       () =>
-        typeof content === "string" && shouldParseIncompleteMarkdown
+        typeof content === 'string' && shouldParseIncompleteMarkdown
           ? parseIncompleteMarkdown(content.trim())
           : content,
-      [content, shouldParseIncompleteMarkdown]
+      [content, shouldParseIncompleteMarkdown],
     );
 
     return <HardenedMarkdown {...props}>{parsedContent}</HardenedMarkdown>;
   },
-  (prevProps, nextProps) => prevProps.content === nextProps.content
+  (prevProps, nextProps) => prevProps.content === nextProps.content,
 );
 
-Block.displayName = "Block";
+Block.displayName = 'Block';
 
 export const Streamdown = memo(
   ({
     children,
-    allowedImagePrefixes = ["*"],
-    allowedLinkPrefixes = ["*"],
+    allowedImagePrefixes = ['*'],
+    allowedLinkPrefixes = ['*'],
     defaultOrigin,
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     components,
     rehypePlugins,
     remarkPlugins,
     className,
-    shikiTheme = ["github-light", "github-dark"],
+    shikiTheme = ['github-light', 'github-dark'],
     mermaidConfig,
     controls = true,
     ...props
@@ -109,19 +111,25 @@ export const Streamdown = memo(
     const generatedId = useId();
     const blocks = useMemo(
       () =>
-        parseMarkdownIntoBlocks(typeof children === "string" ? children : ""),
-      [children]
+        parseMarkdownIntoBlocks(typeof children === 'string' ? children : ''),
+      [children],
     );
     const rehypeKatexPlugin = useMemo(
-      () => () => rehypeKatex({ errorColor: "var(--color-muted-foreground)" }),
-      []
+      () => () => rehypeKatex({ errorColor: 'var(--colors-text-muted)' }),
+      [],
     );
+
+    //className="space-y-2"
 
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
         <MermaidConfigContext.Provider value={mermaidConfig}>
           <ControlsContext.Provider value={controls}>
-            <div className={cn("space-y-4", className)} {...props}>
+            <Box
+              // spaceY={4}
+              className={className}
+              {...props}
+            >
               {blocks.map((block, index) => (
                 <Block
                   allowedImagePrefixes={allowedImagePrefixes}
@@ -147,7 +155,7 @@ export const Streamdown = memo(
                   shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
                 />
               ))}
-            </div>
+            </Box>
           </ControlsContext.Provider>
         </MermaidConfigContext.Provider>
       </ShikiThemeContext.Provider>
@@ -155,6 +163,6 @@ export const Streamdown = memo(
   },
   (prevProps, nextProps) =>
     prevProps.children === nextProps.children &&
-    prevProps.shikiTheme === nextProps.shikiTheme
+    prevProps.shikiTheme === nextProps.shikiTheme,
 );
-Streamdown.displayName = "Streamdown";
+Streamdown.displayName = 'Streamdown';
