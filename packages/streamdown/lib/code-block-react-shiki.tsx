@@ -74,7 +74,10 @@ export const CodeBlockReactShiki = ({
         <div className="w-full">
           <div className="min-w-full">
             <div
-              className={cn("overflow-x-auto", className)}
+              className={cn(
+                "overflow-x-auto [&_pre]:overflow-x-auto [&_pre]:font-mono [&_pre]:text-xs [&_pre]:p-4 [&_pre]:bg-muted/40",
+                className
+              )}
               data-code-block
               data-language={language}
               {...rest}
