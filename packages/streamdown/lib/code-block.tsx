@@ -190,6 +190,7 @@ export const CodeBlock = ({
 
   useEffect(() => {
     mounted.current = true;
+    console.log('[Streamdown] Using Shiki for code highlighting', { language });
 
     highlighterManager
       .highlightCode(code, language, [lightTheme, darkTheme], preClassName)

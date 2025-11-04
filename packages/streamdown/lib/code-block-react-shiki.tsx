@@ -53,6 +53,10 @@ export const CodeBlockReactShiki = ({
     }
   );
 
+  useEffect(() => {
+    console.log('[Streamdown] Using React-Shiki for code highlighting', { language });
+  }, [language]);
+
   return (
     <CodeBlockReactShikiContext.Provider value={{ code }}>
       <div
