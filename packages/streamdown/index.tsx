@@ -19,6 +19,17 @@ export { defaultUrlTransform } from "react-markdown";
 
 export type { MermaidConfig } from "mermaid";
 
+export {
+  CodeBlockReactShiki,
+  CodeBlockReactShikiCopyButton,
+  CodeBlockReactShikiDownloadButton,
+} from "./lib/code-block-react-shiki";
+export {
+  CodeBlock,
+  CodeBlockCopyButton,
+  CodeBlockDownloadButton,
+} from "./lib/code-block";
+
 export type ControlsConfig =
   | boolean
   | {
@@ -27,6 +38,8 @@ export type ControlsConfig =
       mermaid?: boolean;
     };
 
+export type CodeHighlighter = "shiki" | "react-shiki";
+
 export type StreamdownProps = Options & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
@@ -34,6 +47,7 @@ export type StreamdownProps = Options & {
   mermaidConfig?: MermaidConfig;
   controls?: ControlsConfig;
   isAnimating?: boolean;
+  codeHighlighter?: CodeHighlighter;
 };
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
@@ -65,6 +79,8 @@ export const MermaidConfigContext = createContext<MermaidConfig | undefined>(
 );
 
 export const ControlsContext = createContext<ControlsConfig>(true);
+
+export const CodeHighlighterContext = createContext<CodeHighlighter>("shiki");
 
 export type StreamdownRuntimeContextType = {
   isAnimating: boolean;
@@ -109,6 +125,7 @@ export const Streamdown = memo(
     mermaidConfig,
     controls = true,
     isAnimating = false,
+    codeHighlighter = "shiki",
     urlTransform = (value) => value,
     ...props
   }: StreamdownProps) => {
@@ -131,28 +148,30 @@ export const Streamdown = memo(
       <ShikiThemeContext.Provider value={shikiTheme}>
         <MermaidConfigContext.Provider value={mermaidConfig}>
           <ControlsContext.Provider value={controls}>
-            <StreamdownRuntimeContext.Provider value={{ isAnimating }}>
-              <div className={cn("space-y-4", className)}>
-                {blocks.map((block, index) => (
-                  <Block
-                    components={{
-                      ...defaultComponents,
-                      ...components,
-                    }}
-                    content={block}
-                    // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-                    key={`${generatedId}-block-${index}`}
-                    rehypePlugins={rehypePlugins}
-                    remarkPlugins={remarkPlugins}
-                    shouldParseIncompleteMarkdown={
-                      shouldParseIncompleteMarkdown
-                    }
-                    urlTransform={urlTransform}
-                    {...props}
-                  />
-                ))}
-              </div>
-            </StreamdownRuntimeContext.Provider>
+            <CodeHighlighterContext.Provider value={codeHighlighter}>
+              <StreamdownRuntimeContext.Provider value={{ isAnimating }}>
+                <div className={cn("space-y-4", className)}>
+                  {blocks.map((block, index) => (
+                    <Block
+                      components={{
+                        ...defaultComponents,
+                        ...components,
+                      }}
+                      content={block}
+                      // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+                      key={`${generatedId}-block-${index}`}
+                      rehypePlugins={rehypePlugins}
+                      remarkPlugins={remarkPlugins}
+                      shouldParseIncompleteMarkdown={
+                        shouldParseIncompleteMarkdown
+                      }
+                      urlTransform={urlTransform}
+                      {...props}
+                    />
+                  ))}
+                </div>
+              </StreamdownRuntimeContext.Provider>
+            </CodeHighlighterContext.Provider>
           </ControlsContext.Provider>
         </MermaidConfigContext.Provider>
       </ShikiThemeContext.Provider>

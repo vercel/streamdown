@@ -9,12 +9,21 @@ import {
 } from "react";
 import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
-import { ControlsContext, MermaidConfigContext } from "../index";
+import {
+  CodeHighlighterContext,
+  ControlsContext,
+  MermaidConfigContext,
+} from "../index";
 import {
   CodeBlock,
   CodeBlockCopyButton,
   CodeBlockDownloadButton,
 } from "./code-block";
+import {
+  CodeBlockReactShiki,
+  CodeBlockReactShikiCopyButton,
+  CodeBlockReactShikiDownloadButton,
+} from "./code-block-react-shiki";
 import { ImageComponent } from "./image";
 import { Mermaid } from "./mermaid";
 import { TableCopyButton, TableDownloadDropdown } from "./table";
@@ -27,6 +36,7 @@ type MarkdownPosition = { start?: MarkdownPoint; end?: MarkdownPoint };
 type MarkdownNode = {
   position?: MarkdownPosition;
   properties?: { className?: string };
+  tagName?: string;
 };
 
 type WithNode<T> = T & {
@@ -444,9 +454,10 @@ const MemoSection = memo<SectionProps>(
       const isEmptyFootnote = (listItem: React.ReactNode): boolean => {
         if (!isValidElement(listItem)) return false;
 
-        const itemChildren = Array.isArray(listItem.props.children)
-          ? listItem.props.children
-          : [listItem.props.children];
+        const props = listItem.props as { children?: React.ReactNode };
+        const itemChildren = Array.isArray(props.children)
+          ? props.children
+          : [props.children];
 
         // Check if all children are either whitespace or backref links
         let hasContent = false;
@@ -462,14 +473,15 @@ const MemoSection = memo<SectionProps>(
             }
           } else if (isValidElement(itemChild)) {
             // Check if it's a backref link
-            if (itemChild.props?.["data-footnote-backref"] !== undefined) {
+            const childProps = itemChild.props as Record<string, unknown> & { children?: React.ReactNode };
+            if (childProps["data-footnote-backref"] !== undefined) {
               hasBackref = true;
             } else {
               // It's some other element (like <p>), which means it has content
               // But we need to check if the <p> has actual content
-              const grandChildren = Array.isArray(itemChild.props.children)
-                ? itemChild.props.children
-                : [itemChild.props.children];
+              const grandChildren = Array.isArray(childProps.children)
+                ? childProps.children
+                : [childProps.children];
 
               for (const grandChild of grandChildren) {
                 if (
@@ -481,9 +493,8 @@ const MemoSection = memo<SectionProps>(
                 }
                 if (isValidElement(grandChild)) {
                   // If it's not a backref link, it's content
-                  if (
-                    grandChild.props?.["data-footnote-backref"] === undefined
-                  ) {
+                  const grandChildProps = grandChild.props as Record<string, unknown>;
+                  if (grandChildProps["data-footnote-backref"] === undefined) {
                     hasContent = true;
                     break;
                   }
@@ -504,9 +515,10 @@ const MemoSection = memo<SectionProps>(
 
             // If this is an <ol> containing footnote list items
             if (child.type === MemoOl) {
-              const listChildren = Array.isArray(child.props.children)
-                ? child.props.children
-                : [child.props.children];
+              const childProps = child.props as { children?: React.ReactNode };
+              const listChildren = Array.isArray(childProps.children)
+                ? childProps.children
+                : [childProps.children];
 
               const filteredListChildren = listChildren.filter(
                 (listItem: React.ReactNode) => !isEmptyFootnote(listItem)
@@ -518,10 +530,11 @@ const MemoSection = memo<SectionProps>(
               }
 
               // Clone the <ol> with filtered children
+              const existingProps = child.props as Record<string, unknown> & { children?: React.ReactNode };
               return {
                 ...child,
                 props: {
-                  ...child.props,
+                  ...existingProps,
                   children: filteredListChildren,
                 },
               };
@@ -568,6 +581,7 @@ const CodeComponent = ({
   const inline = node?.position?.start.line === node?.position?.end.line;
   const mermaidConfig = useContext(MermaidConfigContext);
   const controlsConfig = useContext(ControlsContext);
+  const codeHighlighter = useContext(CodeHighlighterContext);
 
   if (inline) {
     return (
@@ -624,6 +638,26 @@ const CodeComponent = ({
   }
 
   const showCodeControls = shouldShowControls(controlsConfig, "code");
+
+  if (codeHighlighter === "react-shiki") {
+    return (
+      <CodeBlockReactShiki
+        className={cn("overflow-x-auto border-t", className)}
+        code={code}
+        data-language={language}
+        data-streamdown="code-block"
+        language={language}
+        preClassName="overflow-x-auto font-mono text-xs p-4 bg-muted/40"
+      >
+        {showCodeControls && (
+          <>
+            <CodeBlockReactShikiDownloadButton code={code} language={language} />
+            <CodeBlockReactShikiCopyButton />
+          </>
+        )}
+      </CodeBlockReactShiki>
+    );
+  }
 
   return (
     <CodeBlock

@@ -10,207 +10,58 @@ import {
   useRef,
   useState,
 } from "react";
-import {
-  type BundledLanguage,
-  type BundledTheme,
-  bundledLanguages,
-  createHighlighter,
-  type SpecialLanguage,
-} from "shiki";
-import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+import { type BundledLanguage } from "shiki";
+import { useShikiHighlighter } from "react-shiki";
 import { ShikiThemeContext, StreamdownRuntimeContext } from "../index";
 import { cn, save } from "./utils";
 
-const PRE_TAG_REGEX = /<pre(\s|>)/;
-
-type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
+type CodeBlockReactShikiProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: BundledLanguage;
   preClassName?: string;
+  delay?: number;
 };
 
 type CodeBlockContextType = {
   code: string;
 };
 
-const CodeBlockContext = createContext<CodeBlockContextType>({
+const CodeBlockReactShikiContext = createContext<CodeBlockContextType>({
   code: "",
 });
 
-class HighlighterManager {
-  private lightHighlighter: Awaited<
-    ReturnType<typeof createHighlighter>
-  > | null = null;
-  private darkHighlighter: Awaited<
-    ReturnType<typeof createHighlighter>
-  > | null = null;
-  private lightTheme: BundledTheme | null = null;
-  private darkTheme: BundledTheme | null = null;
-  private readonly loadedLanguages: Set<BundledLanguage> = new Set();
-  private initializationPromise: Promise<void> | null = null;
-
-  private isLanguageSupported(language: string): language is BundledLanguage {
-    return Object.hasOwn(bundledLanguages, language);
-  }
-
-  private getFallbackLanguage(): SpecialLanguage {
-    return "text";
-  }
-
-  private async ensureHighlightersInitialized(
-    themes: [BundledTheme, BundledTheme],
-    language: BundledLanguage
-  ): Promise<void> {
-    const [lightTheme, darkTheme] = themes;
-    const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
-
-    // Check if we need to recreate highlighters due to theme change
-    const needsLightRecreation =
-      !this.lightHighlighter || this.lightTheme !== lightTheme;
-    const needsDarkRecreation =
-      !this.darkHighlighter || this.darkTheme !== darkTheme;
-
-    if (needsLightRecreation || needsDarkRecreation) {
-      // If themes changed, reset loaded languages
-      this.loadedLanguages.clear();
-    }
-
-    // Check if we need to load the language
-    const isLanguageSupported = this.isLanguageSupported(language);
-    const needsLanguageLoad =
-      !this.loadedLanguages.has(language) && isLanguageSupported;
-
-    // Create or recreate light highlighter if needed
-    if (needsLightRecreation) {
-      this.lightHighlighter = await createHighlighter({
-        themes: [lightTheme],
-        langs: isLanguageSupported ? [language] : [],
-        engine: jsEngine,
-      });
-      this.lightTheme = lightTheme;
-      if (isLanguageSupported) {
-        this.loadedLanguages.add(language);
-      }
-    } else if (needsLanguageLoad) {
-      // Load the language if not already loaded
-      await this.lightHighlighter?.loadLanguage(language);
-    }
-
-    // Create or recreate dark highlighter if needed
-    if (needsDarkRecreation) {
-      // If recreating dark highlighter, load all previously loaded languages plus the new one
-      const langsToLoad = needsLanguageLoad
-        ? [...this.loadedLanguages].concat(
-            isLanguageSupported ? [language] : []
-          )
-        : Array.from(this.loadedLanguages);
-
-      this.darkHighlighter = await createHighlighter({
-        themes: [darkTheme],
-        langs:
-          langsToLoad.length > 0
-            ? langsToLoad
-            : isLanguageSupported
-              ? [language]
-              : [],
-        engine: jsEngine,
-      });
-      this.darkTheme = darkTheme;
-    } else if (needsLanguageLoad) {
-      // Load the language if not already loaded
-      await this.darkHighlighter?.loadLanguage(language);
-    }
-
-    // Mark language as loaded after both highlighters have it
-    if (needsLanguageLoad) {
-      this.loadedLanguages.add(language);
-    }
-  }
-
-  async highlightCode(
-    code: string,
-    language: BundledLanguage,
-    themes: [BundledTheme, BundledTheme],
-    preClassName?: string
-  ): Promise<[string, string]> {
-    // Ensure only one initialization happens at a time
-    if (this.initializationPromise) {
-      await this.initializationPromise;
-    }
-    // Initialize or load language
-    this.initializationPromise = this.ensureHighlightersInitialized(
-      themes,
-      language
-    );
-    await this.initializationPromise;
-    this.initializationPromise = null;
-
-    const [lightTheme, darkTheme] = themes;
-
-    const lang = this.isLanguageSupported(language)
-      ? language
-      : this.getFallbackLanguage();
-
-    const light = this.lightHighlighter?.codeToHtml(code, {
-      lang,
-      theme: lightTheme,
-    });
-
-    const dark = this.darkHighlighter?.codeToHtml(code, {
-      lang,
-      theme: darkTheme,
-    });
-
-    const addPreClass = (html: string | undefined) => {
-      if (!html || !preClassName) {
-        return html || "";
-      }
-      return html.replace(PRE_TAG_REGEX, `<pre class="${preClassName}"$1`);
-    };
-
-    return [addPreClass(light), addPreClass(dark)];
-  }
-}
-
-// Create a singleton instance of the highlighter manager
-const highlighterManager = new HighlighterManager();
-
-export const CodeBlock = ({
+export const CodeBlockReactShiki = ({
   code,
   language,
   className,
   children,
   preClassName,
+  delay = 0,
   ...rest
-}: CodeBlockProps) => {
-  const [html, setHtml] = useState<string>("");
-  const [darkHtml, setDarkHtml] = useState<string>("");
-  const mounted = useRef(false);
+}: CodeBlockReactShikiProps) => {
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
-  useEffect(() => {
-    mounted.current = true;
-
-    highlighterManager
-      .highlightCode(code, language, [lightTheme, darkTheme], preClassName)
-      .then(([light, dark]) => {
-        if (mounted.current) {
-          setHtml(light);
-          setDarkHtml(dark);
-        }
-      });
-
-    return () => {
-      mounted.current = false;
-    };
-  }, [code, language, lightTheme, darkTheme, preClassName]);
+  // Use react-shiki's useShikiHighlighter hook with multi-theme support
+  const highlightedCode = useShikiHighlighter(
+    code,
+    language,
+    {
+      light: lightTheme,
+      dark: darkTheme,
+    },
+    {
+      defaultColor: "light",
+      delay,
+    }
+  );
 
   return (
-    <CodeBlockContext.Provider value={{ code }}>
+    <CodeBlockReactShikiContext.Provider value={{ code }}>
       <div
         className="my-4 w-full overflow-hidden rounded-xl border"
         data-code-block-container
         data-language={language}
+        data-highlighter="react-shiki"
       >
         <div
           className="flex items-center justify-between bg-muted/80 p-3 text-muted-foreground text-xs"
@@ -223,35 +74,27 @@ export const CodeBlock = ({
         <div className="w-full">
           <div className="min-w-full">
             <div
-              className={cn("overflow-x-auto dark:hidden", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: html }}
+              className={cn("overflow-x-auto", className)}
               data-code-block
               data-language={language}
               {...rest}
-            />
-            <div
-              className={cn("hidden overflow-x-auto dark:block", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: darkHtml }}
-              data-code-block
-              data-language={language}
-              {...rest}
-            />
+            >
+              {highlightedCode}
+            </div>
           </div>
         </div>
       </div>
-    </CodeBlockContext.Provider>
+    </CodeBlockReactShikiContext.Provider>
   );
 };
 
-export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
+export type CodeBlockReactShikiCopyButtonProps = ComponentProps<"button"> & {
   onCopy?: () => void;
   onError?: (error: Error) => void;
   timeout?: number;
 };
 
-export type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
+export type CodeBlockReactShikiDownloadButtonProps = ComponentProps<"button"> & {
   onDownload?: () => void;
   onError?: (error: Error) => void;
 };
@@ -565,7 +408,7 @@ const languageExtensionMap: Record<BundledLanguage, string> = {
   文言: "wy",
 };
 
-export const CodeBlockDownloadButton = ({
+export const CodeBlockReactShikiDownloadButton = ({
   onDownload,
   onError,
   language,
@@ -573,11 +416,11 @@ export const CodeBlockDownloadButton = ({
   className,
   code: propCode,
   ...props
-}: CodeBlockDownloadButtonProps & {
+}: CodeBlockReactShikiDownloadButtonProps & {
   code?: string;
   language?: BundledLanguage;
 }) => {
-  const { code: contextCode } = useContext(CodeBlockContext);
+  const { code: contextCode } = useContext(CodeBlockReactShikiContext);
   const { isAnimating } = useContext(StreamdownRuntimeContext);
   const code = propCode ?? contextCode;
   const extension =
@@ -613,7 +456,7 @@ export const CodeBlockDownloadButton = ({
   );
 };
 
-export const CodeBlockCopyButton = ({
+export const CodeBlockReactShikiCopyButton = ({
   onCopy,
   onError,
   timeout = 2000,
@@ -621,10 +464,10 @@ export const CodeBlockCopyButton = ({
   className,
   code: propCode,
   ...props
-}: CodeBlockCopyButtonProps & { code?: string }) => {
+}: CodeBlockReactShikiCopyButtonProps & { code?: string }) => {
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
-  const { code: contextCode } = useContext(CodeBlockContext);
+  const { code: contextCode } = useContext(CodeBlockReactShikiContext);
   const { isAnimating } = useContext(StreamdownRuntimeContext);
   const code = propCode ?? contextCode;
 

@@ -1,11 +1,11 @@
 import { defineConfig } from "tsup";
 
-export default defineConfig({
+export default defineConfig((options) => ({
   dts: true,
   entry: ["index.tsx"],
   format: ["cjs", "esm"],
-  minify: true,
+  minify: !options.watch,
   outDir: "dist",
-  sourcemap: false,
+  sourcemap: options.watch ? true : false,
   external: ["react", "react-dom"],
-});
+}));
