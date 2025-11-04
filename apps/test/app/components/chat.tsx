@@ -2,8 +2,9 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import { Moon, Sun } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Streamdown } from "streamdown";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,9 +34,31 @@ export const Chat = ({ models }: ChatProps) => {
   });
   const [input, setInput] = useState("");
   const [model, setModel] = useState(models[0].value);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // Check initial theme
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  const toggleTheme = () => {
+    document.documentElement.classList.toggle("dark");
+    setIsDark(!isDark);
+  };
 
   return (
     <div className="mx-auto flex h-screen flex-col divide-y border-x">
+      <div className="flex items-center justify-between border-b p-4">
+        <h1 className="font-semibold text-lg">Streamdown Test</h1>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleTheme}
+          title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {isDark ? <Sun size={18} /> : <Moon size={18} />}
+        </Button>
+      </div>
       <div className="flex flex-1 divide-x overflow-hidden">
         <div className="flex-1 space-y-4 overflow-y-auto bg-black p-4 text-white">
           {messages.map((message) => (
@@ -80,105 +103,109 @@ export const Chat = ({ models }: ChatProps) => {
             </div>
           ))}
         </div>
-        <div className="flex-1 space-y-4 overflow-y-auto border-r p-4">
-          <div className="sticky top-0 z-10 bg-background pb-2">
-            <h3 className="font-semibold text-sm">Shiki (Default)</h3>
-          </div>
-          {messages.map((message) => (
-            <div key={message.id}>
-              <span className="font-bold">
-                {message.role === "user" ? "User: " : "AI: "}
-              </span>
-              {message.parts.map((part, index) => {
-                switch (part.type) {
-                  case "text":
-                    return (
-                      <Streamdown
-                        codeHighlighter="shiki"
-                        isAnimating={status === "streaming"}
-                        key={index}
-                      >
-                        {part.text}
-                      </Streamdown>
-                    );
-                  case "reasoning":
-                    return (
-                      <p className="italic" key={part.text}>
-                        {part.text}
-                      </p>
-                    );
-                  case "file":
-                    return (
-                      <div key={index}>
-                        {part.mediaType.startsWith("image") ? (
-                          <Image
-                            alt={part.filename ?? "An image attachment"}
-                            height={100}
-                            src={part.url}
-                            unoptimized
-                            width={100}
-                          />
-                        ) : (
-                          <div>File: {part.filename}</div>
-                        )}
-                      </div>
-                    );
-                  default:
-                    return null;
-                }
-              })}
+        <div className="flex-[2] overflow-y-auto">
+          <div className="grid grid-cols-2 divide-x">
+            <div className="space-y-4 p-4">
+              <div className="sticky top-0 z-10 bg-background pb-2">
+                <h3 className="font-semibold text-sm">Shiki (Default)</h3>
+              </div>
+              {messages.map((message) => (
+                <div key={message.id}>
+                  <span className="font-bold">
+                    {message.role === "user" ? "User: " : "AI: "}
+                  </span>
+                  {message.parts.map((part, index) => {
+                    switch (part.type) {
+                      case "text":
+                        return (
+                          <Streamdown
+                            codeHighlighter="shiki"
+                            isAnimating={status === "streaming"}
+                            key={index}
+                          >
+                            {part.text}
+                          </Streamdown>
+                        );
+                      case "reasoning":
+                        return (
+                          <p className="italic" key={part.text}>
+                            {part.text}
+                          </p>
+                        );
+                      case "file":
+                        return (
+                          <div key={index}>
+                            {part.mediaType.startsWith("image") ? (
+                              <Image
+                                alt={part.filename ?? "An image attachment"}
+                                height={100}
+                                src={part.url}
+                                unoptimized
+                                width={100}
+                              />
+                            ) : (
+                              <div>File: {part.filename}</div>
+                            )}
+                          </div>
+                        );
+                      default:
+                        return null;
+                    }
+                  })}
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
-          <div className="sticky top-0 z-10 bg-background pb-2">
-            <h3 className="font-semibold text-sm">React-Shiki</h3>
-          </div>
-          {messages.map((message) => (
-            <div key={message.id}>
-              <span className="font-bold">
-                {message.role === "user" ? "User: " : "AI: "}
-              </span>
-              {message.parts.map((part, index) => {
-                switch (part.type) {
-                  case "text":
-                    return (
-                      <Streamdown
-                        codeHighlighter="react-shiki"
-                        isAnimating={status === "streaming"}
-                        key={index}
-                      >
-                        {part.text}
-                      </Streamdown>
-                    );
-                  case "reasoning":
-                    return (
-                      <p className="italic" key={part.text}>
-                        {part.text}
-                      </p>
-                    );
-                  case "file":
-                    return (
-                      <div key={index}>
-                        {part.mediaType.startsWith("image") ? (
-                          <Image
-                            alt={part.filename ?? "An image attachment"}
-                            height={100}
-                            src={part.url}
-                            unoptimized
-                            width={100}
-                          />
-                        ) : (
-                          <div>File: {part.filename}</div>
-                        )}
-                      </div>
-                    );
-                  default:
-                    return null;
-                }
-              })}
+            <div className="space-y-4 p-4">
+              <div className="sticky top-0 z-10 bg-background pb-2">
+                <h3 className="font-semibold text-sm">React-Shiki</h3>
+              </div>
+              {messages.map((message) => (
+                <div key={message.id}>
+                  <span className="font-bold">
+                    {message.role === "user" ? "User: " : "AI: "}
+                  </span>
+                  {message.parts.map((part, index) => {
+                    switch (part.type) {
+                      case "text":
+                        return (
+                          <Streamdown
+                            codeHighlighter="react-shiki"
+                            isAnimating={status === "streaming"}
+                            key={index}
+                          >
+                            {part.text}
+                          </Streamdown>
+                        );
+                      case "reasoning":
+                        return (
+                          <p className="italic" key={part.text}>
+                            {part.text}
+                          </p>
+                        );
+                      case "file":
+                        return (
+                          <div key={index}>
+                            {part.mediaType.startsWith("image") ? (
+                              <Image
+                                alt={part.filename ?? "An image attachment"}
+                                height={100}
+                                src={part.url}
+                                unoptimized
+                                width={100}
+                              />
+                            ) : (
+                              <div>File: {part.filename}</div>
+                            )}
+                          </div>
+                        );
+                      default:
+                        return null;
+                    }
+                  })}
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
       <form

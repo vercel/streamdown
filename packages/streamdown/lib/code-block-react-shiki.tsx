@@ -18,7 +18,6 @@ import { cn, save } from "./utils";
 type CodeBlockReactShikiProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: BundledLanguage;
-  preClassName?: string;
   delay?: number;
 };
 
@@ -35,13 +34,12 @@ export const CodeBlockReactShiki = ({
   language,
   className,
   children,
-  preClassName,
-  delay = 0,
+  delay = 200,
   ...rest
 }: CodeBlockReactShikiProps) => {
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
-  // Use react-shiki's useShikiHighlighter hook with multi-theme support
+  // Use multi-theme with single render - CSS handles theme switching
   const highlightedCode = useShikiHighlighter(
     code,
     language,
@@ -58,7 +56,7 @@ export const CodeBlockReactShiki = ({
   return (
     <CodeBlockReactShikiContext.Provider value={{ code }}>
       <div
-        className="my-4 w-full overflow-hidden rounded-xl border"
+        className="w-full overflow-hidden rounded-xl border"
         data-code-block-container
         data-language={language}
         data-highlighter="react-shiki"
@@ -74,10 +72,7 @@ export const CodeBlockReactShiki = ({
         <div className="w-full">
           <div className="min-w-full">
             <div
-              className={cn(
-                "overflow-x-auto [&_pre]:overflow-x-auto [&_pre]:font-mono [&_pre]:text-xs [&_pre]:p-4 [&_pre]:bg-muted/40",
-                className
-              )}
+              className={cn("overflow-x-auto [&_pre]:overflow-x-auto [&_pre]:font-mono [&_pre]:text-xs [&_pre]:p-4 [&_pre]:bg-muted/40", className)}
               data-code-block
               data-language={language}
               {...rest}
@@ -97,10 +92,11 @@ export type CodeBlockReactShikiCopyButtonProps = ComponentProps<"button"> & {
   timeout?: number;
 };
 
-export type CodeBlockReactShikiDownloadButtonProps = ComponentProps<"button"> & {
-  onDownload?: () => void;
-  onError?: (error: Error) => void;
-};
+export type CodeBlockReactShikiDownloadButtonProps =
+  ComponentProps<"button"> & {
+    onDownload?: () => void;
+    onError?: (error: Error) => void;
+  };
 
 const languageExtensionMap: Record<BundledLanguage, string> = {
   "1c": "1c",

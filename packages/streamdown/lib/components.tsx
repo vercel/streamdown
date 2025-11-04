@@ -473,7 +473,9 @@ const MemoSection = memo<SectionProps>(
             }
           } else if (isValidElement(itemChild)) {
             // Check if it's a backref link
-            const childProps = itemChild.props as Record<string, unknown> & { children?: React.ReactNode };
+            const childProps = itemChild.props as Record<string, unknown> & {
+              children?: React.ReactNode;
+            };
             if (childProps["data-footnote-backref"] !== undefined) {
               hasBackref = true;
             } else {
@@ -493,7 +495,10 @@ const MemoSection = memo<SectionProps>(
                 }
                 if (isValidElement(grandChild)) {
                   // If it's not a backref link, it's content
-                  const grandChildProps = grandChild.props as Record<string, unknown>;
+                  const grandChildProps = grandChild.props as Record<
+                    string,
+                    unknown
+                  >;
                   if (grandChildProps["data-footnote-backref"] === undefined) {
                     hasContent = true;
                     break;
@@ -530,7 +535,9 @@ const MemoSection = memo<SectionProps>(
               }
 
               // Clone the <ol> with filtered children
-              const existingProps = child.props as Record<string, unknown> & { children?: React.ReactNode };
+              const existingProps = child.props as Record<string, unknown> & {
+                children?: React.ReactNode;
+              };
               return {
                 ...child,
                 props: {
@@ -647,11 +654,13 @@ const CodeComponent = ({
         data-language={language}
         data-streamdown="code-block"
         language={language}
-        preClassName="overflow-x-auto font-mono text-xs p-4 bg-muted/40"
       >
         {showCodeControls && (
           <>
-            <CodeBlockReactShikiDownloadButton code={code} language={language} />
+            <CodeBlockReactShikiDownloadButton
+              code={code}
+              language={language}
+            />
             <CodeBlockReactShikiCopyButton />
           </>
         )}
