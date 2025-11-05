@@ -1,6 +1,6 @@
 {
   "name": "streamdown",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
   "main": "./packages/streamdown/dist/index.js",
   "module": "./packages/streamdown/dist/index.js",
