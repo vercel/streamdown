@@ -28,8 +28,10 @@
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:publish": "pnpm build && changeset publish",
-    "prepare": "turbo run build",
-    "postinstall": "turbo run build"
+    "prepare": "pnpm --filter streamdown build"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
