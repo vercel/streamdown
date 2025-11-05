@@ -40,6 +40,17 @@ export type ControlsConfig =
 
 export type CodeHighlighter = "shiki" | "react-shiki";
 
+export type ShikiConfig = {
+  /** Enable line numbers in code blocks */
+  showLineNumbers?: boolean;
+  /** Starting line number (default: 1) */
+  startingLineNumber?: number;
+  /** Default color mode for multi-theme setup. Use "light-dark()" for reactive theme switching */
+  defaultColor?: "light" | "dark" | "light-dark()" | false;
+  /** Delay between highlights in milliseconds (default: 200) */
+  delay?: number;
+};
+
 export type StreamdownProps = Options & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
@@ -48,6 +59,8 @@ export type StreamdownProps = Options & {
   controls?: ControlsConfig;
   isAnimating?: boolean;
   codeHighlighter?: CodeHighlighter;
+  /** Configuration options for react-shiki code highlighter */
+  shikiConfig?: ShikiConfig;
 };
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
@@ -81,6 +94,13 @@ export const MermaidConfigContext = createContext<MermaidConfig | undefined>(
 export const ControlsContext = createContext<ControlsConfig>(true);
 
 export const CodeHighlighterContext = createContext<CodeHighlighter>("shiki");
+
+export const ShikiConfigContext = createContext<ShikiConfig>({
+  showLineNumbers: false,
+  startingLineNumber: 1,
+  defaultColor: "light-dark()",
+  delay: 200,
+});
 
 export type StreamdownRuntimeContextType = {
   isAnimating: boolean;
@@ -126,6 +146,7 @@ export const Streamdown = memo(
     controls = true,
     isAnimating = false,
     codeHighlighter = "shiki",
+    shikiConfig = {},
     urlTransform = (value) => value,
     ...props
   }: StreamdownProps) => {
@@ -135,6 +156,18 @@ export const Streamdown = memo(
       () =>
         parseMarkdownIntoBlocks(typeof children === "string" ? children : ""),
       [children]
+    );
+
+    // Merge default config with user config
+    const mergedShikiConfig: ShikiConfig = useMemo(
+      () => ({
+        showLineNumbers: false,
+        startingLineNumber: 1,
+        defaultColor: "light-dark()",
+        delay: 200,
+        ...shikiConfig,
+      }),
+      [shikiConfig]
     );
 
     useEffect(() => {
@@ -149,28 +182,30 @@ export const Streamdown = memo(
         <MermaidConfigContext.Provider value={mermaidConfig}>
           <ControlsContext.Provider value={controls}>
             <CodeHighlighterContext.Provider value={codeHighlighter}>
-              <StreamdownRuntimeContext.Provider value={{ isAnimating }}>
-                <div className={cn("space-y-4", className)}>
-                  {blocks.map((block, index) => (
-                    <Block
-                      components={{
-                        ...defaultComponents,
-                        ...components,
-                      }}
-                      content={block}
-                      // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-                      key={`${generatedId}-block-${index}`}
-                      rehypePlugins={rehypePlugins}
-                      remarkPlugins={remarkPlugins}
-                      shouldParseIncompleteMarkdown={
-                        shouldParseIncompleteMarkdown
-                      }
-                      urlTransform={urlTransform}
-                      {...props}
-                    />
-                  ))}
-                </div>
-              </StreamdownRuntimeContext.Provider>
+              <ShikiConfigContext.Provider value={mergedShikiConfig}>
+                <StreamdownRuntimeContext.Provider value={{ isAnimating }}>
+                  <div className={cn("space-y-4", className)}>
+                    {blocks.map((block, index) => (
+                      <Block
+                        components={{
+                          ...defaultComponents,
+                          ...components,
+                        }}
+                        content={block}
+                        // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+                        key={`${generatedId}-block-${index}`}
+                        rehypePlugins={rehypePlugins}
+                        remarkPlugins={remarkPlugins}
+                        shouldParseIncompleteMarkdown={
+                          shouldParseIncompleteMarkdown
+                        }
+                        urlTransform={urlTransform}
+                        {...props}
+                      />
+                    ))}
+                  </div>
+                </StreamdownRuntimeContext.Provider>
+              </ShikiConfigContext.Provider>
             </CodeHighlighterContext.Provider>
           </ControlsContext.Provider>
         </MermaidConfigContext.Provider>

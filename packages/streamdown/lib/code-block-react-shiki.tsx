@@ -12,13 +12,12 @@ import {
 } from "react";
 import { type BundledLanguage } from "shiki";
 import { useShikiHighlighter } from "react-shiki";
-import { ShikiThemeContext, StreamdownRuntimeContext } from "../index";
+import { ShikiThemeContext, ShikiConfigContext, StreamdownRuntimeContext } from "../index";
 import { cn, save } from "./utils";
 
 type CodeBlockReactShikiProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: BundledLanguage;
-  delay?: number;
 };
 
 type CodeBlockContextType = {
@@ -34,10 +33,10 @@ export const CodeBlockReactShiki = ({
   language,
   className,
   children,
-  delay = 200,
   ...rest
 }: CodeBlockReactShikiProps) => {
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
+  const config = useContext(ShikiConfigContext);
 
   // Use multi-theme with single render - CSS handles theme switching
   const highlightedCode = useShikiHighlighter(
@@ -48,8 +47,10 @@ export const CodeBlockReactShiki = ({
       dark: darkTheme,
     },
     {
-      defaultColor: "light",
-      delay,
+      defaultColor: config.defaultColor ?? "light-dark()",
+      delay: config.delay ?? 200,
+      showLineNumbers: config.showLineNumbers ?? false,
+      startingLineNumber: config.startingLineNumber ?? 1,
     }
   );
 
