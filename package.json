@@ -1,6 +1,21 @@
 {
-  "name": "streamdown-monorepo",
-  "private": true,
+  "name": "streamdown",
+  "version": "1.5.1",
+  "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
+  "main": "./packages/streamdown/dist/index.js",
+  "module": "./packages/streamdown/dist/index.js",
+  "types": "./packages/streamdown/dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./packages/streamdown/dist/index.d.ts",
+      "import": "./packages/streamdown/dist/index.js",
+      "require": "./packages/streamdown/dist/index.cjs"
+    }
+  },
+  "files": [
+    "packages/streamdown/dist",
+    "packages/streamdown/README.md"
+  ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -12,7 +27,9 @@
     "check-types": "turbo run check-types",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:publish": "pnpm build && changeset publish"
+    "changeset:publish": "pnpm build && changeset publish",
+    "prepare": "turbo run build",
+    "postinstall": "turbo run build"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
