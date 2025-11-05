@@ -175,7 +175,12 @@ export const Streamdown = memo(
         // @ts-ignore
         import("katex/dist/katex.min.css");
       }
-    }, []);
+
+      if (codeHighlighter === "react-shiki" && mergedShikiConfig.showLineNumbers) {
+        // @ts-ignore
+        import("react-shiki/css");
+      }
+    }, [codeHighlighter, mergedShikiConfig.showLineNumbers]);
 
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
