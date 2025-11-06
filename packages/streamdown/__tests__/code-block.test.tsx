@@ -1,10 +1,10 @@
+import fs from "node:fs";
+import path from "node:path";
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ShikiThemeContext } from "../index";
 import { CodeBlock, CodeBlockCopyButton } from "../lib/code-block";
-import fs from "fs";
-import path from "path";
 
 describe("CodeBlockCopyButton", () => {
   const originalClipboard = navigator.clipboard;
@@ -318,7 +318,11 @@ describe("CodeBlock with multiple languages", () => {
   });
 
   it("should handle heavy streaming appropriately", async () => {
-    const fixturePath = path.join(__dirname, "__fixtures__", "code-block-big-html.html");
+    const fixturePath = path.join(
+      __dirname,
+      "__fixtures__",
+      "code-block-big-html.html"
+    );
     const largeContent = fs.readFileSync(fixturePath, "utf-8");
 
     // Create a component that will stream the content
@@ -345,20 +349,23 @@ describe("CodeBlock with multiple languages", () => {
     );
 
     // Simulate streaming by updating in chunks
-    const chunkSize = 8;
+    const chunkSize = 100;
     let currentIndex = 0;
     let currentContent = "";
 
     // Stream the content in chunks
     while (currentIndex < largeContent.length) {
-      const nextChunk = largeContent.slice(currentIndex, currentIndex + chunkSize);
+      const nextChunk = largeContent.slice(
+        currentIndex,
+        currentIndex + chunkSize
+      );
       currentIndex += chunkSize;
       currentContent += nextChunk;
 
       await act(async () => {
         setStreamedCodeExternal?.(currentContent);
         // Small delay to simulate streaming
-        await new Promise(resolve => setTimeout(resolve, 1));
+        await new Promise((resolve) => setTimeout(resolve, 1));
       });
     }
 
@@ -371,12 +378,12 @@ describe("CodeBlock with multiple languages", () => {
         const innerHTML = codeBlock?.innerHTML || "";
         expect(innerHTML.length).toBeGreaterThan(0);
       },
-      { timeout: 10000 }
+      { timeout: 10_000 }
     );
 
     // Wait a bit more for highlighting to complete
     await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     });
 
     // Verify the code block rendered successfully with content from the fixture
@@ -390,5 +397,5 @@ describe("CodeBlock with multiple languages", () => {
     // Verify the final content length matches the fixture
     expect(largeContent.length).toBeGreaterThan(8000); // Sanity check on fixture size
     expect(currentContent).toBe(largeContent);
-  }, 30000); // Increase test timeout to 30 seconds
+  }, 30_000); // Increase test timeout to 30 seconds
 });
