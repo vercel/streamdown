@@ -97,6 +97,11 @@ const Block = memo(
 
 Block.displayName = "Block";
 
+const defaultShikiTheme: [BundledTheme, BundledTheme] = [
+  "github-light",
+  "github-dark",
+];
+
 export const Streamdown = memo(
   ({
     children,
@@ -105,7 +110,7 @@ export const Streamdown = memo(
     rehypePlugins = Object.values(defaultRehypePlugins),
     remarkPlugins = Object.values(defaultRemarkPlugins),
     className,
-    shikiTheme = ["github-light", "github-dark"],
+    shikiTheme = defaultShikiTheme,
     mermaidConfig,
     controls = true,
     isAnimating = false,
@@ -127,11 +132,13 @@ export const Streamdown = memo(
       }
     }, []);
 
+    const runtimeContext = useMemo(() => ({ isAnimating }), [isAnimating]);
+
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
         <MermaidConfigContext.Provider value={mermaidConfig}>
           <ControlsContext.Provider value={controls}>
-            <StreamdownRuntimeContext.Provider value={{ isAnimating }}>
+            <StreamdownRuntimeContext.Provider value={runtimeContext}>
               <div className={cn("space-y-4", className)}>
                 {blocks.map((block, index) => (
                   <Block
