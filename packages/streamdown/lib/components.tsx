@@ -16,7 +16,7 @@ import {
   CodeBlockDownloadButton,
 } from "./code-block";
 import { ImageComponent } from "./image";
-import { Mermaid } from "./mermaid";
+import { Mermaid, MermaidFullscreenButton } from "./mermaid";
 import { TableCopyButton, TableDownloadDropdown } from "./table";
 import { cn } from "./utils";
 
@@ -67,7 +67,7 @@ function sameClassAndNode(
 }
 
 const shouldShowControls = (
-  config: boolean | { table?: boolean; code?: boolean; mermaid?: boolean },
+  config: boolean | { table?: boolean; code?: boolean; mermaid?: boolean | { download?: boolean; copy?: boolean; fullscreen?: boolean } },
   type: "table" | "code" | "mermaid"
 ) => {
   if (typeof config === "boolean") {
@@ -75,6 +75,27 @@ const shouldShowControls = (
   }
 
   return config[type] !== false;
+};
+
+const shouldShowMermaidControl = (
+  config: boolean | { table?: boolean; code?: boolean; mermaid?: boolean | { download?: boolean; copy?: boolean; fullscreen?: boolean } },
+  controlType: "download" | "copy" | "fullscreen"
+): boolean => {
+  if (typeof config === "boolean") {
+    return config;
+  }
+
+  const mermaidConfig = config.mermaid;
+  
+  if (mermaidConfig === false) {
+    return false;
+  }
+  
+  if (mermaidConfig === true || mermaidConfig === undefined) {
+    return true;
+  }
+  
+  return mermaidConfig[controlType] !== false;
 };
 
 type OlProps = WithNode<JSX.IntrinsicElements["ol"]>;
@@ -603,6 +624,9 @@ const CodeComponent = ({
 
   if (language === "mermaid") {
     const showMermaidControls = shouldShowControls(controlsConfig, "mermaid");
+    const showDownload = shouldShowMermaidControl(controlsConfig, "download");
+    const showCopy = shouldShowMermaidControl(controlsConfig, "copy");
+    const showFullscreen = shouldShowMermaidControl(controlsConfig, "fullscreen");
 
     return (
       <div
@@ -612,10 +636,11 @@ const CodeComponent = ({
         )}
         data-streamdown="mermaid-block"
       >
-        {showMermaidControls && (
+        {showMermaidControls && (showDownload || showCopy || showFullscreen) && (
           <div className="flex items-center justify-end gap-2">
-            <CodeBlockDownloadButton code={code} language={language} />
-            <CodeBlockCopyButton code={code} />
+            {showDownload && <CodeBlockDownloadButton code={code} language={language} />}
+            {showCopy && <CodeBlockCopyButton code={code} />}
+            {showFullscreen && <MermaidFullscreenButton chart={code} config={mermaidConfig} />}
           </div>
         )}
         <Mermaid chart={code} config={mermaidConfig} />

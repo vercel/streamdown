@@ -24,7 +24,13 @@ export type ControlsConfig =
   | {
       table?: boolean;
       code?: boolean;
-      mermaid?: boolean;
+      mermaid?:
+        | boolean
+        | {
+            download?: boolean;
+            copy?: boolean;
+            fullscreen?: boolean;
+          };
     };
 
 export type StreamdownProps = Options & {

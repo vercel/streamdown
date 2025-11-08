@@ -1,7 +1,7 @@
 import { Section } from "./section";
 
 export const MermaidDemo = () => {
-  const mermaidExample = `Interactive diagram rendering with manual control. Click the copy icon next to any Mermaid diagram to copy the code to your clipboard.
+  const mermaidExample = `Interactive diagram rendering with manual control. Use the fullscreen, download, and copy buttons to interact with any Mermaid diagram.
 
 ## Simple Flowchart
 
@@ -45,8 +45,8 @@ sequenceDiagram
     <Section
       description={
         <>
-          Streamdown supports Mermaid diagrams with customizable themes. Current
-          theme is "base".
+          Streamdown supports Mermaid diagrams with customizable themes and
+          fullscreen viewing. Current theme is "base".
         </>
       }
       markdown={mermaidExample}
@@ -55,6 +55,7 @@ sequenceDiagram
         mermaidConfig: {
           theme: "base",
         },
+        controls: true,
       }}
       title="Interactive Mermaid Diagrams"
     />
