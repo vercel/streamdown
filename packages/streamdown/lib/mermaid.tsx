@@ -5,6 +5,23 @@ import { useContext, useEffect, useState } from "react";
 import { StreamdownRuntimeContext } from "../index";
 import { cn } from "./utils";
 
+// Track the number of active fullscreen modals to manage body scroll lock correctly
+let activeFullscreenCount = 0;
+
+const lockBodyScroll = () => {
+  activeFullscreenCount++;
+  if (activeFullscreenCount === 1) {
+    document.body.style.overflow = "hidden";
+  }
+};
+
+const unlockBodyScroll = () => {
+  activeFullscreenCount = Math.max(0, activeFullscreenCount - 1);
+  if (activeFullscreenCount === 0) {
+    document.body.style.overflow = "";
+  }
+};
+
 const initializeMermaid = async (customConfig?: MermaidConfig) => {
   const defaultConfig: MermaidConfig = {
     startOnLoad: false,
@@ -45,32 +62,35 @@ export const MermaidFullscreenButton = ({
 
   const handleToggle = () => {
     setIsFullscreen(!isFullscreen);
-    if (!isFullscreen) {
-      onFullscreen?.();
-      document.body.style.overflow = "hidden";
-    } else {
-      onExit?.();
-      document.body.style.overflow = "";
-    }
   };
 
+  // Manage scroll lock and keyboard events
   useEffect(() => {
-    if (!isFullscreen) return;
+    if (isFullscreen) {
+      lockBodyScroll();
 
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsFullscreen(false);
-        document.body.style.overflow = "";
-        onExit?.();
-      }
-    };
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setIsFullscreen(false);
+        }
+      };
 
-    document.addEventListener("keydown", handleEsc);
-    return () => {
-      document.removeEventListener("keydown", handleEsc);
-      document.body.style.overflow = "";
-    };
-  }, [isFullscreen, onExit]);
+      document.addEventListener("keydown", handleEsc);
+      return () => {
+        document.removeEventListener("keydown", handleEsc);
+        unlockBodyScroll();
+      };
+    }
+  }, [isFullscreen]);
+
+  // Handle callbacks separately to avoid scroll lock flickering
+  useEffect(() => {
+    if (isFullscreen) {
+      onFullscreen?.();
+    } else if (onExit) {
+      onExit();
+    }
+  }, [isFullscreen, onFullscreen, onExit]);
 
   return (
     <>
