@@ -1,5 +1,20 @@
 # streamdown
 
+## 1.5.0
+
+### Minor Changes
+
+- 5c4ad8b: Add fullscreen view button for Mermaid diagrams
+
+### Patch Changes
+
+- 5363a51: Stabilize Streamdown contexts
+- f4c9c1e: Add block-level customization hooks
+- 171a824: fix base64 images
+- e17bf80: fix: add `overflow-hidden` to `TableDownloadDropdown`
+- fbdec4d: fix: add `border-border` to code block
+- 8a3fc5a: Dynamically load `katex.min.css` only when `rehypeKatex` is included in the `rehypePlugins`
+
 ## 1.4.0
 
 ### Minor Changes
