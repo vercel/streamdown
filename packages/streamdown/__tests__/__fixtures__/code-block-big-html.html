@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streamdown Large Code Block Test - Napoleon Dynamite Edition</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #764ba2;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .info {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            line-height: 1.5;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #764ba2;
+            margin-top: 5px;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        #performance {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 6px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦙 Streamdown Performance Test - Napoleon Dynamite Edition</h1>
+
+        <div class="info">
+            <strong>Test Purpose:</strong> This page reproduces the Streamdown v1.4.0 performance issue when rendering large code blocks (5000+ characters) with syntax highlighting.
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Warning:</strong> Clicking "Render Large Code Block" may cause your browser tab to freeze temporarily. This simulates the reported bug.
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Code Block Size</div>
+                <div class="stat-value" id="codeSize">~8,500</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Character Count</div>
+                <div class="stat-value" id="charCount">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Render Time</div>
+                <div class="stat-value" id="renderTime">-</div>
+            </div>
+        </div>
+
+        <div>
+            <button onclick="renderCodeBlock()">Render Large Code Block</button>
+            <button onclick="clearCodeBlock()">Clear Code Block</button>
+            <button onclick="measurePerformance()">Measure Performance</button>
+        </div>
+
+        <div id="performance"></div>
+
+        <div id="content"></div>
+    </div>
+
+    <script>
+        // Large Napoleon Dynamite themed code block (5000+ characters)
+        const largeCodeContent = `// Napoleon Dynamite Character Management System
+// A comprehensive JavaScript application for managing the iconic characters from Preston, Idaho
+
+class NapoleonDynamiteUniverse {
+    constructor() {
+        this.characters = [];
+        this.quotes = [];
+        this.ligers = 0;
+        this.taterTots = 1000;
+        this.initializeUniverse();
+    }
+
+    initializeUniverse() {
+        console.log("Gosh! Initializing the Napoleon Dynamite Universe...");
+        this.addCharacters();
+        this.addQuotes();
+        this.calculateAwesomeness();
+    }
+
+    addCharacters() {
+        this.characters = [
+            {
+                name: "Napoleon Dynamite",
+                skills: ["drawing ligers", "feeding Tina", "dance choreography", "tetherball"],
+                favoriteFood: "tater tots",
+                quote: "Gosh!",
+                awkwardnessLevel: 100,
+                danceSkill: 95,
+                reputation: "legend"
+            },
+            {
+                name: "Pedro Sanchez",
+                skills: ["running for class president", "building sweet bikes", "being cool"],
+                favoriteFood: "nachos",
+                quote: "Vote for Pedro",
+                awkwardnessLevel: 30,
+                coolnessLevel: 100,
+                presidency: true
+            },
+            {
+                name: "Kip Dynamite",
+                skills: ["chatting online", "martial arts training", "cage fighting dreams"],
+                favoriteFood: "steak",
+                quote: "Your mom goes to college!",
+                awkwardnessLevel: 85,
+                girlfriendLocation: "Detroit",
+                relationship: "LaFawnduh"
+            },
+            {
+                name: "Uncle Rico",
+                skills: ["throwing footballs", "time machine enthusiasm", "tupperware sales"],
+                favoriteFood: "steak",
+                quote: "Back in '82, I used to be able to throw a pigskin a quarter mile.",
+                livingInThePast: true,
+                quarterbackDreams: "eternal"
+            },
+            {
+                name: "Deb",
+                skills: ["glamour shots", "side ponytails", "friendship"],
+                favoriteFood: "unknown",
+                quote: "I'm trying to earn money for college.",
+                entrepreneurialSpirit: 100,
+                profession: "photographer"
+            },
+            {
+                name: "Tina the Llama",
+                skills: ["eating", "being fat", "looking majestic"],
+                favoriteFood: "whatever Napoleon brings",
+                quote: "*llama sounds*",
+                fatness: "a lot",
+                species: "llama"
+            },
+            {
+                name: "Rex Kwon Do",
+                skills: ["self-defense training", "American flag pants", "bow staff mastery"],
+                favoriteFood: "not specified",
+                quote: "Bow to your sensei!",
+                confidence: 200,
+                pantStyle: "patriotic"
+            },
+            {
+                name: "LaFawnduh",
+                skills: ["urban sophistication", "relationship building", "style"],
+                favoriteFood: "unknown",
+                quote: "Whatever I feel like I wanna do, gosh!",
+                coolnessLevel: 100,
+                location: "Detroit"
+            }
+        ];
+    }
+
+    addQuotes() {
+        this.quotes = [
+            "Gosh!",
+            "Idiot!",
+            "Tina, you fat lard, come get some dinner!",
+            "Vote for Pedro",
+            "Do the chickens have large talons?",
+            "I see you're drinking 1%. Is that 'cause you think you're fat? 'Cause you're not. You could be drinking whole if you wanted to.",
+            "Girls only want boyfriends who have great skills.",
+            "It's pretty much my favorite animal. It's like a lion and a tiger mixed... bred for its skills in magic.",
+            "Your mom goes to college!",
+            "I don't even have any good skills. You know, like nunchuck skills, bow hunting skills, computer hacking skills.",
+            "This is pretty much the worst video ever made.",
+            "You know, there's like a boat-load of gangs at this school. This one gang kept wanting me to join because I'm pretty good with a bo staff.",
+            "I caught you a delicious bass.",
+            "Back in '82, I used to be able to throw a pigskin a quarter mile.",
+            "Bow to your sensei! BOW TO YOUR SENSEI!",
+            "Break the wrist, walk away.",
+            "I wish you'd get out of my life and shut up!",
+            "Whatever I feel like I wanna do, gosh!",
+            "Just tell them that their wildest dreams will come true if they vote for you.",
+            "I already made like infinity of those at scout camp."
+        ];
+    }
+
+    calculateAwesomeness() {
+        return this.characters.reduce((total, char) => {
+            const skillPoints = char.skills ? char.skills.length * 10 : 0;
+            const awkwardBonus = char.awkwardnessLevel || 0;
+            const coolBonus = (char.coolnessLevel || 0) * 2;
+            return total + skillPoints + awkwardBonus + coolBonus;
+        }, 0);
+    }
+
+    findCharacter(name) {
+        return this.characters.find(char =>
+            char.name.toLowerCase().includes(name.toLowerCase())
+        );
+    }
+
+    getRandomQuote() {
+        const randomIndex = Math.floor(Math.random() * this.quotes.length);
+        return this.quotes[randomIndex];
+    }
+
+    organizePresidentialCampaign(candidate) {
+        console.log(\`Organizing campaign for \${candidate.name}...\`);
+        const steps = [
+            "Create campaign posters",
+            "Practice presidential speech",
+            "Build a sweet bike",
+            "Get Napoleon to do an epic dance",
+            "Promise to make students' wildest dreams come true",
+            "Hand out buttons",
+            "Win the hearts of Preston High"
+        ];
+
+        steps.forEach((step, index) => {
+            console.log(\`Step \${index + 1}: \${step}\`);
+        });
+
+        return "Vote for Pedro!";
+    }
+
+    trainWithRexKwonDo() {
+        console.log("Training at Rex Kwon Do dojo...");
+        const techniques = [
+            "Bow to your sensei",
+            "Break the wrist, walk away",
+            "Defend against bullies",
+            "Forget about it",
+            "Get yourself a girlfriend",
+            "Master the bo staff",
+            "Wear American flag pants"
+        ];
+
+        return techniques.map(technique => {
+            return \`Technique learned: \${technique}\`;
+        });
+    }
+
+    feedTina() {
+        console.log("Tina, you fat lard, come get some dinner!");
+        this.taterTots -= 10;
+        return {
+            message: "Tina is being fed",
+            taterTotsRemaining: this.taterTots,
+            tinaHappiness: "moderate"
+        };
+    }
+
+    drawLiger() {
+        this.ligers++;
+        console.log("Drawing a liger... It's pretty much my favorite animal.");
+        return {
+            description: "A majestic liger - a lion and tiger mixed, bred for its skills in magic",
+            magicLevel: "legendary",
+            ligerCount: this.ligers,
+            awesomeness: 9000
+        };
+    }
+
+    performDance() {
+        console.log("Performing epic dance routine to 'Canned Heat' by Jamiroquai...");
+        const moves = [
+            "Moon walk entrance",
+            "Robot dance",
+            "Spin move",
+            "Jazz hands",
+            "Hip thrust",
+            "Finger guns",
+            "Dramatic pose",
+            "Victory fist pump"
+        ];
+
+        return {
+            moves: moves,
+            audienceReaction: "stunned silence followed by thunderous applause",
+            presidentialCampaignImpact: "guaranteed victory",
+            coolnessAchieved: true
+        };
+    }
+
+    sellTupperware() {
+        console.log("Uncle Rico's Tupperware sales pitch...");
+        const pitch = "This here is a time-tested, quarter-mile-throwing-approved storage solution!";
+        const success = Math.random() > 0.7;
+
+        return {
+            pitch: pitch,
+            sold: success,
+            uncleRicoEnthusiasm: "unwavering",
+            thoughtsAbout1982: "it was my time to shine"
+        };
+    }
+
+    takeGlamourShot() {
+        console.log("Taking glamour shots by Deb...");
+        return {
+            photographer: "Deb",
+            style: "side ponytail chic",
+            backdrop: "Laura Ashley",
+            price: "$5 for the 8x10",
+            quality: "surprisingly professional"
+        };
+    }
+
+    chatOnline() {
+        console.log("Kip is chatting online with babes all day...");
+        return {
+            activity: "Chatting online",
+            participants: "babes",
+            duration: "all day",
+            relationship: "LaFawnduh from Detroit",
+            kipsCoolnessLevel: "exponentially increasing"
+        };
+    }
+
+    generateRandomEvent() {
+        const events = [
+            "Napoleon draws another liger",
+            "Pedro gives a stoic nod",
+            "Kip practices his martial arts",
+            "Uncle Rico throws a football at Napoleon",
+            "Tina refuses to eat",
+            "Rex teaches a self-defense class",
+            "Deb sells more glamour shots",
+            "LaFawnduh arrives from Detroit",
+            "Napoleon performs the dance of his people",
+            "Vote for Pedro campaign intensifies"
+        ];
+
+        const randomEvent = events[Math.floor(Math.random() * events.length)];
+        console.log(\`Event: \${randomEvent}\`);
+        return randomEvent;
+    }
+
+    simulateSchoolDay() {
+        console.log("Simulating a typical day at Preston High...");
+        const schedule = {
+            morning: "Napoleon feeds Tina, misses the bus",
+            earlyAfternoon: "Tetherball championship match",
+            lunch: "Tater tots (if Napoleon can keep them)",
+            afternoon: "Vote for Pedro campaign activities",
+            afterSchool: "Drawing ligers and practicing dance moves",
+            evening: "Uncle Rico's failed business ventures"
+        };
+
+        Object.entries(schedule).forEach(([time, activity]) => {
+            console.log(\`\${time}: \${activity}\`);
+        });
+
+        return schedule;
+    }
+
+    getUniverseStats() {
+        return {
+            totalCharacters: this.characters.length,
+            totalQuotes: this.quotes.length,
+            ligersDrawn: this.ligers,
+            taterTotsRemaining: this.taterTots,
+            overallAwesomeness: this.calculateAwesomeness(),
+            prestonIdahoPopulation: "approximately 5,000",
+            presidentialElection: "Pedro won",
+            mostIconicMoment: "The Dance"
+        };
+    }
+}
+
+// Initialize the universe
+const prestonIdaho = new NapoleonDynamiteUniverse();
+
+// Run some simulations
+console.log("=== NAPOLEON DYNAMITE UNIVERSE SIMULATION ===");
+console.log(prestonIdaho.getRandomQuote());
+prestonIdaho.feedTina();
+prestonIdaho.drawLiger();
+const campaign = prestonIdaho.organizePresidentialCampaign(
+    prestonIdaho.findCharacter("Pedro")
+);
+console.log(campaign);
+
+const dancePerformance = prestonIdaho.performDance();
+console.log("Dance Performance:", dancePerformance);
+
+const rexTraining = prestonIdaho.trainWithRexKwonDo();
+console.log("Rex Kwon Do Training:", rexTraining);
+
+const glamourShot = prestonIdaho.takeGlamourShot();
+console.log("Glamour Shot Session:", glamourShot);
+
+const schoolDay = prestonIdaho.simulateSchoolDay();
+console.log("School Day Simulation:", schoolDay);
+
+const universeStats = prestonIdaho.getUniverseStats();
+console.log("Universe Statistics:", universeStats);
+
+// Continuous event simulation
+console.log("\\n=== RANDOM EVENTS ===");
+for (let i = 0; i < 10; i++) {
+    prestonIdaho.generateRandomEvent();
+}
+
+console.log("\\nGosh! This simulation is complete!");
+console.log("Remember: Vote for Pedro!");
+console.log("And always draw your ligers with excellent skills in magic!");
+
+// Export for use in other modules
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = NapoleonDynamiteUniverse;
+}`;
+
+        function renderCodeBlock() {
+            const startTime = performance.now();
+            const contentDiv = document.getElementById('content');
+
+            // Clear previous content
+            contentDiv.innerHTML = '';
+
+            // Create the code block
+            const pre = document.createElement('pre');
+            const code = document.createElement('code');
+            code.className = 'language-javascript';
+            code.textContent = largeCodeContent;
+
+            pre.appendChild(code);
+            contentDiv.appendChild(pre);
+
+            const endTime = performance.now();
+            const renderTime = (endTime - startTime).toFixed(2);
+
+            // Update stats
+            document.getElementById('charCount').textContent = largeCodeContent.length.toLocaleString();
+            document.getElementById('renderTime').textContent = `${renderTime}ms`;
+
+            console.log(`Rendered ${largeCodeContent.length} characters in ${renderTime}ms`);
+        }
+
+        function clearCodeBlock() {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '';
+            document.getElementById('renderTime').textContent = '-';
+        }
+
+        function measurePerformance() {
+            const performanceDiv = document.getElementById('performance');
+            performanceDiv.style.display = 'block';
+
+            const iterations = 5;
+            const times = [];
+
+            performanceDiv.innerHTML = '<h3>Performance Test Running...</h3>';
+
+            for (let i = 0; i < iterations; i++) {
+                const start = performance.now();
+                renderCodeBlock();
+                const end = performance.now();
+                times.push(end - start);
+                clearCodeBlock();
+            }
+
+            const avg = times.reduce((a, b) => a + b, 0) / times.length;
+            const min = Math.min(...times);
+            const max = Math.max(...times);
+
+            performanceDiv.innerHTML = `
+                <h3>📊 Performance Results (${iterations} iterations)</h3>
+                <p><strong>Average:</strong> ${avg.toFixed(2)}ms</p>
+                <p><strong>Min:</strong> ${min.toFixed(2)}ms</p>
+                <p><strong>Max:</strong> ${max.toFixed(2)}ms</p>
+                <p><strong>Code Size:</strong> ${largeCodeContent.length.toLocaleString()} characters</p>
+                <p><em>Note: This is a simplified test. Streamdown with Shiki would be significantly slower due to syntax highlighting processing.</em></p>
+            `;
+
+            // Render one final time to show the code
+            renderCodeBlock();
+        }
+
+        // Display initial info
+        document.getElementById('charCount').textContent = largeCodeContent.length.toLocaleString();
+    </script>
+</body>
+</html>
