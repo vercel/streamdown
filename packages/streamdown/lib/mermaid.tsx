@@ -1,6 +1,26 @@
 import type { MermaidConfig } from "mermaid";
-import { useEffect, useState } from "react";
+import { Maximize2Icon, XIcon } from "lucide-react";
+import type { ComponentProps } from "react";
+import { useContext, useEffect, useState } from "react";
+import { StreamdownRuntimeContext } from "../index";
 import { cn } from "./utils";
+
+// Track the number of active fullscreen modals to manage body scroll lock correctly
+let activeFullscreenCount = 0;
+
+const lockBodyScroll = () => {
+  activeFullscreenCount++;
+  if (activeFullscreenCount === 1) {
+    document.body.style.overflow = "hidden";
+  }
+};
+
+const unlockBodyScroll = () => {
+  activeFullscreenCount = Math.max(0, activeFullscreenCount - 1);
+  if (activeFullscreenCount === 0) {
+    document.body.style.overflow = "";
+  }
+};
 
 const initializeMermaid = async (customConfig?: MermaidConfig) => {
   const defaultConfig: MermaidConfig = {
@@ -20,6 +40,103 @@ const initializeMermaid = async (customConfig?: MermaidConfig) => {
   mermaid.initialize(config);
 
   return mermaid;
+};
+
+type MermaidFullscreenButtonProps = ComponentProps<"button"> & {
+  chart: string;
+  config?: MermaidConfig;
+  onFullscreen?: () => void;
+  onExit?: () => void;
+};
+
+export const MermaidFullscreenButton = ({
+  chart,
+  config,
+  onFullscreen,
+  onExit,
+  className,
+  ...props
+}: MermaidFullscreenButtonProps) => {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const { isAnimating } = useContext(StreamdownRuntimeContext);
+
+  const handleToggle = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  // Manage scroll lock and keyboard events
+  useEffect(() => {
+    if (isFullscreen) {
+      lockBodyScroll();
+
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setIsFullscreen(false);
+        }
+      };
+
+      document.addEventListener("keydown", handleEsc);
+      return () => {
+        document.removeEventListener("keydown", handleEsc);
+        unlockBodyScroll();
+      };
+    }
+  }, [isFullscreen]);
+
+  // Handle callbacks separately to avoid scroll lock flickering
+  useEffect(() => {
+    if (isFullscreen) {
+      onFullscreen?.();
+    } else if (onExit) {
+      onExit();
+    }
+  }, [isFullscreen, onFullscreen, onExit]);
+
+  return (
+    <>
+      <button
+        className={cn(
+          "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        disabled={isAnimating}
+        onClick={handleToggle}
+        title="View fullscreen"
+        type="button"
+        {...props}
+      >
+        <Maximize2Icon size={14} />
+      </button>
+
+      {isFullscreen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
+          onClick={handleToggle}
+        >
+          <button
+            className="absolute top-4 right-4 z-10 rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+            onClick={handleToggle}
+            title="Exit fullscreen"
+            type="button"
+          >
+            <XIcon size={20} />
+          </button>
+          <div
+            className="flex h-full w-full items-center justify-center p-12"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="max-h-full max-w-full">
+              <Mermaid
+                chart={chart}
+                className="[&>div]:my-0 [&_svg]:h-auto [&_svg]:w-auto [&_svg]:min-h-[60vh] [&_svg]:min-w-[60vw]"
+                config={config}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
 };
 
 type MermaidProps = {
