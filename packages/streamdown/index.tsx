@@ -16,7 +16,7 @@ import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
 
 export { defaultUrlTransform } from "react-markdown";
-
+export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type { MermaidConfig } from "mermaid";
 
 export type ControlsConfig =
@@ -34,6 +34,8 @@ export type ControlsConfig =
     };
 
 export type StreamdownProps = Options & {
+  BlockComponent?: React.ComponentType<BlockProps>;
+  parseMarkdownIntoBlocksFn?: (markdown: string) => string[];
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
@@ -84,9 +86,10 @@ export const StreamdownRuntimeContext =
 type BlockProps = Options & {
   content: string;
   shouldParseIncompleteMarkdown: boolean;
+  index: number;
 };
 
-const Block = memo(
+export const Block = memo(
   ({ content, shouldParseIncompleteMarkdown, ...props }: BlockProps) => {
     const parsedContent = useMemo(
       () =>
@@ -116,13 +119,15 @@ export const Streamdown = memo(
     controls = true,
     isAnimating = false,
     urlTransform = (value) => value,
+    BlockComponent = Block,
+    parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
     const generatedId = useId();
     const blocks = useMemo(
       () =>
-        parseMarkdownIntoBlocks(typeof children === "string" ? children : ""),
+        parseMarkdownIntoBlocksFn(typeof children === "string" ? children : ""),
       [children]
     );
 
@@ -140,12 +145,13 @@ export const Streamdown = memo(
             <StreamdownRuntimeContext.Provider value={{ isAnimating }}>
               <div className={cn("space-y-4", className)}>
                 {blocks.map((block, index) => (
-                  <Block
+                  <BlockComponent
                     components={{
                       ...defaultComponents,
                       ...components,
                     }}
                     content={block}
+                    index={index}
                     // biome-ignore lint/suspicious/noArrayIndexKey: "required"
                     key={`${generatedId}-block-${index}`}
                     rehypePlugins={rehypePlugins}
