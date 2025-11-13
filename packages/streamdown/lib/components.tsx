@@ -440,95 +440,174 @@ const MemoSection = memo<SectionProps>(
       // Filter out empty footnote list items (those with only the backref link)
       // This happens during streaming when footnote definitions haven't fully arrived
 
-      // Helper to check if a node is empty (only contains backref)
-      const isEmptyFootnote = (listItem: React.ReactNode): boolean => {
-        if (!isValidElement(listItem)) return false;
+      // Helper to check if grand child has content
+      const grandChildHasContent = (grandChild: React.ReactNode): boolean => {
+        if (typeof grandChild === "string" && grandChild.trim() !== "") {
+          return true;
+        }
+        if (!isValidElement(grandChild)) {
+          return false;
+        }
+        const grandChildProps = grandChild.props as Record<string, unknown>;
+        return grandChildProps["data-footnote-backref"] === undefined;
+      };
 
-        const itemChildren = Array.isArray(listItem.props.children)
-          ? listItem.props.children
-          : [listItem.props.children];
+      // Helper to check grand children for content
+      const checkGrandChildrenForContent = (
+        itemChild: React.ReactElement
+      ): boolean => {
+        const itemChildProps = itemChild.props as {
+          children?: React.ReactNode;
+        };
+        const grandChildren = Array.isArray(itemChildProps.children)
+          ? itemChildProps.children
+          : [itemChildProps.children];
 
-        // Check if all children are either whitespace or backref links
+        for (const grandChild of grandChildren) {
+          if (grandChildHasContent(grandChild)) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      // Helper to check if string child has content
+      const stringChildHasContent = (itemChild: string): boolean => {
+        return itemChild.trim() !== "";
+      };
+
+      // Helper to check if element child is backref
+      const isBackrefLink = (itemChild: React.ReactElement): boolean => {
+        const itemChildProps = itemChild.props as Record<string, unknown>;
+        return itemChildProps["data-footnote-backref"] !== undefined;
+      };
+
+      // Helper to process string child
+      const processStringItemChild = (
+        itemChild: string,
+        state: { hasContent: boolean; hasBackref: boolean }
+      ): { hasContent: boolean; hasBackref: boolean; shouldBreak: boolean } => {
+        if (stringChildHasContent(itemChild)) {
+          return { ...state, hasContent: true, shouldBreak: true };
+        }
+        return { ...state, shouldBreak: false };
+      };
+
+      // Helper to process element child
+      const processElementItemChild = (
+        itemChild: React.ReactElement,
+        state: { hasContent: boolean; hasBackref: boolean }
+      ): { hasContent: boolean; hasBackref: boolean; shouldBreak: boolean } => {
+        // Check if it's a backref link
+        if (isBackrefLink(itemChild)) {
+          return { ...state, hasBackref: true, shouldBreak: false };
+        }
+
+        // It's some other element (like <p>), which means it has content
+        if (checkGrandChildrenForContent(itemChild)) {
+          return { ...state, hasContent: true, shouldBreak: true };
+        }
+
+        return { ...state, shouldBreak: false };
+      };
+
+      // Helper to process a single item child
+      const processItemChild = (
+        itemChild: React.ReactNode,
+        state: { hasContent: boolean; hasBackref: boolean }
+      ): { hasContent: boolean; hasBackref: boolean; shouldBreak: boolean } => {
+        if (!itemChild) {
+          return { ...state, shouldBreak: false };
+        }
+
+        if (typeof itemChild === "string") {
+          return processStringItemChild(itemChild, state);
+        }
+
+        if (isValidElement(itemChild)) {
+          return processElementItemChild(itemChild, state);
+        }
+
+        return { ...state, shouldBreak: false };
+      };
+
+      // Helper to check item children for content and backref
+      const checkItemChildren = (
+        itemChildren: React.ReactNode[]
+      ): { hasContent: boolean; hasBackref: boolean } => {
         let hasContent = false;
         let hasBackref = false;
 
         for (const itemChild of itemChildren) {
-          if (!itemChild) continue;
-
-          if (typeof itemChild === "string") {
-            // If there's non-whitespace text, it has content
-            if (itemChild.trim() !== "") {
-              hasContent = true;
-            }
-          } else if (isValidElement(itemChild)) {
-            // Check if it's a backref link
-            if (itemChild.props?.["data-footnote-backref"] !== undefined) {
-              hasBackref = true;
-            } else {
-              // It's some other element (like <p>), which means it has content
-              // But we need to check if the <p> has actual content
-              const grandChildren = Array.isArray(itemChild.props.children)
-                ? itemChild.props.children
-                : [itemChild.props.children];
-
-              for (const grandChild of grandChildren) {
-                if (
-                  typeof grandChild === "string" &&
-                  grandChild.trim() !== ""
-                ) {
-                  hasContent = true;
-                  break;
-                }
-                if (isValidElement(grandChild)) {
-                  // If it's not a backref link, it's content
-                  if (
-                    grandChild.props?.["data-footnote-backref"] === undefined
-                  ) {
-                    hasContent = true;
-                    break;
-                  }
-                }
-              }
-            }
+          const result = processItemChild(itemChild, {
+            hasContent,
+            hasBackref,
+          });
+          hasContent = result.hasContent;
+          hasBackref = result.hasBackref;
+          if (result.shouldBreak) {
+            break;
           }
         }
 
+        return { hasContent, hasBackref };
+      };
+
+      // Helper to check if a node is empty (only contains backref)
+      const isEmptyFootnote = (listItem: React.ReactNode): boolean => {
+        if (!isValidElement(listItem)) {
+          return false;
+        }
+
+        const listItemProps = listItem.props as { children?: React.ReactNode };
+        const itemChildren = Array.isArray(listItemProps.children)
+          ? listItemProps.children
+          : [listItemProps.children];
+
+        const { hasContent, hasBackref } = checkItemChildren(itemChildren);
+
         // It's empty if it only has a backref and no other content
-        return hasBackref && !hasContent;
+        return !hasContent && hasBackref;
+      };
+
+      // Helper to process a single child
+      const processChild = (child: React.ReactNode): React.ReactNode => {
+        if (!isValidElement(child)) {
+          return child;
+        }
+
+        // If this is an <ol> containing footnote list items
+        if (child.type !== MemoOl) {
+          return child;
+        }
+
+        const childProps = child.props as { children?: React.ReactNode };
+        const listChildren = Array.isArray(childProps.children)
+          ? childProps.children
+          : [childProps.children];
+
+        const filteredListChildren = listChildren.filter(
+          (listItem: React.ReactNode) => !isEmptyFootnote(listItem)
+        );
+
+        // If all footnotes are empty, return null
+        if (filteredListChildren.length === 0) {
+          return null;
+        }
+
+        // Clone the <ol> with filtered children
+        return {
+          ...child,
+          props: {
+            ...childProps,
+            children: filteredListChildren,
+          },
+        };
       };
 
       // Process children to filter out empty footnotes
       const processedChildren = Array.isArray(children)
-        ? children.map((child) => {
-            if (!isValidElement(child)) return child;
-
-            // If this is an <ol> containing footnote list items
-            if (child.type === MemoOl) {
-              const listChildren = Array.isArray(child.props.children)
-                ? child.props.children
-                : [child.props.children];
-
-              const filteredListChildren = listChildren.filter(
-                (listItem: React.ReactNode) => !isEmptyFootnote(listItem)
-              );
-
-              // If all footnotes are empty, return null
-              if (filteredListChildren.length === 0) {
-                return null;
-              }
-
-              // Clone the <ol> with filtered children
-              return {
-                ...child,
-                props: {
-                  ...child.props,
-                  children: filteredListChildren,
-                },
-              };
-            }
-
-            return child;
-          })
+        ? children.map(processChild)
         : children;
 
       // Check if we filtered out all content
@@ -681,8 +760,7 @@ const MemoParagraph = memo<ParagraphProps>(
     if (
       validChildren.length === 1 &&
       isValidElement(validChildren[0]) &&
-      (validChildren[0].props as { node?: MarkdownNode }).node?.tagName ===
-        "img"
+      validChildren[0].type === MemoImg
     ) {
       return <>{children}</>;
     }

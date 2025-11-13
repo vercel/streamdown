@@ -28,7 +28,7 @@ describe("Mermaid", () => {
       const result = render(<Mermaid chart="graph TD; A-->B" />);
       container = result.container;
     });
-    expect(container!.firstChild).toBeDefined();
+    expect(container?.firstChild).toBeDefined();
   });
 
   it("applies custom className", async () => {
@@ -40,7 +40,7 @@ describe("Mermaid", () => {
       container = result.container;
     });
 
-    const mermaidContainer = container!.firstChild as HTMLElement;
+    const mermaidContainer = container?.firstChild as HTMLElement;
     expect(mermaidContainer.className).toContain("custom-class");
   });
 
@@ -110,7 +110,7 @@ describe("Mermaid", () => {
 
     // Should be able to rerender with different config
     await act(async () => {
-      rerender!(<Mermaid chart="graph TD; A-->B" config={config2} />);
+      rerender?.(<Mermaid chart="graph TD; A-->B" config={config2} />);
     });
 
     // Should still render without error
@@ -136,7 +136,7 @@ describe("Mermaid", () => {
     });
 
     // Should render without error even with complex config
-    expect(container!.firstChild).toBeTruthy();
+    expect(container?.firstChild).toBeTruthy();
   });
 
   it("supports multiple components with different configs", async () => {
@@ -157,7 +157,7 @@ describe("Mermaid", () => {
 
     // Render second component with different config
     await act(async () => {
-      rerender!(<Mermaid chart="graph TD; X-->Y" config={config2} />);
+      rerender?.(<Mermaid chart="graph TD; X-->Y" config={config2} />);
     });
 
     await waitFor(() => expect(mockInitialize).toHaveBeenCalledTimes(2));

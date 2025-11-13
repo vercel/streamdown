@@ -7,8 +7,6 @@ export async function POST(req: Request) {
   const { messages, model }: { messages: UIMessage[]; model: string } =
     await req.json();
 
-  console.log("Running model:", model);
-
   const result = streamText({
     model,
     system: "You are a helpful assistant.",

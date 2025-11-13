@@ -64,7 +64,7 @@ b \\\\
 c
 \\end{bmatrix}`;
 
-    const blocks = parseMarkdownIntoBlocks(content);
+    const _blocks = parseMarkdownIntoBlocks(content);
 
     const { container } = render(
       <Streamdown parseIncompleteMarkdown={true}>{content}</Streamdown>

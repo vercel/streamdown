@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 
 describe("HTML Block Elements with Multiline Content - #164", () => {

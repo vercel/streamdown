@@ -27,15 +27,21 @@ vi.mock("react-markdown", () => ({
 }));
 
 vi.mock("rehype-katex", () => ({
-  default: () => {},
+  default: () => {
+    // Mock for testing
+  },
 }));
 
 vi.mock("remark-gfm", () => ({
-  default: () => {},
+  default: () => {
+    // Mock for testing
+  },
 }));
 
 vi.mock("remark-math", () => ({
-  default: () => {},
+  default: () => {
+    // Mock for testing
+  },
 }));
 
 describe("Email Addresses (#160)", () => {

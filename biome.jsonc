@@ -3,5 +3,52 @@
   "extends": ["ultracite"],
   "files": {
     "includes": ["!**/components/ui", "!**/lib/utils.ts"]
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.css"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noUnknownAtRules": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/__tests__/**", "**/*.test.ts", "**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off",
+            "noMagicNumbers": "off"
+          },
+          "suspicious": {
+            "useAwait": "off",
+            "noArrayIndexKey": "off"
+          },
+          "correctness": {
+            "noChildrenProp": "off"
+          },
+          "performance": {
+            "useTopLevelRegex": "off",
+            "noNamespaceImport": "off"
+          },
+          "complexity": {
+            "noForEach": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/index.tsx", "**/index.ts"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noBarrelFile": "off"
+          }
+        }
+      }
+    }
+  ]
 }

@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 
 const BYPASS_LABELS = ["minor", "major"];
+const CHANGESET_FILE_PATTERN = /^\.changeset\/[a-z-]+\.md/;
+const FRONTMATTER_PATTERN = /---\n([\s\S]+?)\n---/;
 
 // check if current file is the entry point
 if (import.meta.url.endsWith(process.argv[1])) {
@@ -45,6 +47,70 @@ ${error.message}`
   }
 }
 
+function validateChangesetPath(path) {
+  if (!CHANGESET_FILE_PATTERN.test(path)) {
+    throw Object.assign(new Error("Invalid file - not a .changeset file"), {
+      path,
+    });
+  }
+}
+
+function extractFrontmatter(content, path) {
+  const result = content.match(FRONTMATTER_PATTERN);
+  if (!result) {
+    throw Object.assign(
+      new Error("Invalid .changeset file - no frontmatter found"),
+      { path, content }
+    );
+  }
+  return result[0];
+}
+
+function parseVersionBumps(frontmatter, path, content) {
+  const lines = frontmatter.split("\n").slice(1, -1);
+  const versionBumps = {};
+
+  for (const line of lines) {
+    const [packageName, versionBump] = line.split(":").map((s) => s.trim());
+    if (!(packageName && versionBump)) {
+      throw Object.assign(
+        new Error("Invalid .changeset file - invalid frontmatter", {
+          path,
+          content,
+        })
+      );
+    }
+
+    if (versionBumps[packageName]) {
+      throw Object.assign(
+        new Error(
+          `Invalid .changeset file - duplicate package name "${packageName}"`
+        ),
+        { path, content }
+      );
+    }
+
+    versionBumps[packageName] = versionBump;
+  }
+
+  return versionBumps;
+}
+
+function validateVersionBumps(versionBumps, path, content) {
+  const invalidVersionBumps = Object.entries(versionBumps).filter(
+    ([, versionBump]) => versionBump !== "patch"
+  );
+
+  if (invalidVersionBumps.length > 0) {
+    throw Object.assign(
+      new Error(
+        `Invalid .changeset file - invalid version bump (only "patch" is allowed, see https://ai-sdk.dev/docs/migration-guides/versioning). To bypass, add one of the following labels: ${BYPASS_LABELS.join(", ")}`
+      ),
+      { path, content }
+    );
+  }
+}
+
 export async function verifyChangesets(
   event,
   env = process.env,
@@ -65,73 +131,11 @@ export async function verifyChangesets(
       continue;
     }
 
-    // Check if the file is a .changeset file
-    if (!/^\.changeset\/[a-z-]+\.md/.test(path)) {
-      throw Object.assign(new Error("Invalid file - not a .changeset file"), {
-        path,
-      });
-    }
+    validateChangesetPath(path);
 
-    // find frontmatter
     const content = await readFile(`../../../../${path}`, "utf-8");
-    const result = content.match(/---\n([\s\S]+?)\n---/);
-    if (!result) {
-      throw Object.assign(
-        new Error("Invalid .changeset file - no frontmatter found"),
-        {
-          path,
-          content,
-        }
-      );
-    }
-
-    const [frontmatter] = result;
-
-    // Find version bump by package. `frontmatter` looks like this:
-    //
-    // ```yaml
-    // 'ai': patch
-    // '@ai-sdk/provider': patch
-    // ```
-    const lines = frontmatter.split("\n").slice(1, -1);
-    const versionBumps = {};
-    for (const line of lines) {
-      const [packageName, versionBump] = line.split(":").map((s) => s.trim());
-      if (!(packageName && versionBump)) {
-        throw Object.assign(
-          new Error("Invalid .changeset file - invalid frontmatter", {
-            path,
-            content,
-          })
-        );
-      }
-
-      // Check if packageName is already set
-      if (versionBumps[packageName]) {
-        throw Object.assign(
-          new Error(
-            `Invalid .changeset file - duplicate package name "${packageName}"`
-          ),
-          { path, content }
-        );
-      }
-
-      versionBumps[packageName] = versionBump;
-    }
-
-    // check if any of the version bumps are not "patch"
-    const invalidVersionBumps = Object.entries(versionBumps).filter(
-      ([, versionBump]) => versionBump !== "patch"
-    );
-
-    if (invalidVersionBumps.length > 0) {
-      throw Object.assign(
-        new Error(
-          `Invalid .changeset file - invalid version bump (only "patch" is allowed, see https://ai-sdk.dev/docs/migration-guides/versioning). To bypass, add one of the following labels: ${BYPASS_LABELS.join(", ")}`
-        ),
-
-        { path, content }
-      );
-    }
+    const frontmatter = extractFrontmatter(content, path);
+    const versionBumps = parseVersionBumps(frontmatter, path, content);
+    validateVersionBumps(versionBumps, path, content);
   }
 }

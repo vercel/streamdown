@@ -6,6 +6,15 @@ const singleAsteriskPattern = /(\*)([^*]*?)$/;
 const singleUnderscorePattern = /(_)([^_]*?)$/;
 const inlineCodePattern = /(`)([^`]*?)$/;
 const strikethroughPattern = /(~~)([^~]*?)$/;
+const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\]\(([^)]+)$/;
+const emptyOrEmphasisOnlyPattern = /^[\s_~*`]*$/;
+const listItemWithSpacesPattern = /^[\s]*[-*+][\s]+$/;
+const wordCharPattern = /[\p{L}\p{N}_]/u;
+const fourOrMoreAsterisksPattern = /^\*{4,}$/;
+const trailingNewlinePattern = /\n+$/;
+const TRIPLE_BACKTICK_LENGTH = 3;
+const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
+const TRIPLE_ASTERISK_COUNT = 3;
 
 // Helper function to check if we have a complete code block
 const hasCompleteCodeBlock = (text: string): boolean => {
@@ -19,7 +28,6 @@ const hasCompleteCodeBlock = (text: string): boolean => {
 const handleIncompleteLinksAndImages = (text: string): string => {
   // First check for incomplete URLs: [text](partial-url or ![text](partial-url without closing )
   // Pattern: !?[text](url-without-closing-paren at end of string
-  const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\]\(([^)]+)$/;
   const incompleteLinkUrlMatch = text.match(incompleteLinkUrlPattern);
 
   if (incompleteLinkUrlMatch) {
@@ -76,7 +84,10 @@ const handleIncompleteBold = (text: string): string => {
     // boldMatch[2] contains the content after **
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = boldMatch[2];
-    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+    if (
+      !contentAfterMarker ||
+      emptyOrEmphasisOnlyPattern.test(contentAfterMarker)
+    ) {
       return text;
     }
 
@@ -90,7 +101,7 @@ const handleIncompleteBold = (text: string): string => {
     const lineBeforeMarker = text.substring(lineStart, markerIndex);
 
     // Check if this line is a list item with just the bold marker
-    if (/^[\s]*[-*+][\s]+$/.test(lineBeforeMarker)) {
+    if (listItemWithSpacesPattern.test(lineBeforeMarker)) {
       // This is a list item with just emphasis markers
       // Check if content after marker spans multiple lines
       const hasNewlineInContent = contentAfterMarker.includes("\n");
@@ -118,7 +129,10 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
     // italicMatch[2] contains the content after __
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = italicMatch[2];
-    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+    if (
+      !contentAfterMarker ||
+      emptyOrEmphasisOnlyPattern.test(contentAfterMarker)
+    ) {
       return text;
     }
 
@@ -132,7 +146,7 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
     const lineBeforeMarker = text.substring(lineStart, markerIndex);
 
     // Check if this line is a list item with just the underscore marker
-    if (/^[\s]*[-*+][\s]+$/.test(lineBeforeMarker)) {
+    if (listItemWithSpacesPattern.test(lineBeforeMarker)) {
       // This is a list item with just emphasis markers
       // Check if content after marker spans multiple lines
       const hasNewlineInContent = contentAfterMarker.includes("\n");
@@ -151,42 +165,54 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   return text;
 };
 
+// Helper to find line start index
+const findLineStartIndex = (text: string, index: number): number => {
+  for (let i = index - 1; i >= 0; i--) {
+    if (text[i] === "\n") {
+      return i + 1;
+    }
+  }
+  return 0;
+};
+
+// Helper to check if asterisk is a list marker
+const isListMarker = (
+  text: string,
+  index: number,
+  lineStartIndex: number,
+  nextChar: string | undefined
+): boolean => {
+  const beforeAsterisk = text.substring(lineStartIndex, index);
+  return (
+    beforeAsterisk.trim() === "" && (nextChar === " " || nextChar === "\t")
+  );
+};
+
 // Counts single asterisks that are not part of double asterisks, not escaped, and not list markers
 const countSingleAsterisks = (text: string): number => {
   return text.split("").reduce((acc, char, index) => {
-    if (char === "*") {
-      const prevChar = text[index - 1];
-      const nextChar = text[index + 1];
-      // Skip if escaped with backslash
-      if (prevChar === "\\") {
-        return acc;
-      }
-      // Check if this is a list marker (asterisk at start of line followed by space)
-      // Look backwards to find the start of the current line
-      let lineStartIndex = index;
-      for (let i = index - 1; i >= 0; i--) {
-        if (text[i] === "\n") {
-          lineStartIndex = i + 1;
-          break;
-        }
-        if (i === 0) {
-          lineStartIndex = 0;
-          break;
-        }
-      }
-      // Check if this asterisk is at the beginning of a line (with optional whitespace)
-      const beforeAsterisk = text.substring(lineStartIndex, index);
-      if (
-        beforeAsterisk.trim() === "" &&
-        (nextChar === " " || nextChar === "\t")
-      ) {
-        // This is likely a list marker, don't count it
-        return acc;
-      }
-      if (prevChar !== "*" && nextChar !== "*") {
-        return acc + 1;
-      }
+    if (char !== "*") {
+      return acc;
     }
+
+    const prevChar = text[index - 1];
+    const nextChar = text[index + 1];
+    // Skip if escaped with backslash
+    if (prevChar === "\\") {
+      return acc;
+    }
+
+    // Check if this is a list marker (asterisk at start of line followed by space)
+    const lineStartIndex = findLineStartIndex(text, index);
+    if (isListMarker(text, index, lineStartIndex, nextChar)) {
+      // This is likely a list marker, don't count it
+      return acc;
+    }
+
+    if (prevChar !== "*" && nextChar !== "*") {
+      return acc + 1;
+    }
+
     return acc;
   }, 0);
 };
@@ -223,7 +249,7 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
     // Don't close if content is only whitespace or emphasis markers
     if (
       !contentAfterFirstAsterisk ||
-      /^[\s_~*`]*$/.test(contentAfterFirstAsterisk)
+      emptyOrEmphasisOnlyPattern.test(contentAfterFirstAsterisk)
     ) {
       return text;
     }
@@ -240,7 +266,6 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
 // Check if a position is within a math block (between $ or $$)
 const isWithinMathBlock = (text: string, position: number): boolean => {
   // Count dollar signs before this position
-  let inInlineMath = false;
   let inBlockMath = false;
 
   for (let i = 0; i < text.length && i < position; i++) {
@@ -250,51 +275,82 @@ const isWithinMathBlock = (text: string, position: number): boolean => {
       continue;
     }
 
-    if (text[i] === "$") {
-      // Check for block math ($$)
-      if (text[i + 1] === "$") {
-        inBlockMath = !inBlockMath;
-        i++; // Skip the second $
-        inInlineMath = false; // Block math takes precedence
-      } else if (!inBlockMath) {
-        // Only toggle inline math if not in block math
-        inInlineMath = !inInlineMath;
-      }
+    // Check for block math ($$)
+    if (text[i] === "$" && text[i + 1] === "$") {
+      inBlockMath = !inBlockMath;
+      i++; // Skip the second $
     }
   }
 
-  return inInlineMath || inBlockMath;
+  return inBlockMath;
+};
+
+// Helper to check if underscore is word-internal
+const isWordInternalUnderscorePosition = (
+  prevChar: string | undefined,
+  nextChar: string | undefined
+): boolean => {
+  if (!(prevChar && nextChar)) {
+    return false;
+  }
+  return wordCharPattern.test(prevChar) && wordCharPattern.test(nextChar);
 };
 
 // Counts single underscores that are not part of double underscores, not escaped, and not in math blocks
 const countSingleUnderscores = (text: string): number => {
   return text.split("").reduce((acc, char, index) => {
-    if (char === "_") {
-      const prevChar = text[index - 1];
-      const nextChar = text[index + 1];
-      // Skip if escaped with backslash
-      if (prevChar === "\\") {
-        return acc;
-      }
-      // Skip if within math block
-      if (isWithinMathBlock(text, index)) {
-        return acc;
-      }
-      // Skip if underscore is word-internal (between word characters)
-      if (
-        prevChar &&
-        nextChar &&
-        /[\p{L}\p{N}_]/u.test(prevChar) &&
-        /[\p{L}\p{N}_]/u.test(nextChar)
-      ) {
-        return acc;
-      }
-      if (prevChar !== "_" && nextChar !== "_") {
-        return acc + 1;
-      }
+    if (char !== "_") {
+      return acc;
+    }
+
+    const prevChar = text[index - 1];
+    const nextChar = text[index + 1];
+    // Skip if escaped with backslash
+    if (prevChar === "\\") {
+      return acc;
+    }
+    // Skip if within math block
+    if (isWithinMathBlock(text, index)) {
+      return acc;
+    }
+    // Skip if underscore is word-internal (between word characters)
+    if (isWordInternalUnderscorePosition(prevChar, nextChar)) {
+      return acc;
+    }
+    if (prevChar !== "_" && nextChar !== "_") {
+      return acc + 1;
     }
     return acc;
   }, 0);
+};
+
+// Checks if an underscore at a given position is word-internal
+const isWordInternalUnderscore = (text: string, index: number): boolean => {
+  const prevChar = index > 0 ? text[index - 1] : "";
+  const nextChar = index < text.length - 1 ? text[index + 1] : "";
+  return (
+    !!prevChar &&
+    !!nextChar &&
+    wordCharPattern.test(prevChar) &&
+    wordCharPattern.test(nextChar)
+  );
+};
+
+// Finds the first single underscore that's not part of __ and not word-internal
+const findFirstValidSingleUnderscore = (text: string): number => {
+  for (let i = 0; i < text.length; i++) {
+    if (
+      text[i] === "_" &&
+      text[i - 1] !== "_" &&
+      text[i + 1] !== "_" &&
+      text[i - 1] !== "\\" &&
+      !isWithinMathBlock(text, i) &&
+      !isWordInternalUnderscore(text, i)
+    ) {
+      return i;
+    }
+  }
+  return -1;
 };
 
 // Completes incomplete italic formatting with single underscores (_)
@@ -307,32 +363,7 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
 
   if (singleUnderscoreMatch) {
-    // Find the first single underscore position (not part of __ and not word-internal)
-    let firstSingleUnderscoreIndex = -1;
-    for (let i = 0; i < text.length; i++) {
-      if (
-        text[i] === "_" &&
-        text[i - 1] !== "_" &&
-        text[i + 1] !== "_" &&
-        text[i - 1] !== "\\" &&
-        !isWithinMathBlock(text, i)
-      ) {
-        // Check if underscore is word-internal (between word characters)
-        const prevChar = i > 0 ? text[i - 1] : "";
-        const nextChar = i < text.length - 1 ? text[i + 1] : "";
-        if (
-          prevChar &&
-          nextChar &&
-          /[\p{L}\p{N}_]/u.test(prevChar) &&
-          /[\p{L}\p{N}_]/u.test(nextChar)
-        ) {
-          continue;
-        }
-
-        firstSingleUnderscoreIndex = i;
-        break;
-      }
-    }
+    const firstSingleUnderscoreIndex = findFirstValidSingleUnderscore(text);
 
     if (firstSingleUnderscoreIndex === -1) {
       return text;
@@ -347,7 +378,7 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
     // Don't close if content is only whitespace or emphasis markers
     if (
       !contentAfterFirstUnderscore ||
-      /^[\s_~*`]*$/.test(contentAfterFirstUnderscore)
+      emptyOrEmphasisOnlyPattern.test(contentAfterFirstUnderscore)
     ) {
       return text;
     }
@@ -355,7 +386,7 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
     const singleUnderscores = countSingleUnderscores(text);
     if (singleUnderscores % 2 === 1) {
       // If text ends with newline(s), insert underscore before them
-      const trailingNewlineMatch = text.match(/\n+$/);
+      const trailingNewlineMatch = text.match(trailingNewlinePattern);
       if (trailingNewlineMatch) {
         const textBeforeNewlines = text.slice(
           0,
@@ -372,9 +403,11 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
 
 // Checks if a backtick at position i is part of a triple backtick sequence
 const isPartOfTripleBacktick = (text: string, i: number): boolean => {
-  const isTripleStart = text.substring(i, i + 3) === "```";
-  const isTripleMiddle = i > 0 && text.substring(i - 1, i + 2) === "```";
-  const isTripleEnd = i > 1 && text.substring(i - 2, i + 1) === "```";
+  const isTripleStart = text.substring(i, i + TRIPLE_BACKTICK_LENGTH) === "```";
+  const isTripleMiddle =
+    i > 0 && text.substring(i - 1, i + (TRIPLE_BACKTICK_LENGTH - 1)) === "```";
+  const isTripleEnd =
+    i > 1 && text.substring(i - (TRIPLE_BACKTICK_LENGTH - 1), i + 1) === "```";
 
   return isTripleStart || isTripleMiddle || isTripleEnd;
 };
@@ -390,13 +423,9 @@ const countSingleBackticks = (text: string): number => {
   return count;
 };
 
-// Completes incomplete inline code formatting (`)
-// Avoids completing if inside an incomplete code block
-const handleIncompleteInlineCode = (text: string): string => {
-  // Check if we have inline triple backticks (starts with ``` and should end with ```)
-  // This pattern should ONLY match truly inline code (no newlines)
-  // Examples: ```code``` or ```python code```
-  const inlineTripleBacktickMatch = text.match(/^```[^`\n]*```?$/);
+// Helper to check inline triple backticks
+const handleInlineTripleBackticks = (text: string): string | null => {
+  const inlineTripleBacktickMatch = text.match(inlineTripleBacktickPattern);
   if (inlineTripleBacktickMatch && !text.includes("\n")) {
     // Check if it ends with exactly 2 backticks (incomplete)
     if (text.endsWith("``") && !text.endsWith("```")) {
@@ -405,28 +434,51 @@ const handleIncompleteInlineCode = (text: string): string => {
     // Already complete inline triple backticks
     return text;
   }
+  return null;
+};
+
+// Helper to check complete multi-line code blocks
+const hasCompleteMultiLineCodeBlocks = (text: string): boolean => {
+  const allTripleBackticks = (text.match(/```/g) || []).length;
+  return (
+    allTripleBackticks > 0 &&
+    allTripleBackticks % 2 === 0 &&
+    text.includes("\n")
+  );
+};
+
+// Helper to check if text ends with complete code block
+const endsWithCompleteCodeBlock = (text: string): boolean => {
+  if (!(text.endsWith("```\n") || text.endsWith("```"))) {
+    return false;
+  }
+  const allTripleBackticks = (text.match(/```/g) || []).length;
+  return allTripleBackticks % 2 === 0;
+};
+
+// Completes incomplete inline code formatting (`)
+// Avoids completing if inside an incomplete code block
+const handleIncompleteInlineCode = (text: string): string => {
+  // Check if we have inline triple backticks (starts with ``` and should end with ```)
+  const inlineTripleResult = handleInlineTripleBackticks(text);
+  if (inlineTripleResult !== null) {
+    return inlineTripleResult;
+  }
 
   // Check if we're inside a multi-line code block (complete or incomplete)
   const allTripleBackticks = (text.match(/```/g) || []).length;
   const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
 
   // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
-  if (
-    allTripleBackticks > 0 &&
-    allTripleBackticks % 2 === 0 &&
-    text.includes("\n")
-  ) {
+  if (hasCompleteMultiLineCodeBlocks(text)) {
     // We have complete multi-line code blocks, don't add any backticks
     return text;
   }
 
   // Special case: if text ends with ```\n (triple backticks followed by newline)
   // This is actually a complete code block, not incomplete
-  if (text.endsWith("```\n") || text.endsWith("```")) {
-    // Count all triple backticks - if even, it's complete
-    if (allTripleBackticks % 2 === 0) {
-      return text;
-    }
+  if (endsWithCompleteCodeBlock(text)) {
+    return text;
   }
 
   const inlineCodeMatch = text.match(inlineCodePattern);
@@ -436,7 +488,10 @@ const handleIncompleteInlineCode = (text: string): string => {
     // inlineCodeMatch[2] contains the content after `
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = inlineCodeMatch[2];
-    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+    if (
+      !contentAfterMarker ||
+      emptyOrEmphasisOnlyPattern.test(contentAfterMarker)
+    ) {
       return text;
     }
 
@@ -458,7 +513,10 @@ const handleIncompleteStrikethrough = (text: string): string => {
     // strikethroughMatch[2] contains the content after ~~
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = strikethroughMatch[2];
-    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+    if (
+      !contentAfterMarker ||
+      emptyOrEmphasisOnlyPattern.test(contentAfterMarker)
+    ) {
       return text;
     }
 
@@ -522,9 +580,9 @@ const countTripleAsterisks = (text: string): number => {
   for (const match of matches) {
     // Count how many complete triple asterisks are in this sequence
     const asteriskCount = match.length;
-    if (asteriskCount >= 3) {
+    if (asteriskCount >= TRIPLE_ASTERISK_COUNT) {
       // Each group of exactly 3 asterisks counts as one triple asterisk marker
-      count += Math.floor(asteriskCount / 3);
+      count += Math.floor(asteriskCount / TRIPLE_ASTERISK_COUNT);
     }
   }
 
@@ -540,7 +598,7 @@ const handleIncompleteBoldItalic = (text: string): string => {
 
   // Don't process if text is only asterisks and has 4 or more consecutive asterisks
   // This prevents cases like **** from being treated as incomplete ***
-  if (/^\*{4,}$/.test(text)) {
+  if (fourOrMoreAsterisksPattern.test(text)) {
     return text;
   }
 
@@ -551,7 +609,10 @@ const handleIncompleteBoldItalic = (text: string): string => {
     // boldItalicMatch[2] contains the content after ***
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = boldItalicMatch[2];
-    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+    if (
+      !contentAfterMarker ||
+      emptyOrEmphasisOnlyPattern.test(contentAfterMarker)
+    ) {
       return text;
     }
 

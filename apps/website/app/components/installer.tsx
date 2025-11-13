@@ -22,7 +22,9 @@ export const Installer = () => {
       setIsCopied(true);
       track("Copied installer code");
       setTimeout(() => setIsCopied(false), TIMEOUT);
-    } catch (_error) {}
+    } catch (_error) {
+      // Silently fail if clipboard access is denied
+    }
   };
 
   const Icon = isCopied ? CheckIcon : CopyIcon;

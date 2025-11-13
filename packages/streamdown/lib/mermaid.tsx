@@ -2,6 +2,11 @@ import type { MermaidConfig } from "mermaid";
 import { useEffect, useState } from "react";
 import { cn } from "./utils";
 
+// Constants for ID generation
+const BASE36_RADIX = 36;
+const RANDOM_ID_SUBSTRING_START = 2;
+const RANDOM_ID_SUBSTRING_END = 9;
+
 const initializeMermaid = async (customConfig?: MermaidConfig) => {
   const defaultConfig: MermaidConfig = {
     startOnLoad: false,
@@ -49,7 +54,7 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
           // biome-ignore lint/suspicious/noBitwiseOperators: "Required for Mermaid"
           return ((acc << 5) - acc + char.charCodeAt(0)) | 0;
         }, 0);
-        const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(BASE36_RADIX).substring(RANDOM_ID_SUBSTRING_START, RANDOM_ID_SUBSTRING_END)}`;
 
         const { svg } = await mermaid.render(uniqueId, chart);
 

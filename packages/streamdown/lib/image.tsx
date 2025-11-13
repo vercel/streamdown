@@ -3,11 +3,59 @@ import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
 import type { ExtraProps } from "react-markdown";
 import { cn, save } from "./utils";
 
+const FILE_EXTENSION_PATTERN = /\.[^/.]+$/;
+const MAX_EXTENSION_LENGTH = 4;
+
 type ImageComponentProps = DetailedHTMLProps<
   ImgHTMLAttributes<HTMLImageElement>,
   HTMLImageElement
 > &
   ExtraProps;
+
+// Determines file extension from MIME type
+const getExtensionFromMimeType = (mimeType: string): string => {
+  if (mimeType.includes("jpeg") || mimeType.includes("jpg")) {
+    return "jpg";
+  }
+  if (mimeType.includes("png")) {
+    return "png";
+  }
+  if (mimeType.includes("svg")) {
+    return "svg";
+  }
+  if (mimeType.includes("gif")) {
+    return "gif";
+  }
+  if (mimeType.includes("webp")) {
+    return "webp";
+  }
+  return "png"; // default
+};
+
+// Checks if a filename has a valid extension
+const hasValidExtension = (filename: string): boolean => {
+  const parts = filename.split(".");
+  if (!filename.includes(".") || parts.length < 2) {
+    return false;
+  }
+  const extension = parts.pop();
+  return (extension?.length ?? 0) <= MAX_EXTENSION_LENGTH;
+};
+
+// Generates filename from blob and alt text
+const generateFilename = (
+  originalFilename: string,
+  blob: Blob,
+  alt: string | undefined
+): string => {
+  if (hasValidExtension(originalFilename)) {
+    return originalFilename;
+  }
+
+  const extension = getExtensionFromMimeType(blob.type);
+  const baseName = alt || originalFilename || "image";
+  return `${baseName.replace(FILE_EXTENSION_PATTERN, "")}.${extension}`;
+};
 
 export const ImageComponent = ({
   node,
@@ -25,41 +73,14 @@ export const ImageComponent = ({
       const response = await fetch(src);
       const blob = await response.blob();
 
-      // Extract filename from URL or use alt text with proper extension
+      // Extract filename from URL
       const urlPath = new URL(src, window.location.origin).pathname;
       const originalFilename = urlPath.split("/").pop() || "";
-      const hasExtension =
-        originalFilename.includes(".") &&
-        originalFilename.split(".").pop()?.length! <= 4;
 
-      let filename = "";
-
-      if (hasExtension) {
-        filename = originalFilename;
-      } else {
-        // Determine extension from blob type
-        const mimeType = blob.type;
-        let extension = "png"; // default
-
-        if (mimeType.includes("jpeg") || mimeType.includes("jpg")) {
-          extension = "jpg";
-        } else if (mimeType.includes("png")) {
-          extension = "png";
-        } else if (mimeType.includes("svg")) {
-          extension = "svg";
-        } else if (mimeType.includes("gif")) {
-          extension = "gif";
-        } else if (mimeType.includes("webp")) {
-          extension = "webp";
-        }
-
-        const baseName = alt || originalFilename || "image";
-        filename = `${baseName.replace(/\.[^/.]+$/, "")}.${extension}`;
-      }
-
+      const filename = generateFilename(originalFilename, blob, alt);
       save(filename, blob, blob.type);
-    } catch (error) {
-      console.error("Failed to download image:", error);
+    } catch (_error) {
+      // Silently fail if download fails
     }
   };
 

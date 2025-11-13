@@ -82,7 +82,7 @@ y
     );
 
     // Should close the incomplete block with $$
-    const htmlContent = container.innerHTML;
+    const _htmlContent = container.innerHTML;
 
     // Check that the LaTeX is rendered
     const katexElements = container.querySelectorAll(".katex");
