@@ -208,7 +208,7 @@ export const CodeBlock = ({
   return (
     <CodeBlockContext.Provider value={{ code }}>
       <div
-        className="my-4 w-full overflow-hidden rounded-xl border"
+        className="my-4 w-full overflow-hidden rounded-xl border border-border"
         data-code-block-container
         data-language={language}
       >

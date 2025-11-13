@@ -627,7 +627,7 @@ const CodeComponent = ({
 
   return (
     <CodeBlock
-      className={cn("overflow-x-auto border-t", className)}
+      className={cn("overflow-x-auto border-t border-border", className)}
       code={code}
       data-language={language}
       data-streamdown="code-block"
