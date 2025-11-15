@@ -21,6 +21,10 @@ graph TD
     A[Start] --> B[End]
 \`\`\`
 `;
+  const mermaidLoader = async () => ({
+    initialize: () => {},
+    render: async () => ({ svg: "<svg />" }),
+  });
 
   describe("boolean configuration", () => {
     it("should show all controls by default", () => {
@@ -128,7 +132,7 @@ graph TD
 
     it("should hide only mermaid controls when mermaid is false", () => {
       const { container } = render(
-        <Streamdown controls={{ mermaid: false }}>
+        <Streamdown controls={{ mermaid: false }} mermaidLoader={mermaidLoader}>
           {markdownWithMermaid}
         </Streamdown>
       );

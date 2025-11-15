@@ -1,18 +1,14 @@
 import { render, waitFor } from "@testing-library/react";
-import type { MermaidConfig } from "mermaid";
 import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Mermaid, MermaidFullscreenButton } from "../lib/mermaid";
+import type { MermaidConfig } from "../lib/mermaid-types";
 
-// Mock mermaid
 const mockInitialize = vi.fn();
 const mockRender = vi.fn().mockResolvedValue({ svg: "<svg>Test SVG</svg>" });
-
-vi.mock("mermaid", () => ({
-  default: {
-    initialize: mockInitialize,
-    render: mockRender,
-  },
+const mockLoader = vi.fn(async () => ({
+  initialize: mockInitialize,
+  render: mockRender,
 }));
 
 describe("Mermaid", () => {
@@ -25,7 +21,9 @@ describe("Mermaid", () => {
   it("renders without crashing", async () => {
     let container: HTMLElement;
     await act(async () => {
-      const result = render(<Mermaid chart="graph TD; A-->B" />);
+      const result = render(
+        <Mermaid chart="graph TD; A-->B" loader={mockLoader} />
+      );
       container = result.container;
     });
     expect(container!.firstChild).toBeDefined();
@@ -35,7 +33,11 @@ describe("Mermaid", () => {
     let container: HTMLElement;
     await act(async () => {
       const result = render(
-        <Mermaid chart="graph TD; A-->B" className="custom-class" />
+        <Mermaid
+          chart="graph TD; A-->B"
+          className="custom-class"
+          loader={mockLoader}
+        />
       );
       container = result.container;
     });
@@ -55,7 +57,13 @@ describe("Mermaid", () => {
     } as MermaidConfig;
 
     await act(async () => {
-      render(<Mermaid chart="graph TD; A-->B" config={customConfig} />);
+      render(
+        <Mermaid
+          chart="graph TD; A-->B"
+          config={customConfig}
+          loader={mockLoader}
+        />
+      );
     });
 
     // Wait for initialization
@@ -72,7 +80,7 @@ describe("Mermaid", () => {
 
   it("initializes with default config when none provided", async () => {
     await act(async () => {
-      render(<Mermaid chart="graph TD; A-->B" />);
+      render(<Mermaid chart="graph TD; A-->B" loader={mockLoader} />);
     });
 
     // Wait for initialization
@@ -95,7 +103,7 @@ describe("Mermaid", () => {
     let rerender: ReturnType<typeof render>["rerender"];
     await act(async () => {
       const result = render(
-        <Mermaid chart="graph TD; A-->B" config={config1} />
+        <Mermaid chart="graph TD; A-->B" config={config1} loader={mockLoader} />
       );
       rerender = result.rerender;
     });
@@ -110,7 +118,9 @@ describe("Mermaid", () => {
 
     // Should be able to rerender with different config
     await act(async () => {
-      rerender!(<Mermaid chart="graph TD; A-->B" config={config2} />);
+      rerender!(
+        <Mermaid chart="graph TD; A-->B" config={config2} loader={mockLoader} />
+      );
     });
 
     // Should still render without error
@@ -130,7 +140,7 @@ describe("Mermaid", () => {
     let container: HTMLElement;
     await act(async () => {
       const result = render(
-        <Mermaid chart="graph TD; A-->B" config={config} />
+        <Mermaid chart="graph TD; A-->B" config={config} loader={mockLoader} />
       );
       container = result.container;
     });
@@ -147,7 +157,7 @@ describe("Mermaid", () => {
     let rerender: ReturnType<typeof render>["rerender"];
     await act(async () => {
       const result = render(
-        <Mermaid chart="graph TD; A-->B" config={config1} />
+        <Mermaid chart="graph TD; A-->B" config={config1} loader={mockLoader} />
       );
       rerender = result.rerender;
     });
@@ -157,7 +167,9 @@ describe("Mermaid", () => {
 
     // Render second component with different config
     await act(async () => {
-      rerender!(<Mermaid chart="graph TD; X-->Y" config={config2} />);
+      rerender!(
+        <Mermaid chart="graph TD; X-->Y" config={config2} loader={mockLoader} />
+      );
     });
 
     await waitFor(() => expect(mockInitialize).toHaveBeenCalledTimes(2));
@@ -169,7 +181,7 @@ describe("Mermaid", () => {
       let container: HTMLElement;
       await act(async () => {
         const result = render(
-          <MermaidFullscreenButton chart="graph TD; A-->B" />
+          <MermaidFullscreenButton chart="graph TD; A-->B" loader={mockLoader} />
         );
         container = result.container;
       });
@@ -184,7 +196,7 @@ describe("Mermaid", () => {
       let container: HTMLElement;
       await act(async () => {
         const result = render(
-          <MermaidFullscreenButton chart="graph TD; A-->B" />
+          <MermaidFullscreenButton chart="graph TD; A-->B" loader={mockLoader} />
         );
         container = result.container;
       });

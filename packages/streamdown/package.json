@@ -53,7 +53,6 @@
     "katex": "^0.16.22",
     "lucide-react": "^0.542.0",
     "marked": "^16.2.1",
-    "mermaid": "^11.11.0",
     "react-markdown": "^10.1.0",
     "rehype-harden": "^1.1.5",
     "rehype-katex": "^7.0.1",

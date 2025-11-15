@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import type { MermaidConfig } from "mermaid";
+import type { MermaidConfig } from "../lib/mermaid-types";
 import { describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 

@@ -47,9 +47,15 @@ const props = [
   },
   {
     name: "mermaidConfig",
-    type: "MermaidConfig (from Mermaid)",
+    type: "MermaidConfig",
     description:
       "Custom configuration for Mermaid diagrams including theme, colors, fonts, and other rendering options. See Mermaid documentation for all available options.",
+  },
+  {
+    name: "mermaidLoader",
+    type: "MermaidLoader",
+    description:
+      "Provide a function that dynamically imports Mermaid when diagrams are present. Leaving this undefined renders Mermaid code blocks as plain text, which is useful in restricted environments like Chrome extensions.",
   },
   {
     name: "controls",

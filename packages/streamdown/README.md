@@ -55,8 +55,9 @@ export default function Page() {
 Streamdown supports Mermaid diagrams using the `mermaid` language identifier:
 
 ```tsx
-import { Streamdown } from 'streamdown';
-import type { MermaidConfig } from 'mermaid';
+import { Streamdown, type MermaidConfig, type MermaidLoader } from 'streamdown';
+
+const mermaidLoader: MermaidLoader = async () => (await import('mermaid')).default;
 
 export default function Page() {
   const markdown = `
@@ -95,12 +96,14 @@ sequenceDiagram
   };
 
   return (
-    <Streamdown mermaidConfig={mermaidConfig}>
+    <Streamdown mermaidConfig={mermaidConfig} mermaidLoader={mermaidLoader}>
       {markdown}
     </Streamdown>
   );
 }
 ```
+
+> **Note:** Mermaid support is optional. If you omit the `mermaidLoader` prop, Mermaid code fences will render as plain text. This keeps Streamdown safe to bundle in environments (like Chrome extensions) where `@mermaid-js/parser` cannot be resolved. Supply your own loader only when you need diagrams and can alias Mermaid’s dependencies appropriately.
 
 ### With AI SDK
 
@@ -208,6 +211,7 @@ Streamdown accepts all the same props as react-markdown, plus additional streami
 | `remarkPlugins` | `array` | `[[remarkGfm, {}], [remarkMath, { singleDollarTextMath: false }]]` | Remark plugins to use. Includes GitHub Flavored Markdown and math support by default |
 | `shikiTheme` | `[BundledTheme, BundledTheme]` | `['github-light', 'github-dark']` | The light and dark themes to use for code blocks |
 | `mermaidConfig` | `MermaidConfig` | - | Custom configuration for Mermaid diagrams (theme, colors, etc.) |
+| `mermaidLoader` | `MermaidLoader` | `undefined` | Lazily import Mermaid only when a diagram is rendered. When omitted, Mermaid fences render as plain text for maximum compatibility. |
 | `controls` | `boolean \| { table?: boolean, code?: boolean, mermaid?: boolean }` | `true` | Control visibility of copy/download buttons |
 | `isAnimating` | `boolean` | `false` | Whether the component is currently animating. This is used to disable the copy and download buttons when the component is animating. |
 

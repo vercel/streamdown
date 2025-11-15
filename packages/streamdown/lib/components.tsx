@@ -9,7 +9,11 @@ import {
 } from "react";
 import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
-import { ControlsContext, MermaidConfigContext } from "../index";
+import {
+  ControlsContext,
+  MermaidConfigContext,
+  MermaidLoaderContext,
+} from "../index";
 import {
   CodeBlock,
   CodeBlockCopyButton,
@@ -588,6 +592,7 @@ const CodeComponent = ({
   ExtraProps) => {
   const inline = node?.position?.start.line === node?.position?.end.line;
   const mermaidConfig = useContext(MermaidConfigContext);
+  const mermaidLoader = useContext(MermaidLoaderContext);
   const controlsConfig = useContext(ControlsContext);
 
   if (inline) {
@@ -623,6 +628,23 @@ const CodeComponent = ({
   }
 
   if (language === "mermaid") {
+    if (!mermaidLoader) {
+      return (
+        <div
+          className={cn(
+            "my-4 rounded-xl border p-4 text-muted-foreground text-sm",
+            className
+          )}
+          data-streamdown="mermaid-block"
+        >
+          Mermaid rendering is disabled. Provide a{" "}
+          <code className="rounded bg-muted px-1 py-0.5">mermaidLoader</code>{" "}
+          prop to <code className="rounded bg-muted px-1 py-0.5">Streamdown</code>{" "}
+          to enable diagram support.
+        </div>
+      );
+    }
+
     const showMermaidControls = shouldShowControls(controlsConfig, "mermaid");
     const showDownload = shouldShowMermaidControl(controlsConfig, "download");
     const showCopy = shouldShowMermaidControl(controlsConfig, "copy");

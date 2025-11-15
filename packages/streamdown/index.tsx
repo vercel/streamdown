@@ -7,17 +7,17 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
-import type { MermaidConfig } from "mermaid";
 import { harden } from "rehype-harden";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
+import type { MermaidConfig, MermaidLoader } from "./lib/mermaid-types";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
 
 export { defaultUrlTransform } from "react-markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
-export type { MermaidConfig } from "mermaid";
+export type { MermaidConfig, MermaidLoader } from "./lib/mermaid-types";
 
 export type ControlsConfig =
   | boolean
@@ -40,6 +40,7 @@ export type StreamdownProps = Options & {
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
   mermaidConfig?: MermaidConfig;
+  mermaidLoader?: MermaidLoader;
   controls?: ControlsConfig;
   isAnimating?: boolean;
 };
@@ -69,6 +70,10 @@ export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
 ]);
 
 export const MermaidConfigContext = createContext<MermaidConfig | undefined>(
+  undefined
+);
+
+export const MermaidLoaderContext = createContext<MermaidLoader | undefined>(
   undefined
 );
 
@@ -121,6 +126,7 @@ export const Streamdown = memo(
     className,
     shikiTheme = defaultShikiTheme,
     mermaidConfig,
+    mermaidLoader,
     controls = true,
     isAnimating = false,
     urlTransform = (value) => value,
@@ -147,33 +153,35 @@ export const Streamdown = memo(
 
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
-        <MermaidConfigContext.Provider value={mermaidConfig}>
-          <ControlsContext.Provider value={controls}>
-            <StreamdownRuntimeContext.Provider value={runtimeContext}>
-              <div className={cn("space-y-4", className)}>
-                {blocks.map((block, index) => (
-                  <BlockComponent
-                    components={{
-                      ...defaultComponents,
-                      ...components,
-                    }}
-                    content={block}
-                    index={index}
-                    // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-                    key={`${generatedId}-block-${index}`}
-                    rehypePlugins={rehypePlugins}
-                    remarkPlugins={remarkPlugins}
-                    shouldParseIncompleteMarkdown={
-                      shouldParseIncompleteMarkdown
-                    }
-                    urlTransform={urlTransform}
-                    {...props}
-                  />
-                ))}
-              </div>
-            </StreamdownRuntimeContext.Provider>
-          </ControlsContext.Provider>
-        </MermaidConfigContext.Provider>
+        <MermaidLoaderContext.Provider value={mermaidLoader}>
+          <MermaidConfigContext.Provider value={mermaidConfig}>
+            <ControlsContext.Provider value={controls}>
+              <StreamdownRuntimeContext.Provider value={runtimeContext}>
+                <div className={cn("space-y-4", className)}>
+                  {blocks.map((block, index) => (
+                    <BlockComponent
+                      components={{
+                        ...defaultComponents,
+                        ...components,
+                      }}
+                      content={block}
+                      index={index}
+                      // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+                      key={`${generatedId}-block-${index}`}
+                      rehypePlugins={rehypePlugins}
+                      remarkPlugins={remarkPlugins}
+                      shouldParseIncompleteMarkdown={
+                        shouldParseIncompleteMarkdown
+                      }
+                      urlTransform={urlTransform}
+                      {...props}
+                    />
+                  ))}
+                </div>
+              </StreamdownRuntimeContext.Provider>
+            </ControlsContext.Provider>
+          </MermaidConfigContext.Provider>
+        </MermaidLoaderContext.Provider>
       </ShikiThemeContext.Provider>
     );
   },

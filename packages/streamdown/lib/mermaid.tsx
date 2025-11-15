@@ -1,9 +1,12 @@
-import type { MermaidConfig } from "mermaid";
 import { Maximize2Icon, XIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { useContext, useEffect, useState } from "react";
-import { StreamdownRuntimeContext } from "../index";
+import {
+  MermaidLoaderContext,
+  StreamdownRuntimeContext,
+} from "../index";
 import { cn } from "./utils";
+import type { MermaidConfig, MermaidLoader } from "./mermaid-types";
 
 // Track the number of active fullscreen modals to manage body scroll lock correctly
 let activeFullscreenCount = 0;
@@ -22,7 +25,10 @@ const unlockBodyScroll = () => {
   }
 };
 
-const initializeMermaid = async (customConfig?: MermaidConfig) => {
+const initializeMermaid = async (
+  loader: MermaidLoader | undefined,
+  customConfig?: MermaidConfig
+) => {
   const defaultConfig: MermaidConfig = {
     startOnLoad: false,
     theme: "default",
@@ -33,8 +39,13 @@ const initializeMermaid = async (customConfig?: MermaidConfig) => {
 
   const config = { ...defaultConfig, ...customConfig };
 
-  const mermaidModule = await import("mermaid");
-  const mermaid = mermaidModule.default;
+  if (!loader) {
+    throw new Error(
+      "Mermaid rendering is disabled because no loader was provided."
+    );
+  }
+
+  const mermaid = await loader();
 
   // Always reinitialize with the current config to support different configs per component
   mermaid.initialize(config);
@@ -47,6 +58,7 @@ type MermaidFullscreenButtonProps = ComponentProps<"button"> & {
   config?: MermaidConfig;
   onFullscreen?: () => void;
   onExit?: () => void;
+  loader?: MermaidLoader;
 };
 
 export const MermaidFullscreenButton = ({
@@ -55,10 +67,13 @@ export const MermaidFullscreenButton = ({
   onFullscreen,
   onExit,
   className,
+  loader,
   ...props
 }: MermaidFullscreenButtonProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { isAnimating } = useContext(StreamdownRuntimeContext);
+  const contextLoader = useContext(MermaidLoaderContext);
+  const mermaidLoader = loader ?? contextLoader;
 
   const handleToggle = () => {
     setIsFullscreen(!isFullscreen);
@@ -99,7 +114,7 @@ export const MermaidFullscreenButton = ({
           "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
-        disabled={isAnimating}
+        disabled={isAnimating || !mermaidLoader}
         onClick={handleToggle}
         title="View fullscreen"
         type="button"
@@ -130,6 +145,7 @@ export const MermaidFullscreenButton = ({
                 chart={chart}
                 className="[&>div]:my-0 [&_svg]:h-auto [&_svg]:w-auto [&_svg]:min-h-[60vh] [&_svg]:min-w-[60vw]"
                 config={config}
+                loader={mermaidLoader}
               />
             </div>
           </div>
@@ -143,23 +159,39 @@ type MermaidProps = {
   chart: string;
   className?: string;
   config?: MermaidConfig;
+  loader?: MermaidLoader;
 };
 
-export const Mermaid = ({ chart, className, config }: MermaidProps) => {
+export const Mermaid = ({
+  chart,
+  className,
+  config,
+  loader,
+}: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [svgContent, setSvgContent] = useState<string>("");
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
+  const contextLoader = useContext(MermaidLoaderContext);
+  const mermaidLoader = loader ?? contextLoader;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"
   useEffect(() => {
+    if (!mermaidLoader) {
+      setError(
+        "Mermaid loader missing. Pass a mermaidLoader prop to Streamdown to enable diagrams."
+      );
+      setIsLoading(false);
+      return;
+    }
+
     const renderChart = async () => {
       try {
         setError(null);
         setIsLoading(true);
 
         // Initialize mermaid with optional custom config
-        const mermaid = await initializeMermaid(config);
+        const mermaid = await initializeMermaid(mermaidLoader, config);
 
         // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
         const chartHash = chart.split("").reduce((acc, char) => {
