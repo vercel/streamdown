@@ -7,7 +7,8 @@
       "!**/components/ai-elements",
       "!**/components/geistdocs",
       "!**/lib/utils.ts",
-      "!**/hooks/use-mobile.ts"
+      "!**/hooks/use-mobile.ts",
+      "!**/__tests__/__fixtures__"
     ]
   }
 }
