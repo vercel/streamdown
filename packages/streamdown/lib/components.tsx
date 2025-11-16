@@ -17,7 +17,7 @@ import {
 } from "./code-block";
 import { ImageComponent } from "./image";
 import { Mermaid, MermaidFullscreenButton } from "./mermaid";
-import { TableCopyButton, TableDownloadDropdown } from "./table";
+import { TableCopyDropdown, TableDownloadDropdown } from "./table";
 import { cn } from "./utils";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
@@ -318,7 +318,7 @@ const MemoTable = memo<TableProps>(
       >
         {showTableControls && (
           <div className="flex items-center justify-end gap-1">
-            <TableCopyButton />
+            <TableCopyDropdown />
             <TableDownloadDropdown />
           </div>
         )}
