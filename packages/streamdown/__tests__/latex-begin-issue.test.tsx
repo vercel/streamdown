@@ -18,9 +18,9 @@ $$`;
     const blocks = parseMarkdownIntoBlocks(content);
 
     // Test parseIncompleteMarkdown on each block
-    blocks.forEach((block) => {
+    for (const block of blocks) {
       parseIncompleteMarkdown(block);
-    });
+    }
   });
 
   it("should handle incomplete LaTeX block with \\begin without adding extra $$", () => {
@@ -80,9 +80,6 @@ y
     const { container } = render(
       <Streamdown parseIncompleteMarkdown={true}>{content}</Streamdown>
     );
-
-    // Should close the incomplete block with $$
-    const htmlContent = container.innerHTML;
 
     // Check that the LaTeX is rendered
     const katexElements = container.querySelectorAll(".katex");

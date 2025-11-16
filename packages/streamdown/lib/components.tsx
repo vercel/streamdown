@@ -67,7 +67,15 @@ function sameClassAndNode(
 }
 
 const shouldShowControls = (
-  config: boolean | { table?: boolean; code?: boolean; mermaid?: boolean | { download?: boolean; copy?: boolean; fullscreen?: boolean } },
+  config:
+    | boolean
+    | {
+        table?: boolean;
+        code?: boolean;
+        mermaid?:
+          | boolean
+          | { download?: boolean; copy?: boolean; fullscreen?: boolean };
+      },
   type: "table" | "code" | "mermaid"
 ) => {
   if (typeof config === "boolean") {
@@ -78,7 +86,15 @@ const shouldShowControls = (
 };
 
 const shouldShowMermaidControl = (
-  config: boolean | { table?: boolean; code?: boolean; mermaid?: boolean | { download?: boolean; copy?: boolean; fullscreen?: boolean } },
+  config:
+    | boolean
+    | {
+        table?: boolean;
+        code?: boolean;
+        mermaid?:
+          | boolean
+          | { download?: boolean; copy?: boolean; fullscreen?: boolean };
+      },
   controlType: "download" | "copy" | "fullscreen"
 ): boolean => {
   if (typeof config === "boolean") {
@@ -86,15 +102,15 @@ const shouldShowMermaidControl = (
   }
 
   const mermaidConfig = config.mermaid;
-  
+
   if (mermaidConfig === false) {
     return false;
   }
-  
+
   if (mermaidConfig === true || mermaidConfig === undefined) {
     return true;
   }
-  
+
   return mermaidConfig[controlType] !== false;
 };
 
@@ -462,8 +478,11 @@ const MemoSection = memo<SectionProps>(
       // This happens during streaming when footnote definitions haven't fully arrived
 
       // Helper to check if a node is empty (only contains backref)
+      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex footnote validation logic with multiple edge cases"
       const isEmptyFootnote = (listItem: React.ReactNode): boolean => {
-        if (!isValidElement(listItem)) return false;
+        if (!isValidElement(listItem)) {
+          return false;
+        }
 
         const itemChildren = Array.isArray(listItem.props.children)
           ? listItem.props.children
@@ -474,7 +493,9 @@ const MemoSection = memo<SectionProps>(
         let hasBackref = false;
 
         for (const itemChild of itemChildren) {
-          if (!itemChild) continue;
+          if (!itemChild) {
+            continue;
+          }
 
           if (typeof itemChild === "string") {
             // If there's non-whitespace text, it has content
@@ -500,14 +521,13 @@ const MemoSection = memo<SectionProps>(
                   hasContent = true;
                   break;
                 }
-                if (isValidElement(grandChild)) {
+                if (
+                  isValidElement(grandChild) &&
+                  grandChild.props?.["data-footnote-backref"] === undefined
+                ) {
                   // If it's not a backref link, it's content
-                  if (
-                    grandChild.props?.["data-footnote-backref"] === undefined
-                  ) {
-                    hasContent = true;
-                    break;
-                  }
+                  hasContent = true;
+                  break;
                 }
               }
             }
@@ -520,8 +540,11 @@ const MemoSection = memo<SectionProps>(
 
       // Process children to filter out empty footnotes
       const processedChildren = Array.isArray(children)
-        ? children.map((child) => {
-            if (!isValidElement(child)) return child;
+        ? // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex footnote filtering logic"
+          children.map((child) => {
+            if (!isValidElement(child)) {
+              return child;
+            }
 
             // If this is an <ol> containing footnote list items
             if (child.type === MemoOl) {
@@ -626,7 +649,10 @@ const CodeComponent = ({
     const showMermaidControls = shouldShowControls(controlsConfig, "mermaid");
     const showDownload = shouldShowMermaidControl(controlsConfig, "download");
     const showCopy = shouldShowMermaidControl(controlsConfig, "copy");
-    const showFullscreen = shouldShowMermaidControl(controlsConfig, "fullscreen");
+    const showFullscreen = shouldShowMermaidControl(
+      controlsConfig,
+      "fullscreen"
+    );
 
     return (
       <div
@@ -636,13 +662,18 @@ const CodeComponent = ({
         )}
         data-streamdown="mermaid-block"
       >
-        {showMermaidControls && (showDownload || showCopy || showFullscreen) && (
-          <div className="flex items-center justify-end gap-2">
-            {showDownload && <CodeBlockDownloadButton code={code} language={language} />}
-            {showCopy && <CodeBlockCopyButton code={code} />}
-            {showFullscreen && <MermaidFullscreenButton chart={code} config={mermaidConfig} />}
-          </div>
-        )}
+        {showMermaidControls &&
+          (showDownload || showCopy || showFullscreen) && (
+            <div className="flex items-center justify-end gap-2">
+              {showDownload && (
+                <CodeBlockDownloadButton code={code} language={language} />
+              )}
+              {showCopy && <CodeBlockCopyButton code={code} />}
+              {showFullscreen && (
+                <MermaidFullscreenButton chart={code} config={mermaidConfig} />
+              )}
+            </div>
+          )}
         <Mermaid chart={code} config={mermaidConfig} />
       </div>
     );
@@ -652,7 +683,7 @@ const CodeComponent = ({
 
   return (
     <CodeBlock
-      className={cn("overflow-x-auto border-t border-border", className)}
+      className={cn("overflow-x-auto border-border border-t", className)}
       code={code}
       data-language={language}
       data-streamdown="code-block"

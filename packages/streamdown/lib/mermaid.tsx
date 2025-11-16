@@ -1,5 +1,5 @@
-import type { MermaidConfig } from "mermaid";
 import { Maximize2Icon, XIcon } from "lucide-react";
+import type { MermaidConfig } from "mermaid";
 import type { ComponentProps } from "react";
 import { useContext, useEffect, useState } from "react";
 import { StreamdownRuntimeContext } from "../index";
@@ -9,7 +9,7 @@ import { cn } from "./utils";
 let activeFullscreenCount = 0;
 
 const lockBodyScroll = () => {
-  activeFullscreenCount++;
+  activeFullscreenCount += 1;
   if (activeFullscreenCount === 1) {
     document.body.style.overflow = "hidden";
   }
@@ -109,9 +109,17 @@ export const MermaidFullscreenButton = ({
       </button>
 
       {isFullscreen && (
+        // biome-ignore lint/a11y/useSemanticElements: "div is used as a backdrop overlay, not a button"
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
           onClick={handleToggle}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              handleToggle();
+            }
+          }}
+          role="button"
+          tabIndex={0}
         >
           <button
             className="absolute top-4 right-4 z-10 rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
@@ -121,14 +129,17 @@ export const MermaidFullscreenButton = ({
           >
             <XIcon size={20} />
           </button>
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
           <div
             className="flex h-full w-full items-center justify-center p-12"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
           >
             <div className="max-h-full max-w-full">
               <Mermaid
                 chart={chart}
-                className="[&>div]:my-0 [&_svg]:h-auto [&_svg]:w-auto [&_svg]:min-h-[60vh] [&_svg]:min-w-[60vw]"
+                className="[&>div]:my-0 [&_svg]:h-auto [&_svg]:min-h-[60vh] [&_svg]:w-auto [&_svg]:min-w-[60vw]"
                 config={config}
               />
             </div>

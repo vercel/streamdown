@@ -1,5 +1,4 @@
 import { render } from "@testing-library/react";
-import React from "react";
 import { describe, expect, it } from "vitest";
 import { components } from "../lib/components";
 
@@ -27,7 +26,10 @@ describe("Node Attribute Fix", () => {
 
   describe("List Components - No node attribute in HTML", () => {
     it("should NOT render node attribute in OL element", () => {
-      const OL = components.ol!;
+      const OL = components.ol;
+      if (!OL) {
+        throw new Error("OL component not found");
+      }
       const { container } = render(
         <OL node={mockHastNode as any}>
           <li>Item 1</li>
@@ -48,7 +50,10 @@ describe("Node Attribute Fix", () => {
     });
 
     it("should NOT render node attribute in UL element", () => {
-      const UL = components.ul!;
+      const UL = components.ul;
+      if (!UL) {
+        throw new Error("UL component not found");
+      }
       const { container } = render(
         <UL node={mockHastNode as any}>
           <li>Item 1</li>
@@ -69,7 +74,10 @@ describe("Node Attribute Fix", () => {
     });
 
     it("should NOT render node attribute in LI element", () => {
-      const LI = components.li!;
+      const LI = components.li;
+      if (!LI) {
+        throw new Error("LI component not found");
+      }
       const { container } = render(
         <LI node={mockHastNode as any}>List item content</LI>
       );
@@ -89,7 +97,10 @@ describe("Node Attribute Fix", () => {
 
   describe("Heading Components - No node attribute in HTML", () => {
     it("should NOT render node attribute in H1 element", () => {
-      const H1 = components.h1!;
+      const H1 = components.h1;
+      if (!H1) {
+        throw new Error("H1 component not found");
+      }
       const { container } = render(
         <H1 node={mockHastNode as any}>Heading 1</H1>
       );
@@ -107,7 +118,10 @@ describe("Node Attribute Fix", () => {
     });
 
     it("should NOT render node attribute in H2 element", () => {
-      const H2 = components.h2!;
+      const H2 = components.h2;
+      if (!H2) {
+        throw new Error("H2 component not found");
+      }
       const { container } = render(
         <H2 node={mockHastNode as any}>Heading 2</H2>
       );
@@ -125,7 +139,10 @@ describe("Node Attribute Fix", () => {
     });
 
     it("should NOT render node attribute in H3 element", () => {
-      const H3 = components.h3!;
+      const H3 = components.h3;
+      if (!H3) {
+        throw new Error("H3 component not found");
+      }
       const { container } = render(
         <H3 node={mockHastNode as any}>Heading 3</H3>
       );
@@ -145,7 +162,10 @@ describe("Node Attribute Fix", () => {
 
   describe("Link Component - No node attribute in HTML", () => {
     it("should NOT render node attribute in A element", () => {
-      const A = components.a!;
+      const A = components.a;
+      if (!A) {
+        throw new Error("A component not found");
+      }
       const { container } = render(
         <A href="https://example.com" node={mockHastNode as any}>
           Link text
@@ -168,7 +188,10 @@ describe("Node Attribute Fix", () => {
 
   describe("Image Component - No node attribute in HTML", () => {
     it("should NOT render node attribute in IMG element", () => {
-      const IMG = components.img!;
+      const IMG = components.img;
+      if (!IMG) {
+        throw new Error("IMG component not found");
+      }
       const { container } = render(
         <IMG
           alt="Test image"
@@ -193,7 +216,10 @@ describe("Node Attribute Fix", () => {
 
   describe("Code Component - No node attribute in HTML", () => {
     it("should NOT render node attribute in inline CODE element", () => {
-      const Code = components.code!;
+      const Code = components.code;
+      if (!Code) {
+        throw new Error("Code component not found");
+      }
       const { container } = render(
         <Code
           node={
@@ -224,28 +250,43 @@ describe("Node Attribute Fix", () => {
 
   describe("Comprehensive Node Attribute Check", () => {
     it("should verify NO components render node='[object Object]' attribute", () => {
+      if (
+        !(
+          components.ol &&
+          components.ul &&
+          components.li &&
+          components.h1 &&
+          components.h2 &&
+          components.h3 &&
+          components.a &&
+          components.img
+        )
+      ) {
+        throw new Error("Required components not found");
+      }
+
       const testComponents = [
-        { name: "ol", component: components.ol!, element: "ol" },
-        { name: "ul", component: components.ul!, element: "ul" },
-        { name: "li", component: components.li!, element: "li" },
-        { name: "h1", component: components.h1!, element: "h1" },
-        { name: "h2", component: components.h2!, element: "h2" },
-        { name: "h3", component: components.h3!, element: "h3" },
+        { name: "ol", component: components.ol, element: "ol" },
+        { name: "ul", component: components.ul, element: "ul" },
+        { name: "li", component: components.li, element: "li" },
+        { name: "h1", component: components.h1, element: "h1" },
+        { name: "h2", component: components.h2, element: "h2" },
+        { name: "h3", component: components.h3, element: "h3" },
         {
           name: "a",
-          component: components.a!,
+          component: components.a,
           element: "a",
           props: { href: "https://example.com" },
         },
         {
           name: "img",
-          component: components.img!,
+          component: components.img,
           element: "img",
           props: { src: "test.png", alt: "test" },
         },
       ];
 
-      testComponents.forEach(({ name, component, element, props = {} }) => {
+      for (const { name, component, element, props = {} } of testComponents) {
         const Component = component;
         const { container } = render(
           <Component node={mockHastNode as any} {...props}>
@@ -272,12 +313,15 @@ describe("Node Attribute Fix", () => {
           domElement?.getAttribute("data-streamdown"),
           `${name} component should have data-streamdown attribute`
         ).toBeTruthy();
-      });
+      }
     });
 
     it("should verify component still receives node prop internally (for memoization)", () => {
       // This test ensures we didn't break the internal node usage
-      const UL = components.ul!;
+      const UL = components.ul;
+      if (!UL) {
+        throw new Error("UL component not found");
+      }
 
       // First render
       const { container, rerender } = render(
