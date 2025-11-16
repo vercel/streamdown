@@ -1,11 +1,12 @@
 import "./global.css";
-import { CommandIcon } from "lucide-react";
 import { Navbar } from "@/components/geistdocs/navbar";
 import { GeistdocsProvider } from "@/components/geistdocs/provider";
 import { mono, sans } from "@/lib/geistdocs/fonts";
 import { cn } from "@/lib/utils";
 
-const Logo = () => <CommandIcon className="size-5" />;
+const Logo = () => (
+  <span className="font-semibold text-xl tracking-tight">Streamdown</span>
+);
 
 const links = [
   {

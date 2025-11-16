@@ -1,5 +1,7 @@
 /** biome-ignore-all lint/suspicious/noArrayIndexKey: "required" */
 
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Installer } from "./installer";
 
@@ -27,7 +29,12 @@ export const Hero = () => (
           streaming.
         </p>
         <div className="mx-auto flex w-fit flex-col items-center gap-8 pt-4">
-          <Installer />
+          <div className="flex items-center gap-2">
+            <Installer />
+            <Button asChild variant="outline">
+              <Link href="/docs">Read the docs</Link>
+            </Button>
+          </div>
           <p className="text-muted-foreground text-sm">
             or install it directly with{" "}
             <code className="rounded-md bg-foreground/5 px-2 py-1 tracking-tight">

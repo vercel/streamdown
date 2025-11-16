@@ -5,12 +5,9 @@ import { FAQ } from "./components/faq";
 import { Footer } from "./components/footer";
 import { GitHubFlavoredMarkdown } from "./components/gfm";
 import { HardenedMarkdown } from "./components/hardened";
-import { Header } from "./components/header";
 import { Hero } from "./components/hero";
-import { Implementation } from "./components/implementation";
 import { Mathematics } from "./components/mathematics";
 import { MermaidDemo } from "./components/mermaid";
-import { Props } from "./components/props";
 import { Styles } from "./components/styles";
 import { TerminatorParser } from "./components/terminator-parser";
 
@@ -21,11 +18,9 @@ export const metadata: Metadata = {
 };
 
 const Home = () => (
-  <div className="overflow-x-hidden sm:px-4">
-    <div className="container mx-auto max-w-5xl divide-y px-0 sm:border-x">
-      <Header />
+  <div className="overflow-x-hidden bg-sidebar sm:px-4">
+    <div className="container mx-auto max-w-6xl divide-y px-0 sm:border-x">
       <Hero />
-      <Implementation />
       <Styles />
       <GitHubFlavoredMarkdown />
       <CodeBlocks />
@@ -33,7 +28,6 @@ const Home = () => (
       <MermaidDemo />
       <TerminatorParser />
       <HardenedMarkdown />
-      <Props />
       <CallToAction />
       <FAQ />
       <Footer />
