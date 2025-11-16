@@ -7,7 +7,7 @@ Thank you for your interest in contributing to Streamdown! We welcome contributi
 ### Prerequisites
 
 - Node.js 18 or higher
-- pnpm 9.0.0 (specified in packageManager field)
+- pnpm (version specified in package.json `packageManager` field)
 
 ### Setup
 
