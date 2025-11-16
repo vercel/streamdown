@@ -11,7 +11,10 @@ const components = importedComponents as RequiredComponents;
 describe("Markdown Components", () => {
   describe("List Components", () => {
     it("should render ordered list with correct classes", () => {
-      const OL = components.ol!;
+      const OL = components.ol;
+      if (!OL) {
+        throw new Error("OL component not found");
+      }
       const { container } = render(
         <OL node={null as any}>
           <li>Item 1</li>
@@ -26,7 +29,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render unordered list with correct classes", () => {
-      const UL = components.ul!;
+      const UL = components.ul;
+      if (!UL) {
+        throw new Error("UL component not found");
+      }
       const { container } = render(
         <UL node={null as any}>
           <li>Item 1</li>
@@ -41,7 +47,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render list item with correct classes", () => {
-      const LI = components.li!;
+      const LI = components.li;
+      if (!LI) {
+        throw new Error("LI component not found");
+      }
       const { container } = render(
         <LI node={null as any}>List item content</LI>
       );
@@ -53,7 +62,10 @@ describe("Markdown Components", () => {
 
   describe("Heading Components", () => {
     it("should render h1 with correct classes", () => {
-      const H1 = components.h1!;
+      const H1 = components.h1;
+      if (!H1) {
+        throw new Error("H1 component not found");
+      }
       const { container } = render(<H1 node={null as any}>Heading 1</H1>);
       const h1 = container.querySelector("h1");
       expect(h1).toBeTruthy();
@@ -64,7 +76,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render h2 with correct classes", () => {
-      const H2 = components.h2!;
+      const H2 = components.h2;
+      if (!H2) {
+        throw new Error("H2 component not found");
+      }
       const { container } = render(<H2 node={null as any}>Heading 2</H2>);
       const h2 = container.querySelector("h2");
       expect(h2).toBeTruthy();
@@ -72,7 +87,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render h3 with correct classes", () => {
-      const H3 = components.h3!;
+      const H3 = components.h3;
+      if (!H3) {
+        throw new Error("H3 component not found");
+      }
       const { container } = render(<H3 node={null as any}>Heading 3</H3>);
       const h3 = container.querySelector("h3");
       expect(h3).toBeTruthy();
@@ -80,7 +98,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render h4 with correct classes", () => {
-      const H4 = components.h4!;
+      const H4 = components.h4;
+      if (!H4) {
+        throw new Error("H4 component not found");
+      }
       const { container } = render(<H4 node={null as any}>Heading 4</H4>);
       const h4 = container.querySelector("h4");
       expect(h4).toBeTruthy();
@@ -421,7 +442,10 @@ describe("Markdown Components", () => {
 
   describe("Custom className prop", () => {
     it("should merge custom className with default classes", () => {
-      const H1 = components.h1!;
+      const H1 = components.h1;
+      if (!H1) {
+        throw new Error("H1 component not found");
+      }
       const { container } = render(
         <H1 className="custom-class" node={null as any}>
           Heading

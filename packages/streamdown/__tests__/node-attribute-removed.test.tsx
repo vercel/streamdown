@@ -26,7 +26,10 @@ describe("Node Attribute Fix", () => {
 
   describe("List Components - No node attribute in HTML", () => {
     it("should NOT render node attribute in OL element", () => {
-      const OL = components.ol!;
+      const OL = components.ol;
+      if (!OL) {
+        throw new Error("OL component not found");
+      }
       const { container } = render(
         <OL node={mockHastNode as any}>
           <li>Item 1</li>
