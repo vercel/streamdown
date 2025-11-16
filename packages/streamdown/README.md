@@ -50,4 +50,4 @@ export default function Page() {
 }
 ```
 
-For more info, see the [documentation](https://streamdown.ai/docs).
+For more info, see the [documentation](https://streamdown.ai).
