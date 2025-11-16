@@ -35,11 +35,8 @@ export const CodeBlocks = () => (
         >
           Shiki
         </a>{" "}
-        to highlight code blocks, and comes with a copy button so you can easily
-        copy the code.{" "}
-        <span className="font-medium text-blue-600">
-          Hover to reveal the copy button!
-        </span>
+        to highlight code blocks, and comes with copy and download buttons in
+        the header.
       </>
     }
     markdown={markdown}
