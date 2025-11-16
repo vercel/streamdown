@@ -16,6 +16,7 @@ import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
 
 export type { MermaidConfig } from "mermaid";
+// biome-ignore lint/performance/noBarrelFile: "required"
 export { defaultUrlTransform } from "react-markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 
@@ -133,7 +134,7 @@ export const Streamdown = memo(
     const blocks = useMemo(
       () =>
         parseMarkdownIntoBlocksFn(typeof children === "string" ? children : ""),
-      [children]
+      [children, parseMarkdownIntoBlocksFn]
     );
 
     useEffect(() => {
@@ -148,7 +149,7 @@ export const Streamdown = memo(
         // @ts-expect-error
         import("katex/dist/katex.min.css");
       }
-    }, []);
+    }, [rehypePlugins]);
 
     const runtimeContext = useMemo(() => ({ isAnimating }), [isAnimating]);
 
