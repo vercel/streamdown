@@ -250,7 +250,18 @@ describe("Node Attribute Fix", () => {
 
   describe("Comprehensive Node Attribute Check", () => {
     it("should verify NO components render node='[object Object]' attribute", () => {
-      if (!components.ol || !components.ul || !components.li || !components.h1 || !components.h2 || !components.h3 || !components.a || !components.img) {
+      if (
+        !(
+          components.ol &&
+          components.ul &&
+          components.li &&
+          components.h1 &&
+          components.h2 &&
+          components.h3 &&
+          components.a &&
+          components.img
+        )
+      ) {
         throw new Error("Required components not found");
       }
 
