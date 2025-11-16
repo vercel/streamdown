@@ -21,6 +21,7 @@ export type { MermaidConfig } from "mermaid";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { defaultUrlTransform } from "react-markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
+export { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 
 export type ControlsConfig =
   | boolean
