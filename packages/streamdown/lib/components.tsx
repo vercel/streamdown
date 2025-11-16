@@ -478,8 +478,11 @@ const MemoSection = memo<SectionProps>(
       // This happens during streaming when footnote definitions haven't fully arrived
 
       // Helper to check if a node is empty (only contains backref)
+      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex footnote validation logic with multiple edge cases"
       const isEmptyFootnote = (listItem: React.ReactNode): boolean => {
-        if (!isValidElement(listItem)) return false;
+        if (!isValidElement(listItem)) {
+          return false;
+        }
 
         const itemChildren = Array.isArray(listItem.props.children)
           ? listItem.props.children
@@ -490,7 +493,9 @@ const MemoSection = memo<SectionProps>(
         let hasBackref = false;
 
         for (const itemChild of itemChildren) {
-          if (!itemChild) continue;
+          if (!itemChild) {
+            continue;
+          }
 
           if (typeof itemChild === "string") {
             // If there's non-whitespace text, it has content
@@ -516,14 +521,13 @@ const MemoSection = memo<SectionProps>(
                   hasContent = true;
                   break;
                 }
-                if (isValidElement(grandChild)) {
+                if (
+                  isValidElement(grandChild) &&
+                  grandChild.props?.["data-footnote-backref"] === undefined
+                ) {
                   // If it's not a backref link, it's content
-                  if (
-                    grandChild.props?.["data-footnote-backref"] === undefined
-                  ) {
-                    hasContent = true;
-                    break;
-                  }
+                  hasContent = true;
+                  break;
                 }
               }
             }
@@ -536,8 +540,11 @@ const MemoSection = memo<SectionProps>(
 
       // Process children to filter out empty footnotes
       const processedChildren = Array.isArray(children)
-        ? children.map((child) => {
-            if (!isValidElement(child)) return child;
+        ? // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex footnote filtering logic"
+          children.map((child) => {
+            if (!isValidElement(child)) {
+              return child;
+            }
 
             // If this is an <ol> containing footnote list items
             if (child.type === MemoOl) {

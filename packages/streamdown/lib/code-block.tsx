@@ -57,6 +57,7 @@ class HighlighterManager {
     return "text";
   }
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex highlighter initialization logic with multiple edge cases"
   private async ensureHighlightersInitialized(
     themes: [BundledTheme, BundledTheme],
     language: BundledLanguage
@@ -105,14 +106,15 @@ class HighlighterManager {
           )
         : Array.from(this.loadedLanguages);
 
+      let langs: BundledLanguage[] = [];
+      if (langsToLoad.length > 0) {
+        langs = langsToLoad;
+      } else if (isLanguageSupported) {
+        langs = [language];
+      }
       this.darkHighlighter = await createHighlighter({
         themes: [darkTheme],
-        langs:
-          langsToLoad.length > 0
-            ? langsToLoad
-            : isLanguageSupported
-              ? [language]
-              : [],
+        langs,
         engine: jsEngine,
       });
       this.darkTheme = darkTheme;

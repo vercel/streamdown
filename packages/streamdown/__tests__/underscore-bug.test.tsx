@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { parseIncompleteMarkdown } from "../lib/parse-incomplete-markdown";
 
+const HELLO_WORLD_UNDERSCORE_REGEX = /hello_world_/;
+const TRAILING_UNDERSCORE_REGEX = /_$/;
+
 describe("parseIncompleteMarkdown - word-internal underscores", () => {
   describe("underscores as word separators", () => {
     it("should handle single underscore between words", () => {
@@ -123,8 +126,8 @@ describe("parseIncompleteMarkdown - word-internal underscores", () => {
 <a href="example_link"/>`;
       const result = parseIncompleteMarkdown(input);
       expect(result).toBe(input);
-      expect(result).not.toMatch(/hello_world_/);
-      expect(result).not.toMatch(/_$/);
+      expect(result).not.toMatch(HELLO_WORLD_UNDERSCORE_REGEX);
+      expect(result).not.toMatch(TRAILING_UNDERSCORE_REGEX);
     });
   });
 });

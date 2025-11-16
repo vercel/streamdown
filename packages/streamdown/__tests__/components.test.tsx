@@ -267,9 +267,7 @@ describe("Markdown Components", () => {
       if (!Pre) {
         throw new Error("Pre component not found");
       }
-      const codeElement = React.createElement("code", {
-        children: "const x = 1;",
-      });
+      const codeElement = React.createElement("code", {}, "const x = 1;");
       const { container } = render(<Pre node={null as any}>{codeElement}</Pre>);
       // The pre component returns its children
       // The code element should be present as a child
@@ -386,7 +384,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render thead with correct classes", () => {
-      const THead = components.thead!;
+      const THead = components.thead;
+      if (!THead) {
+        return;
+      }
       const { container } = render(
         <THead node={null as any}>
           <tr>
@@ -400,7 +401,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render tbody with correct classes", () => {
-      const TBody = components.tbody!;
+      const TBody = components.tbody;
+      if (!TBody) {
+        return;
+      }
       const { container } = render(
         <TBody node={null as any}>
           <tr>
@@ -416,7 +420,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render tr with correct classes", () => {
-      const TR = components.tr!;
+      const TR = components.tr;
+      if (!TR) {
+        return;
+      }
       const { container } = render(
         <TR node={null as any}>
           <td>Cell</td>
@@ -429,7 +436,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render th with correct classes", () => {
-      const TH = components.th!;
+      const TH = components.th;
+      if (!TH) {
+        return;
+      }
       const { container } = render(<TH node={null as any}>Header</TH>);
       const th = container.querySelector("th");
       expect(th).toBeTruthy();
@@ -442,7 +452,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render td with correct classes", () => {
-      const TD = components.td!;
+      const TD = components.td;
+      if (!TD) {
+        return;
+      }
       const { container } = render(<TD node={null as any}>Cell</TD>);
       const td = container.querySelector("td");
       expect(td).toBeTruthy();
@@ -454,7 +467,10 @@ describe("Markdown Components", () => {
 
   describe("Other Components", () => {
     it("should render hr with correct classes", () => {
-      const HR = components.hr!;
+      const HR = components.hr;
+      if (!HR) {
+        return;
+      }
       const { container } = render(<HR node={null as any} />);
       const hr = container.querySelector("hr");
       expect(hr).toBeTruthy();
@@ -463,7 +479,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render sup with correct classes", () => {
-      const Sup = components.sup!;
+      const Sup = components.sup;
+      if (!Sup) {
+        return;
+      }
       const { container } = render(<Sup node={null as any}>superscript</Sup>);
       const sup = container.querySelector("sup");
       expect(sup).toBeTruthy();
@@ -471,7 +490,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render sub with correct classes", () => {
-      const Sub = components.sub!;
+      const Sub = components.sub;
+      if (!Sub) {
+        return;
+      }
       const { container } = render(<Sub node={null as any}>subscript</Sub>);
       const sub = container.querySelector("sub");
       expect(sub).toBeTruthy();

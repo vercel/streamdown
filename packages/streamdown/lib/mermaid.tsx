@@ -109,6 +109,7 @@ export const MermaidFullscreenButton = ({
       </button>
 
       {isFullscreen && (
+        // biome-ignore lint/a11y/useSemanticElements: "div is used as a backdrop overlay, not a button"
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
           onClick={handleToggle}
@@ -128,6 +129,7 @@ export const MermaidFullscreenButton = ({
           >
             <XIcon size={20} />
           </button>
+          {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
           <div
             className="flex h-full w-full items-center justify-center p-12"
             onClick={(e) => e.stopPropagation()}

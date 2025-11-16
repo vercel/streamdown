@@ -165,6 +165,7 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
 
 // Counts single asterisks that are not part of double asterisks, not escaped, and not list markers
 const countSingleAsterisks = (text: string): number => {
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
   return text.split("").reduce((acc, char, index) => {
     if (char === "*") {
       const prevChar = text[index - 1];
@@ -280,6 +281,7 @@ const isWithinMathBlock = (text: string, position: number): boolean => {
 
 // Counts single underscores that are not part of double underscores, not escaped, and not in math blocks
 const countSingleUnderscores = (text: string): number => {
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
   return text.split("").reduce((acc, char, index) => {
     if (char === "_") {
       const prevChar = text[index - 1];
@@ -310,6 +312,7 @@ const countSingleUnderscores = (text: string): number => {
 };
 
 // Completes incomplete italic formatting with single underscores (_)
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex italic handling logic with multiple edge cases for markdown parsing"
 const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
   // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
@@ -404,6 +407,7 @@ const countSingleBackticks = (text: string): number => {
 
 // Completes incomplete inline code formatting (`)
 // Avoids completing if inside an incomplete code block
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex inline code handling logic with multiple edge cases for markdown parsing"
 const handleIncompleteInlineCode = (text: string): string => {
   // Check if we have inline triple backticks (starts with ``` and should end with ```)
   // This pattern should ONLY match truly inline code (no newlines)

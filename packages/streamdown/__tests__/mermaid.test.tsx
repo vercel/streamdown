@@ -24,23 +24,23 @@ describe("Mermaid", () => {
 
   it("renders without crashing", async () => {
     let container: HTMLElement;
-    await act(async () => {
+    await act(() => {
       const result = render(<Mermaid chart="graph TD; A-->B" />);
       container = result.container;
     });
-    expect(container!.firstChild).toBeDefined();
+    expect(container?.firstChild).toBeDefined();
   });
 
   it("applies custom className", async () => {
     let container: HTMLElement;
-    await act(async () => {
+    await act(() => {
       const result = render(
         <Mermaid chart="graph TD; A-->B" className="custom-class" />
       );
       container = result.container;
     });
 
-    const mermaidContainer = container!.firstChild as HTMLElement;
+    const mermaidContainer = container?.firstChild as HTMLElement;
     expect(mermaidContainer.className).toContain("custom-class");
   });
 
@@ -54,7 +54,7 @@ describe("Mermaid", () => {
       fontFamily: "Arial, sans-serif",
     } as MermaidConfig;
 
-    await act(async () => {
+    await act(() => {
       render(<Mermaid chart="graph TD; A-->B" config={customConfig} />);
     });
 
@@ -71,7 +71,7 @@ describe("Mermaid", () => {
   });
 
   it("initializes with default config when none provided", async () => {
-    await act(async () => {
+    await act(() => {
       render(<Mermaid chart="graph TD; A-->B" />);
     });
 
@@ -93,7 +93,7 @@ describe("Mermaid", () => {
     } as MermaidConfig;
 
     let rerender: ReturnType<typeof render>["rerender"];
-    await act(async () => {
+    await act(() => {
       const result = render(
         <Mermaid chart="graph TD; A-->B" config={config1} />
       );
@@ -109,8 +109,8 @@ describe("Mermaid", () => {
     } as MermaidConfig;
 
     // Should be able to rerender with different config
-    await act(async () => {
-      rerender!(<Mermaid chart="graph TD; A-->B" config={config2} />);
+    await act(() => {
+      rerender?.(<Mermaid chart="graph TD; A-->B" config={config2} />);
     });
 
     // Should still render without error
@@ -128,7 +128,7 @@ describe("Mermaid", () => {
     } as MermaidConfig;
 
     let container: HTMLElement;
-    await act(async () => {
+    await act(() => {
       const result = render(
         <Mermaid chart="graph TD; A-->B" config={config} />
       );
@@ -136,7 +136,7 @@ describe("Mermaid", () => {
     });
 
     // Should render without error even with complex config
-    expect(container!.firstChild).toBeTruthy();
+    expect(container?.firstChild).toBeTruthy();
   });
 
   it("supports multiple components with different configs", async () => {
@@ -145,7 +145,7 @@ describe("Mermaid", () => {
 
     // Render first component
     let rerender: ReturnType<typeof render>["rerender"];
-    await act(async () => {
+    await act(() => {
       const result = render(
         <Mermaid chart="graph TD; A-->B" config={config1} />
       );
@@ -156,8 +156,8 @@ describe("Mermaid", () => {
     expect(mockInitialize.mock.calls[0][0].theme).toBe("forest");
 
     // Render second component with different config
-    await act(async () => {
-      rerender!(<Mermaid chart="graph TD; X-->Y" config={config2} />);
+    await act(() => {
+      rerender?.(<Mermaid chart="graph TD; X-->Y" config={config2} />);
     });
 
     await waitFor(() => expect(mockInitialize).toHaveBeenCalledTimes(2));
@@ -167,14 +167,14 @@ describe("Mermaid", () => {
   describe("Fullscreen functionality", () => {
     it("should render fullscreen button", async () => {
       let container: HTMLElement;
-      await act(async () => {
+      await act(() => {
         const result = render(
           <MermaidFullscreenButton chart="graph TD; A-->B" />
         );
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector(
+      const fullscreenButton = container?.querySelector(
         'button[title="View fullscreen"]'
       );
       expect(fullscreenButton).toBeTruthy();
@@ -184,19 +184,19 @@ describe("Mermaid", () => {
       const { fireEvent } = await import("@testing-library/react");
 
       let container: HTMLElement;
-      await act(async () => {
+      await act(() => {
         const result = render(
           <MermaidFullscreenButton chart="graph TD; A-->B" />
         );
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector(
+      const fullscreenButton = container?.querySelector(
         'button[title="View fullscreen"]'
       ) as HTMLButtonElement;
       expect(fullscreenButton).toBeTruthy();
 
-      await act(async () => {
+      await act(() => {
         fireEvent.click(fullscreenButton);
       });
 
@@ -215,19 +215,19 @@ describe("Mermaid", () => {
       const { fireEvent } = await import("@testing-library/react");
 
       let container: HTMLElement;
-      await act(async () => {
+      await act(() => {
         const result = render(
           <MermaidFullscreenButton chart="graph TD; A-->B" />
         );
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector(
+      const fullscreenButton = container?.querySelector(
         'button[title="View fullscreen"]'
       ) as HTMLButtonElement;
 
       // Open fullscreen
-      await act(async () => {
+      await act(() => {
         fireEvent.click(fullscreenButton);
       });
 
@@ -237,7 +237,7 @@ describe("Mermaid", () => {
       expect(closeButton).toBeTruthy();
 
       // Close fullscreen
-      await act(async () => {
+      await act(() => {
         fireEvent.click(closeButton);
       });
 
@@ -252,19 +252,19 @@ describe("Mermaid", () => {
       const { fireEvent } = await import("@testing-library/react");
 
       let container: HTMLElement;
-      await act(async () => {
+      await act(() => {
         const result = render(
           <MermaidFullscreenButton chart="graph TD; A-->B" />
         );
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector(
+      const fullscreenButton = container?.querySelector(
         'button[title="View fullscreen"]'
       ) as HTMLButtonElement;
 
       // Open fullscreen
-      await act(async () => {
+      await act(() => {
         fireEvent.click(fullscreenButton);
       });
 
@@ -272,7 +272,7 @@ describe("Mermaid", () => {
       expect(modal).toBeTruthy();
 
       // Press ESC key
-      await act(async () => {
+      await act(() => {
         fireEvent.keyDown(document, { key: "Escape" });
       });
 
@@ -287,19 +287,19 @@ describe("Mermaid", () => {
       const { fireEvent } = await import("@testing-library/react");
 
       let container: HTMLElement;
-      await act(async () => {
+      await act(() => {
         const result = render(
           <MermaidFullscreenButton chart="graph TD; A-->B" />
         );
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector(
+      const fullscreenButton = container?.querySelector(
         'button[title="View fullscreen"]'
       ) as HTMLButtonElement;
 
       // Open fullscreen
-      await act(async () => {
+      await act(() => {
         fireEvent.click(fullscreenButton);
       });
 
@@ -309,7 +309,7 @@ describe("Mermaid", () => {
       expect(modal).toBeTruthy();
 
       // Click on the modal backdrop (outside the diagram)
-      await act(async () => {
+      await act(() => {
         fireEvent.click(modal);
       });
 
@@ -324,19 +324,19 @@ describe("Mermaid", () => {
       const { fireEvent } = await import("@testing-library/react");
 
       let container: HTMLElement;
-      await act(async () => {
+      await act(() => {
         const result = render(
           <MermaidFullscreenButton chart="graph TD; A-->B" />
         );
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector(
+      const fullscreenButton = container?.querySelector(
         'button[title="View fullscreen"]'
       ) as HTMLButtonElement;
 
       // Open fullscreen
-      await act(async () => {
+      await act(() => {
         fireEvent.click(fullscreenButton);
       });
 
@@ -346,7 +346,7 @@ describe("Mermaid", () => {
       expect(diagram).toBeTruthy();
 
       // Click on the diagram itself
-      await act(async () => {
+      await act(() => {
         fireEvent.click(diagram);
       });
 
@@ -359,20 +359,20 @@ describe("Mermaid", () => {
       const { fireEvent } = await import("@testing-library/react");
 
       let container: HTMLElement;
-      await act(async () => {
+      await act(() => {
         const result = render(
           <MermaidFullscreenButton chart="graph TD; A-->B" />
         );
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector(
+      const fullscreenButton = container?.querySelector(
         'button[title="View fullscreen"]'
       ) as HTMLButtonElement;
 
       // Open fullscreen - verify modal is open instead of body style
       // (body style manipulation may not work consistently in jsdom test environment)
-      await act(async () => {
+      await act(() => {
         fireEvent.click(fullscreenButton);
       });
 
@@ -385,7 +385,7 @@ describe("Mermaid", () => {
       const closeButton = document.querySelector(
         'button[title="Exit fullscreen"]'
       ) as HTMLButtonElement;
-      await act(async () => {
+      await act(() => {
         fireEvent.click(closeButton);
       });
 

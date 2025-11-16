@@ -18,6 +18,7 @@ export const ImageComponent = ({
   alt,
   ...props
 }: ImageComponentProps) => {
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex image download logic with multiple edge cases"
   const downloadImage = async () => {
     if (!src) {
       return;
@@ -43,22 +44,22 @@ export const ImageComponent = ({
       } else {
         // Determine extension from blob type
         const mimeType = blob.type;
-        let extension = "png"; // default
+        let fileExtension = "png"; // default
 
         if (mimeType.includes("jpeg") || mimeType.includes("jpg")) {
-          extension = "jpg";
+          fileExtension = "jpg";
         } else if (mimeType.includes("png")) {
-          extension = "png";
+          fileExtension = "png";
         } else if (mimeType.includes("svg")) {
-          extension = "svg";
+          fileExtension = "svg";
         } else if (mimeType.includes("gif")) {
-          extension = "gif";
+          fileExtension = "gif";
         } else if (mimeType.includes("webp")) {
-          extension = "webp";
+          fileExtension = "webp";
         }
 
         const baseName = alt || originalFilename || "image";
-        filename = `${baseName.replace(fileExtensionPattern, "")}.${extension}`;
+        filename = `${baseName.replace(fileExtensionPattern, "")}.${fileExtension}`;
       }
 
       save(filename, blob, blob.type);
@@ -76,8 +77,8 @@ export const ImageComponent = ({
       className="group relative my-4 inline-block"
       data-streamdown="image-wrapper"
     >
-      {/** biome-ignore lint/nursery/useImageSize: "unknown size" */}
       {/** biome-ignore lint/performance/noImgElement: "streamdown is framework-agnostic" */}
+      {/** biome-ignore lint/correctness/useImageSize: "unknown size" */}
       <img
         alt={alt}
         className={cn("max-w-full rounded-lg", className)}
