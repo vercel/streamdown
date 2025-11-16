@@ -4,6 +4,8 @@
   "files": {
     "includes": [
       "!**/components/ui",
+      "!**/components/ai-elements",
+      "!**/components/geistdocs",
       "!**/lib/utils.ts",
       "!**/hooks/use-mobile.ts"
     ]
