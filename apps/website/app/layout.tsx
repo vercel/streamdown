@@ -1,43 +1,41 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { Analytics } from "@vercel/analytics/next";
-import type { ReactNode } from "react";
-import { Providers } from "@/components/providers";
+import "./global.css";
+import { CommandIcon } from "lucide-react";
+import { Navbar } from "@/components/geistdocs/navbar";
+import { GeistdocsProvider } from "@/components/geistdocs/provider";
+import { mono, sans } from "@/lib/geistdocs/fonts";
 import { cn } from "@/lib/utils";
 
-const geistSans = Geist({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  weight: "variable",
-  display: "swap",
-});
+const Logo = () => <CommandIcon className="size-5" />;
 
-const geistMono = Geist_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  weight: "variable",
-  display: "swap",
-});
+const links = [
+  {
+    label: "Docs",
+    href: "/docs",
+  },
+];
 
-type RootLayoutProps = {
-  children: ReactNode;
-};
+const suggestions = [
+  "What is Vercel?",
+  "What can I deploy with Vercel?",
+  "What is Fluid Compute?",
+  "How much does Vercel cost?",
+];
 
-const RootLayout = ({ children }: RootLayoutProps) => (
-  <html lang="en" suppressHydrationWarning>
-    <body
-      className={cn(
-        geistSans.variable,
-        geistMono.variable,
-        "overflow-x-hidden font-sans antialiased sm:px-4"
-      )}
-    >
-      <Providers>
+const Layout = ({ children }: LayoutProps<"/">) => (
+  <html
+    className={cn(sans.variable, mono.variable, "scroll-smooth antialiased")}
+    lang="en"
+    suppressHydrationWarning
+  >
+    <body>
+      <GeistdocsProvider>
+        <Navbar items={links} suggestions={suggestions}>
+          <Logo />
+        </Navbar>
         {children}
-        <Analytics />
-      </Providers>
+      </GeistdocsProvider>
     </body>
   </html>
 );
 
-export default RootLayout;
+export default Layout;

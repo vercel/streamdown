@@ -1,0 +1,64 @@
+---
+title: Edit on GitHub
+description: Allow readers to contribute directly by editing documentation pages on GitHub
+---
+
+The "Edit on GitHub" feature provides a direct link for readers to propose changes to your documentation. This link appears in the table of contents sidebar on every documentation page, making it easy for users to contribute fixes, improvements, or updates.
+
+## How It Works
+
+When users click the "Edit this page on GitHub" link, they are taken directly to the source file in your GitHub repository. From there, they can:
+
+1. Fork the repository (if they haven't already)
+2. Make their edits in the GitHub web editor
+3. Submit a pull request with their changes
+
+This workflow leverages GitHub's built-in editing capabilities, making it straightforward for both technical and non-technical users to contribute.
+
+## Configuration
+
+The Edit on GitHub link is automatically generated based on three environment variables:
+
+```bash title=".env"
+NEXT_PUBLIC_GEISTDOCS_OWNER="your-username"
+NEXT_PUBLIC_GEISTDOCS_REPO="your-repo-name"
+```
+
+### Environment Variables
+
+- **`NEXT_PUBLIC_GEISTDOCS_OWNER`** - Your GitHub username or organization name
+- **`NEXT_PUBLIC_GEISTDOCS_REPO`** - Your repository name
+
+### Generated URL Format
+
+The link follows this pattern:
+
+```
+https://github.com/{owner}/{repo}/edit/main/content/docs/{file-path}
+```
+
+For example, if your page is located at `content/docs/getting-started.mdx`, the generated link would be:
+
+```
+https://github.com/your-username/your-repo-name/edit/main/content/docs/getting-started.mdx
+```
+
+## Implementation Details
+
+The Edit on GitHub feature is implemented in the `DocsPage` component at `components/geistdocs/docs-page.tsx`. The link is automatically generated for each page based on its file path.
+
+If the required environment variables are not set, the link will not appear on your documentation pages.
+
+## Best Practices
+
+1. **Clear Contribution Guidelines** - Add a `CONTRIBUTING.md` file to your repository to help contributors understand your standards and workflow
+2. **Branch Protection** - Enable branch protection rules on your main branch to require reviews before merging
+3. **Templates** - Use pull request templates to guide contributors on what information to include
+4. **Acknowledgments** - Consider acknowledging contributors in your documentation or release notes
+
+## Benefits
+
+- **Lower Barrier to Entry** - Users can suggest changes without needing to clone the repository locally
+- **Improved Documentation Quality** - Community contributions help catch errors and keep content up-to-date
+- **Transparent Process** - All changes go through pull requests, maintaining quality control
+- **Community Engagement** - Encourages users to become active contributors to your project

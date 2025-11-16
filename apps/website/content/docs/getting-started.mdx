@@ -1,0 +1,101 @@
+---
+title: Getting Started
+description: A comprehensive guide to getting started with Geistdocs
+---
+
+Welcome to Geistdocs! This guide will walk you through everything you need to know to set up and customize your documentation site.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- **Node.js 18+** installed on your system
+- **pnpm** (recommended) or npm package manager
+- A **GitHub account** for repository hosting
+- Basic familiarity with **Markdown** and **React**
+
+## Installation
+
+### 1. Create a New Project
+
+Create a new repository using the Geistdocs template:
+
+```bash
+gh repo create mydocs --template vercel/geistdocs --clone
+cd mydocs
+```
+
+Alternatively, you can use the template directly on GitHub:
+1. Visit the Geistdocs repository
+2. Click "Use this template"
+3. Clone your new repository
+
+### 2. Install Dependencies
+
+Run the following command to install dependencies:
+
+```bash
+pnpm install
+```
+
+This will install all dependencies including Next.js, Fumadocs, and the AI SDK.
+
+### 3. Configure Environment Variables
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env.local
+```
+
+Then edit the environment variables in the `.env.local` file.
+
+### 4. Delete the Geistdocs content
+
+Delete all the files within `content/docs`. These are the default files that come with the Geistdocs template.
+
+```bash
+rm -rf content/docs/*
+```
+
+### 5. Start Development Server
+
+Run the development server:
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to see your documentation site.
+
+## Writing Your First Page
+
+### Create a New Page
+
+Create a new file in `content/docs/`:
+
+```mdx title="content/docs/my-first-page.mdx"
+---
+title: My First Page
+description: This is my first documentation page
+---
+
+# My First Page
+
+Welcome to my documentation! This page will be available at `/docs/my-first-page`.
+
+## Features
+
+- Easy to write with Markdown
+- Full React component support
+- Automatic navigation generation
+
+## Code Example
+
+```typescript
+const greeting = (name: string): string => {
+  return `Hello, ${name}!`;
+};
+
+console.log(greeting("World"));
+```

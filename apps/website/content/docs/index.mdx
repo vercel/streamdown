@@ -1,0 +1,124 @@
+---
+title: Overview
+description: A modern documentation template for spinning up Vercel documentation microsites quickly and consistently
+---
+
+Geistdocs is a production-ready documentation template built with Next.js 16 and Fumadocs. It's designed as an internal Vercel template for creating documentation microsites with a consistent look, feel, and feature set across projects.
+
+## Overview
+
+This template provides everything you need to build beautiful, functional documentation sites with minimal setup. It combines the power of MDX for content authoring with modern features like AI-powered chat, GitHub Discussions integration, and advanced search capabilities.
+
+## Key Features
+
+### Content Authoring
+
+- **MDX-powered documentation** - Write docs in MDX with full React component support
+- **Syntax highlighting** - Beautiful code blocks powered by Shiki
+- **TypeScript support** - Full type safety across the documentation system
+- **Custom components** - Extend with your own React components
+
+### Interactive Features
+
+- **AI-powered chat** - Built-in AI assistant that understands your documentation
+- **GitHub Discussions** - Allow users to provide feedback directly to GitHub
+- **Advanced search** - Fast, fuzzy search through all documentation
+- **RSS feed** - Automatic RSS feed generation for content updates
+
+### User Experience
+
+- **Modern UI** - Beautiful, accessible components built with Radix UI
+- **Dark mode** - Built-in theme switching with system preference detection
+- **Responsive design** - Mobile-first approach that works everywhere
+- **Fast performance** - Optimized with Next.js 16 App Router
+
+### Developer Experience
+
+- **Zero-config linting** - Uses Ultracite (Biome preset) for strict code quality
+- **Hot reload** - Instant feedback during development
+- **Type-safe content** - Generated types for all MDX content
+- **Easy deployment** - Optimized for Vercel with one-click deployment
+
+## Architecture
+
+Geistdocs is built on a modern stack:
+
+- **Next.js 16** - React framework with App Router
+- **Fumadocs** - Documentation framework for content management
+- **Tailwind CSS 4** - Utility-first styling
+- **Radix UI** - Accessible component primitives
+- **Vercel AI SDK** - AI chat functionality
+- **Octokit** - GitHub API integration
+
+## Use Cases
+
+This template is ideal for:
+
+- **Product documentation** - Feature guides, tutorials, and references
+- **API documentation** - Endpoint documentation with code examples
+- **Developer tools** - CLI tools, SDKs, and framework documentation
+- **Internal wikis** - Team knowledge bases and guides
+- **Project documentation** - Open source project documentation
+
+## Core Concepts
+
+### Content Structure
+
+Documentation lives in the `content/docs/` directory. Each `.mdx` file becomes a page with automatic routing based on the file path.
+
+### Frontmatter
+
+Every documentation page requires frontmatter metadata:
+
+```mdx
+---
+title: Page Title
+description: Brief description of the page
+---
+```
+
+### Navigation
+
+Navigation is configured using `meta.json` files in each directory, allowing you to control ordering and grouping of pages.
+
+### Components
+
+Import and use React components directly in your MDX:
+
+```mdx
+<Card title="Learn more" href="/docs/getting-started" />
+```
+
+## What's Included
+
+The template comes with several built-in features out of the box:
+
+- **Edit on GitHub** - Direct links for users to propose changes
+- **Feedback widget** - Emotion-based feedback that creates GitHub Discussions
+- **Ask AI** - Context-aware AI chat for answering questions
+- **Open in Chat** - Send documentation to external AI platforms
+- **RSS feed** - Automatic feed generation at `/rss.xml`
+
+## Next Steps
+
+<Cards>
+  <Card title="Getting Started" href="/docs/getting-started" />
+  <Card title="Edit on GitHub" href="/docs/edit-on-github" />
+  <Card title="Feedback" href="/docs/feedback" />
+  <Card title="Ask AI" href="/docs/ask-ai" />
+  <Card title="Open in Chat" href="/docs/open-in-chat" />
+  <Card title="RSS" href="/docs/rss" />
+</Cards>
+
+## Learn More
+
+- [Fumadocs Documentation](https://fumadocs.dev) - Learn about the documentation framework
+- [Next.js Documentation](https://nextjs.org/docs) - Explore Next.js features
+- [Ultracite](https://github.com/haydenbleasel/ultracite) - Code quality standards
+
+## Support
+
+For issues, questions, or contributions:
+- Check the documentation pages for detailed guides
+- Use the built-in feedback widget to report issues
+- Ask questions using the AI chat assistant

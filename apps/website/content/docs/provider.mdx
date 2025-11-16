@@ -1,0 +1,78 @@
+---
+title: Geistdocs Provider
+description: The root provider component that handles layout shifts, notifications, and analytics
+---
+
+The `GeistdocsProvider` is a wrapper component that sits at the root of your application. It wraps Fumadocs' `RootProvider` and adds Geistdocs-specific functionality to make everything work seamlessly.
+
+## What It Does
+
+The provider handles four main things for you:
+
+1. **Layout Shifts** - Automatically adjusts page padding when the AI chat sidebar opens on desktop
+2. **Toast Notifications** - Provides a global notification system for user feedback
+3. **Analytics** - Integrates Vercel Analytics for tracking page views and performance
+4. **Search** - Configures the search dialog and connects it to your search API
+
+## Usage
+
+Wrap your application with the provider in your root layout:
+
+```tsx title="app/layout.tsx"
+import { GeistdocsProvider } from "@/components/geistdocs/provider";
+
+const Layout = ({ children }: LayoutProps) => (
+  <html lang="en">
+    <body>
+      <GeistdocsProvider>
+        <Navbar />
+        {children}
+      </GeistdocsProvider>
+    </body>
+  </html>
+);
+```
+
+That's it. The provider handles everything automatically.
+
+## Layout Shifts
+
+When users open the AI chat on desktop, the provider automatically adds padding to prevent content from being hidden behind the sidebar. On mobile, the chat opens as a drawer instead, so no padding is needed.
+
+You don't need to do anything - the provider detects the screen size and chat state automatically.
+
+## Toast Notifications
+
+The provider includes a global toast notification system. Use it anywhere in your app:
+
+```tsx
+import { toast } from "sonner";
+
+toast.success("Changes saved");
+toast.error("Something went wrong");
+```
+
+## Analytics
+
+Vercel Analytics is automatically included and tracks:
+- Page views
+- Web Vitals
+- User interactions
+- Performance metrics
+
+No configuration needed - it works automatically when deployed on Vercel.
+
+## Optional Props
+
+The provider accepts a few optional props if you need to customize behavior:
+
+- **`basePath`** - Set a custom base path for API routes (useful for subdirectory deployments)
+- **`className`** - Add custom CSS classes to the wrapper
+- **`search`** - Override search configuration options
+
+Most projects won't need to customize these - the defaults work for standard deployments.
+
+## Related
+
+- [Ask AI](/docs/ask-ai) - The AI chat feature that triggers layout shifts
+- [Feedback](/docs/feedback) - Uses toast notifications for user feedback

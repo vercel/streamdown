@@ -1,0 +1,6 @@
+{
+  "title": "Vercel Documentation",
+  "description": "Vercel Documentation",
+  "root": true,
+  "pages": ["index", "getting-started", "deployment", "---Features---", "..."]
+}

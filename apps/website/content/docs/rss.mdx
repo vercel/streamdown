@@ -1,0 +1,327 @@
+---
+title: RSS
+description: Keep users updated with an automatically generated RSS feed for your documentation
+---
+
+The RSS feature provides an automatically generated RSS 2.0 feed for your documentation. This allows users to subscribe to updates and stay informed when new content is published or existing pages are modified.
+
+## How It Works
+
+Geistdocs automatically generates an RSS feed that includes:
+
+- All published documentation pages
+- Page titles and descriptions
+- Direct links to each page
+- Last modified dates
+- Author information
+
+The feed is regenerated on each request, ensuring subscribers always receive the most current information about your documentation.
+
+## Accessing the Feed
+
+The RSS feed is available at:
+
+```
+https://your-domain.com/rss.xml
+```
+
+Users can subscribe to this URL using:
+- RSS readers (Feedly, Inoreader, NewsBlur)
+- Email services (Blogtrottr, Kill the Newsletter)
+- Browser extensions
+- News aggregators
+
+### RSS Button
+
+A convenient RSS button appears in the navigation bar, making it easy for users to discover and subscribe to your feed. Clicking the button opens the RSS XML in a new tab.
+
+## Feed Format
+
+The RSS feed follows the RSS 2.0 specification and includes:
+
+### Channel Metadata
+
+```xml
+<channel>
+  <title>Your Documentation Title</title>
+  <link>https://your-domain.com</link>
+  <language>en</language>
+  <image>https://your-domain.com/banner.png</image>
+  <copyright>All rights reserved [Year], [Your Organization]</copyright>
+</channel>
+```
+
+### Item Format
+
+Each documentation page appears as an item:
+
+```xml
+<item>
+  <guid>page-url</guid>
+  <title>Page Title</title>
+  <description>Page description</description>
+  <link>https://your-domain.com/docs/page-url</link>
+  <pubDate>Thu, 12 Nov 2025 00:00:00 GMT</pubDate>
+  <author>
+    <name>Your Organization</name>
+  </author>
+</item>
+```
+
+## Configuration
+
+The RSS feed requires minimal configuration:
+
+```bash title=".env"
+NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL="your-domain.com"
+```
+
+### Environment Variables
+
+- **`NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL`** - Your production domain (used for generating absolute URLs)
+- **`NODE_ENV`** - Determines protocol (https in production, http in development)
+
+### Customization
+
+You can customize the RSS feed metadata by editing the Feed configuration:
+
+```typescript title="app/rss.xml/route.ts"
+const feed = new Feed({
+  title: "Your Documentation Title",
+  id: baseUrl,
+  link: baseUrl,
+  language: "en",
+  image: `${baseUrl}/banner.png`,
+  favicon: `${baseUrl}/icon.png`,
+  copyright: `All rights reserved ${new Date().getFullYear()}, Your Organization`,
+});
+```
+
+## Features
+
+### Automatic Updates
+
+The feed automatically includes:
+- Newly created pages
+- Updated page content (using last modified dates)
+- Changed titles or descriptions
+- All pages from your documentation source
+
+### Last Modified Dates
+
+Pages use their `lastModified` frontmatter field or fall back to the current date:
+
+```mdx title="content/docs/example.mdx"
+---
+title: Example Page
+description: An example documentation page
+lastModified: 2025-11-12
+---
+```
+
+### Static Regeneration
+
+By default, the RSS feed uses:
+```typescript
+export const revalidate = false;
+```
+
+This means the feed is regenerated on every request, ensuring freshness. You can enable caching by setting a revalidate value (in seconds):
+
+```typescript
+export const revalidate = 3600; // Cache for 1 hour
+```
+
+## Implementation Details
+
+The RSS feature is implemented in:
+
+- `app/rss.xml/route.ts` - RSS feed generation
+- `components/geistdocs/rss-button.tsx` - RSS button component
+- `components/geistdocs/navbar.tsx` - Integration into navigation
+
+The feed uses the [feed](https://www.npmjs.com/package/feed) package to generate compliant RSS 2.0 XML.
+
+## Best Practices
+
+### 1. Set Proper Dates
+
+Include `lastModified` in your page frontmatter:
+
+```mdx
+---
+title: My Page
+description: A great page
+lastModified: 2025-11-12
+---
+```
+
+This helps subscribers:
+- Identify new vs. updated content
+- Sort by freshness in their RSS reader
+- Track documentation changes over time
+
+### 2. Write Descriptive Titles and Descriptions
+
+RSS readers display these prominently:
+- Keep titles concise and clear
+- Write descriptions that stand alone
+- Include relevant keywords
+- Avoid clickbait or vague titles
+
+### 3. Consider Caching
+
+For large documentation sites:
+- Enable revalidation to reduce load
+- Set appropriate cache duration
+- Balance freshness with performance
+- Monitor regeneration time
+
+### 4. Provide Brand Assets
+
+Ensure your feed includes:
+- A banner image (1200x630px recommended)
+- A favicon/icon (512x512px recommended)
+- Proper copyright information
+- Consistent branding
+
+## User Benefits
+
+### Stay Updated
+
+Subscribers receive notifications when:
+- New documentation pages are published
+- Existing pages are updated
+- Important changes are made
+- Major content additions occur
+
+### Flexible Consumption
+
+Users can:
+- Read updates in their preferred RSS reader
+- Combine multiple feeds into a single stream
+- Filter and organize content as needed
+- Save articles for later reading
+
+### No Account Required
+
+Unlike email newsletters:
+- No signup process
+- No email collection
+- No GDPR concerns for feed providers
+- User privacy preserved
+
+## Use Cases
+
+### For Product Documentation
+
+- Announce new feature documentation
+- Update API reference changes
+- Publish integration guides
+- Share best practices and tutorials
+
+### For Knowledge Bases
+
+- Notify of new help articles
+- Update troubleshooting guides
+- Share product tips and tricks
+- Announce policy changes
+
+### For Developer Docs
+
+- Release API updates
+- Share SDK documentation
+- Publish migration guides
+- Announce breaking changes
+
+## SEO Benefits
+
+RSS feeds can help with:
+
+1. **Content Discovery** - Search engines use RSS feeds to discover new content
+2. **Faster Indexing** - Fresh content is indexed more quickly
+3. **Syndication** - Content can be republished with proper attribution
+4. **Social Signals** - RSS-to-social tools increase visibility
+
+## Troubleshooting
+
+### Feed not updating
+
+- Check if `revalidate` is set (set to `false` for always fresh)
+- Verify `lastModified` dates in frontmatter
+- Clear your CDN cache if using one
+- Test with `?nocache` query parameter
+
+### Images not displaying
+
+- Use absolute URLs for images
+- Verify image URLs are publicly accessible
+- Check image dimensions (large images may not display in all readers)
+- Ensure proper CORS headers if needed
+
+### Invalid feed
+
+- Validate using [W3C Feed Validator](https://validator.w3.org/feed/)
+- Check for XML special characters in titles/descriptions
+- Ensure all URLs are properly encoded
+- Verify dates are in correct format
+
+### RSS button not appearing
+
+- Check if component is imported in navbar
+- Verify no CSS is hiding the button
+- Test in different browsers
+- Check console for JavaScript errors
+
+## Advanced Customization
+
+### Multiple Feeds
+
+Create category-specific feeds by filtering pages:
+
+```typescript title="app/rss/[category]/route.ts"
+const pages = source.getPages().filter(
+  page => page.url.startsWith(`/docs/${category}`)
+);
+```
+
+### Full Content in Feed
+
+Include full article content instead of just descriptions:
+
+```typescript
+feed.addItem({
+  // ...existing fields
+  content: page.data.body, // Full page content
+});
+```
+
+### Enclosures
+
+Add media files (podcasts, videos):
+
+```typescript
+feed.addItem({
+  // ...existing fields
+  enclosure: {
+    url: "https://example.com/episode.mp3",
+    type: "audio/mpeg",
+    length: 12345,
+  },
+});
+```
+
+## Related Standards
+
+The RSS implementation follows:
+- **RSS 2.0 Specification** - Feed format and structure
+- **RFC 822** - Date format for pubDate
+- **Dublin Core** - Optional metadata elements
+- **Content Module** - For full content inclusion
+
+## Further Reading
+
+- [RSS 2.0 Specification](https://www.rssboard.org/rss-specification)
+- [Feed NPM Package](https://www.npmjs.com/package/feed)
+- [RSS Best Practices](https://www.rssboard.org/rss-profile)
+- [Feed Validation](https://validator.w3.org/feed/)
