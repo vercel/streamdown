@@ -6,51 +6,58 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
   describe("Japanese text with emphasis", () => {
     it("renders bold text with Japanese parentheses correctly", () => {
       const japaneseContent =
-        "**この文は太字になります（This sentence will be bolded）。**";
+        "**この文は太字になります（This sentence will be bolded）。**この文が後に続いても大丈夫です（This sentence can be followed without issue）。";
       const { container } = render(<Streamdown>{japaneseContent}</Streamdown>);
 
       // The content should be rendered and processed
       expect(container.textContent).toContain("この文は太字になります");
       expect(container.textContent).toContain("This sentence will be bolded");
+
+      expect(container.textContent).not.toContain("**");
     });
 
     it("renders bold text with ideographic punctuation marks", () => {
       const punctuationTests = [
-        "**日本語の文章（括弧付き）**",
-        "**テキスト【角括弧】**",
-        "**文章「引用符」**",
-        "**内容〈山括弧〉**",
+        "**日本語の文章（括弧付き）**続き",
+        "**テキスト【角括弧】**続き",
+        "**文章「引用符」**続き",
+        "**内容〈山括弧〉**続き",
       ];
 
       for (const content of punctuationTests) {
         const { container } = render(<Streamdown>{content}</Streamdown>);
         expect(container.textContent).toBeTruthy();
+        expect(container.textContent).not.toContain("**");
       }
     });
 
     it("renders italic text with Japanese punctuation", () => {
-      const japaneseItalic = "*これは斜体のテキストです（括弧付き）。*";
+      const japaneseItalic =
+        "*これは斜体のテキストです（括弧付き）。*この文が後に続いても大丈夫です。";
       const { container } = render(<Streamdown>{japaneseItalic}</Streamdown>);
 
       expect(container.textContent).toContain("これは斜体のテキストです");
       expect(container.textContent).toContain("括弧付き");
+
+      expect(container.textContent).not.toContain("*");
     });
 
     it("renders combined bold and italic with Japanese text", () => {
-      const combined = "***重要な情報（詳細）***";
+      const combined = "***重要な情報（詳細）***続き";
       const { container } = render(<Streamdown>{combined}</Streamdown>);
 
       expect(container.textContent).toContain("重要な情報");
       expect(container.textContent).toContain("詳細");
+      expect(container.textContent).not.toContain("*");
     });
 
     it("handles complex Japanese markdown", () => {
       const complexContent = `
 # 見出し（タイトル）
 
-**太字のテキスト（説明）。**
+**太字のテキスト（説明）。**補足のテキスト。
 
-*斜体のテキスト【補足】。*
+*斜体のテキスト【補足】。*補足のテキスト。
 
 普通のテキストと**太字（強調）**を混ぜる。
       `;
@@ -59,6 +66,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
       expect(container.textContent).toContain("見出し");
       expect(container.textContent).toContain("太字のテキスト");
       expect(container.textContent).toContain("斜体のテキスト");
+      expect(container.textContent).toContain("補足のテキスト");
+
+      expect(container.textContent).not.toContain("*");
     });
   });
 
