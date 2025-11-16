@@ -9,7 +9,7 @@ import { cn } from "./utils";
 let activeFullscreenCount = 0;
 
 const lockBodyScroll = () => {
-  activeFullscreenCount++;
+  activeFullscreenCount += 1;
   if (activeFullscreenCount === 1) {
     document.body.style.overflow = "hidden";
   }

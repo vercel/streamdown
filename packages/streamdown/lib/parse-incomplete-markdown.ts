@@ -6,6 +6,13 @@ const singleAsteriskPattern = /(\*)([^*]*?)$/;
 const singleUnderscorePattern = /(_)([^_]*?)$/;
 const inlineCodePattern = /(`)([^`]*?)$/;
 const strikethroughPattern = /(~~)([^~]*?)$/;
+const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\]\(([^)]+)$/;
+const whitespaceOrMarkersPattern = /^[\s_~*`]*$/;
+const listItemPattern = /^[\s]*[-*+][\s]+$/;
+const letterNumberUnderscorePattern = /[\p{L}\p{N}_]/u;
+const trailingNewlinePattern = /\n+$/;
+const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
+const fourOrMoreAsterisksPattern = /^\*{4,}$/;
 
 // Helper function to check if we have a complete code block
 const hasCompleteCodeBlock = (text: string): boolean => {
@@ -19,7 +26,6 @@ const hasCompleteCodeBlock = (text: string): boolean => {
 const handleIncompleteLinksAndImages = (text: string): string => {
   // First check for incomplete URLs: [text](partial-url or ![text](partial-url without closing )
   // Pattern: !?[text](url-without-closing-paren at end of string
-  const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\]\(([^)]+)$/;
   const incompleteLinkUrlMatch = text.match(incompleteLinkUrlPattern);
 
   if (incompleteLinkUrlMatch) {
@@ -76,7 +82,10 @@ const handleIncompleteBold = (text: string): string => {
     // boldMatch[2] contains the content after **
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = boldMatch[2];
-    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+    if (
+      !contentAfterMarker ||
+      whitespaceOrMarkersPattern.test(contentAfterMarker)
+    ) {
       return text;
     }
 
@@ -90,7 +99,7 @@ const handleIncompleteBold = (text: string): string => {
     const lineBeforeMarker = text.substring(lineStart, markerIndex);
 
     // Check if this line is a list item with just the bold marker
-    if (/^[\s]*[-*+][\s]+$/.test(lineBeforeMarker)) {
+    if (listItemPattern.test(lineBeforeMarker)) {
       // This is a list item with just emphasis markers
       // Check if content after marker spans multiple lines
       const hasNewlineInContent = contentAfterMarker.includes("\n");
@@ -118,7 +127,10 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
     // italicMatch[2] contains the content after __
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = italicMatch[2];
-    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+    if (
+      !contentAfterMarker ||
+      whitespaceOrMarkersPattern.test(contentAfterMarker)
+    ) {
       return text;
     }
 
@@ -132,7 +144,7 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
     const lineBeforeMarker = text.substring(lineStart, markerIndex);
 
     // Check if this line is a list item with just the underscore marker
-    if (/^[\s]*[-*+][\s]+$/.test(lineBeforeMarker)) {
+    if (listItemPattern.test(lineBeforeMarker)) {
       // This is a list item with just emphasis markers
       // Check if content after marker spans multiple lines
       const hasNewlineInContent = contentAfterMarker.includes("\n");
@@ -223,7 +235,7 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
     // Don't close if content is only whitespace or emphasis markers
     if (
       !contentAfterFirstAsterisk ||
-      /^[\s_~*`]*$/.test(contentAfterFirstAsterisk)
+      whitespaceOrMarkersPattern.test(contentAfterFirstAsterisk)
     ) {
       return text;
     }
@@ -243,10 +255,10 @@ const isWithinMathBlock = (text: string, position: number): boolean => {
   let inInlineMath = false;
   let inBlockMath = false;
 
-  for (let i = 0; i < text.length && i < position; i++) {
+  for (let i = 0; i < text.length && i < position; i += 1) {
     // Skip escaped dollar signs
     if (text[i] === "\\" && text[i + 1] === "$") {
-      i++; // Skip the next character
+      i += 1; // Skip the next character
       continue;
     }
 
@@ -254,7 +266,7 @@ const isWithinMathBlock = (text: string, position: number): boolean => {
       // Check for block math ($$)
       if (text[i + 1] === "$") {
         inBlockMath = !inBlockMath;
-        i++; // Skip the second $
+        i += 1; // Skip the second $
         inInlineMath = false; // Block math takes precedence
       } else if (!inBlockMath) {
         // Only toggle inline math if not in block math
@@ -284,8 +296,8 @@ const countSingleUnderscores = (text: string): number => {
       if (
         prevChar &&
         nextChar &&
-        /[\p{L}\p{N}_]/u.test(prevChar) &&
-        /[\p{L}\p{N}_]/u.test(nextChar)
+        letterNumberUnderscorePattern.test(prevChar) &&
+        letterNumberUnderscorePattern.test(nextChar)
       ) {
         return acc;
       }
@@ -323,8 +335,8 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
         if (
           prevChar &&
           nextChar &&
-          /[\p{L}\p{N}_]/u.test(prevChar) &&
-          /[\p{L}\p{N}_]/u.test(nextChar)
+          letterNumberUnderscorePattern.test(prevChar) &&
+          letterNumberUnderscorePattern.test(nextChar)
         ) {
           continue;
         }
@@ -347,7 +359,7 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
     // Don't close if content is only whitespace or emphasis markers
     if (
       !contentAfterFirstUnderscore ||
-      /^[\s_~*`]*$/.test(contentAfterFirstUnderscore)
+      whitespaceOrMarkersPattern.test(contentAfterFirstUnderscore)
     ) {
       return text;
     }
@@ -355,7 +367,7 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
     const singleUnderscores = countSingleUnderscores(text);
     if (singleUnderscores % 2 === 1) {
       // If text ends with newline(s), insert underscore before them
-      const trailingNewlineMatch = text.match(/\n+$/);
+      const trailingNewlineMatch = text.match(trailingNewlinePattern);
       if (trailingNewlineMatch) {
         const textBeforeNewlines = text.slice(
           0,
@@ -382,9 +394,9 @@ const isPartOfTripleBacktick = (text: string, i: number): boolean => {
 // Counts single backticks that are not part of triple backticks
 const countSingleBackticks = (text: string): number => {
   let count = 0;
-  for (let i = 0; i < text.length; i++) {
+  for (let i = 0; i < text.length; i += 1) {
     if (text[i] === "`" && !isPartOfTripleBacktick(text, i)) {
-      count++;
+      count += 1;
     }
   }
   return count;
@@ -396,7 +408,7 @@ const handleIncompleteInlineCode = (text: string): string => {
   // Check if we have inline triple backticks (starts with ``` and should end with ```)
   // This pattern should ONLY match truly inline code (no newlines)
   // Examples: ```code``` or ```python code```
-  const inlineTripleBacktickMatch = text.match(/^```[^`\n]*```?$/);
+  const inlineTripleBacktickMatch = text.match(inlineTripleBacktickPattern);
   if (inlineTripleBacktickMatch && !text.includes("\n")) {
     // Check if it ends with exactly 2 backticks (incomplete)
     if (text.endsWith("``") && !text.endsWith("```")) {
@@ -436,7 +448,10 @@ const handleIncompleteInlineCode = (text: string): string => {
     // inlineCodeMatch[2] contains the content after `
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = inlineCodeMatch[2];
-    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+    if (
+      !contentAfterMarker ||
+      whitespaceOrMarkersPattern.test(contentAfterMarker)
+    ) {
       return text;
     }
 
@@ -458,7 +473,7 @@ const handleIncompleteStrikethrough = (text: string): string => {
     // strikethroughMatch[2] contains the content after ~~
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = strikethroughMatch[2];
-    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+    if (!contentAfterMarker || whitespaceOrMarkersPattern.test(contentAfterMarker)) {
       return text;
     }
 
@@ -540,7 +555,7 @@ const handleIncompleteBoldItalic = (text: string): string => {
 
   // Don't process if text is only asterisks and has 4 or more consecutive asterisks
   // This prevents cases like **** from being treated as incomplete ***
-  if (/^\*{4,}$/.test(text)) {
+  if (fourOrMoreAsterisksPattern.test(text)) {
     return text;
   }
 
@@ -551,7 +566,7 @@ const handleIncompleteBoldItalic = (text: string): string => {
     // boldItalicMatch[2] contains the content after ***
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = boldItalicMatch[2];
-    if (!contentAfterMarker || /^[\s_~*`]*$/.test(contentAfterMarker)) {
+    if (!contentAfterMarker || whitespaceOrMarkersPattern.test(contentAfterMarker)) {
       return text;
     }
 

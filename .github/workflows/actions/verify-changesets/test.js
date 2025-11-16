@@ -37,7 +37,9 @@ test("ignores .changeset/README.md", async () => {
     CHANGED_FILES: ".changeset/README.md",
   };
 
-  const readFile = mock.fn(() => {});
+  const readFile = mock.fn(() => {
+    // Intentionally empty for testing ignore behavior
+  });
 
   await verifyChangesets(event, env, readFile);
 
@@ -54,7 +56,9 @@ test("invalid file - not a .changeset file", async () => {
     CHANGED_FILES: ".changeset/not-a-changeset-file.txt",
   };
 
-  const readFile = mock.fn(() => {});
+  const readFile = mock.fn(() => {
+    // Intentionally empty for testing validation error
+  });
 
   await assert.rejects(
     () => verifyChangesets(event, env, readFile),
@@ -101,12 +105,14 @@ test("minor update", async () => {
     CHANGED_FILES: ".changeset/patch-update.md .changeset/minor-update.md",
   };
 
-  const readFile = mock.fn(async (path) => {
+  const readFile = mock.fn((path) => {
     if (path.endsWith("patch-update.md")) {
-      return "---\nai: patch\n---\n## Test changeset";
+      return Promise.resolve("---\nai: patch\n---\n## Test changeset");
     }
 
-    return "---\n@ai-sdk/provider: minor\n---\n## Test changeset";
+    return Promise.resolve(
+      "---\n@ai-sdk/provider: minor\n---\n## Test changeset"
+    );
   });
 
   await assert.rejects(
@@ -147,12 +153,14 @@ test('minor update - with "minor" label', async () => {
     CHANGED_FILES: ".changeset/patch-update.md .changeset/minor-update.md",
   };
 
-  const readFile = mock.fn(async (path) => {
+  const readFile = mock.fn((path) => {
     if (path.endsWith("patch-update.md")) {
-      return "---\nai: patch\n---\n## Test changeset";
+      return Promise.resolve("---\nai: patch\n---\n## Test changeset");
     }
 
-    return "---\n@ai-sdk/provider: minor\n---\n## Test changeset";
+    return Promise.resolve(
+      "---\n@ai-sdk/provider: minor\n---\n## Test changeset"
+    );
   });
 
   const message = await verifyChangesets(event, env, readFile);
@@ -176,12 +184,14 @@ test('major update - with "major" label', async () => {
     CHANGED_FILES: ".changeset/patch-update.md .changeset/major-update.md",
   };
 
-  const readFile = mock.fn(async (path) => {
+  const readFile = mock.fn((path) => {
     if (path.endsWith("patch-update.md")) {
-      return "---\nai: patch\n---\n## Test changeset";
+      return Promise.resolve("---\nai: patch\n---\n## Test changeset");
     }
 
-    return "---\n@ai-sdk/provider: major\n---\n## Test changeset";
+    return Promise.resolve(
+      "---\n@ai-sdk/provider: major\n---\n## Test changeset"
+    );
   });
 
   const message = await verifyChangesets(event, env, readFile);

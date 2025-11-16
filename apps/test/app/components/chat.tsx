@@ -44,22 +44,23 @@ export const Chat = ({ models }: ChatProps) => {
                 {message.role === "user" ? "User: " : "AI: "}
               </span>
               {message.parts.map((part, index) => {
+                const key = `${part.type}-${index}-${part.type === "file" ? part.url : (part.text?.slice(0, 50) ?? "")}`;
                 switch (part.type) {
                   case "text":
                     return (
-                      <pre className="whitespace-pre-wrap" key={index}>
+                      <pre className="whitespace-pre-wrap" key={key}>
                         {part.text}
                       </pre>
                     );
                   case "reasoning":
                     return (
-                      <pre className="italic" key={index}>
+                      <pre className="italic" key={key}>
                         {part.text}
                       </pre>
                     );
                   case "file":
                     return (
-                      <div key={index}>
+                      <div key={key}>
                         {part.mediaType.startsWith("image") ? (
                           <Image
                             alt={part.filename ?? "An image attachment"}
@@ -87,25 +88,26 @@ export const Chat = ({ models }: ChatProps) => {
                 {message.role === "user" ? "User: " : "AI: "}
               </span>
               {message.parts.map((part, index) => {
+                const key = `${part.type}-${index}-${part.type === "file" ? part.url : (part.text?.slice(0, 50) ?? "")}`;
                 switch (part.type) {
                   case "text":
                     return (
                       <Streamdown
                         isAnimating={status === "streaming"}
-                        key={index}
+                        key={key}
                       >
                         {part.text}
                       </Streamdown>
                     );
                   case "reasoning":
                     return (
-                      <p className="italic" key={part.text}>
+                      <p className="italic" key={key}>
                         {part.text}
                       </p>
                     );
                   case "file":
                     return (
-                      <div key={index}>
+                      <div key={key}>
                         {part.mediaType.startsWith("image") ? (
                           <Image
                             alt={part.filename ?? "An image attachment"}

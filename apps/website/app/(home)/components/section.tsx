@@ -56,7 +56,7 @@ export const Section = ({
       if (index < tokens.length) {
         currentContent += tokens[index];
         setContent(currentContent);
-        index++;
+        index += 1;
       } else {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
