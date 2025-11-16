@@ -29,7 +29,7 @@ export const Hero = () => (
           streaming.
         </p>
         <div className="mx-auto flex w-fit flex-col items-center gap-8 pt-4">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-center gap-2 sm:flex-row">
             <Installer />
             <Button asChild variant="outline">
               <Link href="/docs">Read the docs</Link>
@@ -37,7 +37,7 @@ export const Hero = () => (
           </div>
           <p className="text-muted-foreground text-sm">
             or install it directly with{" "}
-            <code className="rounded-md bg-foreground/5 px-2 py-1 tracking-tight">
+            <code className="block rounded-md bg-foreground/5 px-2 py-1 tracking-tight sm:inline">
               npm i streamdown
             </code>
           </p>

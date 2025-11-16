@@ -1,12 +1,18 @@
 import "./global.css";
 import "katex/dist/katex.css";
+import { ArrowDownWideNarrowIcon } from "lucide-react";
 import { Navbar } from "@/components/geistdocs/navbar";
 import { GeistdocsProvider } from "@/components/geistdocs/provider";
 import { mono, sans } from "@/lib/geistdocs/fonts";
 import { cn } from "@/lib/utils";
 
 const Logo = () => (
-  <span className="font-semibold text-xl tracking-tight">Streamdown</span>
+  <>
+    <span className="hidden font-semibold text-xl tracking-tight sm:block">
+      Streamdown
+    </span>
+    <ArrowDownWideNarrowIcon className="sm:hidden" />
+  </>
 );
 
 const links = [
