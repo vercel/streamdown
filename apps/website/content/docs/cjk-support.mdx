@@ -7,10 +7,10 @@ Streamdown includes built-in support for CJK (Chinese, Japanese, Korean) languag
 
 ## The Problem
 
-The CommonMark/GFM specification has a limitation where emphasis markers (`**` or `*`) adjacent to ideographic punctuation marks fail to be recognized. This causes formatting to break in CJK text:
+The CommonMark/GFM specification has a [limitation](https://github.com/commonmark/commonmark-spec/issues/650) where emphasis markers (`**` or `*`) adjacent to ideographic punctuation marks occasionally fail to be recognized. This causes formatting to break in CJK text:
 
 ```markdown
-**この文は太字になりません（This won't be bolded）。**
+**この文は太字になりません（This won't be bolded）。**この文のせいで（It is due to this sentence）。
 ```
 
 Without CJK-friendly parsing, the text above would render as plain text instead of bold because the closing `**` appears next to the Japanese period.
@@ -26,56 +26,58 @@ Streamdown uses the [remark-cjk-friendly](https://www.npmjs.com/package/remark-c
 Works correctly with all ideographic punctuation marks:
 
 ```markdown
-**日本語の文章（括弧付き）**
-**中文文本（带括号）。**
-**한국어 텍스트（괄호）。**
+**日本語の文章（括弧付き）。**この文が後に続いても大丈夫です。
+**中文文本（带括号）。**这句子继续也没问题。
+**한국어 구문(괄호 포함)**을 강조.
 ```
 
-Japanese: **日本語の文章（括弧付き）**
+{/* The following lang="..." is crucial to ensure proper han character rendering */}
 
-Chinese: **中文文本（带括号）。**
+Japanese: <span lang="ja"><strong>日本語の文章（括弧付き）。</strong>この文が後に続いても大丈夫です。</span>
 
-Korean: **한국어 텍스트（괄호）。**
+Chinese: <span lang="zh-Hans"><strong>中文文本（带括号）。</strong>这句子继续也没问题。</span>
+
+Korean: <span lang="ko"><strong>한국어 구문(괄호 포함)</strong>을 강조.</span>
 
 ### Italic Text with Punctuation
 
 ```markdown
-*これは斜体のテキストです（括弧付き）。*
-*这是斜体文字（带括号）。*
-*기울임 텍스트（괄호）。*
+*これは斜体のテキストです（括弧付き）。*この文が後に続いても大丈夫です。
+*这是斜体文字（带括号）。*这句子继续也没问题。
+*이 텍스트(괄호 포함)*는 기울임꼴입니다.
 ```
 
-Japanese: *これは斜体のテキストです（括弧付き）。*
+Japanese: <span lang="ja"><em>これは斜体のテキストです（括弧付き）。</em>この文が後に続いても大丈夫です。</span>
 
-Chinese: *这是斜体文字（带括号）。*
+Chinese: <span lang="zh-Hans"><em>这是斜体文字（带括号）。</em>这句子继续也没问题。</span>
 
-Korean: *기울임 텍스트（괄호）。*
+Korean: <span lang="ko"><em>이 텍스트(괄호 포함)</em>는 기울임꼴입니다.</span>
 
 ### Strikethrough with Punctuation
 
 Streamdown includes `remark-cjk-friendly-gfm-strikethrough` for proper strikethrough support:
 
 ```markdown
-~~削除されたテキスト（括弧付き）。~~
-~~删除的文字（带括号）。~~
-~~취소선 텍스트（괄호）。~~
+~~削除されたテキスト（括弧付き）。~~この文は正しいです。
+~~删除的文字（带括号）。~~这个句子是正确的。
+~~이 텍스트(괄호 포함)~~를 삭제합니다.
 ```
 
-Japanese: ~~削除されたテキスト（括弧付き）。~~
+Japanese: <span lang="ja"><del>削除されたテキスト（括弧付き）。</del>この文は正しいです。</span>
 
-Chinese: ~~删除的文字（带括号）。~~
+Chinese: <span lang="zh-Hans"><del>删除的文字（带括号）。</del>这个句子是正确的。</span>
 
-Korean: ~~취소선 텍스트（괄호）。~~
+Korean: <span lang="ko"><del>이 텍스트(괄호 포함)</del>를 삭제합니다。</span>
 
 ### Mixed Content
 
 CJK and English text work seamlessly together:
 
 ```markdown
-**重要提示（Important Notice）：请注意。**
+**重要提示（Important Notice）：**请注意。
 ```
 
-Result: **重要提示（Important Notice）：请注意。**
+Result: <span lang="zh-Hans"><strong>重要提示（Important Notice）：</strong>请注意。</span>
 
 ## Supported Punctuation
 
@@ -83,8 +85,8 @@ The plugin handles all common ideographic punctuation marks:
 
 - Parentheses: `（）`
 - Brackets: `【】「」〈〉`
-- Periods: `。`
-- Commas: `，`
+- Periods: `。．`
+- Commas: `，、`
 - Questions: `？`
 - Exclamations: `！`
 - Colons: `：`
@@ -93,14 +95,19 @@ The plugin handles all common ideographic punctuation marks:
 
 Language models generate markdown naturally, often placing emphasis markers around phrases that include punctuation. Without CJK-friendly parsing, AI-generated content in Chinese, Japanese, or Korean would have broken formatting.
 
-```markdown
-❌ Without CJK support:
-The model writes: **この文は太字です（説明）。**
-The user sees: **この文は太字です（説明）。** (not bold!)
-
-✅ With CJK support:
-The model writes: **この文は太字です（説明）。**
-The user sees: **この文は太字です（説明）。** (properly bolded!)
+{/* prettier-ignore */}
+<dl>
+  <dt>❌ Without CJK support:</dt>
+  <dd>
+    - The model writes: <span lang="ja">`**この用語（読み方など）**について説明します。`</span>
+    - The user sees: <span lang="ja">\*\*この用語（読み方など）\*\*について説明します。</span> (not bold!)
+  </dd>
+  <dt>✅ With CJK support:</dt>
+  <dd>
+    - The model writes: <span lang="ja">`**この用語（読み方など）**について説明します。`</span>
+    - The user sees: <span lang="ja"><strong>この用語（読み方など）</strong>について説明します。</span> (properly bolded!)
+  </dd>
+</dl>
 ```
 
 ## Configuration
@@ -108,14 +115,10 @@ The user sees: **この文は太字です（説明）。** (properly bolded!)
 CJK support is enabled by default with no configuration required. The plugins are included in the default remark plugin list:
 
 ```tsx
-import { Streamdown } from 'streamdown';
+import { Streamdown } from "streamdown";
 
 export default function Page() {
-  return (
-    <Streamdown>
-      {markdown}
-    </Streamdown>
-  );
+  return <Streamdown>{markdown}</Streamdown>;
 }
 ```
 
@@ -124,17 +127,13 @@ export default function Page() {
 If you need to disable CJK support, you can override the default remark plugins:
 
 ```tsx
-import { Streamdown } from 'streamdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
+import { Streamdown } from "streamdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 
 export default function Page() {
   return (
-    <Streamdown
-      remarkPlugins={[remarkGfm, remarkMath]}
-    >
-      {markdown}
-    </Streamdown>
+    <Streamdown remarkPlugins={[remarkGfm, remarkMath]}>{markdown}</Streamdown>
   );
 }
 ```
