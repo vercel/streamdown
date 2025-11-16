@@ -1,0 +1,93 @@
+---
+title: Memoization
+description: Performance optimization through intelligent memoization and caching.
+---
+
+Streamdown is built with performance in mind, utilizing React's memoization capabilities to ensure efficient rendering even with large amounts of streaming content. The library intelligently caches computations and prevents unnecessary re-renders, making it ideal for real-time AI streaming applications.
+
+## How Memoization Works
+
+Streamdown implements memoization at multiple levels to maximize performance:
+
+### Component-Level Memoization
+
+The main `Streamdown` component is wrapped with `React.memo`, which prevents re-renders when props haven't changed:
+
+```tsx
+import { Streamdown } from 'streamdown';
+
+export default function Page() {
+  const markdown = "# Hello World\n\nThis is **streaming** markdown!";
+
+  return <Streamdown>{markdown}</Streamdown>;
+}
+```
+
+The component only re-renders when:
+- The `children` prop (markdown content) changes
+- The `shikiTheme` prop changes
+- The `isAnimating` prop changes
+
+All other prop changes are ignored, ensuring optimal performance.
+
+### Block-Level Memoization
+
+Streamdown parses markdown content into individual blocks, with each block memoized separately. This means:
+- Only blocks with changed content are re-rendered
+- Unchanged blocks remain memoized, even if new blocks are added
+- Parsing is cached per block for efficiency
+
+Expensive computations are also cached using `useMemo`.
+
+## Performance Benefits
+
+### Streaming Efficiency
+
+When content is streaming in, Streamdown's memoization strategy ensures:
+
+1. **Incremental Rendering** - Only new or changed blocks are processed
+2. **Stable Output** - Completed blocks remain stable and don't re-render
+3. **Minimal Overhead** - Parsing and rendering work is minimized
+
+Example with streaming content:
+
+```tsx
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { Streamdown } from 'streamdown';
+
+export default function Chat() {
+  const { messages, sendMessage, status } = useChat();
+
+  return (
+    <>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.parts.filter(part => part.type === 'text').map((part, index) => (
+            <Streamdown
+              isAnimating={status === 'streaming'}
+              key={index}
+            >
+              {part.text}
+            </Streamdown>
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}
+```
+
+In this example:
+- As new tokens arrive, only the affected blocks are re-rendered
+- Previous blocks remain memoized and stable
+- The rendering performance stays consistent regardless of content length
+
+### Syntax Highlighting Cache
+
+The syntax highlighter maintains an internal cache of loaded languages and themes. This means:
+
+- Languages are loaded once and cached for reuse
+- Theme changes don't require reloading languages
+- Multiple code blocks in the same language share the highlighter instance
