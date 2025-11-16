@@ -1,0 +1,142 @@
+---
+title: CJK Language Support
+description: Full support for Chinese, Japanese, and Korean text with proper emphasis formatting.
+---
+
+Streamdown includes built-in support for CJK (Chinese, Japanese, Korean) languages, ensuring that emphasis markers like bold and italic work correctly with ideographic punctuation. This is particularly important for AI-generated content, where language models naturally place emphasis markers around phrases that include or end with punctuation.
+
+## The Problem
+
+The CommonMark/GFM specification has a limitation where emphasis markers (`**` or `*`) adjacent to ideographic punctuation marks fail to be recognized. This causes formatting to break in CJK text:
+
+```markdown
+**この文は太字になりません（This won't be bolded）。**
+```
+
+Without CJK-friendly parsing, the text above would render as plain text instead of bold because the closing `**` appears next to the Japanese period.
+
+## The Solution
+
+Streamdown uses the [remark-cjk-friendly](https://www.npmjs.com/package/remark-cjk-friendly) and [remark-cjk-friendly-gfm-strikethrough](https://www.npmjs.com/package/remark-cjk-friendly-gfm-strikethrough) plugins to handle CJK text properly. This plugin implements an improved parsing approach that correctly recognizes emphasis markers adjacent to ideographic punctuation.
+
+## Supported Features
+
+### Bold Text with Punctuation
+
+Works correctly with all ideographic punctuation marks:
+
+```markdown
+**日本語の文章（括弧付き）**
+**中文文本（带括号）。**
+**한국어 텍스트（괄호）。**
+```
+
+Japanese: **日本語の文章（括弧付き）**
+
+Chinese: **中文文本（带括号）。**
+
+Korean: **한국어 텍스트（괄호）。**
+
+### Italic Text with Punctuation
+
+```markdown
+*これは斜体のテキストです（括弧付き）。*
+*这是斜体文字（带括号）。*
+*기울임 텍스트（괄호）。*
+```
+
+Japanese: *これは斜体のテキストです（括弧付き）。*
+
+Chinese: *这是斜体文字（带括号）。*
+
+Korean: *기울임 텍스트（괄호）。*
+
+### Strikethrough with Punctuation
+
+Streamdown includes `remark-cjk-friendly-gfm-strikethrough` for proper strikethrough support:
+
+```markdown
+~~削除されたテキスト（括弧付き）。~~
+~~删除的文字（带括号）。~~
+~~취소선 텍스트（괄호）。~~
+```
+
+Japanese: ~~削除されたテキスト（括弧付き）。~~
+
+Chinese: ~~删除的文字（带括号）。~~
+
+Korean: ~~취소선 텍스트（괄호）。~~
+
+### Mixed Content
+
+CJK and English text work seamlessly together:
+
+```markdown
+**重要提示（Important Notice）：请注意。**
+```
+
+Result: **重要提示（Important Notice）：请注意。**
+
+## Supported Punctuation
+
+The plugin handles all common ideographic punctuation marks:
+
+- Parentheses: `（）`
+- Brackets: `【】「」〈〉`
+- Periods: `。`
+- Commas: `，`
+- Questions: `？`
+- Exclamations: `！`
+- Colons: `：`
+
+## Why This Matters for AI
+
+Language models generate markdown naturally, often placing emphasis markers around phrases that include punctuation. Without CJK-friendly parsing, AI-generated content in Chinese, Japanese, or Korean would have broken formatting.
+
+```markdown
+❌ Without CJK support:
+The model writes: **この文は太字です（説明）。**
+The user sees: **この文は太字です（説明）。** (not bold!)
+
+✅ With CJK support:
+The model writes: **この文は太字です（説明）。**
+The user sees: **この文は太字です（説明）。** (properly bolded!)
+```
+
+## Configuration
+
+CJK support is enabled by default with no configuration required. The plugins are included in the default remark plugin list:
+
+```tsx
+import { Streamdown } from 'streamdown';
+
+export default function Page() {
+  return (
+    <Streamdown>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+### Disabling CJK Support
+
+If you need to disable CJK support, you can override the default remark plugins:
+
+```tsx
+import { Streamdown } from 'streamdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+
+export default function Page() {
+  return (
+    <Streamdown
+      remarkPlugins={[remarkGfm, remarkMath]}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+Note: This removes all default remark plugins, so you'll need to add back any others you need.

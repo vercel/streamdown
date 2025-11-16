@@ -58,6 +58,8 @@
     "rehype-harden": "^1.1.5",
     "rehype-katex": "^7.0.1",
     "rehype-raw": "^7.0.0",
+    "remark-cjk-friendly": "^1.2.3",
+    "remark-cjk-friendly-gfm-strikethrough": "^1.2.3",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
     "shiki": "^3.12.2",

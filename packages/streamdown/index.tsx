@@ -6,6 +6,8 @@ import ReactMarkdown, { type Options } from "react-markdown";
 import { harden } from "rehype-harden";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
+import remarkCjkFriendly from "remark-cjk-friendly";
+import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
@@ -62,6 +64,8 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
   gfm: [remarkGfm, {}],
   math: [remarkMath, { singleDollarTextMath: false }],
+  cjkFriendly: [remarkCjkFriendly, {}],
+  cjkFriendlyGfmStrikethrough: [remarkCjkFriendlyGfmStrikethrough, {}],
 } as const;
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
