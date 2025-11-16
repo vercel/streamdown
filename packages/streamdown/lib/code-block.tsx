@@ -233,7 +233,6 @@ class HighlighterManager {
 
     // Create or recreate dark highlighter if needed
     if (needsDarkRecreation) {
-      // If recreating dark highlighter, load all previously loaded languages plus the new one
       this.darkHighlighter = await createHighlighter({
         themes: [darkTheme],
         langs: [],
@@ -966,11 +965,12 @@ export const CodeBlockCopyButton = ({
     }
   };
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       window.clearTimeout(timeoutRef.current);
-    };
-  }, []);
+    },
+    []
+  );
 
   const Icon = isCopied ? CheckIcon : CopyIcon;
 

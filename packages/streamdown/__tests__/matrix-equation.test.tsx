@@ -28,9 +28,9 @@ $$`;
 
     // Check how the content is split into blocks
     const blocks = parseMarkdownIntoBlocks(content);
-    blocks.forEach((block) => {
+    for (const block of blocks) {
       parseIncompleteMarkdown(block);
-    });
+    }
 
     const { container } = render(
       <Streamdown parseIncompleteMarkdown={true}>{content}</Streamdown>
@@ -63,8 +63,6 @@ a \\\\
 b \\\\
 c
 \\end{bmatrix}`;
-
-    const blocks = parseMarkdownIntoBlocks(content);
 
     const { container } = render(
       <Streamdown parseIncompleteMarkdown={true}>{content}</Streamdown>

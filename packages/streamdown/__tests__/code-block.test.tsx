@@ -41,13 +41,16 @@ describe("CodeBlockCopyButton", () => {
 
     const button = container.querySelector("button");
     expect(button).toBeTruthy();
+    if (!button) {
+      throw new Error("Button not found");
+    }
 
     // Wait for button to be enabled (code highlighting to complete)
     await waitFor(() => {
-      expect(button?.hasAttribute("disabled")).toBe(false);
+      expect(button.hasAttribute("disabled")).toBe(false);
     });
 
-    fireEvent.click(button!);
+    fireEvent.click(button);
 
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
@@ -65,17 +68,21 @@ describe("CodeBlockCopyButton", () => {
     );
 
     const button = container.querySelector("button");
+    expect(button).toBeTruthy();
+    if (!button) {
+      throw new Error("Button not found");
+    }
 
     // Wait for button to be enabled (code highlighting to complete)
     await waitFor(() => {
-      expect(button?.hasAttribute("disabled")).toBe(false);
+      expect(button.hasAttribute("disabled")).toBe(false);
     });
 
-    fireEvent.click(button!);
+    fireEvent.click(button);
 
     await waitFor(() => {
       // Check icon should be visible after copying
-      const svg = button?.querySelector("svg");
+      const svg = button.querySelector("svg");
       expect(svg).toBeTruthy();
     });
   });
@@ -99,14 +106,18 @@ describe("CodeBlockCopyButton", () => {
     );
 
     const button = container.querySelector("button");
+    expect(button).toBeTruthy();
+    if (!button) {
+      throw new Error("Button not found");
+    }
 
     // Wait for button to be enabled (code highlighting to complete)
     await waitFor(() => {
-      expect(button?.hasAttribute("disabled")).toBe(false);
+      expect(button.hasAttribute("disabled")).toBe(false);
     });
 
-    await act(async () => {
-      fireEvent.click(button!);
+    act(() => {
+      fireEvent.click(button);
     });
 
     expect(onError).toHaveBeenCalledWith(expect.any(Error));
@@ -131,13 +142,17 @@ describe("CodeBlockCopyButton", () => {
     );
 
     const button = container.querySelector("button");
+    expect(button).toBeTruthy();
+    if (!button) {
+      throw new Error("Button not found");
+    }
 
     // Wait for button to be enabled (code highlighting to complete)
     await waitFor(() => {
-      expect(button?.hasAttribute("disabled")).toBe(false);
+      expect(button.hasAttribute("disabled")).toBe(false);
     });
 
-    fireEvent.click(button!);
+    fireEvent.click(button);
 
     await waitFor(() => {
       expect(onError).toHaveBeenCalledWith(error);
@@ -152,27 +167,31 @@ describe("CodeBlockCopyButton", () => {
     );
 
     const button = container.querySelector("button");
+    expect(button).toBeTruthy();
+    if (!button) {
+      throw new Error("Button not found");
+    }
 
     // Wait for button to be enabled (code highlighting to complete)
     await waitFor(() => {
-      expect(button?.hasAttribute("disabled")).toBe(false);
+      expect(button.hasAttribute("disabled")).toBe(false);
     });
 
     vi.useFakeTimers();
 
-    await act(async () => {
-      fireEvent.click(button!);
+    act(() => {
+      fireEvent.click(button);
     });
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("const x = 1;");
 
     // Fast-forward time
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(1000);
     });
 
     // Icon should be reset after timeout
-    const svg = button?.querySelector("svg");
+    const svg = button.querySelector("svg");
     expect(svg).toBeTruthy();
   });
 });
@@ -256,8 +275,12 @@ describe("CodeBlock with multiple languages", () => {
     const { container } = render(
       <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
         <div>
-          {languages.map((item, index) => (
-            <CodeBlock code={item.code} key={index} language={item.lang} />
+          {languages.map((item) => (
+            <CodeBlock
+              code={item.code}
+              key={`${item.lang}-${item.code.slice(0, 20)}`}
+              language={item.lang}
+            />
           ))}
         </div>
       </ShikiThemeContext.Provider>
@@ -309,9 +332,9 @@ describe("CodeBlock with multiple languages", () => {
         const codeBlockElements =
           container.querySelectorAll("[data-code-block]");
         expect(codeBlockElements.length).toBeGreaterThan(0);
-        codeBlockElements.forEach((element) => {
+        for (const element of codeBlockElements) {
           expect(element.getAttribute("data-language")).toBe("javascript");
-        });
+        }
       },
       { timeout: 5000 }
     );

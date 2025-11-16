@@ -1,0 +1,14 @@
+{
+  "title": "Streamdown",
+  "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
+  "pages": [
+    "index",
+    "getting-started",
+    "usage",
+    "configuration",
+    "styling",
+    "faq",
+    "---Features---",
+    "..."
+  ]
+}

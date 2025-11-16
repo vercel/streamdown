@@ -1,13 +1,19 @@
-import type { Token } from "marked";
 import { Lexer } from "marked";
 
+// Regex patterns moved to top level for performance
+const footnoteReferencePattern = /\[\^[^\]\s]{1,200}\](?!:)/;
+const footnoteDefinitionPattern = /\[\^[^\]\s]{1,200}\]:/;
+const closingTagPattern = /<\/(\w+)>/;
+const openingTagPattern = /<(\w+)[\s>]/;
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex parsing logic that handles multiple markdown edge cases"
 export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   // Check if the markdown contains footnotes (references or definitions)
   // Footnote references: [^1], [^label], etc.
   // Footnote definitions: [^1]: text, [^label]: text, etc.
   // Use atomic groups or possessive quantifiers to prevent backtracking
-  const hasFootnoteReference = /\[\^[^\]\s]{1,200}\](?!:)/.test(markdown);
-  const hasFootnoteDefinition = /\[\^[^\]\s]{1,200}\]:/.test(markdown);
+  const hasFootnoteReference = footnoteReferencePattern.test(markdown);
+  const hasFootnoteDefinition = footnoteDefinitionPattern.test(markdown);
 
   // If footnotes are present, return the entire document as a single block
   // This ensures footnote references and definitions remain in the same mdast tree
@@ -21,8 +27,7 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   const mergedBlocks: string[] = [];
   const htmlStack: string[] = []; // Track opening HTML tags
 
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
+  for (const token of tokens) {
     const currentBlock = token.raw;
 
     // Check if we're inside an HTML block
@@ -32,11 +37,11 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
 
       // Check if this token closes an HTML tag
       if (token.type === "html") {
-        const closingTagMatch = currentBlock.match(/<\/(\w+)>/);
+        const closingTagMatch = currentBlock.match(closingTagPattern);
         if (closingTagMatch) {
           const closingTag = closingTagMatch[1];
           // Check if this closes the most recent opening tag
-          if (htmlStack[htmlStack.length - 1] === closingTag) {
+          if (htmlStack.at(-1) === closingTag) {
             htmlStack.pop();
           }
         }
@@ -46,7 +51,7 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
 
     // Check if this is an opening HTML block tag
     if (token.type === "html" && token.block) {
-      const openingTagMatch = currentBlock.match(/<(\w+)[\s>]/);
+      const openingTagMatch = currentBlock.match(openingTagPattern);
       if (openingTagMatch) {
         const tagName = openingTagMatch[1];
         // Check if this is a self-closing tag or if there's a closing tag in the same block
