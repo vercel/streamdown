@@ -162,13 +162,17 @@ x_i = y_j
 $$
 ```
 
-### Word-Internal Underscores
+### Word-Internal Characters
 
-Underscores within words (like variable names) are preserved:
+Asterisks and underscores within words (like variable names or between alphanumeric characters) are preserved:
 
 ```markdown
 const user_name = "john_doe";
+234234*123
+hello*world
 ```
+
+This ensures that text like product codes or mathematical expressions with asterisks are not mistakenly interpreted as italic formatting.
 
 ## Performance Considerations
 

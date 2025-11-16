@@ -799,6 +799,28 @@ describe("parseIncompleteMarkdown", () => {
     });
   });
 
+  describe("word-internal asterisks", () => {
+    it("should not treat asterisks in the middle of words as italic markers - #189", () => {
+      expect(parseIncompleteMarkdown("234234*123")).toBe("234234*123");
+      expect(parseIncompleteMarkdown("hello*world")).toBe("hello*world");
+      expect(parseIncompleteMarkdown("test*123*test")).toBe("test*123*test");
+    });
+
+    it("should handle asterisks between letters and numbers", () => {
+      expect(parseIncompleteMarkdown("abc*123")).toBe("abc*123");
+      expect(parseIncompleteMarkdown("123*abc")).toBe("123*abc");
+    });
+
+    it("should still complete italic formatting with asterisks when not word-internal", () => {
+      expect(parseIncompleteMarkdown("This is *italic")).toBe(
+        "This is *italic*"
+      );
+      expect(parseIncompleteMarkdown("*word* and more text")).toBe(
+        "*word* and more text"
+      );
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle text ending with formatting characters", () => {
       expect(parseIncompleteMarkdown("Text ending with *")).toBe(

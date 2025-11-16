@@ -163,7 +163,7 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   return text;
 };
 
-// Counts single asterisks that are not part of double asterisks, not escaped, and not list markers
+// Counts single asterisks that are not part of double asterisks, not escaped, not list markers, and not word-internal
 const countSingleAsterisks = (text: string): number => {
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
   return text.split("").reduce((acc, char, index) => {
@@ -172,6 +172,15 @@ const countSingleAsterisks = (text: string): number => {
       const nextChar = text[index + 1];
       // Skip if escaped with backslash
       if (prevChar === "\\") {
+        return acc;
+      }
+      // Skip if asterisk is word-internal (between word characters)
+      if (
+        prevChar &&
+        nextChar &&
+        letterNumberUnderscorePattern.test(prevChar) &&
+        letterNumberUnderscorePattern.test(nextChar)
+      ) {
         return acc;
       }
       // Check if this is a list marker (asterisk at start of line followed by space)
@@ -205,6 +214,7 @@ const countSingleAsterisks = (text: string): number => {
 };
 
 // Completes incomplete italic formatting with single asterisks (*)
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex italic handling logic with multiple edge cases for markdown parsing"
 const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
@@ -214,10 +224,27 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   const singleAsteriskMatch = text.match(singleAsteriskPattern);
 
   if (singleAsteriskMatch) {
-    // Find the first single asterisk position (not part of **)
+    // Find the first single asterisk position (not part of ** and not word-internal)
     let firstSingleAsteriskIndex = -1;
     for (let i = 0; i < text.length; i++) {
-      if (text[i] === "*" && text[i - 1] !== "*" && text[i + 1] !== "*") {
+      if (
+        text[i] === "*" &&
+        text[i - 1] !== "*" &&
+        text[i + 1] !== "*" &&
+        text[i - 1] !== "\\"
+      ) {
+        // Check if asterisk is word-internal (between word characters)
+        const prevChar = i > 0 ? text[i - 1] : "";
+        const nextChar = i < text.length - 1 ? text[i + 1] : "";
+        if (
+          prevChar &&
+          nextChar &&
+          letterNumberUnderscorePattern.test(prevChar) &&
+          letterNumberUnderscorePattern.test(nextChar)
+        ) {
+          continue;
+        }
+
         firstSingleAsteriskIndex = i;
         break;
       }
