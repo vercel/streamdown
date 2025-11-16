@@ -14,6 +14,7 @@ import {
 } from "fumadocs-ui/components/dialog/search";
 import { useI18n } from "fumadocs-ui/contexts/i18n";
 import { useSearchContext } from "fumadocs-ui/contexts/search";
+import { SearchIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { Kbd } from "../ui/kbd";
 
@@ -48,15 +49,26 @@ export const SearchButton = () => {
   const { setOpenSearch } = useSearchContext();
 
   return (
-    <Button
-      className="gap-8 pr-1.5 font-normal text-muted-foreground shadow-none"
-      onClick={() => setOpenSearch(true)}
-      size="sm"
-      type="button"
-      variant="outline"
-    >
-      <span>Search...</span>
-      <Kbd className="border bg-background font-medium">⌘K</Kbd>
-    </Button>
+    <>
+      <Button
+        className="hidden gap-8 pr-1.5 font-normal text-muted-foreground shadow-none sm:flex"
+        onClick={() => setOpenSearch(true)}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        <span>Search...</span>
+        <Kbd className="border bg-background font-medium">⌘K</Kbd>
+      </Button>
+      <Button
+        className="sm:hidden"
+        onClick={() => setOpenSearch(true)}
+        size="icon-sm"
+        type="button"
+        variant="outline"
+      >
+        <SearchIcon className="size-4" />
+      </Button>
+    </>
   );
 };
