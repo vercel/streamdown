@@ -8,29 +8,31 @@ Streamdown properly handles emphasis in Chinese, Japanese, and Korean text, even
 
 Standard markdown breaks with ideographic punctuation:
 
-**この文は太字になります（This sentence will be bolded）。**
+**この文は太字になります（This sentence will be bolded）。**この文が後に続いても大丈夫です。
 
-*斜体のテキスト【補足情報】*
+*斜体のテキスト【補足情報】。*この文が後に続いても大丈夫です。
 
-~~削除されたテキスト（古い情報）~~
+~~削除されたテキスト（古い情報）。~~この文は正しいです。
 
 ## Chinese
 
 Works seamlessly with Chinese punctuation:
 
-**重要提示（Important Notice）：请注意。**
+**重要提示（Important Notice）：**请注意。
 
-*这是斜体文字（带括号）。*
+*这是斜体文字（带括号）。*这句子继续也没问题。
 
-~~旧方法（已废弃）~~ → 新方法
+~~旧方法（已废弃）。~~这个句子是正确的。
 
 ## Korean
 
 Korean text with mixed punctuation:
 
-**한국어 텍스트（괄호 포함）。**
+**한국어 구문(괄호 포함)**을 강조.
 
-*기울임 텍스트【주석】*
+*이 텍스트(괄호 포함)*는 기울임꼴입니다.
+
+~~이 텍스트(괄호 포함)~~를 삭제합니다.
 `;
 
 export const CJKLanguageSupport = () => (
