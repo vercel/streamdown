@@ -1,0 +1,508 @@
+---
+title: Mermaid Diagrams
+description: Create interactive flowcharts, sequence diagrams, and more with Mermaid support.
+---
+
+Streamdown includes built-in support for [Mermaid](https://mermaid.js.org/) diagrams, allowing you to create flowcharts, sequence diagrams, state diagrams, and more using simple text-based syntax. Each diagram includes interactive controls for fullscreen viewing, downloading, and copying.
+
+## Basic Usage
+
+Create Mermaid diagrams using code blocks with the `mermaid` language identifier:
+
+````markdown
+```mermaid
+graph TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Success]
+    B -->|No| D[Try Again]
+    D --> B
+```
+````
+
+Streamdown will render the diagram as an interactive SVG with controls.
+
+## Diagram Types
+
+### Flowcharts
+
+Create flowcharts to visualize processes and workflows:
+
+````markdown
+```mermaid
+graph TD
+    A[Christmas] -->|Get money| B(Go shopping)
+    B --> C{Let me think}
+    C -->|One| D[Laptop]
+    C -->|Two| E[iPhone]
+    C -->|Three| F[Car]
+```
+````
+
+**Node Shapes:**
+- `[text]` - Rectangle
+- `(text)` - Rounded rectangle
+- `{text}` - Rhombus (decision)
+- `((text))` - Circle
+- `[[text]]` - Subroutine shape
+
+**Direction:**
+- `graph TD` - Top to bottom
+- `graph LR` - Left to right
+- `graph BT` - Bottom to top
+- `graph RL` - Right to left
+
+### Sequence Diagrams
+
+Visualize interactions between different actors or systems:
+
+````markdown
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser
+    participant Server
+    participant Database
+
+    User->>Browser: Enter URL
+    Browser->>Server: HTTP Request
+    Server->>Database: Query data
+    Database-->>Server: Return results
+    Server-->>Browser: HTTP Response
+    Browser-->>User: Display page
+```
+````
+
+**Arrow Types:**
+- `->` - Solid line
+- `-->` - Dotted line
+- `->>` - Solid arrow
+- `-->>` - Dotted arrow
+
+### State Diagrams
+
+Model state machines and state transitions:
+
+````markdown
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Loading: start
+    Loading --> Success: data received
+    Loading --> Error: failed
+    Success --> Idle: reset
+    Error --> Loading: retry
+    Success --> [*]
+```
+````
+
+### Class Diagrams
+
+Document object-oriented designs:
+
+````markdown
+```mermaid
+classDiagram
+    class User {
+        +String name
+        +String email
+        +login()
+        +logout()
+    }
+    class Post {
+        +String title
+        +String content
+        +Date createdAt
+        +publish()
+    }
+    User "1" --> "*" Post: creates
+```
+````
+
+### Pie Charts
+
+Display proportional data:
+
+````markdown
+```mermaid
+pie title Project Time Distribution
+    "Development" : 45
+    "Testing" : 20
+    "Documentation" : 15
+    "Meetings" : 20
+```
+````
+
+### Gantt Charts
+
+Plan and track project timelines:
+
+````markdown
+```mermaid
+gantt
+    title Project Schedule
+    dateFormat YYYY-MM-DD
+    section Design
+    Wireframes       :2024-01-01, 7d
+    Mockups         :2024-01-08, 7d
+    section Development
+    Frontend        :2024-01-15, 14d
+    Backend         :2024-01-15, 14d
+    section Testing
+    QA Testing      :2024-01-29, 7d
+```
+````
+
+### Entity Relationship Diagrams
+
+Model database relationships:
+
+````markdown
+```mermaid
+erDiagram
+    USER ||--o{ POST : creates
+    USER {
+        int id PK
+        string email
+        string name
+    }
+    POST {
+        int id PK
+        int userId FK
+        string title
+        text content
+    }
+    POST ||--o{ COMMENT : has
+    COMMENT {
+        int id PK
+        int postId FK
+        string content
+    }
+```
+````
+
+### Git Graphs
+
+Visualize Git workflows:
+
+````markdown
+```mermaid
+gitGraph
+    commit
+    commit
+    branch develop
+    checkout develop
+    commit
+    commit
+    checkout main
+    merge develop
+    commit
+```
+````
+
+## Configuration
+
+### Theme Customization
+
+Customize the Mermaid theme using the `mermaidConfig` prop:
+
+```tsx
+import { Streamdown } from 'streamdown';
+import type { MermaidConfig } from 'streamdown';
+
+export default function Page() {
+  const mermaidConfig: MermaidConfig = {
+    theme: 'dark',
+    themeVariables: {
+      primaryColor: '#ff6b6b',
+      primaryTextColor: '#fff',
+      primaryBorderColor: '#ff6b6b',
+      lineColor: '#f5f5f5',
+      secondaryColor: '#4ecdc4',
+      tertiaryColor: '#45b7d1'
+    }
+  };
+
+  return (
+    <Streamdown mermaidConfig={mermaidConfig}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+### Available Themes
+
+Mermaid includes several built-in themes:
+
+- `default` - Classic Mermaid theme
+- `dark` - Dark mode optimized
+- `forest` - Green tones
+- `neutral` - Minimal styling
+- `base` - Clean, modern style
+
+Example:
+
+```tsx
+<Streamdown mermaidConfig={{ theme: 'forest' }}>
+  {markdown}
+</Streamdown>
+```
+
+### Advanced Configuration
+
+Customize specific diagram types:
+
+```tsx
+const mermaidConfig: MermaidConfig = {
+  theme: 'base',
+  themeVariables: {
+    fontSize: '16px',
+    fontFamily: 'Inter, sans-serif',
+  },
+  flowchart: {
+    nodeSpacing: 50,
+    rankSpacing: 50,
+    curve: 'basis',
+  },
+  sequence: {
+    actorMargin: 50,
+    boxMargin: 10,
+    boxTextMargin: 5,
+  },
+};
+```
+
+## Interactive Controls
+
+Each Mermaid diagram includes interactive controls:
+
+### Fullscreen Mode
+
+Click the fullscreen button to view the diagram in an overlay with a dark background. This is especially useful for complex diagrams.
+
+### Download
+
+Download the diagram as an SVG file for use in presentations or documentation.
+
+### Copy
+
+Copy the diagram to your clipboard for pasting into other applications.
+
+### Customizing Controls
+
+You can customize which controls are shown:
+
+```tsx
+<Streamdown
+  controls={{
+    mermaid: {
+      fullscreen: true,
+      download: true,
+      copy: true,
+    }
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+Or disable specific controls:
+
+```tsx
+<Streamdown
+  controls={{
+    mermaid: {
+      fullscreen: true,
+      download: false,  // Hide download button
+      copy: false,      // Hide copy button
+    }
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+Or disable all Mermaid controls:
+
+```tsx
+<Streamdown controls={{ mermaid: false }}>
+  {markdown}
+</Streamdown>
+```
+
+## Streaming Considerations
+
+### Initial Render
+
+When Mermaid diagrams are first streamed in, they appear as code blocks until the diagram syntax is complete. Streamdown's parser ensures the code block is properly formatted during streaming.
+
+### Disable Interactions During Streaming
+
+Use the `isAnimating` prop to disable interactive controls while content is streaming:
+
+```tsx
+<Streamdown isAnimating={isStreaming}>
+  {markdown}
+</Streamdown>
+```
+
+This prevents users from interacting with incomplete diagrams.
+
+## Best Practices
+
+### Keep Diagrams Focused
+
+Break complex diagrams into smaller, focused visualizations:
+
+````markdown
+✅ Good: Multiple small diagrams
+
+## User Authentication Flow
+```mermaid
+graph LR
+    A[Login] --> B{Valid?}
+    B -->|Yes| C[Dashboard]
+    B -->|No| D[Error]
+```
+
+## Data Fetching Flow
+```mermaid
+graph LR
+    A[Request] --> B[API]
+    B --> C[Database]
+    C --> B
+    B --> D[Response]
+```
+
+❌ Avoid: One massive diagram with everything
+````
+
+### Add Context
+
+Provide descriptions for your diagrams:
+
+````markdown
+Here's the authentication flow for our application:
+
+```mermaid
+sequenceDiagram
+    User->>App: Enter credentials
+    App->>Server: Authenticate
+    Server-->>App: Token
+    App-->>User: Success
+```
+
+The server validates credentials and returns a JWT token.
+````
+
+### Use Descriptive Labels
+
+Make your diagrams self-documenting:
+
+````markdown
+✅ Good: Clear labels
+```mermaid
+graph TD
+    A[User clicks 'Submit'] --> B{Form valid?}
+    B -->|Yes| C[Send to server]
+    B -->|No| D[Show validation errors]
+```
+
+❌ Avoid: Cryptic labels
+```mermaid
+graph TD
+    A[Step 1] --> B{Check}
+    B -->|OK| C[Next]
+    B -->|Bad| D[Err]
+```
+````
+
+### Choose the Right Diagram Type
+
+Select the diagram type that best represents your information:
+
+- **Flowchart** - Processes, algorithms, workflows
+- **Sequence** - API interactions, communication flows
+- **State** - Lifecycle, state machines
+- **Class** - Object relationships, architecture
+- **ER** - Database schemas
+- **Gantt** - Project timelines
+- **Pie/Bar** - Statistical data
+
+## Syntax Reference
+
+### Flowchart Links
+
+```mermaid
+A --> B         // Arrow
+A --- B         // Line
+A -.-> B        // Dotted arrow
+A ==> B         // Thick arrow
+A -->|Label| B  // Labeled arrow
+```
+
+### Sequence Diagram Actors
+
+```mermaid
+participant A as Alice
+actor B as Bob
+```
+
+### Styling Nodes
+
+```mermaid
+graph TD
+    A[Node]
+    style A fill:#f9f,stroke:#333,stroke-width:4px
+```
+
+### Subgraphs
+
+```mermaid
+graph TD
+    subgraph Group A
+        A1 --> A2
+    end
+    subgraph Group B
+        B1 --> B2
+    end
+    A2 --> B1
+```
+
+## Common Issues
+
+### Diagram Not Rendering
+
+1. Verify the syntax is correct (check [Mermaid Live Editor](https://mermaid.live/))
+2. Ensure the code block uses `` ```mermaid ``
+3. Check browser console for JavaScript errors
+4. Verify Mermaid is not being blocked by CSP
+
+### Performance with Large Diagrams
+
+Large diagrams may take time to render. Consider:
+
+- Breaking into smaller diagrams
+- Simplifying node relationships
+- Using subgraphs for organization
+- Lazy loading diagram-heavy pages
+
+### Theme Not Applying
+
+1. Verify `mermaidConfig` is properly passed
+2. Check that theme name is spelled correctly
+3. Ensure custom theme variables are valid
+
+## Resources
+
+- [Mermaid Documentation](https://mermaid.js.org/intro/) - Official docs
+- [Mermaid Live Editor](https://mermaid.live/) - Test diagrams online
+- [Syntax Reference](https://mermaid.js.org/intro/syntax-reference.html) - Complete syntax guide
+- [Mermaid Examples](https://mermaid.js.org/ecosystem/integrations.html) - Gallery of examples
+
+## Related Features
+
+- [Code Blocks](/docs/code-blocks) - Syntax highlighting for other code
+- [GitHub Flavored Markdown](/docs/gfm) - Extended Markdown features
+- [Typography](/docs/typography) - Text styling around diagrams
+- [Unterminated Block Parsing](/docs/termination) - How streaming works with Mermaid

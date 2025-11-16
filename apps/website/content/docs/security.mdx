@@ -1,0 +1,235 @@
+---
+title: Security
+description: Built-in content hardening and security features to protect against malicious Markdown.
+---
+
+Streamdown is built with security as a top priority. When rendering user-generated or AI-generated Markdown content, it's crucial to protect against malicious content, especially when dealing with content that might have been subject to prompt injection attacks.
+
+## Why Security Matters
+
+Markdown can contain:
+- **Links to malicious sites** - Phishing or malware distribution
+- **External images** - Privacy tracking or CSRF attacks
+- **HTML content** - XSS vulnerabilities
+- **JavaScript execution** - Code injection
+- **Prompt injection** - AI models manipulated to include harmful content
+
+Streamdown uses [rehype-harden](https://github.com/vercel-labs/markdown-sanitizers) to sanitize and validate content before rendering.
+
+## Default Security
+
+By default, Streamdown is configured with **permissive security** to allow maximum functionality:
+
+```tsx
+// Default configuration
+{
+  allowedImagePrefixes: ["*"],  // All images allowed
+  allowedLinkPrefixes: ["*"],   // All links allowed
+  defaultOrigin: undefined,     // No origin restriction
+  allowDataImages: true,        // Base64 images allowed
+}
+```
+
+This works well for trusted content but should be tightened for untrusted sources.
+
+## Restricting Links
+
+Limit which domains users can link to:
+
+```tsx
+import { Streamdown, defaultRehypePlugins } from 'streamdown';
+import { harden } from 'rehype-harden';
+
+export default function Page() {
+  return (
+    <Streamdown
+      rehypePlugins={[
+        defaultRehypePlugins.raw,
+        defaultRehypePlugins.katex,
+        [
+          harden,
+          {
+            defaultOrigin: 'https://streamdown.ai',
+            allowedLinkPrefixes: [
+              'https://streamdown.ai',
+              'https://github.com',
+              'https://vercel.com',
+            ],
+          },
+        ],
+      ]}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+Any links not matching the allowed prefixes will be rewritten to point to the `defaultOrigin`.
+
+### Example
+
+With the above configuration:
+
+```markdown
+[Safe link](https://github.com/vercel/streamdown)
+[Unsafe link](https://malicious-site.com)
+```
+
+Results in:
+- Safe link: Works normally
+- Unsafe link: Renders as [blocked]
+
+## Restricting Images
+
+Similarly, restrict which domains can serve images:
+
+```tsx
+<Streamdown
+  rehypePlugins={[
+    defaultRehypePlugins.raw,
+    defaultRehypePlugins.katex,
+    [
+      harden,
+      {
+        allowedImagePrefixes: [
+          'https://your-cdn.com',
+          'https://trusted-images.com',
+        ],
+        allowDataImages: false,  // Disable base64 images
+      },
+    ],
+  ]}
+>
+  {markdown}
+</Streamdown>
+```
+
+### Data Images
+
+Base64-encoded images (`data:image/...`) can be disabled:
+
+```tsx
+allowDataImages: false
+```
+
+This prevents embedding arbitrary image data in Markdown, which could be used for:
+- Tracking pixels
+- Large embedded files
+- Malicious payloads
+
+## Protecting Against Prompt Injection
+
+When using AI-generated content, models can be manipulated to include malicious links or content. Here's a production-ready configuration:
+
+```tsx
+import { Streamdown, defaultRehypePlugins } from 'streamdown';
+import { harden } from 'rehype-harden';
+
+export default function ChatMessage({ content, isAIGenerated }) {
+  const securityConfig = isAIGenerated ? {
+    defaultOrigin: 'https://your-app.com',
+    allowedLinkPrefixes: [
+      'https://your-app.com',
+      'https://docs.your-app.com',
+      'https://github.com',
+    ],
+    allowedImagePrefixes: [
+      'https://your-cdn.com',
+    ],
+    allowDataImages: false,
+  } : {
+    // More permissive for user content
+    allowedLinkPrefixes: ['*'],
+    allowedImagePrefixes: ['*'],
+  };
+
+  return (
+    <Streamdown
+      rehypePlugins={[
+        defaultRehypePlugins.raw,
+        defaultRehypePlugins.katex,
+        [harden, securityConfig],
+      ]}
+    >
+      {content}
+    </Streamdown>
+  );
+}
+```
+
+## HTML Content
+
+Streamdown supports raw HTML through `rehype-raw`. To disable HTML entirely:
+
+```tsx
+import { Streamdown, defaultRehypePlugins } from 'streamdown';
+
+export default function Page() {
+  return (
+    <Streamdown
+      rehypePlugins={[
+        // Omit defaultRehypePlugins.raw
+        defaultRehypePlugins.katex,
+        defaultRehypePlugins.harden,
+      ]}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+Without `rehype-raw`, HTML tags will be escaped and displayed as text.
+
+## Relative URLs
+
+Control how relative URLs are handled:
+
+```tsx
+{
+  defaultOrigin: 'https://your-app.com'
+}
+```
+
+Relative URLs will be resolved against this origin:
+
+```markdown
+[Relative link](/docs/guide)
+```
+
+Becomes: `https://your-app.com/docs/guide`
+
+## Custom URL Transform
+
+For advanced URL handling, use the `urlTransform` prop:
+
+```tsx
+import { Streamdown, defaultUrlTransform } from 'streamdown';
+
+export default function Page() {
+  const customUrlTransform = (url: string) => {
+    // First apply default transform
+    const transformed = defaultUrlTransform(url);
+
+    // Add your custom logic
+    if (transformed.startsWith('http://')) {
+      // Upgrade to HTTPS
+      return transformed.replace('http://', 'https://');
+    }
+
+    // Block specific domains
+    if (transformed.includes('untrusted-site.com')) {
+      return 'https://your-app.com/blocked';
+    }
+
+    return transformed;
+  };
+
+  return (
+    <Streamdown urlTransform={customUrlTransform}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```

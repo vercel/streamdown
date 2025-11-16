@@ -1,4 +1,5 @@
 import "./global.css";
+import "katex/dist/katex.css";
 import { Navbar } from "@/components/geistdocs/navbar";
 import { GeistdocsProvider } from "@/components/geistdocs/provider";
 import { mono, sans } from "@/lib/geistdocs/fonts";
@@ -12,6 +13,14 @@ const links = [
   {
     label: "Docs",
     href: "/docs",
+  },
+  {
+    label: "Source",
+    href: "https://github.com/vercel/streamdown",
+  },
+  {
+    label: "AI Elements",
+    href: "https://ai-sdk.dev/elements",
   },
 ];
 

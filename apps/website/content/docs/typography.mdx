@@ -1,0 +1,170 @@
+---
+title: Typography
+description: Explore Streamdown's built-in Tailwind typography styles for beautiful Markdown rendering.
+---
+
+Streamdown comes with beautiful, built-in typography styles powered by Tailwind CSS. All standard Markdown elements are styled out of the box, ensuring your content looks polished without additional configuration.
+
+## Headings
+
+Streamdown supports all six levels of Markdown headings with responsive sizing and proper spacing:
+
+```markdown
+# Heading 1
+## Heading 2
+### Heading 3
+#### Heading 4
+##### Heading 5
+###### Heading 6
+```
+
+Headings automatically include:
+- Responsive font sizes that scale appropriately
+- Proper font weights (semibold by default)
+- Optimal line heights for readability
+- Consistent vertical spacing
+
+## Text Formatting
+
+### Bold and Italic
+
+Use standard Markdown syntax for emphasis:
+
+```markdown
+**Bold text** or __also bold__
+*Italic text* or _also italic_
+***Bold and italic***
+```
+
+### Strikethrough
+
+GitHub Flavored Markdown strikethrough is fully supported:
+
+```markdown
+~~Crossed out text~~
+```
+
+### Inline Code
+
+Inline code is styled with a subtle background and monospace font:
+
+```markdown
+Use the `Streamdown` component in your app.
+```
+
+## Links
+
+Links are styled with underlines and appropriate colors:
+
+```markdown
+[Visit our website](https://streamdown.ai)
+```
+
+Features include:
+- Distinct styling for regular links
+- Proper hover and focus states
+- Accessible color contrast
+- Smooth transitions
+
+## Lists
+
+### Unordered Lists
+
+```markdown
+- First item
+- Second item
+  - Nested item
+  - Another nested item
+- Third item
+```
+
+### Ordered Lists
+
+```markdown
+1. First step
+2. Second step
+   1. Sub-step A
+   2. Sub-step B
+3. Third step
+```
+
+Lists include:
+- Proper indentation for nested levels
+- Consistent spacing between items
+- Clear visual hierarchy
+- Appropriate markers (bullets/numbers)
+
+## Blockquotes
+
+Blockquotes are styled with a left border and subtle background:
+
+```markdown
+> "The development of full artificial intelligence could spell the end of the human race."
+> — Stephen Hawking
+```
+
+Features:
+- Left accent border
+- Subtle background color
+- Proper padding and margin
+- Italic text styling
+
+## Code Blocks
+
+Code blocks receive syntax highlighting via Shiki:
+
+````markdown
+```javascript
+function greet(name) {
+  return `Hello, ${name}!`;
+}
+```
+````
+
+See the [Code Blocks](/docs/code-blocks) documentation for detailed configuration options.
+
+## Images
+
+Images are responsive and properly contained:
+
+```markdown
+![Alt text](https://example.com/image.jpg)
+```
+
+Features:
+- Responsive sizing
+- Proper aspect ratio preservation
+- Loading states
+- Alt text for accessibility
+
+## Tables
+
+Tables are fully styled with borders and hover states:
+
+```markdown
+| Feature | Supported |
+|---------|-----------|
+| Markdown | ✓ |
+| Streaming | ✓ |
+| Math | ✓ |
+```
+
+See the [GitHub Flavored Markdown](/docs/gfm) documentation for more table features.
+
+## Horizontal Rules
+
+Create visual separators:
+
+```markdown
+---
+```
+
+## Paragraphs
+
+Paragraphs receive proper spacing and line height for optimal readability:
+
+```markdown
+This is a paragraph with normal text flow. It automatically wraps and includes proper spacing between adjacent paragraphs.
+
+This is a second paragraph with appropriate margin top spacing.
+```

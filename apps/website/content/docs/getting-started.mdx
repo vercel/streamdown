@@ -1,101 +1,60 @@
 ---
 title: Getting Started
-description: A comprehensive guide to getting started with Geistdocs
+description: Learn how to install and configure Streamdown in your React application.
 ---
 
-Welcome to Geistdocs! This guide will walk you through everything you need to know to set up and customize your documentation site.
+Get up and running with Streamdown in minutes. This guide will walk you through installation, configuration, and your first implementation.
 
-## Prerequisites
+## Requirements
 
-Before you begin, make sure you have:
-
-- **Node.js 18+** installed on your system
-- **pnpm** (recommended) or npm package manager
-- A **GitHub account** for repository hosting
-- Basic familiarity with **Markdown** and **React**
+- **Node.js** >= 18
+- **React** >= 19.1.1 (compatible with React 18+)
+- **Tailwind CSS** (for styling)
 
 ## Installation
 
-### 1. Create a New Project
+You can install Streamdown directly, or use it as part of the [AI Elements](https://ai-sdk.dev/elements) library.
 
-Create a new repository using the Geistdocs template:
+### AI Elements
 
-```bash
-gh repo create mydocs --template vercel/geistdocs --clone
-cd mydocs
+Install the `message` component from AI Elements:
+
+```package-install
+npx ai-elements@latest add message
 ```
 
-Alternatively, you can use the template directly on GitHub:
-1. Visit the Geistdocs repository
-2. Click "Use this template"
-3. Clone your new repository
+### Direct Installation
 
-### 2. Install Dependencies
+Install Streamdown using your preferred package manager:
 
-Run the following command to install dependencies:
-
-```bash
-pnpm install
+```package-install
+npm i streamdown
 ```
 
-This will install all dependencies including Next.js, Fumadocs, and the AI SDK.
+## Tailwind CSS Configuration
 
-### 3. Configure Environment Variables
+Streamdown uses Tailwind CSS for styling. To ensure the styles are properly applied, you need to configure your Tailwind setup to include Streamdown's source files.
 
-Copy the example environment file:
+### Tailwind v4
 
-```bash
-cp .env.example .env.local
+Add the following CSS source directive to your `globals.css` or main CSS file:
+
+```css title="globals.css"
+@source "../node_modules/streamdown/dist/index.js";
 ```
 
-Then edit the environment variables in the `.env.local` file.
+Make sure the path matches the location of your `node_modules` folder relative to your CSS file.
 
-### 4. Delete the Geistdocs content
+### Tailwind v3
 
-Delete all the files within `content/docs`. These are the default files that come with the Geistdocs template.
+Add Streamdown to your `content` array in your `tailwind.config.js`:
 
-```bash
-rm -rf content/docs/*
-```
-
-### 5. Start Development Server
-
-Run the development server:
-
-```bash
-pnpm dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser to see your documentation site.
-
-## Writing Your First Page
-
-### Create a New Page
-
-Create a new file in `content/docs/`:
-
-```mdx title="content/docs/my-first-page.mdx"
----
-title: My First Page
-description: This is my first documentation page
----
-
-# My First Page
-
-Welcome to my documentation! This page will be available at `/docs/my-first-page`.
-
-## Features
-
-- Easy to write with Markdown
-- Full React component support
-- Automatic navigation generation
-
-## Code Example
-
-```typescript
-const greeting = (name: string): string => {
-  return `Hello, ${name}!`;
-};
-
-console.log(greeting("World"));
+```js title="tailwind.config.js"
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './node_modules/streamdown/dist/**/*.js',
+  ],
+  // ... rest of your config
+}
 ```

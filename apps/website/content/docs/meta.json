@@ -1,6 +1,12 @@
 {
-  "title": "Vercel Documentation",
-  "description": "Vercel Documentation",
-  "root": true,
-  "pages": ["index", "getting-started", "deployment", "---Features---", "..."]
+  "title": "Streamdown",
+  "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
+  "pages": [
+    "index",
+    "getting-started",
+    "usage",
+    "configuration",
+    "---Features---",
+    "..."
+  ]
 }
