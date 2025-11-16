@@ -8,7 +8,7 @@ export const revalidate = false;
 
 export const GET = () => {
   const feed = new Feed({
-    title: "Geistdocs Documentation",
+    title: "Streamdown Documentation",
     id: baseUrl,
     link: baseUrl,
     language: "en",
