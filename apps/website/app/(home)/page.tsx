@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CJKLanguageSupport } from "./components/cjk";
 import { CodeBlocks } from "./components/code-blocks";
 import { CallToAction } from "./components/cta";
 import { Footer } from "./components/footer";
@@ -22,6 +23,7 @@ const Home = () => (
       <Hero />
       <Styles />
       <GitHubFlavoredMarkdown />
+      <CJKLanguageSupport />
       <CodeBlocks />
       <Mathematics />
       <MermaidDemo />
