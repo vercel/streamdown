@@ -5,6 +5,7 @@ import {
   type ComponentProps,
   createContext,
   type HTMLAttributes,
+  startTransition,
   useContext,
   useEffect,
   useRef,
@@ -15,13 +16,12 @@ import {
   type BundledTheme,
   bundledLanguages,
   createHighlighter,
+  type ShikiTransformer,
   type SpecialLanguage,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import { ShikiThemeContext, StreamdownRuntimeContext } from "../index";
 import { cn, save } from "./utils";
-
-const PRE_TAG_REGEX = /<pre(\s|>)/;
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
@@ -33,9 +33,115 @@ type CodeBlockContextType = {
   code: string;
 };
 
+type HighlightThrottling = {
+  minHighlightInterval: number;
+  debounceMs: number;
+};
+
 const CodeBlockContext = createContext<CodeBlockContextType>({
   code: "",
 });
+
+function useThrottledDebounce<T>(value: T, throttleMs = 200, debounceMs = 50) {
+  const [processedValue, setProcessedValue] = useState(value);
+  const lastRunTime = useRef(0);
+  const timeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const now = Date.now();
+    const timeSinceLastRun = now - lastRunTime.current;
+
+    // Clear any pending debounce
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+    }
+
+    // If enough time has passed, run immediately (throttle)
+    if (timeSinceLastRun >= throttleMs) {
+      setProcessedValue(value);
+      lastRunTime.current = now;
+    } else {
+      // Otherwise, debounce it
+      timeoutRef.current = window.setTimeout(() => {
+        setProcessedValue(value);
+        lastRunTime.current = Date.now();
+      }, debounceMs);
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [value, throttleMs, debounceMs]);
+
+  return processedValue;
+}
+
+const getHighlightThrottling = (lineCount: number): HighlightThrottling => {
+  const smallThreshold = 50;
+  const mediumThreshold = 150;
+  const largeThreshold = 300;
+  if (lineCount < smallThreshold) {
+    // Small blocks: highlight frequently
+    return {
+      minHighlightInterval: 100,
+      debounceMs: 500,
+    };
+  }
+  if (lineCount < mediumThreshold) {
+    // Medium blocks: reduce highlight frequency
+    return {
+      minHighlightInterval: 500,
+      debounceMs: 800,
+    };
+  }
+  if (lineCount < largeThreshold) {
+    // Large blocks: highlight rarely, rely on debounce
+    return {
+      minHighlightInterval: 1500,
+      debounceMs: 1200,
+    };
+  }
+  // Very large blocks: skip immediate highlights entirely during streaming
+  return {
+    minHighlightInterval: Number.POSITIVE_INFINITY,
+    debounceMs: 1500,
+  };
+};
+
+const escapeHtml = (html: string) =>
+  html
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+const splitCurrentIncompleteLineFromCode = (code: string): [string, string] => {
+  const lastNewLineIndex = code.lastIndexOf("\n");
+  const completeCode =
+    lastNewLineIndex >= 0 ? code.slice(0, lastNewLineIndex + 1) : "";
+  const currentIncompleteLine =
+    lastNewLineIndex >= 0 ? code.slice(lastNewLineIndex + 1) : code;
+  return [completeCode, currentIncompleteLine];
+};
+
+// Added separate from HighlighterManager class to avoid conflicts with `this`
+const getTransformersFromPreClassName = (
+  preClassName?: string
+): ShikiTransformer[] => {
+  if (!preClassName) {
+    return [];
+  }
+  const preTransformer: ShikiTransformer = {
+    pre(node) {
+      this.addClassToHast(node, preClassName);
+      return node;
+    },
+  };
+  return [preTransformer];
+};
 
 class HighlighterManager {
   private lightHighlighter: Awaited<
@@ -48,6 +154,18 @@ class HighlighterManager {
   private darkTheme: BundledTheme | null = null;
   private readonly loadedLanguages: Set<BundledLanguage> = new Set();
   private initializationPromise: Promise<void> | null = null;
+  private loadLanguagePromise: Promise<void> | null = null;
+
+  // LRU cache for highlighted code
+  private readonly cache = new Map<string, [string, string]>();
+  private cacheKeys: string[] = [];
+  private readonly MAX_CACHE_SIZE = 50;
+
+  // Queue to deduplicate concurrent highlight requests
+  private readonly highlightQueue = new Map<
+    string,
+    Promise<[string, string]>
+  >();
 
   private isLanguageSupported(language: string): language is BundledLanguage {
     return Object.hasOwn(bundledLanguages, language);
@@ -57,120 +175,217 @@ class HighlighterManager {
     return "text";
   }
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex highlighter initialization logic with multiple edge cases"
-  private async ensureHighlightersInitialized(
-    themes: [BundledTheme, BundledTheme],
-    language: BundledLanguage
-  ): Promise<void> {
-    const [lightTheme, darkTheme] = themes;
-    const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
+  private getCacheKey(
+    code: string,
+    language: string,
+    preClassName?: string
+  ): string {
+    return `${language}::${preClassName || ""}::${code}`;
+  }
 
+  private addToCache(key: string, value: [string, string]): void {
+    // Remove oldest entry if cache is full
+    if (this.cache.size >= this.MAX_CACHE_SIZE) {
+      const oldestKey = this.cacheKeys.shift();
+      if (oldestKey) {
+        this.cache.delete(oldestKey);
+      }
+    }
+    this.cache.set(key, value);
+    this.cacheKeys.push(key);
+  }
+
+  private needsHighlightersInitialization(
+    themes: [BundledTheme, BundledTheme]
+  ): [boolean, boolean] {
+    const [lightTheme, darkTheme] = themes;
     // Check if we need to recreate highlighters due to theme change
     const needsLightRecreation =
       !this.lightHighlighter || this.lightTheme !== lightTheme;
     const needsDarkRecreation =
       !this.darkHighlighter || this.darkTheme !== darkTheme;
+    return [needsLightRecreation, needsDarkRecreation];
+  }
 
-    if (needsLightRecreation || needsDarkRecreation) {
-      // If themes changed, reset loaded languages
-      this.loadedLanguages.clear();
-    }
+  private async ensureHighlightersInitialized(
+    themes: [BundledTheme, BundledTheme],
+    needsThemeRecreation: [boolean, boolean]
+  ): Promise<void> {
+    const [needsLightRecreation, needsDarkRecreation] = needsThemeRecreation;
+    const [lightTheme, darkTheme] = themes;
+    const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
 
-    // Check if we need to load the language
-    const isLanguageSupported = this.isLanguageSupported(language);
-    const needsLanguageLoad =
-      !this.loadedLanguages.has(language) && isLanguageSupported;
+    // If themes changed, reset loaded languages, clear cache, and clear queue
+    this.loadedLanguages.clear();
+    this.cache.clear();
+    this.cacheKeys = [];
+    this.highlightQueue.clear();
 
     // Create or recreate light highlighter if needed
     if (needsLightRecreation) {
       this.lightHighlighter = await createHighlighter({
         themes: [lightTheme],
-        langs: isLanguageSupported ? [language] : [],
+        langs: [],
         engine: jsEngine,
       });
       this.lightTheme = lightTheme;
-      if (isLanguageSupported) {
-        this.loadedLanguages.add(language);
-      }
-    } else if (needsLanguageLoad) {
-      // Load the language if not already loaded
-      await this.lightHighlighter?.loadLanguage(language);
     }
 
     // Create or recreate dark highlighter if needed
     if (needsDarkRecreation) {
-      // If recreating dark highlighter, load all previously loaded languages plus the new one
-      const langsToLoad = needsLanguageLoad
-        ? [...this.loadedLanguages].concat(
-            isLanguageSupported ? [language] : []
-          )
-        : Array.from(this.loadedLanguages);
-
-      let langs: BundledLanguage[] = [];
-      if (langsToLoad.length > 0) {
-        langs = langsToLoad;
-      } else if (isLanguageSupported) {
-        langs = [language];
-      }
       this.darkHighlighter = await createHighlighter({
         themes: [darkTheme],
-        langs,
+        langs: [],
         engine: jsEngine,
       });
       this.darkTheme = darkTheme;
-    } else if (needsLanguageLoad) {
-      // Load the language if not already loaded
-      await this.darkHighlighter?.loadLanguage(language);
-    }
-
-    // Mark language as loaded after both highlighters have it
-    if (needsLanguageLoad) {
-      this.loadedLanguages.add(language);
     }
   }
 
-  async highlightCode(
-    code: string,
-    language: BundledLanguage,
-    themes: [BundledTheme, BundledTheme],
-    preClassName?: string
-  ): Promise<[string, string]> {
+  private async loadLanguage(language: BundledLanguage): Promise<void> {
+    // Load the language
+    await this.darkHighlighter?.loadLanguage(language);
+    await this.lightHighlighter?.loadLanguage(language);
+    this.loadedLanguages.add(language);
+  }
+
+  async initializeHighlighters(
+    themes: [BundledTheme, BundledTheme]
+  ): Promise<void> {
     // Ensure only one initialization happens at a time
     if (this.initializationPromise) {
       await this.initializationPromise;
     }
-    // Initialize or load language
-    this.initializationPromise = this.ensureHighlightersInitialized(
-      themes,
-      language
-    );
-    await this.initializationPromise;
-    this.initializationPromise = null;
+    const needsThemeRecreation = this.needsHighlightersInitialization(themes);
+    const [needsLightRecreation, needsDarkRecreation] = needsThemeRecreation;
 
-    const [lightTheme, darkTheme] = themes;
+    if (needsLightRecreation || needsDarkRecreation) {
+      // Initialize or load language
+      this.initializationPromise = this.ensureHighlightersInitialized(
+        themes,
+        needsThemeRecreation
+      );
+      await this.initializationPromise;
+      this.initializationPromise = null;
+    }
+  }
 
+  private performHighlights(
+    code: string,
+    language: BundledLanguage,
+    preClassName?: string
+  ): [string, string] {
     const lang = this.isLanguageSupported(language)
       ? language
       : this.getFallbackLanguage();
 
-    const light = this.lightHighlighter?.codeToHtml(code, {
+    if (
+      this.lightHighlighter === null ||
+      this.darkHighlighter === null ||
+      this.lightTheme === null ||
+      this.darkTheme === null
+    ) {
+      throw new Error(
+        "highlightCode must be called after initializeHighlighters."
+      );
+    }
+
+    const transformers = getTransformersFromPreClassName(preClassName);
+
+    // Do expensive synchronous work (still blocks, but after yielding)
+    const light = this.lightHighlighter.codeToHtml(code, {
       lang,
-      theme: lightTheme,
+      theme: this.lightTheme,
+      transformers,
     });
 
-    const dark = this.darkHighlighter?.codeToHtml(code, {
+    const dark = this.darkHighlighter.codeToHtml(code, {
       lang,
-      theme: darkTheme,
+      theme: this.darkTheme,
+      transformers,
     });
+    return [light, dark];
+  }
 
-    const addPreClass = (html: string) => {
-      if (!preClassName) {
-        return html;
+  // biome-ignore lint/suspicious/useAwait: "async is simpler than wrapping the cache return in a promise"
+  async highlightCode(
+    code: string,
+    language: BundledLanguage,
+    preClassName?: string,
+    signal?: AbortSignal
+  ): Promise<[string, string]> {
+    // Check cache first
+    const cacheKey = this.getCacheKey(code, language, preClassName);
+    const cached = this.cache.get(cacheKey);
+    if (cached) {
+      // Move to end (LRU)
+      this.cacheKeys = this.cacheKeys.filter((k) => k !== cacheKey);
+      this.cacheKeys.push(cacheKey);
+      return cached;
+    }
+
+    // Check if already highlighting this exact code (deduplicate concurrent requests)
+    const existing = this.highlightQueue.get(cacheKey);
+    if (existing) {
+      return existing;
+    }
+
+    const checkSignal = () => {
+      if (signal?.aborted) {
+        throw new DOMException("Aborted", "AbortError");
       }
-      return html.replace(PRE_TAG_REGEX, `<pre class="${preClassName}"$1`);
     };
 
-    return [addPreClass(light), addPreClass(dark)];
+    // Create promise for this highlight operation
+    const highlightPromise = (async () => {
+      try {
+        // Yield to browser before expensive work
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        // Check if aborted after yielding
+        checkSignal();
+
+        // Wait for initialization to complete before proceeding
+        if (this.initializationPromise) {
+          await this.initializationPromise;
+        }
+
+        // Check again after await
+        checkSignal();
+
+        // Ensure only one language load happens at a time
+        if (this.loadLanguagePromise) {
+          await this.loadLanguagePromise;
+        }
+
+        // Check again after await
+        checkSignal();
+
+        const needsLanguageLoad =
+          !this.loadedLanguages.has(language) &&
+          this.isLanguageSupported(language);
+
+        if (needsLanguageLoad) {
+          this.loadLanguagePromise = this.loadLanguage(language);
+          await this.loadLanguagePromise;
+          this.loadLanguagePromise = null;
+        }
+
+        // Check again after await
+        checkSignal();
+
+        const result = this.performHighlights(code, language, preClassName);
+        this.addToCache(cacheKey, result);
+        return result;
+      } finally {
+        // Clean up queue entry
+        this.highlightQueue.delete(cacheKey);
+      }
+    })();
+
+    // Store in queue to deduplicate concurrent requests
+    this.highlightQueue.set(cacheKey, highlightPromise);
+    return highlightPromise;
   }
 }
 
@@ -187,25 +402,118 @@ export const CodeBlock = ({
 }: CodeBlockProps) => {
   const [html, setHtml] = useState<string>("");
   const [darkHtml, setDarkHtml] = useState<string>("");
+  const [lastHighlightedCode, setLastHighlightedCode] = useState("");
+  const [incompleteLine, setIncompleteLine] = useState("");
+  const codeToHighlight = useThrottledDebounce(code);
+  const timeoutRef = useRef(0);
   const mounted = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const lastHighlightTime = useRef(0);
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
   useEffect(() => {
+    highlighterManager.initializeHighlighters([lightTheme, darkTheme]);
+  }, [lightTheme, darkTheme]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: "adding lastHighlightedCode to dependency array will trigger re-runs"
+  useEffect(() => {
     mounted.current = true;
 
-    highlighterManager
-      .highlightCode(code, language, [lightTheme, darkTheme], preClassName)
-      .then(([light, dark]) => {
-        if (mounted.current) {
-          setHtml(light);
-          setDarkHtml(dark);
-        }
-      });
+    // Cancel previous highlight operations
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
 
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    const [completeCode, currentIncompleteLine] =
+      splitCurrentIncompleteLineFromCode(codeToHighlight);
+
+    // Adaptive throttling based on code size
+    const lineCount = codeToHighlight.split("\n").length;
+
+    const { minHighlightInterval, debounceMs } =
+      getHighlightThrottling(lineCount);
+
+    if (completeCode && completeCode !== lastHighlightedCode) {
+      const now = Date.now();
+      const timeSinceLastHighlight = now - lastHighlightTime.current;
+
+      // Throttle: only highlight if enough time has passed OR streaming has stopped
+      if (
+        timeSinceLastHighlight > minHighlightInterval ||
+        !currentIncompleteLine
+      ) {
+        lastHighlightTime.current = now;
+        highlighterManager
+          .highlightCode(completeCode, language, preClassName, signal)
+          .then(([light, dark]) => {
+            if (mounted.current && !signal.aborted) {
+              // Use startTransition to mark these updates as non-urgent
+              startTransition(() => {
+                setHtml(light);
+                setDarkHtml(dark);
+                setLastHighlightedCode(completeCode);
+                setIncompleteLine(currentIncompleteLine);
+              });
+            }
+          })
+          .catch((err) => {
+            // Silently ignore AbortError
+            if (err.name !== "AbortError") {
+              throw err;
+            }
+          });
+      } else {
+        // Skip this highlight, let debounce handle it
+        setIncompleteLine(currentIncompleteLine);
+      }
+    } else {
+      // set incomplete line immediately here for incremental streaming updates
+      setIncompleteLine(currentIncompleteLine);
+    }
+
+    // Debounce full highlight (e.g. in case streaming stops)
+    timeoutRef.current = window.setTimeout(() => {
+      if (
+        currentIncompleteLine &&
+        codeToHighlight !== lastHighlightedCode &&
+        !signal.aborted
+      ) {
+        highlighterManager
+          .highlightCode(codeToHighlight, language, preClassName, signal)
+          .then(([light, dark]) => {
+            if (mounted.current && !signal.aborted) {
+              // Use startTransition to mark these updates as non-urgent
+              startTransition(() => {
+                setHtml(light);
+                setDarkHtml(dark);
+                setLastHighlightedCode(codeToHighlight);
+                setIncompleteLine("");
+              });
+            }
+          })
+          .catch((err) => {
+            // Silently ignore AbortError
+            if (err.name !== "AbortError") {
+              throw err;
+            }
+          });
+      }
+    }, debounceMs);
     return () => {
       mounted.current = false;
+      abortControllerRef.current?.abort();
     };
-  }, [code, language, lightTheme, darkTheme, preClassName]);
+  }, [codeToHighlight, language, preClassName]);
+
+  const incompleteLineHtml = incompleteLine
+    ? `<span class="line"><span>${escapeHtml(incompleteLine)}</span></span>`
+    : "";
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
@@ -227,7 +535,9 @@ export const CodeBlock = ({
             <div
               className={cn("overflow-x-auto dark:hidden", className)}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: html }}
+              dangerouslySetInnerHTML={{
+                __html: incompleteLineHtml ? html + incompleteLineHtml : html,
+              }}
               data-code-block
               data-language={language}
               {...rest}
@@ -235,7 +545,11 @@ export const CodeBlock = ({
             <div
               className={cn("hidden overflow-x-auto dark:block", className)}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: darkHtml }}
+              dangerouslySetInnerHTML={{
+                __html: incompleteLineHtml
+                  ? darkHtml + incompleteLineHtml
+                  : darkHtml,
+              }}
               data-code-block
               data-language={language}
               {...rest}

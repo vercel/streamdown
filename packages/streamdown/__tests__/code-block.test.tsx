@@ -1,4 +1,7 @@
+import fs from "node:fs";
+import path from "node:path";
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
+import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ShikiThemeContext } from "../index";
 import { CodeBlock, CodeBlockCopyButton } from "../lib/code-block";
@@ -336,4 +339,86 @@ describe("CodeBlock with multiple languages", () => {
       { timeout: 5000 }
     );
   });
+
+  it("should handle heavy streaming appropriately", async () => {
+    const fixturePath = path.join(
+      __dirname,
+      "__fixtures__",
+      "code-block-big-html.html"
+    );
+    const largeContent = fs.readFileSync(fixturePath, "utf-8");
+
+    // Create a component that will stream the content
+    let setStreamedCodeExternal: ((code: string) => void) | null = null;
+
+    const StreamingCodeBlock = () => {
+      const [streamedCode, setStreamedCode] = React.useState("");
+
+      React.useEffect(() => {
+        setStreamedCodeExternal = setStreamedCode;
+      }, []);
+
+      return (
+        <div>
+          <CodeBlock code={streamedCode} language="html" />
+        </div>
+      );
+    };
+
+    const { container } = render(
+      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+        <StreamingCodeBlock />
+      </ShikiThemeContext.Provider>
+    );
+
+    // Simulate streaming by updating in chunks
+    const chunkSize = 100;
+    let currentIndex = 0;
+    let currentContent = "";
+
+    // Stream the content in chunks
+    while (currentIndex < largeContent.length) {
+      const nextChunk = largeContent.slice(
+        currentIndex,
+        currentIndex + chunkSize
+      );
+      currentIndex += chunkSize;
+      currentContent += nextChunk;
+
+      await act(async () => {
+        setStreamedCodeExternal?.(currentContent);
+        // Small delay to simulate streaming
+        await new Promise((resolve) => setTimeout(resolve, 1));
+      });
+    }
+
+    // Wait for the final render to complete
+    await waitFor(
+      () => {
+        const codeBlock = container.querySelector("[data-code-block]");
+        expect(codeBlock).toBeTruthy();
+        // Check that content has been rendered
+        const innerHTML = codeBlock?.innerHTML || "";
+        expect(innerHTML.length).toBeGreaterThan(0);
+      },
+      { timeout: 10_000 }
+    );
+
+    // Wait a bit more for highlighting to complete
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+    });
+
+    // Verify the code block rendered successfully with content from the fixture
+    const codeBlock = container.querySelector("[data-code-block]");
+    expect(codeBlock?.innerHTML).toContain("Napoleon");
+
+    // Verify the component is showing HTML language
+    const languageLabel = container.querySelector(".font-mono.lowercase");
+    expect(languageLabel?.textContent).toBe("html");
+
+    // Verify the final content length matches the fixture
+    expect(largeContent.length).toBeGreaterThan(8000); // Sanity check on fixture size
+    expect(currentContent).toBe(largeContent);
+  }, 30_000); // Increase test timeout to 30 seconds
 });
