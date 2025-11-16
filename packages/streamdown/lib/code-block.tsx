@@ -649,11 +649,12 @@ export const CodeBlockCopyButton = ({
     }
   };
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       window.clearTimeout(timeoutRef.current);
-    };
-  }, []);
+    },
+    []
+  );
 
   const Icon = isCopied ? CheckIcon : CopyIcon;
 

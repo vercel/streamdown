@@ -67,7 +67,15 @@ function sameClassAndNode(
 }
 
 const shouldShowControls = (
-  config: boolean | { table?: boolean; code?: boolean; mermaid?: boolean | { download?: boolean; copy?: boolean; fullscreen?: boolean } },
+  config:
+    | boolean
+    | {
+        table?: boolean;
+        code?: boolean;
+        mermaid?:
+          | boolean
+          | { download?: boolean; copy?: boolean; fullscreen?: boolean };
+      },
   type: "table" | "code" | "mermaid"
 ) => {
   if (typeof config === "boolean") {
@@ -78,7 +86,15 @@ const shouldShowControls = (
 };
 
 const shouldShowMermaidControl = (
-  config: boolean | { table?: boolean; code?: boolean; mermaid?: boolean | { download?: boolean; copy?: boolean; fullscreen?: boolean } },
+  config:
+    | boolean
+    | {
+        table?: boolean;
+        code?: boolean;
+        mermaid?:
+          | boolean
+          | { download?: boolean; copy?: boolean; fullscreen?: boolean };
+      },
   controlType: "download" | "copy" | "fullscreen"
 ): boolean => {
   if (typeof config === "boolean") {
@@ -86,15 +102,15 @@ const shouldShowMermaidControl = (
   }
 
   const mermaidConfig = config.mermaid;
-  
+
   if (mermaidConfig === false) {
     return false;
   }
-  
+
   if (mermaidConfig === true || mermaidConfig === undefined) {
     return true;
   }
-  
+
   return mermaidConfig[controlType] !== false;
 };
 
@@ -626,7 +642,10 @@ const CodeComponent = ({
     const showMermaidControls = shouldShowControls(controlsConfig, "mermaid");
     const showDownload = shouldShowMermaidControl(controlsConfig, "download");
     const showCopy = shouldShowMermaidControl(controlsConfig, "copy");
-    const showFullscreen = shouldShowMermaidControl(controlsConfig, "fullscreen");
+    const showFullscreen = shouldShowMermaidControl(
+      controlsConfig,
+      "fullscreen"
+    );
 
     return (
       <div
@@ -636,13 +655,18 @@ const CodeComponent = ({
         )}
         data-streamdown="mermaid-block"
       >
-        {showMermaidControls && (showDownload || showCopy || showFullscreen) && (
-          <div className="flex items-center justify-end gap-2">
-            {showDownload && <CodeBlockDownloadButton code={code} language={language} />}
-            {showCopy && <CodeBlockCopyButton code={code} />}
-            {showFullscreen && <MermaidFullscreenButton chart={code} config={mermaidConfig} />}
-          </div>
-        )}
+        {showMermaidControls &&
+          (showDownload || showCopy || showFullscreen) && (
+            <div className="flex items-center justify-end gap-2">
+              {showDownload && (
+                <CodeBlockDownloadButton code={code} language={language} />
+              )}
+              {showCopy && <CodeBlockCopyButton code={code} />}
+              {showFullscreen && (
+                <MermaidFullscreenButton chart={code} config={mermaidConfig} />
+              )}
+            </div>
+          )}
         <Mermaid chart={code} config={mermaidConfig} />
       </div>
     );
@@ -652,7 +676,7 @@ const CodeComponent = ({
 
   return (
     <CodeBlock
-      className={cn("overflow-x-auto border-t border-border", className)}
+      className={cn("overflow-x-auto border-border border-t", className)}
       code={code}
       data-language={language}
       data-streamdown="code-block"

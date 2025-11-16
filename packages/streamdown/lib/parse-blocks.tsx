@@ -1,4 +1,3 @@
-import type { Token } from "marked";
 import { Lexer } from "marked";
 
 export const parseMarkdownIntoBlocks = (markdown: string): string[] => {

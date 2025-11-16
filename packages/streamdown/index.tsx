@@ -1,23 +1,23 @@
 "use client";
 
+import type { MermaidConfig } from "mermaid";
 import { createContext, memo, useEffect, useId, useMemo } from "react";
 import ReactMarkdown, { type Options } from "react-markdown";
+import { harden } from "rehype-harden";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
-import type { MermaidConfig } from "mermaid";
-import { harden } from "rehype-harden";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
 
+export type { MermaidConfig } from "mermaid";
 export { defaultUrlTransform } from "react-markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
-export type { MermaidConfig } from "mermaid";
 
 export type ControlsConfig =
   | boolean
@@ -137,8 +137,15 @@ export const Streamdown = memo(
     );
 
     useEffect(() => {
-      if (Array.isArray(rehypePlugins) && rehypePlugins.some(plugin => Array.isArray(plugin) ? plugin[0] === rehypeKatex : plugin === rehypeKatex)) {
-        // @ts-ignore
+      if (
+        Array.isArray(rehypePlugins) &&
+        rehypePlugins.some((plugin) =>
+          Array.isArray(plugin)
+            ? plugin[0] === rehypeKatex
+            : plugin === rehypeKatex
+        )
+      ) {
+        // @ts-expect-error
         import("katex/dist/katex.min.css");
       }
     }, []);

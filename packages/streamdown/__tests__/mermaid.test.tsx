@@ -174,13 +174,15 @@ describe("Mermaid", () => {
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector('button[title="View fullscreen"]');
+      const fullscreenButton = container!.querySelector(
+        'button[title="View fullscreen"]'
+      );
       expect(fullscreenButton).toBeTruthy();
     });
 
     it("should open fullscreen modal when fullscreen button is clicked", async () => {
       const { fireEvent } = await import("@testing-library/react");
-      
+
       let container: HTMLElement;
       await act(async () => {
         const result = render(
@@ -189,25 +191,29 @@ describe("Mermaid", () => {
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector('button[title="View fullscreen"]') as HTMLButtonElement;
+      const fullscreenButton = container!.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement;
       expect(fullscreenButton).toBeTruthy();
-      
+
       await act(async () => {
         fireEvent.click(fullscreenButton);
       });
 
       // Check that fullscreen modal is visible
-      const modal = document.querySelector('.fixed.inset-0.z-50');
+      const modal = document.querySelector(".fixed.inset-0.z-50");
       expect(modal).toBeTruthy();
-      
+
       // Check that close button exists
-      const closeButton = document.querySelector('button[title="Exit fullscreen"]');
+      const closeButton = document.querySelector(
+        'button[title="Exit fullscreen"]'
+      );
       expect(closeButton).toBeTruthy();
     });
 
     it("should close fullscreen modal when close button is clicked", async () => {
       const { fireEvent } = await import("@testing-library/react");
-      
+
       let container: HTMLElement;
       await act(async () => {
         const result = render(
@@ -216,14 +222,18 @@ describe("Mermaid", () => {
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector('button[title="View fullscreen"]') as HTMLButtonElement;
-      
+      const fullscreenButton = container!.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement;
+
       // Open fullscreen
       await act(async () => {
         fireEvent.click(fullscreenButton);
       });
 
-      const closeButton = document.querySelector('button[title="Exit fullscreen"]') as HTMLButtonElement;
+      const closeButton = document.querySelector(
+        'button[title="Exit fullscreen"]'
+      ) as HTMLButtonElement;
       expect(closeButton).toBeTruthy();
 
       // Close fullscreen
@@ -233,14 +243,14 @@ describe("Mermaid", () => {
 
       // Modal should be gone
       await waitFor(() => {
-        const modal = document.querySelector('.fixed.inset-0.z-50');
+        const modal = document.querySelector(".fixed.inset-0.z-50");
         expect(modal).toBeNull();
       });
     });
 
     it("should close fullscreen modal when ESC key is pressed", async () => {
       const { fireEvent } = await import("@testing-library/react");
-      
+
       let container: HTMLElement;
       await act(async () => {
         const result = render(
@@ -249,31 +259,33 @@ describe("Mermaid", () => {
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector('button[title="View fullscreen"]') as HTMLButtonElement;
-      
+      const fullscreenButton = container!.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement;
+
       // Open fullscreen
       await act(async () => {
         fireEvent.click(fullscreenButton);
       });
 
-      const modal = document.querySelector('.fixed.inset-0.z-50');
+      const modal = document.querySelector(".fixed.inset-0.z-50");
       expect(modal).toBeTruthy();
 
       // Press ESC key
       await act(async () => {
-        fireEvent.keyDown(document, { key: 'Escape' });
+        fireEvent.keyDown(document, { key: "Escape" });
       });
 
       // Modal should be gone
       await waitFor(() => {
-        const modalAfter = document.querySelector('.fixed.inset-0.z-50');
+        const modalAfter = document.querySelector(".fixed.inset-0.z-50");
         expect(modalAfter).toBeNull();
       });
     });
 
     it("should close fullscreen modal when clicking outside the diagram", async () => {
       const { fireEvent } = await import("@testing-library/react");
-      
+
       let container: HTMLElement;
       await act(async () => {
         const result = render(
@@ -282,14 +294,18 @@ describe("Mermaid", () => {
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector('button[title="View fullscreen"]') as HTMLButtonElement;
-      
+      const fullscreenButton = container!.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement;
+
       // Open fullscreen
       await act(async () => {
         fireEvent.click(fullscreenButton);
       });
 
-      const modal = document.querySelector('.fixed.inset-0.z-50') as HTMLElement;
+      const modal = document.querySelector(
+        ".fixed.inset-0.z-50"
+      ) as HTMLElement;
       expect(modal).toBeTruthy();
 
       // Click on the modal backdrop (outside the diagram)
@@ -299,14 +315,14 @@ describe("Mermaid", () => {
 
       // Modal should be gone
       await waitFor(() => {
-        const modalAfter = document.querySelector('.fixed.inset-0.z-50');
+        const modalAfter = document.querySelector(".fixed.inset-0.z-50");
         expect(modalAfter).toBeNull();
       });
     });
 
     it("should not close fullscreen when clicking on the diagram itself", async () => {
       const { fireEvent } = await import("@testing-library/react");
-      
+
       let container: HTMLElement;
       await act(async () => {
         const result = render(
@@ -315,14 +331,18 @@ describe("Mermaid", () => {
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector('button[title="View fullscreen"]') as HTMLButtonElement;
-      
+      const fullscreenButton = container!.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement;
+
       // Open fullscreen
       await act(async () => {
         fireEvent.click(fullscreenButton);
       });
 
-      const diagram = document.querySelector('[aria-label="Mermaid chart"]') as HTMLElement;
+      const diagram = document.querySelector(
+        '[aria-label="Mermaid chart"]'
+      ) as HTMLElement;
       expect(diagram).toBeTruthy();
 
       // Click on the diagram itself
@@ -331,13 +351,13 @@ describe("Mermaid", () => {
       });
 
       // Modal should still be open
-      const modal = document.querySelector('.fixed.inset-0.z-50');
+      const modal = document.querySelector(".fixed.inset-0.z-50");
       expect(modal).toBeTruthy();
     });
 
     it("should manage body scroll state when fullscreen is toggled", async () => {
       const { fireEvent } = await import("@testing-library/react");
-      
+
       let container: HTMLElement;
       await act(async () => {
         const result = render(
@@ -346,8 +366,10 @@ describe("Mermaid", () => {
         container = result.container;
       });
 
-      const fullscreenButton = container!.querySelector('button[title="View fullscreen"]') as HTMLButtonElement;
-      
+      const fullscreenButton = container!.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement;
+
       // Open fullscreen - verify modal is open instead of body style
       // (body style manipulation may not work consistently in jsdom test environment)
       await act(async () => {
@@ -355,21 +377,23 @@ describe("Mermaid", () => {
       });
 
       await waitFor(() => {
-        const modal = document.querySelector('.fixed.inset-0.z-50');
+        const modal = document.querySelector(".fixed.inset-0.z-50");
         expect(modal).toBeTruthy();
       });
 
       // Close fullscreen
-      const closeButton = document.querySelector('button[title="Exit fullscreen"]') as HTMLButtonElement;
+      const closeButton = document.querySelector(
+        'button[title="Exit fullscreen"]'
+      ) as HTMLButtonElement;
       await act(async () => {
         fireEvent.click(closeButton);
       });
 
       await waitFor(() => {
-        const modal = document.querySelector('.fixed.inset-0.z-50');
+        const modal = document.querySelector(".fixed.inset-0.z-50");
         expect(modal).toBeNull();
       });
-      
+
       // Verify body overflow is restored (or at least not left in "hidden" state)
       expect(document.body.style.overflow).not.toBe("hidden");
     });

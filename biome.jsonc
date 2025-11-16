@@ -2,6 +2,10 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "extends": ["ultracite/core", "ultracite/react", "ultracite/next"],
   "files": {
-    "includes": ["!**/components/ui", "!**/lib/utils.ts", "!**/hooks/use-mobile.ts"]
+    "includes": [
+      "!**/components/ui",
+      "!**/lib/utils.ts",
+      "!**/hooks/use-mobile.ts"
+    ]
   }
 }

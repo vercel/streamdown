@@ -1,5 +1,5 @@
-import type { MermaidConfig } from "mermaid";
 import { Maximize2Icon, XIcon } from "lucide-react";
+import type { MermaidConfig } from "mermaid";
 import type { ComponentProps } from "react";
 import { useContext, useEffect, useState } from "react";
 import { StreamdownRuntimeContext } from "../index";
@@ -128,7 +128,7 @@ export const MermaidFullscreenButton = ({
             <div className="max-h-full max-w-full">
               <Mermaid
                 chart={chart}
-                className="[&>div]:my-0 [&_svg]:h-auto [&_svg]:w-auto [&_svg]:min-h-[60vh] [&_svg]:min-w-[60vw]"
+                className="[&>div]:my-0 [&_svg]:h-auto [&_svg]:min-h-[60vh] [&_svg]:w-auto [&_svg]:min-w-[60vw]"
                 config={config}
               />
             </div>

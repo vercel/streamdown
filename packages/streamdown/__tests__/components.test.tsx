@@ -281,7 +281,7 @@ describe("Markdown Components", () => {
           {"graph TD; A-->B;"}
         </Code>
       );
-      
+
       // Verify mermaid block structure is created
       const mermaidBlock = container.querySelector(
         '[data-streamdown="mermaid-block"]'
@@ -291,7 +291,7 @@ describe("Markdown Components", () => {
       expect(mermaidBlock?.className).toContain("relative");
       expect(mermaidBlock?.className).toContain("rounded-xl");
       expect(mermaidBlock?.className).toContain("border");
-      
+
       // Note: Full Mermaid rendering is tested in mermaid.test.tsx with proper mocks
     });
   });
