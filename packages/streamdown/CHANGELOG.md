@@ -1,5 +1,12 @@
 # streamdown
 
+## 1.5.1
+
+### Patch Changes
+
+- 40fe4c6: Fix documents and some test cases for CJK Friendly Emphasis
+- 19da935: fix pnpm version mismatch
+
 ## 1.5.0
 
 ### Minor Changes
