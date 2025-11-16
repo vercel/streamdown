@@ -1,5 +1,28 @@
 # streamdown
 
+## 1.5.0
+
+### Minor Changes
+
+- 5c4ad8b: Add fullscreen view button for Mermaid diagrams
+- 2ebd886: Fix performance issues with large code streaming blocks
+
+### Patch Changes
+
+- f7568e5: Export parseIncompleteMarkdown function to public API
+- 5363a51: Stabilize Streamdown contexts
+- f941fd6: Improved CJK support with remark-cjk-friendly and remark-cjk-friendly-gfm-strikethrough
+- f4c9c1e: Add block-level customization hooks
+- 171a824: fix base64 images
+- e17bf80: fix: add `overflow-hidden` to `TableDownloadDropdown`
+- ed0154a: Add TSV copy support to tables
+- 75e9d40: Add documentation
+- 75e9d40: Fix linting and formatting issues
+- 7041497: Fix in-word asterisks
+- fbdec4d: fix: add `border-border` to code block
+- 75e9d40: Document styling
+- 8a3fc5a: Dynamically load `katex.min.css` only when `rehypeKatex` is included in the `rehypePlugins`
+
 ## 1.4.0
 
 ### Minor Changes
