@@ -265,9 +265,6 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12
     devDependencies:
-      '@biomejs/biome':
-        specifier: ^2.3.5
-        version: 2.3.5
       '@tailwindcss/postcss':
         specifier: ^4.1.17
         version: 4.1.17
@@ -295,9 +292,6 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
-      ultracite:
-        specifier: 6.3.2
-        version: 6.3.2(typescript@5.9.3)
 
   packages/streamdown:
     dependencies:
@@ -5049,10 +5043,6 @@ packages:
 
   ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
-
-  ultracite@6.3.2:
-    resolution: {integrity: sha512-lIHpVBDmuodzJ6llhVct5VDzbOufUE2XmtfnUyq5Apba1vbAE0RYN3Zm2tcmF5EdaV2HTxcY6XQRNaE+ynlXCg==}
-    hasBin: true
 
   ultracite@6.3.3:
     resolution: {integrity: sha512-B0mDgyqRmEv9oJlN5JLHra/Mb5e5JRc5R4uimmQbnOORJNGV0/ecKoiNNJaw/06wi67qLRBVjqtdswq/m/DmnQ==}
@@ -11541,23 +11531,6 @@ snapshots:
   ua-parser-js@1.0.41: {}
 
   ufo@1.6.1: {}
-
-  ultracite@6.3.2(typescript@5.9.3):
-    dependencies:
-      '@clack/prompts': 0.11.0
-      '@trpc/server': 11.7.1(typescript@5.9.3)
-      deepmerge: 4.3.1
-      glob: 11.0.3
-      jsonc-parser: 3.3.1
-      nypm: 0.6.2
-      trpc-cli: 0.12.1(@trpc/server@11.7.1(typescript@5.9.3))(zod@4.1.12)
-      zod: 4.1.12
-    transitivePeerDependencies:
-      - '@orpc/server'
-      - '@valibot/to-json-schema'
-      - effect
-      - typescript
-      - valibot
 
   ultracite@6.3.3(typescript@5.9.3):
     dependencies:
