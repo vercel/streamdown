@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 const Home = () => (
-  <div className="overflow-x-hidden bg-sidebar sm:px-4">
+  <div className="sm:px-4">
     <div className="container mx-auto max-w-6xl divide-y px-0 sm:border-x">
       <Hero />
       <Styles />
