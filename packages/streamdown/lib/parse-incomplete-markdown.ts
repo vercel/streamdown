@@ -434,7 +434,10 @@ const handleIncompleteInlineCode = (text: string): string => {
 
   // Special case: if text ends with ```\n (triple backticks followed by newline)
   // This is actually a complete code block, not incomplete
-  if ((text.endsWith("```\n") || text.endsWith("```")) && allTripleBackticks % 2 === 0) {
+  if (
+    (text.endsWith("```\n") || text.endsWith("```")) &&
+    allTripleBackticks % 2 === 0
+  ) {
     // Count all triple backticks - if even, it's complete
     return text;
   }

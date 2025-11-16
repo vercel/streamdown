@@ -28,15 +28,21 @@ vi.mock("react-markdown", () => ({
 }));
 
 vi.mock("rehype-katex", () => ({
-  default: () => {},
+  default: () => {
+    // Mock implementation
+  },
 }));
 
 vi.mock("remark-gfm", () => ({
-  default: () => {},
+  default: () => {
+    // Mock implementation
+  },
 }));
 
 vi.mock("remark-math", () => ({
-  default: () => {},
+  default: () => {
+    // Mock implementation
+  },
 }));
 
 describe("Streamdown Component", () => {
@@ -98,7 +104,9 @@ describe("Streamdown Component", () => {
   });
 
   it("should merge custom rehype plugins", () => {
-    const customPlugin = () => {};
+    const customPlugin = () => {
+      // Mock plugin implementation
+    };
 
     const { container } = render(
       <Streamdown rehypePlugins={[customPlugin]}>Content</Streamdown>
@@ -109,7 +117,9 @@ describe("Streamdown Component", () => {
   });
 
   it("should merge custom remark plugins", () => {
-    const customPlugin = () => {};
+    const customPlugin = () => {
+      // Mock plugin implementation
+    };
 
     const { container } = render(
       <Streamdown remarkPlugins={[customPlugin]}>Content</Streamdown>

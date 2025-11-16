@@ -109,7 +109,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render h5 with correct classes", () => {
-      const H5 = components.h5!;
+      const H5 = components.h5;
+      if (!H5) {
+        throw new Error("H5 component not found");
+      }
       const { container } = render(<H5 node={null as any}>Heading 5</H5>);
       const h5 = container.querySelector("h5");
       expect(h5).toBeTruthy();
@@ -117,7 +120,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render h6 with correct classes", () => {
-      const H6 = components.h6!;
+      const H6 = components.h6;
+      if (!H6) {
+        throw new Error("H6 component not found");
+      }
       const { container } = render(<H6 node={null as any}>Heading 6</H6>);
       const h6 = container.querySelector("h6");
       expect(h6).toBeTruthy();
@@ -127,7 +133,10 @@ describe("Markdown Components", () => {
 
   describe("Text Formatting Components", () => {
     it("should render strong with correct classes", () => {
-      const Strong = components.strong!;
+      const Strong = components.strong;
+      if (!Strong) {
+        throw new Error("Strong component not found");
+      }
       const { container } = render(
         <Strong node={null as any}>Bold text</Strong>
       );
@@ -137,7 +146,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render link with correct attributes and classes", () => {
-      const A = components.a!;
+      const A = components.a;
+      if (!A) {
+        throw new Error("A component not found");
+      }
       const { container } = render(
         <A href="https://example.com" node={null as any}>
           Link text
@@ -154,7 +166,10 @@ describe("Markdown Components", () => {
     });
 
     it("should mark incomplete links with data attribute", () => {
-      const A = components.a!;
+      const A = components.a;
+      if (!A) {
+        throw new Error("A component not found");
+      }
       const { container } = render(
         <A href="streamdown:incomplete-link" node={null as any}>
           Incomplete link text
@@ -169,7 +184,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render blockquote with correct classes", () => {
-      const Blockquote = components.blockquote!;
+      const Blockquote = components.blockquote;
+      if (!Blockquote) {
+        throw new Error("Blockquote component not found");
+      }
       const { container } = render(
         <Blockquote node={null as any}>Quote text</Blockquote>
       );
@@ -184,7 +202,10 @@ describe("Markdown Components", () => {
 
   describe("Code Components", () => {
     it("should render inline code with correct classes", () => {
-      const Code = components.code!;
+      const Code = components.code;
+      if (!Code) {
+        throw new Error("Code component not found");
+      }
       const { container } = render(
         <Code
           node={
@@ -210,7 +231,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render block code without inline styles", () => {
-      const Code = components.code!;
+      const Code = components.code;
+      if (!Code) {
+        throw new Error("Code component not found");
+      }
       const { container } = render(
         <Code
           node={
@@ -239,7 +263,10 @@ describe("Markdown Components", () => {
     });
 
     it("should render pre with code block", () => {
-      const Pre = components.pre!;
+      const Pre = components.pre;
+      if (!Pre) {
+        throw new Error("Pre component not found");
+      }
       const codeElement = React.createElement("code", {
         children: "const x = 1;",
       });
@@ -252,7 +279,10 @@ describe("Markdown Components", () => {
     });
 
     it("should extract language from code className", () => {
-      const Code = components.code!;
+      const Code = components.code;
+      if (!Code) {
+        throw new Error("Code component not found");
+      }
       // Test the code component directly since it handles language extraction
       const { container } = render(
         <Code
@@ -278,7 +308,10 @@ describe("Markdown Components", () => {
     });
 
     it("should extract code from children in pre component", () => {
-      const Pre = components.pre!;
+      const Pre = components.pre;
+      if (!Pre) {
+        throw new Error("Pre component not found");
+      }
       const { container } = render(
         <Pre node={null as any}>plain text code</Pre>
       );
@@ -286,7 +319,10 @@ describe("Markdown Components", () => {
       expect(container.textContent).toBe("plain text code");
     });
     it("should render mermaid block with correct structure", () => {
-      const Code = components.code!;
+      const Code = components.code;
+      if (!Code) {
+        throw new Error("Code component not found");
+      }
       const { container } = render(
         <Code
           className="language-mermaid"
@@ -319,7 +355,10 @@ describe("Markdown Components", () => {
 
   describe("Table Components", () => {
     it("should render table with wrapper div", () => {
-      const Table = components.table!;
+      const Table = components.table;
+      if (!Table) {
+        throw new Error("Table component not found");
+      }
       const { container } = render(
         <Table node={null as any}>
           <tbody>

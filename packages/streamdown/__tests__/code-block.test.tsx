@@ -273,7 +273,11 @@ describe("CodeBlock with multiple languages", () => {
       <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
         <div>
           {languages.map((item) => (
-            <CodeBlock code={item.code} key={`${item.lang}-${item.code.slice(0, 20)}`} language={item.lang} />
+            <CodeBlock
+              code={item.code}
+              key={`${item.lang}-${item.code.slice(0, 20)}`}
+              language={item.lang}
+            />
           ))}
         </div>
       </ShikiThemeContext.Provider>
