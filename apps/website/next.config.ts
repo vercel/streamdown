@@ -4,12 +4,11 @@ import type { NextConfig } from "next";
 const withMDX = createMDX();
 
 const config: NextConfig = {
-  reactStrictMode: true,
-
   experimental: {
     turbopackFileSystemCacheForDev: true,
   },
 
+  // biome-ignore lint/suspicious/useAwait: "required"
   async rewrites() {
     return [
       {
@@ -21,16 +20,6 @@ const config: NextConfig = {
         destination: "/llms.mdx/:path*",
       },
     ];
-  },
-
-  images: {
-    formats: ["image/avif", "image/webp"],
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "placehold.co",
-      },
-    ],
   },
 };
 
