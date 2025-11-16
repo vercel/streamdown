@@ -26,8 +26,7 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   const mergedBlocks: string[] = [];
   const htmlStack: string[] = []; // Track opening HTML tags
 
-  for (let i = 0; i < tokens.length; i++) {
-    const token = tokens[i];
+  for (const token of tokens) {
     const currentBlock = token.raw;
 
     // Check if we're inside an HTML block

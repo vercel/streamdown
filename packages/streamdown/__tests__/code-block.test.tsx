@@ -102,7 +102,7 @@ describe("CodeBlockCopyButton", () => {
       expect(button?.hasAttribute("disabled")).toBe(false);
     });
 
-    await act(async () => {
+    act(() => {
       fireEvent.click(button!);
     });
 
@@ -157,14 +157,14 @@ describe("CodeBlockCopyButton", () => {
 
     vi.useFakeTimers();
 
-    await act(async () => {
+    act(() => {
       fireEvent.click(button!);
     });
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("const x = 1;");
 
     // Fast-forward time
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(1000);
     });
 
@@ -306,9 +306,9 @@ describe("CodeBlock with multiple languages", () => {
         const codeBlockElements =
           container.querySelectorAll("[data-code-block]");
         expect(codeBlockElements.length).toBeGreaterThan(0);
-        codeBlockElements.forEach((element) => {
+        for (const element of codeBlockElements) {
           expect(element.getAttribute("data-language")).toBe("javascript");
-        });
+        }
       },
       { timeout: 5000 }
     );

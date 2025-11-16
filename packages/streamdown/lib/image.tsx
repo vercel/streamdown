@@ -3,6 +3,8 @@ import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
 import type { ExtraProps } from "react-markdown";
 import { cn, save } from "./utils";
 
+const fileExtensionPattern = /\.[^/.]+$/;
+
 type ImageComponentProps = DetailedHTMLProps<
   ImgHTMLAttributes<HTMLImageElement>,
   HTMLImageElement
@@ -28,9 +30,11 @@ export const ImageComponent = ({
       // Extract filename from URL or use alt text with proper extension
       const urlPath = new URL(src, window.location.origin).pathname;
       const originalFilename = urlPath.split("/").pop() || "";
+      const extension = originalFilename.split(".").pop();
       const hasExtension =
         originalFilename.includes(".") &&
-        originalFilename.split(".").pop()?.length! <= 4;
+        extension !== undefined &&
+        extension.length <= 4;
 
       let filename = "";
 
@@ -54,7 +58,7 @@ export const ImageComponent = ({
         }
 
         const baseName = alt || originalFilename || "image";
-        filename = `${baseName.replace(/\.[^/.]+$/, "")}.${extension}`;
+        filename = `${baseName.replace(fileExtensionPattern, "")}.${extension}`;
       }
 
       save(filename, blob, blob.type);

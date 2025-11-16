@@ -434,11 +434,9 @@ const handleIncompleteInlineCode = (text: string): string => {
 
   // Special case: if text ends with ```\n (triple backticks followed by newline)
   // This is actually a complete code block, not incomplete
-  if (text.endsWith("```\n") || text.endsWith("```")) {
+  if ((text.endsWith("```\n") || text.endsWith("```")) && allTripleBackticks % 2 === 0) {
     // Count all triple backticks - if even, it's complete
-    if (allTripleBackticks % 2 === 0) {
-      return text;
-    }
+    return text;
   }
 
   const inlineCodeMatch = text.match(inlineCodePattern);
@@ -473,7 +471,10 @@ const handleIncompleteStrikethrough = (text: string): string => {
     // strikethroughMatch[2] contains the content after ~~
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = strikethroughMatch[2];
-    if (!contentAfterMarker || whitespaceOrMarkersPattern.test(contentAfterMarker)) {
+    if (
+      !contentAfterMarker ||
+      whitespaceOrMarkersPattern.test(contentAfterMarker)
+    ) {
       return text;
     }
 
@@ -566,7 +567,10 @@ const handleIncompleteBoldItalic = (text: string): string => {
     // boldItalicMatch[2] contains the content after ***
     // Check if content is only whitespace or other emphasis markers
     const contentAfterMarker = boldItalicMatch[2];
-    if (!contentAfterMarker || whitespaceOrMarkersPattern.test(contentAfterMarker)) {
+    if (
+      !contentAfterMarker ||
+      whitespaceOrMarkersPattern.test(contentAfterMarker)
+    ) {
       return text;
     }
 

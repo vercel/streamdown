@@ -112,6 +112,13 @@ export const MermaidFullscreenButton = ({
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
           onClick={handleToggle}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              handleToggle();
+            }
+          }}
+          role="button"
+          tabIndex={0}
         >
           <button
             className="absolute top-4 right-4 z-10 rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
@@ -124,6 +131,8 @@ export const MermaidFullscreenButton = ({
           <div
             className="flex h-full w-full items-center justify-center p-12"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+            role="presentation"
           >
             <div className="max-h-full max-w-full">
               <Mermaid
