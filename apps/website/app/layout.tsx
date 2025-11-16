@@ -25,10 +25,10 @@ const links = [
 ];
 
 const suggestions = [
-  "What is Vercel?",
-  "What can I deploy with Vercel?",
-  "What is Fluid Compute?",
-  "How much does Vercel cost?",
+  "What is Streamdown?",
+  "How does unterminated markdown parsing work?",
+  "How is Streamdown secure?",
+  "Is Streamdown performance optimized?",
 ];
 
 const Layout = ({ children }: LayoutProps<"/">) => (
