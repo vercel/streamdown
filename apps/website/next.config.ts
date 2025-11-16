@@ -1,8 +1,26 @@
+import { createMDX } from "fumadocs-mdx/next";
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
-  transpilePackages: ["shiki"],
+const withMDX = createMDX();
+
+const config: NextConfig = {
+  experimental: {
+    turbopackFileSystemCacheForDev: true,
+  },
+
+  // biome-ignore lint/suspicious/useAwait: "required"
+  async rewrites() {
+    return [
+      {
+        source: "/docs/:path*.mdx",
+        destination: "/llms.mdx/:path*",
+      },
+      {
+        source: "/docs/:path*.md",
+        destination: "/llms.mdx/:path*",
+      },
+    ];
+  },
 };
 
-export default nextConfig;
+export default withMDX(config);

@@ -1,0 +1,60 @@
+---
+title: Getting Started
+description: Learn how to install and configure Streamdown in your React application.
+---
+
+Get up and running with Streamdown in minutes. This guide will walk you through installation, configuration, and your first implementation.
+
+## Requirements
+
+- **Node.js** >= 18
+- **React** >= 19.1.1 (compatible with React 18+)
+- **Tailwind CSS** (for styling)
+
+## Installation
+
+You can install Streamdown directly, or use it as part of the [AI Elements](https://ai-sdk.dev/elements) library.
+
+### AI Elements
+
+Install the `message` component from AI Elements:
+
+```package-install
+npx ai-elements@latest add message
+```
+
+### Direct Installation
+
+Install Streamdown using your preferred package manager:
+
+```package-install
+npm i streamdown
+```
+
+## Tailwind CSS Configuration
+
+Streamdown uses Tailwind CSS for styling. To ensure the styles are properly applied, you need to configure your Tailwind setup to include Streamdown's source files.
+
+### Tailwind v4
+
+Add the following CSS source directive to your `globals.css` or main CSS file:
+
+```css title="globals.css"
+@source "../node_modules/streamdown/dist/index.js";
+```
+
+Make sure the path matches the location of your `node_modules` folder relative to your CSS file.
+
+### Tailwind v3
+
+Add Streamdown to your `content` array in your `tailwind.config.js`:
+
+```js title="tailwind.config.js"
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    './node_modules/streamdown/dist/**/*.js',
+  ],
+  // ... rest of your config
+}
+```

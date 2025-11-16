@@ -1,0 +1,66 @@
+---
+title: Usage
+description: Learn how to use Streamdown in your project.
+---
+
+Streamdown is a drop-in replacement for `react-markdown`, so you can use it just like you would use `react-markdown`.
+
+## Basic Usage
+
+Import and use the `Streamdown` component in your React application:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+
+export default function Page() {
+  const markdown = "# Hello World\n\nThis is **streaming** markdown!";
+
+  return <Streamdown>{markdown}</Streamdown>;
+}
+```
+
+That's it! Streamdown will render your Markdown with all the built-in features enabled.
+
+## With AI Streaming
+
+Streamdown really shines when used with AI streaming. Here's an example using the Vercel AI SDK:
+
+```tsx title="app/page.tsx"
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { Streamdown } from 'streamdown';
+
+export default function ChatPage() {
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+
+  return (
+    <div className="flex flex-col h-screen">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={message.role === 'user' ? 'text-right' : 'text-left'}
+          >
+            <div className="inline-block max-w-2xl">
+              <Streamdown isAnimating={isLoading && message.role === 'assistant'}>
+                {message.content}
+              </Streamdown>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <form onSubmit={handleSubmit} className="p-4 border-t">
+        <input
+          value={input}
+          onChange={handleInputChange}
+          placeholder="Ask me anything..."
+          className="w-full px-4 py-2 border rounded-lg"
+          disabled={isLoading}
+        />
+      </form>
+    </div>
+  );
+}
+```

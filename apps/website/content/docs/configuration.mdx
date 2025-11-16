@@ -1,0 +1,129 @@
+---
+title: Configuration
+description: Learn how to configure Streamdown in your project.
+---
+
+Streamdown can be configured to suit your needs. This guide will walk you through the available options and how to configure them.
+
+## Core Props
+
+<TypeTable
+  type={{
+    children: {
+      description: 'The Markdown content to render',
+      type: 'string',
+    },
+    parseIncompleteMarkdown: {
+      description: 'Enable parsing and styling of unterminated Markdown blocks',
+      type: 'boolean',
+      default: 'true',
+    },
+    isAnimating: {
+      description: 'Indicates if content is currently streaming (disables copy buttons)',
+      type: 'boolean',
+      default: 'false',
+    },
+    className: {
+      description: 'CSS class for the container element',
+      type: 'string',
+    },
+  }}
+/>
+
+## Styling Props
+
+<TypeTable
+  type={{
+    shikiTheme: {
+      description: 'Light and dark themes for code syntax highlighting',
+      type: '[BundledTheme, BundledTheme]',
+      default: "['github-light', 'github-dark']",
+    },
+    components: {
+      description: 'Custom component overrides for Markdown elements',
+      type: 'object',
+    },
+  }}
+/>
+
+## Plugin Props
+
+<TypeTable
+  type={{
+    rehypePlugins: {
+      description: 'Rehype plugins for HTML processing',
+      type: 'Pluggable[]',
+      default: 'Object.values(defaultRehypePlugins)',
+    },
+    remarkPlugins: {
+      description: 'Remark plugins for Markdown processing',
+      type: 'Pluggable[]',
+      default: 'Object.values(defaultRemarkPlugins)',
+    },
+  }}
+/>
+
+**Default Rehype Plugins:**
+- `rehype-harden` - Security hardening (allows all image and link prefixes, data images enabled)
+- `rehype-raw` - HTML support
+- `rehype-katex` - Math rendering with KaTeX
+
+**Default Remark Plugins:**
+- `remark-gfm` - GitHub Flavored Markdown
+- `remark-math` - Math syntax support (single dollar text math disabled)
+
+## Feature-Specific Props
+
+<TypeTable
+  type={{
+    mermaidConfig: {
+      description: 'Custom configuration for Mermaid diagrams',
+      type: 'MermaidConfig',
+    },
+    controls: {
+      description: 'Control visibility of interactive buttons',
+      type: 'ControlsConfig',
+      default: 'true',
+    },
+  }}
+/>
+
+## Advanced Props
+
+<TypeTable
+  type={{
+    BlockComponent: {
+      description: 'Custom block component for rendering individual markdown blocks',
+      type: 'React.ComponentType<BlockProps>',
+      default: 'Block',
+    },
+    parseMarkdownIntoBlocksFn: {
+      description: 'Custom function to parse markdown into blocks',
+      type: '(markdown: string) => string[]',
+      default: 'parseMarkdownIntoBlocks',
+    },
+    urlTransform: {
+      description: 'Function to transform URLs in markdown content',
+      type: '(url: string) => string',
+      default: '(value) => value',
+    },
+  }}
+/>
+
+The `controls` prop can be configured granularly:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  controls={{
+    table: true,        // Show table download button
+    code: true,         // Show code copy button
+    mermaid: {
+      download: true,   // Show mermaid download button
+      copy: true,       // Show mermaid copy button
+      fullscreen: true  // Show mermaid fullscreen button
+    }
+  }}
+>
+  {markdown}
+</Streamdown>
+```

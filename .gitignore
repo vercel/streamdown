@@ -40,3 +40,6 @@ yarn-error.log*
 # Prevent accidental npm lockfiles in pnpm monorepo
 package-lock.json
 **/package-lock.json
+
+# Fumadocs
+.source

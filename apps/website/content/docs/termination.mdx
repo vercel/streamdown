@@ -1,0 +1,204 @@
+---
+title: Unterminated Block Parsing
+description: Learn how Streamdown handles incomplete Markdown syntax during AI streaming.
+---
+
+One of Streamdown's most powerful features is its ability to intelligently parse and style incomplete Markdown blocks. This feature, called **unterminated block parsing**, ensures that your streaming content looks polished even before the AI finishes its response.
+
+## The Challenge
+
+When AI models stream Markdown content token-by-token, the content often arrives incomplete:
+
+```
+**This is bold text
+```
+
+Without proper handling, this would either:
+- Not render any formatting at all
+- Display the raw Markdown syntax
+- Break the layout
+
+Streamdown solves this by detecting incomplete patterns and intelligently completing them for rendering purposes.
+
+## How It Works
+
+Streamdown's parser analyzes the incoming Markdown and identifies common patterns that might be incomplete. When detected, it automatically adds the closing syntax so the content renders correctly, then seamlessly updates when the actual closing syntax arrives.
+
+### Supported Incomplete Patterns
+
+#### Bold Text (`**text`)
+
+```markdown
+**This is bold text that hasn't been closed yet
+```
+
+The parser detects the opening `**` and adds a closing `**` to ensure the text renders as bold.
+
+#### Italic Text (`*text` or `_text`)
+
+```markdown
+*This is italic text
+_This is also italic
+```
+
+Single asterisks or underscores are completed automatically.
+
+#### Bold Italic (`***text`)
+
+```markdown
+***This is bold and italic
+```
+
+Triple asterisks for combined formatting are handled.
+
+#### Inline Code (`` `code ``)
+
+```markdown
+`const foo = "bar
+```
+
+Incomplete inline code blocks are closed with a backtick.
+
+#### Strikethrough (`~~text`)
+
+```markdown
+~~This text is being crossed out
+```
+
+Strikethrough formatting is completed automatically.
+
+#### Links (`[text](url)`)
+
+Streamdown handles several link scenarios:
+
+**Incomplete link text:**
+```markdown
+[Click here
+```
+Completes to: `[Click here](streamdown:incomplete-link)`
+
+**Incomplete URL:**
+```markdown
+[Click here](https://exampl
+```
+Completes to: `[Click here](streamdown:incomplete-link)`
+
+The special `streamdown:incomplete-link` URL ensures the link renders visually but doesn't navigate anywhere.
+
+#### Images
+
+For incomplete images, Streamdown removes them entirely rather than showing broken image placeholders:
+
+```markdown
+![Alt text that's incomplete
+```
+
+This prevents visual clutter during streaming.
+
+#### Mathematical Expressions
+
+Block-level KaTeX expressions are completed:
+
+```markdown
+$$
+E = mc^2
+```
+
+The parser adds the closing `$$` to ensure proper math rendering.
+
+## Configuration
+
+Unterminated block parsing is enabled by default. You can disable it if needed:
+
+```tsx
+import { Streamdown } from 'streamdown';
+
+export default function Page() {
+  return (
+    <Streamdown parseIncompleteMarkdown={false}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+However, disabling this feature will result in incomplete Markdown syntax being displayed literally, which is generally not desirable for user-facing applications.
+
+## Smart Behavior
+
+Streamdown's parser includes intelligent rules to avoid false positives:
+
+### List Item Detection
+
+The parser won't close formatting markers that appear at the start of list items:
+
+```markdown
+- **
+- Item with bold marker only
+```
+
+This prevents prematurely closing bold formatting that might be intentional list structure.
+
+### Code Block Awareness
+
+Formatting within complete code blocks is left untouched:
+
+````markdown
+```python
+def foo():
+    # This **won't** be treated as incomplete bold
+    return "bar"
+```
+````
+
+### Math Block Protection
+
+Underscores within math blocks are not treated as italic markers:
+
+```markdown
+$$
+E = m \times c^2
+x_i = y_j
+$$
+```
+
+### Word-Internal Underscores
+
+Underscores within words (like variable names) are preserved:
+
+```markdown
+const user_name = "john_doe";
+```
+
+## Performance Considerations
+
+Streamdown's parser is highly optimized:
+
+- **Memoization** - Parsing results are cached to avoid redundant work
+- **Early Exits** - The parser stops checking patterns once matches are found
+- **Minimal Regex** - Uses efficient pattern matching techniques
+- **Block-Level Processing** - Content is split into blocks for parallel processing
+
+## Examples
+
+### Bold Text Streaming
+
+As content streams in:
+
+1. `**This` → Renders nothing (too short)
+2. `**This is bol` → Renders as **This is bol**
+3. `**This is bold**` → Renders as **This is bold**
+
+### Link Streaming
+
+1. `[Cli` → Renders nothing
+2. `[Click here` → Renders as [Click here](streamdown:incomplete-link)
+3. `[Click here](https://` → Renders as [Click here](streamdown:incomplete-link)
+4. `[Click here](https://example.com)` → Renders as [Click here](https://example.com)
+
+### Code Streaming
+
+1. `` `const `` → Renders as `const`
+2. `` `const foo = `` → Renders as `const foo =`
+3. `` `const foo = "bar"` `` → Renders as `const foo = "bar"`
+
