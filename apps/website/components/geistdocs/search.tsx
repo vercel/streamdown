@@ -65,7 +65,7 @@ export const SearchButton = () => {
         onClick={() => setOpenSearch(true)}
         size="icon-sm"
         type="button"
-        variant="outline"
+        variant="ghost"
       >
         <SearchIcon className="size-4" />
       </Button>
