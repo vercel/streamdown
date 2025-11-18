@@ -261,6 +261,7 @@ export const MermaidDownloadDropdown = ({
       if (format === "png") {
         const blob = await svgToPngBlob(svg);
         save("diagram.png", blob, "image/png");
+        onDownload?.(format);
         setIsOpen(false);
         return;
       }
