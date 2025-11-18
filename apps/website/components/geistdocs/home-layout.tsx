@@ -6,7 +6,7 @@ export const HomeLayout = ({
 }: Pick<LayoutProps<"/">, "children">) => (
   <FumadocsDocsLayout
     containerProps={{
-      className: "p-0!",
+      className: "p-0! w-full mx-0",
     }}
     nav={{
       enabled: false,
