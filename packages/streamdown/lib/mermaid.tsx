@@ -1,9 +1,9 @@
-import { Maximize2Icon, XIcon } from "lucide-react";
+import { DownloadIcon, Maximize2Icon, XIcon } from "lucide-react";
 import type { MermaidConfig } from "mermaid";
 import type { ComponentProps } from "react";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownRuntimeContext } from "../index";
-import { cn } from "./utils";
+import { cn, save } from "./utils";
 
 // Track the number of active fullscreen modals to manage body scroll lock correctly
 let activeFullscreenCount = 0;
@@ -147,6 +147,184 @@ export const MermaidFullscreenButton = ({
         </div>
       )}
     </>
+  );
+};
+
+export function svgToPngBlob(
+  svgString: string,
+  options?: { scale?: number }
+): Promise<Blob> {
+  const scale = options?.scale ?? 5;
+
+  return new Promise((resolve, reject) => {
+    const encoded =
+      "data:image/svg+xml;base64," +
+      btoa(unescape(encodeURIComponent(svgString)));
+
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const w = img.width * scale;
+      const h = img.height * scale;
+
+      canvas.width = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        reject(new Error("Failed to create 2D canvas context for PNG export"));
+        return;
+      }
+
+      // Do NOT draw a background → transparency preserved
+      // ctx.clearRect(0, 0, w, h);
+
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // Export PNG (lossless, keeps transparency)
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          reject(new Error("Failed to create PNG blob"));
+          return;
+        }
+        resolve(blob);
+      }, "image/png");
+    };
+
+    img.onerror = () => reject(new Error("Failed to load SVG image"));
+    img.src = encoded;
+  });
+}
+
+type MermaidDownloadDropdownProps = {
+  chart: string;
+  children?: React.ReactNode;
+  className?: string;
+  onDownload?: (format: "mmd" | "png" | "svg") => void;
+  onError?: (error: Error) => void;
+  config?: MermaidConfig;
+};
+export const MermaidDownloadDropdown = ({
+  chart,
+  children,
+  className,
+  onDownload,
+  config,
+  onError,
+}: MermaidDownloadDropdownProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { isAnimating } = useContext(StreamdownRuntimeContext);
+  const downloadMermaid = async (format: "mmd" | "png" | "svg") => {
+    try {
+      if (format === "mmd") {
+        // Download as Mermaid source code
+        const filename = "diagram.mmd";
+        const mimeType = "text/plain";
+        save(filename, chart, mimeType);
+        setIsOpen(false);
+        onDownload?.(format);
+        return;
+      }
+
+      const mermaid = await initializeMermaid(config);
+
+      // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
+      const chartHash = chart.split("").reduce((acc, char) => {
+        // biome-ignore lint/suspicious/noBitwiseOperators: "Required for Mermaid"
+        return ((acc << 5) - acc + char.charCodeAt(0)) | 0;
+      }, 0);
+      const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+      const { svg } = await mermaid.render(uniqueId, chart);
+      // For SVG and PNG, we need to extract the rendered SVG
+
+      if (!svg) {
+        onError?.(
+          new Error("SVG not found. Please wait for the diagram to render.")
+        );
+        return;
+      }
+
+      if (format === "svg") {
+        const filename = "diagram.svg";
+        const mimeType = "image/svg+xml";
+        save(filename, svg, mimeType);
+        setIsOpen(false);
+        onDownload?.(format);
+        return;
+      }
+
+      if (format === "png") {
+        const blob = await svgToPngBlob(svg);
+        save("diagram.png", blob, "image/png");
+        setIsOpen(false);
+        return;
+      }
+    } catch (error) {
+      onError?.(error as Error);
+    }
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        className={cn(
+          "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        disabled={isAnimating}
+        onClick={() => setIsOpen(!isOpen)}
+        title="Download diagram"
+        type="button"
+      >
+        {children ?? <DownloadIcon size={14} />}
+      </button>
+      {isOpen && (
+        <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg">
+          <button
+            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            onClick={() => downloadMermaid("svg")}
+            type="button"
+          >
+            SVG
+          </button>
+          <button
+            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            onClick={() => downloadMermaid("png")}
+            type="button"
+          >
+            PNG
+          </button>
+          <button
+            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            onClick={() => downloadMermaid("mmd")}
+            type="button"
+          >
+            MMD
+          </button>
+        </div>
+      )}
+    </div>
   );
 };
 
