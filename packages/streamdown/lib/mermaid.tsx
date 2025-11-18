@@ -3,6 +3,7 @@ import type { MermaidConfig } from "mermaid";
 import type { ComponentProps } from "react";
 import { useContext, useEffect, useState } from "react";
 import { StreamdownRuntimeContext } from "../index";
+import { PanZoom } from "./pan-zoom";
 import { cn } from "./utils";
 
 // Track the number of active fullscreen modals to manage body scroll lock correctly
@@ -131,18 +132,17 @@ export const MermaidFullscreenButton = ({
           </button>
           {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
           <div
-            className="flex h-full w-full items-center justify-center p-12"
+            className="flex h-full w-full items-center justify-center p-4"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
             role="presentation"
           >
-            <div className="max-h-full max-w-full">
-              <Mermaid
-                chart={chart}
-                className="[&>div]:my-0 [&_svg]:h-auto [&_svg]:min-h-[60vh] [&_svg]:w-auto [&_svg]:min-w-[60vw]"
-                config={config}
-              />
-            </div>
+            <Mermaid
+              chart={chart}
+              className="h-full w-full [&>div]:h-full [&>div]:overflow-hidden [&_svg]:h-auto [&_svg]:w-auto"
+              config={config}
+              fullscreen={true}
+            />
           </div>
         </div>
       )}
@@ -154,9 +154,15 @@ type MermaidProps = {
   chart: string;
   className?: string;
   config?: MermaidConfig;
+  fullscreen?: boolean;
 };
 
-export const Mermaid = ({ chart, className, config }: MermaidProps) => {
+export const Mermaid = ({
+  chart,
+  className,
+  config,
+  fullscreen = false,
+}: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [svgContent, setSvgContent] = useState<string>("");
@@ -242,12 +248,27 @@ export const Mermaid = ({ chart, className, config }: MermaidProps) => {
   const displaySvg = svgContent || lastValidSvg;
 
   return (
-    <div
-      aria-label="Mermaid chart"
-      className={cn("my-4 flex justify-center", className)}
-      // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
-      dangerouslySetInnerHTML={{ __html: displaySvg }}
-      role="img"
-    />
+    <PanZoom
+      className={cn(
+        fullscreen ? "h-full w-full overflow-hidden" : "my-4 overflow-hidden",
+        className
+      )}
+      fullscreen={fullscreen}
+      maxZoom={3}
+      minZoom={0.5}
+      showControls={true}
+      zoomStep={0.1}
+    >
+      <div
+        aria-label="Mermaid chart"
+        className={cn(
+          "flex justify-center",
+          fullscreen && "h-full w-full items-center"
+        )}
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
+        dangerouslySetInnerHTML={{ __html: displaySvg }}
+        role="img"
+      />
+    </PanZoom>
   );
 };
