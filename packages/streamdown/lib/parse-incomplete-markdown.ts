@@ -508,7 +508,7 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
       // Use string methods instead of regex to avoid ReDoS vulnerability
       let endIndex = text.length;
       while (endIndex > 0 && text[endIndex - 1] === "\n") {
-        endIndex += 1;
+        endIndex -= 1;
       }
       if (endIndex < text.length) {
         const textBeforeNewlines = text.slice(0, endIndex);
