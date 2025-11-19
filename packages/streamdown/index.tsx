@@ -13,7 +13,7 @@ import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
-import { MermaidErrorComponentContext } from "./lib/mermaid";
+import { MermaidContext } from "./lib/mermaid";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
@@ -87,12 +87,8 @@ export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
   "github-dark" as BundledTheme,
 ]);
 
-export const MermaidConfigContext = createContext<MermaidConfig | undefined>(
-  undefined
-);
-
-// Export the context (imported from ./lib/mermaid above)
-export { MermaidErrorComponentContext };
+// Export the unified context (imported from ./lib/mermaid above)
+export { MermaidContext };
 
 export const ControlsContext = createContext<ControlsConfig>(true);
 
@@ -181,28 +177,24 @@ export const Streamdown = memo(
       return (
         <ModeContext.Provider value={mode}>
           <ShikiThemeContext.Provider value={shikiTheme}>
-            <MermaidConfigContext.Provider value={mermaid?.config}>
-              <MermaidErrorComponentContext.Provider
-                value={mermaid?.errorComponent}
-              >
-                <ControlsContext.Provider value={controls}>
-                  <div className={cn("space-y-4", className)}>
-                    <ReactMarkdown
-                      components={{
-                        ...defaultComponents,
-                        ...components,
-                      }}
-                      rehypePlugins={rehypePlugins}
-                      remarkPlugins={remarkPlugins}
-                      urlTransform={urlTransform}
-                      {...props}
-                    >
-                      {children}
-                    </ReactMarkdown>
-                  </div>
-                </ControlsContext.Provider>
-              </MermaidErrorComponentContext.Provider>
-            </MermaidConfigContext.Provider>
+            <MermaidContext.Provider value={mermaid}>
+              <ControlsContext.Provider value={controls}>
+                <div className={cn("space-y-4", className)}>
+                  <ReactMarkdown
+                    components={{
+                      ...defaultComponents,
+                      ...components,
+                    }}
+                    rehypePlugins={rehypePlugins}
+                    remarkPlugins={remarkPlugins}
+                    urlTransform={urlTransform}
+                    {...props}
+                  >
+                    {children}
+                  </ReactMarkdown>
+                </div>
+              </ControlsContext.Provider>
+            </MermaidContext.Provider>
           </ShikiThemeContext.Provider>
         </ModeContext.Provider>
       );
@@ -212,37 +204,33 @@ export const Streamdown = memo(
     return (
       <ModeContext.Provider value={mode}>
         <ShikiThemeContext.Provider value={shikiTheme}>
-          <MermaidConfigContext.Provider value={mermaid?.config}>
-            <MermaidErrorComponentContext.Provider
-              value={mermaid?.errorComponent}
-            >
-              <ControlsContext.Provider value={controls}>
-                <StreamdownRuntimeContext.Provider value={runtimeContext}>
-                  <div className={cn("space-y-4", className)}>
-                    {blocks.map((block, index) => (
-                      <BlockComponent
-                        components={{
-                          ...defaultComponents,
-                          ...components,
-                        }}
-                        content={block}
-                        index={index}
-                        // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-                        key={`${generatedId}-block-${index}`}
-                        rehypePlugins={rehypePlugins}
-                        remarkPlugins={remarkPlugins}
-                        shouldParseIncompleteMarkdown={
-                          shouldParseIncompleteMarkdown
-                        }
-                        urlTransform={urlTransform}
-                        {...props}
-                      />
-                    ))}
-                  </div>
-                </StreamdownRuntimeContext.Provider>
-              </ControlsContext.Provider>
-            </MermaidErrorComponentContext.Provider>
-          </MermaidConfigContext.Provider>
+          <MermaidContext.Provider value={mermaid}>
+            <ControlsContext.Provider value={controls}>
+              <StreamdownRuntimeContext.Provider value={runtimeContext}>
+                <div className={cn("space-y-4", className)}>
+                  {blocks.map((block, index) => (
+                    <BlockComponent
+                      components={{
+                        ...defaultComponents,
+                        ...components,
+                      }}
+                      content={block}
+                      index={index}
+                      // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+                      key={`${generatedId}-block-${index}`}
+                      rehypePlugins={rehypePlugins}
+                      remarkPlugins={remarkPlugins}
+                      shouldParseIncompleteMarkdown={
+                        shouldParseIncompleteMarkdown
+                      }
+                      urlTransform={urlTransform}
+                      {...props}
+                    />
+                  ))}
+                </div>
+              </StreamdownRuntimeContext.Provider>
+            </ControlsContext.Provider>
+          </MermaidContext.Provider>
         </ShikiThemeContext.Provider>
       </ModeContext.Provider>
     );

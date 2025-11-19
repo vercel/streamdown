@@ -1,14 +1,14 @@
 import type { MermaidConfig } from "mermaid";
 import { createContext, useContext, useEffect, useState } from "react";
-import type { MermaidErrorComponentProps } from "../..";
+import type { MermaidErrorComponentProps, MermaidOptions } from "../..";
 import { cn } from "../utils";
 import { PanZoom } from "./pan-zoom";
 import { initializeMermaid } from "./utils";
 
-// Create context here to avoid import issues in tests
-export const MermaidErrorComponentContext = createContext<
-  React.ComponentType<MermaidErrorComponentProps> | undefined
->(undefined);
+// Create unified context here to avoid import issues in tests
+export const MermaidContext = createContext<MermaidOptions | undefined>(
+  undefined
+);
 
 type MermaidProps = {
   chart: string;
@@ -28,7 +28,8 @@ export const Mermaid = ({
   const [svgContent, setSvgContent] = useState<string>("");
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
-  const ErrorComponent = useContext(MermaidErrorComponentContext);
+  const mermaidContext = useContext(MermaidContext);
+  const ErrorComponent = mermaidContext?.errorComponent;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"
   useEffect(() => {
