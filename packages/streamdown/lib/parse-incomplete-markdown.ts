@@ -102,7 +102,7 @@ const handleIncompleteLinksAndImages = (text: string): string => {
             openBracket = i;
             break;
           }
-          bracketDepth += 1;
+          bracketDepth -= 1;
         }
       }
 
