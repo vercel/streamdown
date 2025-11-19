@@ -5,7 +5,6 @@ const singleAsteriskPattern = /(\*)([^*]*?)$/;
 const singleUnderscorePattern = /(_)([^_]*?)$/;
 const inlineCodePattern = /(`)([^`]*?)$/;
 const strikethroughPattern = /(~~)([^~]*?)$/;
-const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\]\(([^)]+)$/;
 const whitespaceOrMarkersPattern = /^[\s_~*`]*$/;
 const listItemPattern = /^[\s]*[-*+][\s]+$/;
 const letterNumberUnderscorePattern = /[\p{L}\p{N}_]/u;
@@ -75,33 +74,55 @@ const isInsideCodeBlock = (text: string, position: number): boolean => {
 // Handles incomplete links and images by preserving them with a special marker
 const handleIncompleteLinksAndImages = (text: string): string => {
   // First check for incomplete URLs: [text](partial-url or ![text](partial-url without closing )
-  // Pattern: !?[text](url-without-closing-paren at end of string
-  const incompleteLinkUrlMatch = text.match(incompleteLinkUrlPattern);
+  // Use string methods instead of regex to avoid ReDoS vulnerability
 
-  if (incompleteLinkUrlMatch) {
-    const isImage = incompleteLinkUrlMatch[1] === "!";
-    const linkText = incompleteLinkUrlMatch[2];
-    const partialUrl = incompleteLinkUrlMatch[3];
+  // Look for ]( pattern, which indicates start of a link/image URL
+  const lastUrlStart = text.lastIndexOf("](");
 
-    // Find the start position of this link/image pattern
-    const matchStart = text.lastIndexOf(
-      `${isImage ? "!" : ""}[${linkText}](${partialUrl}`
-    );
+  if (lastUrlStart !== -1) {
+    // Check if there's a closing ) after ](
+    const closingParen = text.indexOf(")", lastUrlStart + 2);
 
-    // Check if this match is inside a code block
-    if (isInsideCodeBlock(text, matchStart)) {
-      return text;
+    if (closingParen === -1) {
+      // No closing ), so this might be an incomplete URL
+      // Find the opening [ for this link
+      let openBracket = -1;
+      let bracketDepth = 0;
+
+      for (let i = lastUrlStart - 1; i >= 0; i--) {
+        if (text[i] === ']') {
+          bracketDepth++;
+        } else if (text[i] === '[') {
+          if (bracketDepth === 0) {
+            openBracket = i;
+            break;
+          }
+          bracketDepth--;
+        }
+      }
+
+      if (openBracket !== -1) {
+        const isImage = openBracket > 0 && text[openBracket - 1] === '!';
+        const matchStart = isImage ? openBracket - 1 : openBracket;
+        const linkText = text.substring(openBracket + 1, lastUrlStart);
+        const partialUrl = text.substring(lastUrlStart + 2);
+
+        // Check if this match is inside a code block
+        if (isInsideCodeBlock(text, matchStart)) {
+          return text;
+        }
+
+        const beforeLink = text.substring(0, matchStart);
+
+        if (isImage) {
+          // For images with incomplete URLs, remove them entirely
+          return beforeLink;
+        }
+
+        // For links with incomplete URLs, replace the URL with placeholder and close it
+        return `${beforeLink}[${linkText}](streamdown:incomplete-link)`;
+      }
     }
-
-    const beforeLink = text.substring(0, matchStart);
-
-    if (isImage) {
-      // For images with incomplete URLs, remove them entirely
-      return beforeLink;
-    }
-
-    // For links with incomplete URLs, replace the URL with placeholder and close it
-    return `${beforeLink}[${linkText}](streamdown:incomplete-link)`;
   }
 
   // Then check for incomplete link text: [partial-text without closing ]
