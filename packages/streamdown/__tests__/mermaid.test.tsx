@@ -2,7 +2,15 @@ import { render, waitFor } from "@testing-library/react";
 import type { MermaidConfig } from "mermaid";
 import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Mermaid, MermaidFullscreenButton } from "../lib/mermaid";
+import {
+  Mermaid,
+  MermaidDownloadDropdown,
+  MermaidFullscreenButton,
+} from "../lib/mermaid";
+
+const { saveMock } = vi.hoisted(() => ({
+  saveMock: vi.fn(),
+}));
 
 // Mock mermaid
 const mockInitialize = vi.fn();
@@ -15,11 +23,18 @@ vi.mock("mermaid", () => ({
   },
 }));
 
+vi.mock("../lib/utils", async () => {
+  const actual =
+    await vi.importActual<typeof import("../lib/utils")>("../lib/utils");
+  return { ...actual, save: saveMock };
+});
+
 describe("Mermaid", () => {
   beforeEach(() => {
     // Clear mock calls before each test
     mockInitialize.mockClear();
     mockRender.mockClear();
+    saveMock.mockClear();
   });
 
   it("renders without crashing", async () => {
@@ -396,6 +411,186 @@ describe("Mermaid", () => {
 
       // Verify body overflow is restored (or at least not left in "hidden" state)
       expect(document.body.style.overflow).not.toBe("hidden");
+    });
+  });
+
+  describe("MermaidDownloadDropdown", () => {
+    it("downloads Mermaid source when selecting MMD", async () => {
+      const { fireEvent } = await import("@testing-library/react");
+      const handleDownload = vi.fn();
+
+      const { getByTitle, getByRole, queryByRole } = render(
+        <MermaidDownloadDropdown
+          chart="graph TD; A-->B"
+          onDownload={handleDownload}
+        />
+      );
+
+      const toggleButton = getByTitle("Download diagram");
+
+      await act(() => {
+        fireEvent.click(toggleButton);
+      });
+
+      const mmdButton = await waitFor(() =>
+        getByRole("button", { name: "MMD" })
+      );
+
+      await act(() => {
+        fireEvent.click(mmdButton);
+      });
+
+      await waitFor(() => {
+        expect(saveMock).toHaveBeenCalledWith(
+          "diagram.mmd",
+          "graph TD; A-->B",
+          "text/plain"
+        );
+      });
+
+      expect(handleDownload).toHaveBeenCalledWith("mmd");
+
+      await waitFor(() => {
+        expect(queryByRole("button", { name: "MMD" })).toBeNull();
+      });
+    });
+
+    it("downloads SVG when selected", async () => {
+      const { fireEvent } = await import("@testing-library/react");
+      const handleDownload = vi.fn();
+
+      const { getByTitle, getByRole } = render(
+        <MermaidDownloadDropdown
+          chart="graph TD; A-->B"
+          onDownload={handleDownload}
+        />
+      );
+
+      const toggleButton = getByTitle("Download diagram");
+
+      await act(() => {
+        fireEvent.click(toggleButton);
+      });
+
+      const svgButton = await waitFor(() =>
+        getByRole("button", { name: "SVG" })
+      );
+
+      await act(() => {
+        fireEvent.click(svgButton);
+      });
+
+      await waitFor(() => {
+        expect(mockInitialize).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+        expect(mockRender).toHaveBeenCalled();
+      });
+
+      await waitFor(() => {
+        expect(saveMock).toHaveBeenCalledWith(
+          "diagram.svg",
+          "<svg>Test SVG</svg>",
+          "image/svg+xml"
+        );
+      });
+
+      expect(handleDownload).toHaveBeenCalledWith("svg");
+    });
+
+    it("downloads PNG when selected", async () => {
+      const { fireEvent } = await import("@testing-library/react");
+      const pngBlob = new Blob(["png"], { type: "image/png" });
+      const originalImage = global.Image;
+      const originalGetContext = HTMLCanvasElement.prototype.getContext;
+      const originalToBlob = HTMLCanvasElement.prototype.toBlob;
+
+      class MockImage {
+        height = 100;
+        onload: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        width = 100;
+
+        set src(_: string) {
+          this.onload?.();
+        }
+      }
+
+      const mockContext = {
+        drawImage: vi.fn(),
+      };
+
+      // @ts-expect-error - replace global Image for testing
+      global.Image = MockImage;
+      HTMLCanvasElement.prototype.getContext = vi
+        .fn()
+        .mockReturnValue(mockContext);
+      HTMLCanvasElement.prototype.toBlob = (callback) => {
+        callback?.(pngBlob);
+      };
+
+      try {
+        const { getByTitle, getByRole } = render(
+          <MermaidDownloadDropdown chart="graph TD; A-->B" />
+        );
+
+        const toggleButton = getByTitle("Download diagram");
+
+        await act(() => {
+          fireEvent.click(toggleButton);
+        });
+
+        const pngButton = await waitFor(() =>
+          getByRole("button", { name: "PNG" })
+        );
+
+        await act(() => {
+          fireEvent.click(pngButton);
+        });
+
+        await waitFor(() => {
+          expect(saveMock).toHaveBeenCalledTimes(1);
+        });
+
+        const [filename, fileContent, mimeType] = saveMock.mock.calls[0];
+        expect(filename).toBe("diagram.png");
+        expect(fileContent).toBe(pngBlob);
+        expect(mimeType).toBe("image/png");
+      } finally {
+        global.Image = originalImage;
+        HTMLCanvasElement.prototype.getContext = originalGetContext;
+        HTMLCanvasElement.prototype.toBlob = originalToBlob;
+      }
+    });
+
+    it("calls onError when rendering fails", async () => {
+      const { fireEvent } = await import("@testing-library/react");
+      const onError = vi.fn();
+
+      mockRender.mockRejectedValueOnce(new Error("Render failed"));
+
+      const { getByTitle, getByRole } = render(
+        <MermaidDownloadDropdown chart="graph TD; A-->B" onError={onError} />
+      );
+
+      const toggleButton = getByTitle("Download diagram");
+
+      await act(() => {
+        fireEvent.click(toggleButton);
+      });
+
+      const svgButton = await waitFor(() =>
+        getByRole("button", { name: "SVG" })
+      );
+
+      await act(() => {
+        fireEvent.click(svgButton);
+      });
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalled();
+      });
     });
   });
 });

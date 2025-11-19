@@ -15,7 +15,11 @@ import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
 import { CodeBlock as StaticCodeBlock } from "./code-block/static";
 import { ImageComponent } from "./image";
-import { Mermaid, MermaidFullscreenButton } from "./mermaid";
+import {
+  Mermaid,
+  MermaidDownloadDropdown,
+  MermaidFullscreenButton,
+} from "./mermaid";
 import { TableCopyDropdown, TableDownloadDropdown } from "./table";
 import { cn } from "./utils";
 
@@ -668,7 +672,7 @@ const CodeComponent = ({
           (showDownload || showCopy || showFullscreen) && (
             <div className="flex items-center justify-end gap-2">
               {showDownload && (
-                <CodeBlockDownloadButton code={code} language={language} />
+                <MermaidDownloadDropdown chart={code} config={mermaidConfig} />
               )}
               {showCopy && <CodeBlockCopyButton code={code} />}
               {showFullscreen && (
