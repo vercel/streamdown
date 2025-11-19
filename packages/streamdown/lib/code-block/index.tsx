@@ -13,7 +13,6 @@ import { useThrottledDebounce } from "../../hooks/use-throttled-debouce";
 import { ModeContext, ShikiThemeContext } from "../../index";
 import { cn } from "../utils";
 import { CodeBlockContext } from "./context";
-import { CodeBlockCopyButton } from "./copy-button";
 import { CodeBlockHeader } from "./header";
 import { highlighterManager } from "./highlight-manager";
 import {
@@ -217,5 +216,3 @@ export const CodeBlock = ({
     </CodeBlockContext.Provider>
   );
 };
-
-export { CodeBlockCopyButton };

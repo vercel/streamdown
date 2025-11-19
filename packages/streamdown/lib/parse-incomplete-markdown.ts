@@ -1,4 +1,3 @@
-const linkImagePattern = /(!?\[)([^\]]*?)$/;
 const boldPattern = /(\*\*)([^*]*?)$/;
 const italicPattern = /(__)([^_]*?)$/;
 const boldItalicPattern = /(\*\*\*)([^*]*?)$/;
@@ -6,11 +5,9 @@ const singleAsteriskPattern = /(\*)([^*]*?)$/;
 const singleUnderscorePattern = /(_)([^_]*?)$/;
 const inlineCodePattern = /(`)([^`]*?)$/;
 const strikethroughPattern = /(~~)([^~]*?)$/;
-const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\]\(([^)]+)$/;
 const whitespaceOrMarkersPattern = /^[\s_~*`]*$/;
 const listItemPattern = /^[\s]*[-*+][\s]+$/;
 const letterNumberUnderscorePattern = /[\p{L}\p{N}_]/u;
-const trailingNewlinePattern = /\n+$/;
 const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
 const fourOrMoreAsterisksPattern = /^\*{4,}$/;
 
@@ -29,7 +26,7 @@ const isInsideCodeBlock = (text: string, position: number): boolean => {
   let currentPos = 0;
 
   while (currentPos < text.length) {
-    const nextTripleBacktick = text.indexOf('```', currentPos);
+    const nextTripleBacktick = text.indexOf("```", currentPos);
 
     if (nextTripleBacktick === -1 || nextTripleBacktick > position) {
       // No more code blocks or we've passed the position
@@ -51,18 +48,23 @@ const isInsideCodeBlock = (text: string, position: number): boolean => {
   // Skip triple backticks as they're for multiline blocks
   let insideInlineBlock = false;
   for (let i = 0; i < position; i++) {
-    if (text[i] === '`') {
+    if (text[i] === "`") {
       // Check if this is part of a triple backtick
-      if (i + 2 < text.length && text[i + 1] === '`' && text[i + 2] === '`') {
+      if (i + 2 < text.length && text[i + 1] === "`" && text[i + 2] === "`") {
         // Skip triple backticks
         i += 2;
         continue;
       }
-      if (i >= 2 && text[i - 1] === '`' && text[i - 2] === '`') {
+      if (i >= 2 && text[i - 1] === "`" && text[i - 2] === "`") {
         // Part of triple backtick, already handled
         continue;
       }
-      if (i >= 1 && text[i - 1] === '`' && i + 1 < text.length && text[i + 1] === '`') {
+      if (
+        i >= 1 &&
+        text[i - 1] === "`" &&
+        i + 1 < text.length &&
+        text[i + 1] === "`"
+      ) {
         // Middle of triple backtick
         continue;
       }
@@ -77,58 +79,98 @@ const isInsideCodeBlock = (text: string, position: number): boolean => {
 // Handles incomplete links and images by preserving them with a special marker
 const handleIncompleteLinksAndImages = (text: string): string => {
   // First check for incomplete URLs: [text](partial-url or ![text](partial-url without closing )
-  // Pattern: !?[text](url-without-closing-paren at end of string
-  const incompleteLinkUrlMatch = text.match(incompleteLinkUrlPattern);
+  // Use string methods instead of regex to avoid ReDoS vulnerability
 
-  if (incompleteLinkUrlMatch) {
-    const isImage = incompleteLinkUrlMatch[1] === "!";
-    const linkText = incompleteLinkUrlMatch[2];
-    const partialUrl = incompleteLinkUrlMatch[3];
+  // Look for ]( pattern, which indicates start of a link/image URL
+  const lastUrlStart = text.lastIndexOf("](");
 
-    // Find the start position of this link/image pattern
-    const matchStart = text.lastIndexOf(
-      `${isImage ? "!" : ""}[${linkText}](${partialUrl}`
-    );
+  if (lastUrlStart !== -1) {
+    // Check if there's a closing ) after ](
+    const closingParen = text.indexOf(")", lastUrlStart + 2);
 
-    // Check if this match is inside a code block
-    if (isInsideCodeBlock(text, matchStart)) {
-      return text;
+    if (closingParen === -1) {
+      // No closing ), so this might be an incomplete URL
+      // Find the opening [ for this link
+      let openBracket = -1;
+      let bracketDepth = 0;
+
+      for (let i = lastUrlStart - 1; i >= 0; i--) {
+        if (text[i] === "]") {
+          bracketDepth += 1;
+        } else if (text[i] === "[") {
+          if (bracketDepth === 0) {
+            openBracket = i;
+            break;
+          }
+          bracketDepth -= 1;
+        }
+      }
+
+      if (openBracket !== -1) {
+        const isImage = openBracket > 0 && text[openBracket - 1] === "!";
+        const matchStart = isImage ? openBracket - 1 : openBracket;
+        const linkText = text.substring(openBracket + 1, lastUrlStart);
+
+        // Check if this match is inside a code block
+        if (isInsideCodeBlock(text, matchStart)) {
+          return text;
+        }
+
+        const beforeLink = text.substring(0, matchStart);
+
+        if (isImage) {
+          // For images with incomplete URLs, remove them entirely
+          return beforeLink;
+        }
+
+        // For links with incomplete URLs, replace the URL with placeholder and close it
+        return `${beforeLink}[${linkText}](streamdown:incomplete-link)`;
+      }
     }
-
-    const beforeLink = text.substring(0, matchStart);
-
-    if (isImage) {
-      // For images with incomplete URLs, remove them entirely
-      return beforeLink;
-    }
-
-    // For links with incomplete URLs, replace the URL with placeholder and close it
-    return `${beforeLink}[${linkText}](streamdown:incomplete-link)`;
   }
 
   // Then check for incomplete link text: [partial-text without closing ]
-  const linkMatch = text.match(linkImagePattern);
+  // Use string methods instead of regex to avoid ReDoS vulnerability
 
-  if (linkMatch) {
-    const isImage = linkMatch[1].startsWith("!");
+  // Search backwards to find the last [ or ![
+  let matchStart = -1;
+  let isImage = false;
 
-    // Find the position of this match
-    const matchStart = text.lastIndexOf(linkMatch[1]);
-
-    // Check if this match is inside a code block
-    if (isInsideCodeBlock(text, matchStart)) {
-      return text;
+  for (let i = text.length - 1; i >= 0; i--) {
+    if (text[i] === "[") {
+      // Check if this is part of ![
+      if (i > 0 && text[i - 1] === "!") {
+        matchStart = i - 1;
+        isImage = true;
+      } else {
+        matchStart = i;
+        isImage = false;
+      }
+      break;
     }
+  }
 
-    // For images, we still remove them as they can't show skeleton
-    if (isImage) {
-      const startIndex = text.lastIndexOf(linkMatch[1]);
-      return text.substring(0, startIndex);
+  if (matchStart !== -1) {
+    // Check if there's a closing ] after this bracket
+    const searchStart = isImage ? matchStart + 2 : matchStart + 1;
+    const closingBracket = text.indexOf("]", searchStart);
+    const hasClosingBracket = closingBracket !== -1;
+
+    if (!hasClosingBracket) {
+      // Check if this match is inside a code block
+      if (isInsideCodeBlock(text, matchStart)) {
+        return text;
+      }
+
+      // For images, we still remove them as they can't show skeleton
+      if (isImage) {
+        return text.substring(0, matchStart);
+      }
+
+      // For links, preserve the text and close the link with a
+      // special placeholder URL that indicates it's incomplete
+      return `${text}](streamdown:incomplete-link)`;
     }
-
-    // For links, preserve the text and close the link with a
-    // special placeholder URL that indicates it's incomplete
-    return `${text}](streamdown:incomplete-link)`;
   }
 
   return text;
@@ -463,13 +505,15 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
     const singleUnderscores = countSingleUnderscores(text);
     if (singleUnderscores % 2 === 1) {
       // If text ends with newline(s), insert underscore before them
-      const trailingNewlineMatch = text.match(trailingNewlinePattern);
-      if (trailingNewlineMatch) {
-        const textBeforeNewlines = text.slice(
-          0,
-          -trailingNewlineMatch[0].length
-        );
-        return `${textBeforeNewlines}_${trailingNewlineMatch[0]}`;
+      // Use string methods instead of regex to avoid ReDoS vulnerability
+      let endIndex = text.length;
+      while (endIndex > 0 && text[endIndex - 1] === "\n") {
+        endIndex -= 1;
+      }
+      if (endIndex < text.length) {
+        const textBeforeNewlines = text.slice(0, endIndex);
+        const trailingNewlines = text.slice(endIndex);
+        return `${textBeforeNewlines}_${trailingNewlines}`;
       }
       return `${text}_`;
     }

@@ -84,6 +84,12 @@ function tableDataToTSV(data: TableData): string {
   return tsvRows.join("\n");
 }
 
+// Helper function to properly escape markdown table cells
+// Must escape backslashes first, then pipes to avoid incomplete escaping
+function escapeMarkdownTableCell(cell: string): string {
+  return cell.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
+}
+
 function tableDataToMarkdown(data: TableData): string {
   const { headers, rows } = data;
 
@@ -94,7 +100,7 @@ function tableDataToMarkdown(data: TableData): string {
   const markdownRows: string[] = [];
 
   // Add headers
-  const escapedHeaders = headers.map((h) => h.replace(/\|/g, "\\|"));
+  const escapedHeaders = headers.map((h) => escapeMarkdownTableCell(h));
   markdownRows.push(`| ${escapedHeaders.join(" | ")} |`);
 
   // Add separator row
@@ -107,7 +113,7 @@ function tableDataToMarkdown(data: TableData): string {
     while (paddedRow.length < headers.length) {
       paddedRow.push("");
     }
-    const escapedRow = paddedRow.map((cell) => cell.replace(/\|/g, "\\|"));
+    const escapedRow = paddedRow.map((cell) => escapeMarkdownTableCell(cell));
     markdownRows.push(`| ${escapedRow.join(" | ")} |`);
   }
 
