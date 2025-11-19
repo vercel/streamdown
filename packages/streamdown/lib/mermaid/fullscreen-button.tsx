@@ -1,5 +1,3 @@
-"use client";
-
 import { Maximize2Icon, XIcon } from "lucide-react";
 import type { MermaidConfig } from "mermaid";
 import { type ComponentProps, useContext, useEffect, useState } from "react";

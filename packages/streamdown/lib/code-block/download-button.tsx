@@ -1,5 +1,3 @@
-"use client";
-
 import { DownloadIcon } from "lucide-react";
 import { type ComponentProps, useContext } from "react";
 import type { BundledLanguage } from "shiki";

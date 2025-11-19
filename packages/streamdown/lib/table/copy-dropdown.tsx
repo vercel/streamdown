@@ -1,5 +1,3 @@
-"use client";
-
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownRuntimeContext } from "../../index";

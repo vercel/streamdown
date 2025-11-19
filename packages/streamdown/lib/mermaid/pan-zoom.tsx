@@ -1,5 +1,3 @@
-"use client";
-
 import { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";

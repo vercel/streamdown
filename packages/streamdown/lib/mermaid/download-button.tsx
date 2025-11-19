@@ -1,5 +1,3 @@
-"use client";
-
 import { DownloadIcon } from "lucide-react";
 import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useRef, useState } from "react";
