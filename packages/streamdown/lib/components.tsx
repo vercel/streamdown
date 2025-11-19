@@ -18,7 +18,8 @@ import { ImageComponent } from "./image";
 import { Mermaid } from "./mermaid";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
-import { TableCopyDropdown, TableDownloadDropdown } from "./table";
+import { TableCopyDropdown } from "./table/copy-dropdown";
+import { TableDownloadDropdown } from "./table/download-dropdown";
 import { cn } from "./utils";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
