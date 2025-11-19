@@ -27,6 +27,15 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
       description: 'CSS class for the container element',
       type: 'string',
     },
+    mode: {
+      description: 'Mode of the Streamdown component',
+      type: '"streaming" | "static"',
+      default: 'streaming',
+      options: [
+        'streaming',
+        'static',
+      ],
+    }
   }}
 />
 
