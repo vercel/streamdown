@@ -1,0 +1,55 @@
+---
+title: Static Mode
+description: Render markdown content statically without streaming optimizations.
+---
+
+Static mode is designed for rendering pre-generated markdown content, such as blog posts, documentation, or other static pages where content is already complete.
+
+## When to Use Static Mode
+
+Use static mode when:
+
+- Rendering static markdown content (e.g., blog posts, docs)
+- Content is pre-generated and not streaming
+- You need improved fallback rendering for code blocks
+- Streaming optimizations are unnecessary
+
+## Basic Usage
+
+Enable static mode by setting the `mode` prop to `"static"`:
+
+```tsx title="app/blog/[slug]/page.tsx"
+import { Streamdown } from 'streamdown';
+
+export default function BlogPost({ content }: { content: string }) {
+  return <Streamdown mode="static">{content}</Streamdown>;
+}
+```
+
+## How It Works
+
+Static mode skips streaming-related optimizations:
+
+- **No block parsing**: Content is rendered as a single unit instead of being split into blocks
+- **No incomplete markdown handling**: Assumes markdown is complete and well-formed
+- **Improved code blocks**: Uses optimized rendering for static code blocks
+- **Simpler rendering**: Direct ReactMarkdown rendering without streaming overhead
+
+## Configuration
+
+All standard Streamdown props work in static mode, including:
+
+- Custom components
+- Syntax highlighting themes
+- Mermaid diagrams
+- Plugin configuration
+
+```tsx title="app/blog/[slug]/page.tsx"
+<Streamdown
+  mode="static"
+  shikiTheme={['github-light', 'github-dark']}
+  mermaidConfig={{ theme: 'neutral' }}
+>
+  {content}
+</Streamdown>
+```

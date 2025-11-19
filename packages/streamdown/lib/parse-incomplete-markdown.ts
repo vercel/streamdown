@@ -22,6 +22,58 @@ const hasCompleteCodeBlock = (text: string): boolean => {
   );
 };
 
+// Helper function to check if a position is inside a code block (either inline or multiline)
+const isInsideCodeBlock = (text: string, position: number): boolean => {
+  // Check for multiline code blocks (```)
+  let insideMultilineBlock = false;
+  let currentPos = 0;
+
+  while (currentPos < text.length) {
+    const nextTripleBacktick = text.indexOf('```', currentPos);
+
+    if (nextTripleBacktick === -1 || nextTripleBacktick > position) {
+      // No more code blocks or we've passed the position
+      break;
+    }
+
+    if (nextTripleBacktick <= position) {
+      insideMultilineBlock = !insideMultilineBlock;
+      currentPos = nextTripleBacktick + 3;
+    }
+  }
+
+  if (insideMultilineBlock) {
+    return true;
+  }
+
+  // Check for inline code blocks (`)
+  // We need to count single backticks from the start to the position
+  // Skip triple backticks as they're for multiline blocks
+  let insideInlineBlock = false;
+  for (let i = 0; i < position; i++) {
+    if (text[i] === '`') {
+      // Check if this is part of a triple backtick
+      if (i + 2 < text.length && text[i + 1] === '`' && text[i + 2] === '`') {
+        // Skip triple backticks
+        i += 2;
+        continue;
+      }
+      if (i >= 2 && text[i - 1] === '`' && text[i - 2] === '`') {
+        // Part of triple backtick, already handled
+        continue;
+      }
+      if (i >= 1 && text[i - 1] === '`' && i + 1 < text.length && text[i + 1] === '`') {
+        // Middle of triple backtick
+        continue;
+      }
+      // This is a single backtick
+      insideInlineBlock = !insideInlineBlock;
+    }
+  }
+
+  return insideInlineBlock;
+};
+
 // Handles incomplete links and images by preserving them with a special marker
 const handleIncompleteLinksAndImages = (text: string): string => {
   // First check for incomplete URLs: [text](partial-url or ![text](partial-url without closing )
@@ -37,6 +89,12 @@ const handleIncompleteLinksAndImages = (text: string): string => {
     const matchStart = text.lastIndexOf(
       `${isImage ? "!" : ""}[${linkText}](${partialUrl}`
     );
+
+    // Check if this match is inside a code block
+    if (isInsideCodeBlock(text, matchStart)) {
+      return text;
+    }
+
     const beforeLink = text.substring(0, matchStart);
 
     if (isImage) {
@@ -53,6 +111,14 @@ const handleIncompleteLinksAndImages = (text: string): string => {
 
   if (linkMatch) {
     const isImage = linkMatch[1].startsWith("!");
+
+    // Find the position of this match
+    const matchStart = text.lastIndexOf(linkMatch[1]);
+
+    // Check if this match is inside a code block
+    if (isInsideCodeBlock(text, matchStart)) {
+      return text;
+    }
 
     // For images, we still remove them as they can't show skeleton
     if (isImage) {

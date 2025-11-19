@@ -9,14 +9,17 @@ import {
 } from "react";
 import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
-import { ControlsContext, MermaidConfigContext } from "../index";
-import {
-  CodeBlock,
-  CodeBlockCopyButton,
-  CodeBlockDownloadButton,
-} from "./code-block";
+import { ControlsContext, MermaidConfigContext, ModeContext } from "../index";
+import { CodeBlock } from "./code-block";
+import { CodeBlockCopyButton } from "./code-block/copy-button";
+import { CodeBlockDownloadButton } from "./code-block/download-button";
+import { CodeBlock as StaticCodeBlock } from "./code-block/static";
 import { ImageComponent } from "./image";
-import { Mermaid, MermaidFullscreenButton } from "./mermaid";
+import {
+  Mermaid,
+  MermaidDownloadDropdown,
+  MermaidFullscreenButton,
+} from "./mermaid";
 import { TableCopyDropdown, TableDownloadDropdown } from "./table";
 import { cn } from "./utils";
 
@@ -612,6 +615,9 @@ const CodeComponent = ({
   const inline = node?.position?.start.line === node?.position?.end.line;
   const mermaidConfig = useContext(MermaidConfigContext);
   const controlsConfig = useContext(ControlsContext);
+  const mode = useContext(ModeContext);
+
+  const CodeBlockComponent = mode === "static" ? StaticCodeBlock : CodeBlock;
 
   if (inline) {
     return (
@@ -666,7 +672,7 @@ const CodeComponent = ({
           (showDownload || showCopy || showFullscreen) && (
             <div className="flex items-center justify-end gap-2">
               {showDownload && (
-                <CodeBlockDownloadButton code={code} language={language} />
+                <MermaidDownloadDropdown chart={code} config={mermaidConfig} />
               )}
               {showCopy && <CodeBlockCopyButton code={code} />}
               {showFullscreen && (
@@ -682,7 +688,7 @@ const CodeComponent = ({
   const showCodeControls = shouldShowControls(controlsConfig, "code");
 
   return (
-    <CodeBlock
+    <CodeBlockComponent
       className={cn("overflow-x-auto border-border border-t", className)}
       code={code}
       data-language={language}
@@ -696,7 +702,7 @@ const CodeComponent = ({
           <CodeBlockCopyButton />
         </>
       )}
-    </CodeBlock>
+    </CodeBlockComponent>
   );
 };
 
