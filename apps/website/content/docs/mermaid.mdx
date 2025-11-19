@@ -272,6 +272,77 @@ const mermaidConfig: MermaidConfig = {
 };
 ```
 
+## Error Handling
+
+### Custom Error Component
+
+When Mermaid diagrams fail to render due to invalid syntax, you can provide a custom error component instead of displaying the default error message. This is especially useful for production environments where you want to control the user experience.
+
+```tsx
+import { Streamdown } from 'streamdown';
+import type { MermaidErrorComponentProps } from 'streamdown';
+
+const CustomMermaidError = ({ error, chart, retry }: MermaidErrorComponentProps) => (
+  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+    <div className="flex items-center gap-2">
+      <span className="text-xl">⚠️</span>
+      <p className="font-semibold text-amber-900">Couldn't render diagram</p>
+    </div>
+    <p className="mt-2 text-amber-700 text-sm">
+      There was an issue with the diagram syntax.
+    </p>
+    <button
+      onClick={retry}
+      className="mt-3 rounded bg-amber-600 px-4 py-2 text-white text-sm hover:bg-amber-700"
+    >
+      Try Again
+    </button>
+  </div>
+);
+
+export default function Page() {
+  return (
+    <Streamdown mermaidErrorComponent={CustomMermaidError}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+The error component receives three props:
+
+- **error** (`string`) - The error message from Mermaid
+- **chart** (`string`) - The original Mermaid diagram code
+- **retry** (`() => void`) - Function to retry rendering the diagram
+
+### Error Component Benefits
+
+- **Production-ready** - Hide technical error details from end users
+- **Custom branding** - Style errors to match your application
+- **Better UX** - Provide helpful actions like retry buttons or support links
+- **Debugging control** - Log errors to your monitoring service
+
+### Example: Logging Errors
+
+```tsx
+const ErrorWithLogging = ({ error, chart, retry }: MermaidErrorComponentProps) => {
+  useEffect(() => {
+    // Log to your error tracking service
+    console.error('Mermaid rendering failed:', error);
+    // Could also send to Sentry, LogRocket, etc.
+  }, [error]);
+
+  return (
+    <div className="text-center p-4">
+      <p className="text-muted-foreground">Unable to display diagram</p>
+      <button onClick={retry} className="mt-2 text-primary text-sm underline">
+        Retry
+      </button>
+    </div>
+  );
+};
+```
+
 ## Interactive Controls
 
 Each Mermaid diagram includes interactive controls:
