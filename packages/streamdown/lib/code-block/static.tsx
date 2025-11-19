@@ -11,7 +11,7 @@ import type { BundledLanguage } from "shiki";
 import { ShikiThemeContext } from "../../index";
 import { cn } from "../utils";
 import { CodeBlockContext } from "./context";
-import { highlighterManager } from "./highlight-manager";
+import { performHighlight } from "./highlighter";
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
@@ -29,14 +29,9 @@ export const CodeBlock = ({
 }: CodeBlockProps) => {
   const [html, setHtml] = useState<string>("");
   const [darkHtml, setDarkHtml] = useState<string>("");
-  const [lastHighlightedCode, setLastHighlightedCode] = useState("");
   const mounted = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
-
-  useEffect(() => {
-    highlighterManager.initializeHighlighters([lightTheme, darkTheme]);
-  }, [lightTheme, darkTheme]);
 
   useEffect(() => {
     mounted.current = true;
@@ -48,29 +43,25 @@ export const CodeBlock = ({
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
-    if (code && code !== lastHighlightedCode) {
-      highlighterManager
-        .highlightCode(code, language, preClassName, signal)
-        .then(([light, dark]) => {
-          if (mounted.current && !signal.aborted) {
-            setHtml(light);
-            setDarkHtml(dark);
-            setLastHighlightedCode(code);
-          }
-        })
-        .catch((err) => {
-          // Silently ignore AbortError
-          if (err.name !== "AbortError") {
-            throw err;
-          }
-        });
-    }
+    performHighlight(code, language, lightTheme, darkTheme, preClassName)
+      .then(([light, dark]) => {
+        if (mounted.current && !signal.aborted) {
+          setHtml(light);
+          setDarkHtml(dark);
+        }
+      })
+      .catch((err) => {
+        // Silently ignore AbortError
+        if (err.name !== "AbortError") {
+          throw err;
+        }
+      });
 
     return () => {
       mounted.current = false;
       abortControllerRef.current?.abort();
     };
-  }, [code, language, preClassName, lastHighlightedCode]);
+  }, [code, language, preClassName, lightTheme, darkTheme]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>

@@ -3,28 +3,14 @@
 import {
   type BundledLanguage,
   type BundledTheme,
-  bundledLanguages,
   createHighlighter,
-  type ShikiTransformer,
-  type SpecialLanguage,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-
-// Added separate from HighlighterManager class to avoid conflicts with `this`
-const getTransformersFromPreClassName = (
-  preClassName?: string
-): ShikiTransformer[] => {
-  if (!preClassName) {
-    return [];
-  }
-  const preTransformer: ShikiTransformer = {
-    pre(node) {
-      this.addClassToHast(node, preClassName);
-      return node;
-    },
-  };
-  return [preTransformer];
-};
+import {
+  getFallbackLanguage,
+  getTransformersFromPreClassName,
+  isLanguageSupported,
+} from "./highlighter";
 
 class HighlighterManager {
   private lightHighlighter: Awaited<
@@ -50,13 +36,6 @@ class HighlighterManager {
     Promise<[string, string]>
   >();
 
-  private isLanguageSupported(language: string): language is BundledLanguage {
-    return Object.hasOwn(bundledLanguages, language);
-  }
-
-  private getFallbackLanguage(): SpecialLanguage {
-    return "text";
-  }
 
   private getCacheKey(
     code: string,
@@ -158,9 +137,9 @@ class HighlighterManager {
     language: BundledLanguage,
     preClassName?: string
   ): [string, string] {
-    const lang = this.isLanguageSupported(language)
+    const lang = isLanguageSupported(language)
       ? language
-      : this.getFallbackLanguage();
+      : getFallbackLanguage();
 
     if (
       this.lightHighlighter === null ||
@@ -246,7 +225,7 @@ class HighlighterManager {
 
         const needsLanguageLoad =
           !this.loadedLanguages.has(language) &&
-          this.isLanguageSupported(language);
+          isLanguageSupported(language);
 
         if (needsLanguageLoad) {
           this.loadLanguagePromise = this.loadLanguage(language);
