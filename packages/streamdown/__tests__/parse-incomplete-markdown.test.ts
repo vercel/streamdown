@@ -38,6 +38,26 @@ describe("parseIncompleteMarkdown", () => {
       const text = "[link1](url1) and [link2](url2)";
       expect(parseIncompleteMarkdown(text)).toBe(text);
     });
+
+    it("should handle nested brackets in incomplete links", () => {
+      // Test case for nested brackets - this would have caught the bracketDepth bug
+      expect(parseIncompleteMarkdown("[outer [nested] text](incomplete")).toBe(
+        "[outer [nested] text](streamdown:incomplete-link)"
+      );
+
+      expect(parseIncompleteMarkdown("[link with [inner] content](http://incomplete")).toBe(
+        "[link with [inner] content](streamdown:incomplete-link)"
+      );
+
+      expect(parseIncompleteMarkdown("Text [foo [bar] baz](")).toBe(
+        "Text [foo [bar] baz](streamdown:incomplete-link)"
+      );
+    });
+
+    it("should handle nested brackets in complete links", () => {
+      const text = "[link with [brackets] inside](https://example.com)";
+      expect(parseIncompleteMarkdown(text)).toBe(text);
+    });
   });
 
   describe("image handling", () => {
