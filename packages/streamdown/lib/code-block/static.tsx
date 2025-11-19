@@ -30,22 +30,14 @@ export const CodeBlock = ({
   const [html, setHtml] = useState<string>("");
   const [darkHtml, setDarkHtml] = useState<string>("");
   const mounted = useRef(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
 
   useEffect(() => {
     mounted.current = true;
 
-    // Cancel previous highlight operations
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
-
     performHighlight(code, language, lightTheme, darkTheme, preClassName)
       .then(([light, dark]) => {
-        if (mounted.current && !signal.aborted) {
+        if (mounted.current) {
           setHtml(light);
           setDarkHtml(dark);
         }
@@ -59,7 +51,6 @@ export const CodeBlock = ({
 
     return () => {
       mounted.current = false;
-      abortControllerRef.current?.abort();
     };
   }, [code, language, preClassName, lightTheme, darkTheme]);
 
