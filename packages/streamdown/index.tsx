@@ -44,6 +44,11 @@ export type MermaidErrorComponentProps = {
   retry: () => void;
 };
 
+export type MermaidOptions = {
+  config?: MermaidConfig;
+  errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
+};
+
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
   BlockComponent?: React.ComponentType<BlockProps>;
@@ -51,8 +56,7 @@ export type StreamdownProps = Options & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
-  mermaidConfig?: MermaidConfig;
-  mermaidErrorComponent?: React.ComponentType<MermaidErrorComponentProps>;
+  mermaid?: MermaidOptions;
   controls?: ControlsConfig;
   isAnimating?: boolean;
 };
@@ -141,8 +145,7 @@ export const Streamdown = memo(
     remarkPlugins = Object.values(defaultRemarkPlugins),
     className,
     shikiTheme = defaultShikiTheme,
-    mermaidConfig,
-    mermaidErrorComponent,
+    mermaid,
     controls = true,
     isAnimating = false,
     urlTransform = (value) => value,
@@ -178,9 +181,9 @@ export const Streamdown = memo(
       return (
         <ModeContext.Provider value={mode}>
           <ShikiThemeContext.Provider value={shikiTheme}>
-            <MermaidConfigContext.Provider value={mermaidConfig}>
+            <MermaidConfigContext.Provider value={mermaid?.config}>
               <MermaidErrorComponentContext.Provider
-                value={mermaidErrorComponent}
+                value={mermaid?.errorComponent}
               >
                 <ControlsContext.Provider value={controls}>
                   <div className={cn("space-y-4", className)}>
@@ -209,9 +212,9 @@ export const Streamdown = memo(
     return (
       <ModeContext.Provider value={mode}>
         <ShikiThemeContext.Provider value={shikiTheme}>
-          <MermaidConfigContext.Provider value={mermaidConfig}>
+          <MermaidConfigContext.Provider value={mermaid?.config}>
             <MermaidErrorComponentContext.Provider
-              value={mermaidErrorComponent}
+              value={mermaid?.errorComponent}
             >
               <ControlsContext.Provider value={controls}>
                 <StreamdownRuntimeContext.Provider value={runtimeContext}>

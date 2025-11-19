@@ -203,27 +203,29 @@ gitGraph
 
 ### Theme Customization
 
-Customize the Mermaid theme using the `mermaidConfig` prop:
+Customize the Mermaid theme using the `mermaid.config` prop:
 
 ```tsx
 import { Streamdown } from 'streamdown';
 import type { MermaidConfig } from 'streamdown';
 
 export default function Page() {
-  const mermaidConfig: MermaidConfig = {
-    theme: 'dark',
-    themeVariables: {
-      primaryColor: '#ff6b6b',
-      primaryTextColor: '#fff',
-      primaryBorderColor: '#ff6b6b',
-      lineColor: '#f5f5f5',
-      secondaryColor: '#4ecdc4',
-      tertiaryColor: '#45b7d1'
-    }
-  };
-
   return (
-    <Streamdown mermaidConfig={mermaidConfig}>
+    <Streamdown
+      mermaid={{
+        config: {
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#ff6b6b',
+            primaryTextColor: '#fff',
+            primaryBorderColor: '#ff6b6b',
+            lineColor: '#f5f5f5',
+            secondaryColor: '#4ecdc4',
+            tertiaryColor: '#45b7d1'
+          }
+        }
+      }}
+    >
       {markdown}
     </Streamdown>
   );
@@ -243,7 +245,7 @@ Mermaid includes several built-in themes:
 Example:
 
 ```tsx
-<Streamdown mermaidConfig={{ theme: 'forest' }}>
+<Streamdown mermaid={{ config: { theme: 'forest' } }}>
   {markdown}
 </Streamdown>
 ```
@@ -253,23 +255,29 @@ Example:
 Customize specific diagram types:
 
 ```tsx
-const mermaidConfig: MermaidConfig = {
-  theme: 'base',
-  themeVariables: {
-    fontSize: '16px',
-    fontFamily: 'Inter, sans-serif',
-  },
-  flowchart: {
-    nodeSpacing: 50,
-    rankSpacing: 50,
-    curve: 'basis',
-  },
-  sequence: {
-    actorMargin: 50,
-    boxMargin: 10,
-    boxTextMargin: 5,
-  },
-};
+<Streamdown
+  mermaid={{
+    config: {
+      theme: 'base',
+      themeVariables: {
+        fontSize: '16px',
+        fontFamily: 'Inter, sans-serif',
+      },
+      flowchart: {
+        nodeSpacing: 50,
+        rankSpacing: 50,
+        curve: 'basis',
+      },
+      sequence: {
+        actorMargin: 50,
+        boxMargin: 10,
+        boxTextMargin: 5,
+      },
+    }
+  }}
+>
+  {markdown}
+</Streamdown>
 ```
 
 ## Error Handling
@@ -302,7 +310,11 @@ const CustomMermaidError = ({ error, chart, retry }: MermaidErrorComponentProps)
 
 export default function Page() {
   return (
-    <Streamdown mermaidErrorComponent={CustomMermaidError}>
+    <Streamdown
+      mermaid={{
+        errorComponent: CustomMermaidError
+      }}
+    >
       {markdown}
     </Streamdown>
   );

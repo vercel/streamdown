@@ -87,18 +87,31 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
 
 <TypeTable
   type={{
-    mermaidConfig: {
-      description: 'Custom configuration for Mermaid diagrams',
-      type: 'MermaidConfig',
-    },
-    mermaidErrorComponent: {
-      description: 'Custom React component for handling Mermaid rendering errors',
-      type: 'React.ComponentType<MermaidErrorComponentProps>',
+    mermaid: {
+      description: 'Mermaid diagram configuration and error handling',
+      type: 'MermaidOptions',
     },
     controls: {
       description: 'Control visibility of interactive buttons',
       type: 'ControlsConfig',
       default: 'true',
+    },
+  }}
+/>
+
+### Mermaid Options
+
+The `mermaid` prop accepts an object with the following properties:
+
+<TypeTable
+  type={{
+    config: {
+      description: 'Custom configuration for Mermaid diagrams',
+      type: 'MermaidConfig',
+    },
+    errorComponent: {
+      description: 'Custom React component for handling Mermaid rendering errors',
+      type: 'React.ComponentType<MermaidErrorComponentProps>',
     },
   }}
 />
