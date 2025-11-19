@@ -1,6 +1,6 @@
 import type { MermaidConfig } from "mermaid";
 import { createContext, useContext, useEffect, useState } from "react";
-import type { MermaidOptions } from "../..";
+import type { MermaidOptions } from "../../index";
 import { cn } from "../utils";
 import { PanZoom } from "./pan-zoom";
 import { initializeMermaid } from "./utils";
