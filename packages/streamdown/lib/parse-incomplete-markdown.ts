@@ -1,4 +1,3 @@
-const linkImagePattern = /(!?\[)([^\]]*?)$/;
 const boldPattern = /(\*\*)([^*]*?)$/;
 const italicPattern = /(__)([^_]*?)$/;
 const boldItalicPattern = /(\*\*\*)([^*]*?)$/;
@@ -106,28 +105,47 @@ const handleIncompleteLinksAndImages = (text: string): string => {
   }
 
   // Then check for incomplete link text: [partial-text without closing ]
-  const linkMatch = text.match(linkImagePattern);
+  // Use string methods instead of regex to avoid ReDoS vulnerability
 
-  if (linkMatch) {
-    const isImage = linkMatch[1].startsWith("!");
+  // Search backwards to find the last [ or ![
+  let matchStart = -1;
+  let isImage = false;
 
-    // Find the position of this match
-    const matchStart = text.lastIndexOf(linkMatch[1]);
-
-    // Check if this match is inside a code block
-    if (isInsideCodeBlock(text, matchStart)) {
-      return text;
+  for (let i = text.length - 1; i >= 0; i--) {
+    if (text[i] === '[') {
+      // Check if this is part of ![
+      if (i > 0 && text[i - 1] === '!') {
+        matchStart = i - 1;
+        isImage = true;
+      } else {
+        matchStart = i;
+        isImage = false;
+      }
+      break;
     }
+  }
 
-    // For images, we still remove them as they can't show skeleton
-    if (isImage) {
-      const startIndex = text.lastIndexOf(linkMatch[1]);
-      return text.substring(0, startIndex);
+  if (matchStart !== -1) {
+    // Check if there's a closing ] after this bracket
+    const searchStart = isImage ? matchStart + 2 : matchStart + 1;
+    const closingBracket = text.indexOf("]", searchStart);
+    const hasClosingBracket = closingBracket !== -1;
+
+    if (!hasClosingBracket) {
+      // Check if this match is inside a code block
+      if (isInsideCodeBlock(text, matchStart)) {
+        return text;
+      }
+
+      // For images, we still remove them as they can't show skeleton
+      if (isImage) {
+        return text.substring(0, matchStart);
+      }
+
+      // For links, preserve the text and close the link with a
+      // special placeholder URL that indicates it's incomplete
+      return `${text}](streamdown:incomplete-link)`;
     }
-
-    // For links, preserve the text and close the link with a
-    // special placeholder URL that indicates it's incomplete
-    return `${text}](streamdown:incomplete-link)`;
   }
 
   return text;
