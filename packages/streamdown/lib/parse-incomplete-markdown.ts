@@ -10,7 +10,6 @@ const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\]\(([^)]+)$/;
 const whitespaceOrMarkersPattern = /^[\s_~*`]*$/;
 const listItemPattern = /^[\s]*[-*+][\s]+$/;
 const letterNumberUnderscorePattern = /[\p{L}\p{N}_]/u;
-const trailingNewlinePattern = /\n+$/;
 const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
 const fourOrMoreAsterisksPattern = /^\*{4,}$/;
 
@@ -463,13 +462,15 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
     const singleUnderscores = countSingleUnderscores(text);
     if (singleUnderscores % 2 === 1) {
       // If text ends with newline(s), insert underscore before them
-      const trailingNewlineMatch = text.match(trailingNewlinePattern);
-      if (trailingNewlineMatch) {
-        const textBeforeNewlines = text.slice(
-          0,
-          -trailingNewlineMatch[0].length
-        );
-        return `${textBeforeNewlines}_${trailingNewlineMatch[0]}`;
+      // Use string methods instead of regex to avoid ReDoS vulnerability
+      let endIndex = text.length;
+      while (endIndex > 0 && text[endIndex - 1] === '\n') {
+        endIndex--;
+      }
+      if (endIndex < text.length) {
+        const textBeforeNewlines = text.slice(0, endIndex);
+        const trailingNewlines = text.slice(endIndex);
+        return `${textBeforeNewlines}_${trailingNewlines}`;
       }
       return `${text}_`;
     }
