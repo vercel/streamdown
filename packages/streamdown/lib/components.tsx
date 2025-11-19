@@ -18,8 +18,7 @@ import { ImageComponent } from "./image";
 import { Mermaid } from "./mermaid";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
-import { TableCopyDropdown } from "./table/copy-dropdown";
-import { TableDownloadDropdown } from "./table/download-dropdown";
+import { Table } from "./table";
 import { cn } from "./utils";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
@@ -314,29 +313,14 @@ const MemoTable = memo<TableProps>(
     const showTableControls = shouldShowControls(controlsConfig, "table");
 
     return (
-      <div
-        className="my-4 flex flex-col space-y-2"
+      <Table
+        className={className}
         data-streamdown="table-wrapper"
+        showControls={showTableControls}
+        {...props}
       >
-        {showTableControls && (
-          <div className="flex items-center justify-end gap-1">
-            <TableCopyDropdown />
-            <TableDownloadDropdown />
-          </div>
-        )}
-        <div className="overflow-x-auto">
-          <table
-            className={cn(
-              "w-full border-collapse border border-border",
-              className
-            )}
-            data-streamdown="table"
-            {...props}
-          >
-            {children}
-          </table>
-        </div>
-      </div>
+        {children}
+      </Table>
     );
   },
   (p, n) => sameClassAndNode(p, n)
