@@ -219,4 +219,55 @@ And an incomplete [link
     // Just verify it renders without error when mermaidConfig is not provided
     expect(container.firstElementChild).toBeTruthy();
   });
+
+  it('should render in static mode without block parsing', () => {
+    const content = "# Hello\n\nThis is a paragraph.";
+    const { container } = render(<Streamdown mode="static">{content}</Streamdown>);
+
+    // In static mode, there should be only one ReactMarkdown component rendering all content
+    const markdowns = container.querySelectorAll('[data-testid="markdown"]');
+    expect(markdowns.length).toBe(1);
+    expect(markdowns[0]?.textContent).toContain("Hello");
+    expect(markdowns[0]?.textContent).toContain("This is a paragraph.");
+  });
+
+  it('should render in streaming mode with block parsing by default', () => {
+    const content = "# Hello\n\nThis is a paragraph.";
+    const { container } = render(<Streamdown>{content}</Streamdown>);
+
+    // In streaming mode, content is split into blocks
+    const markdowns = container.querySelectorAll('[data-testid="markdown"]');
+    expect(markdowns.length).toBeGreaterThan(1);
+  });
+
+  it('should render in streaming mode when explicitly set', () => {
+    const content = "# Hello\n\nThis is a paragraph.";
+    const { container } = render(<Streamdown mode="streaming">{content}</Streamdown>);
+
+    // In streaming mode, content is split into blocks
+    const markdowns = container.querySelectorAll('[data-testid="markdown"]');
+    expect(markdowns.length).toBeGreaterThan(1);
+  });
+
+  it('should not parse incomplete markdown in static mode', () => {
+    const content = "Text with **incomplete bold";
+    const { container } = render(<Streamdown mode="static">{content}</Streamdown>);
+
+    const markdown = container.querySelector('[data-testid="markdown"]');
+    // In static mode, incomplete markdown is NOT parsed/fixed
+    expect(markdown?.textContent).toBe("Text with **incomplete bold");
+  });
+
+  it('should memoize based on mode prop', () => {
+    const { rerender, container } = render(
+      <Streamdown mode="streaming">Content</Streamdown>
+    );
+
+    // Different mode - should re-render
+    rerender(<Streamdown mode="static">Content</Streamdown>);
+
+    // Verify it rendered
+    const markdown = container.querySelector('[data-testid="markdown"]');
+    expect(markdown?.textContent).toBe("Content");
+  });
 });
