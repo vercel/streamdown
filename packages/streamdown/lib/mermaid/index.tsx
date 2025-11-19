@@ -1,6 +1,6 @@
 import type { MermaidConfig } from "mermaid";
 import { createContext, useContext, useEffect, useState } from "react";
-import type { MermaidErrorComponentProps, MermaidOptions } from "../..";
+import type { MermaidOptions } from "../..";
 import { cn } from "../utils";
 import { PanZoom } from "./pan-zoom";
 import { initializeMermaid } from "./utils";
@@ -91,7 +91,7 @@ export const Mermaid = ({
 
     // Use custom error component if provided
     if (ErrorComponent) {
-      return <ErrorComponent error={error} chart={chart} retry={retry} />;
+      return <ErrorComponent chart={chart} error={error} retry={retry} />;
     }
 
     // Default error display
