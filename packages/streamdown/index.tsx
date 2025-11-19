@@ -13,6 +13,7 @@ import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
+import { MermaidErrorComponentContext } from "./lib/mermaid";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
@@ -37,6 +38,12 @@ export type ControlsConfig =
           };
     };
 
+export type MermaidErrorComponentProps = {
+  error: string;
+  chart: string;
+  retry: () => void;
+};
+
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
   BlockComponent?: React.ComponentType<BlockProps>;
@@ -45,6 +52,7 @@ export type StreamdownProps = Options & {
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
   mermaidConfig?: MermaidConfig;
+  mermaidErrorComponent?: React.ComponentType<MermaidErrorComponentProps>;
   controls?: ControlsConfig;
   isAnimating?: boolean;
 };
@@ -78,6 +86,9 @@ export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
 export const MermaidConfigContext = createContext<MermaidConfig | undefined>(
   undefined
 );
+
+// Export the context (imported from ./lib/mermaid above)
+export { MermaidErrorComponentContext };
 
 export const ControlsContext = createContext<ControlsConfig>(true);
 
@@ -131,6 +142,7 @@ export const Streamdown = memo(
     className,
     shikiTheme = defaultShikiTheme,
     mermaidConfig,
+    mermaidErrorComponent,
     controls = true,
     isAnimating = false,
     urlTransform = (value) => value,
@@ -167,22 +179,26 @@ export const Streamdown = memo(
         <ModeContext.Provider value={mode}>
           <ShikiThemeContext.Provider value={shikiTheme}>
             <MermaidConfigContext.Provider value={mermaidConfig}>
-              <ControlsContext.Provider value={controls}>
-                <div className={cn("space-y-4", className)}>
-                  <ReactMarkdown
-                    components={{
-                      ...defaultComponents,
-                      ...components,
-                    }}
-                    rehypePlugins={rehypePlugins}
-                    remarkPlugins={remarkPlugins}
-                    urlTransform={urlTransform}
-                    {...props}
-                  >
-                    {children}
-                  </ReactMarkdown>
-                </div>
-              </ControlsContext.Provider>
+              <MermaidErrorComponentContext.Provider
+                value={mermaidErrorComponent}
+              >
+                <ControlsContext.Provider value={controls}>
+                  <div className={cn("space-y-4", className)}>
+                    <ReactMarkdown
+                      components={{
+                        ...defaultComponents,
+                        ...components,
+                      }}
+                      rehypePlugins={rehypePlugins}
+                      remarkPlugins={remarkPlugins}
+                      urlTransform={urlTransform}
+                      {...props}
+                    >
+                      {children}
+                    </ReactMarkdown>
+                  </div>
+                </ControlsContext.Provider>
+              </MermaidErrorComponentContext.Provider>
             </MermaidConfigContext.Provider>
           </ShikiThemeContext.Provider>
         </ModeContext.Provider>
@@ -194,31 +210,35 @@ export const Streamdown = memo(
       <ModeContext.Provider value={mode}>
         <ShikiThemeContext.Provider value={shikiTheme}>
           <MermaidConfigContext.Provider value={mermaidConfig}>
-            <ControlsContext.Provider value={controls}>
-              <StreamdownRuntimeContext.Provider value={runtimeContext}>
-                <div className={cn("space-y-4", className)}>
-                  {blocks.map((block, index) => (
-                    <BlockComponent
-                      components={{
-                        ...defaultComponents,
-                        ...components,
-                      }}
-                      content={block}
-                      index={index}
-                      // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-                      key={`${generatedId}-block-${index}`}
-                      rehypePlugins={rehypePlugins}
-                      remarkPlugins={remarkPlugins}
-                      shouldParseIncompleteMarkdown={
-                        shouldParseIncompleteMarkdown
-                      }
-                      urlTransform={urlTransform}
-                      {...props}
-                    />
-                  ))}
-                </div>
-              </StreamdownRuntimeContext.Provider>
-            </ControlsContext.Provider>
+            <MermaidErrorComponentContext.Provider
+              value={mermaidErrorComponent}
+            >
+              <ControlsContext.Provider value={controls}>
+                <StreamdownRuntimeContext.Provider value={runtimeContext}>
+                  <div className={cn("space-y-4", className)}>
+                    {blocks.map((block, index) => (
+                      <BlockComponent
+                        components={{
+                          ...defaultComponents,
+                          ...components,
+                        }}
+                        content={block}
+                        index={index}
+                        // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+                        key={`${generatedId}-block-${index}`}
+                        rehypePlugins={rehypePlugins}
+                        remarkPlugins={remarkPlugins}
+                        shouldParseIncompleteMarkdown={
+                          shouldParseIncompleteMarkdown
+                        }
+                        urlTransform={urlTransform}
+                        {...props}
+                      />
+                    ))}
+                  </div>
+                </StreamdownRuntimeContext.Provider>
+              </ControlsContext.Provider>
+            </MermaidErrorComponentContext.Provider>
           </MermaidConfigContext.Provider>
         </ShikiThemeContext.Provider>
       </ModeContext.Provider>
