@@ -12,11 +12,18 @@ import { ShikiThemeContext } from "../../index";
 import { cn } from "../utils";
 import { CodeBlockContext } from "./context";
 import { performHighlight } from "./highlighter";
+import { escapeHtml } from "./utils";
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: BundledLanguage;
   preClassName?: string;
+};
+
+const createPlainHtml = (code: string, className?: string) => {
+  const escapedCode = escapeHtml(code);
+
+  return `<pre class="${className || ""}"><code>${escapedCode}</code></pre>`;
 };
 
 export const CodeBlock = ({
@@ -27,10 +34,12 @@ export const CodeBlock = ({
   preClassName,
   ...rest
 }: CodeBlockProps) => {
-  const [html, setHtml] = useState<string>("");
-  const [darkHtml, setDarkHtml] = useState<string>("");
-  const mounted = useRef(false);
   const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
+  const [html, setHtml] = useState<string>(createPlainHtml(code, preClassName));
+  const [darkHtml, setDarkHtml] = useState<string>(
+    createPlainHtml(code, preClassName)
+  );
+  const mounted = useRef(false);
 
   useEffect(() => {
     mounted.current = true;
