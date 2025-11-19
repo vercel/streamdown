@@ -3,7 +3,7 @@
 import { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cn } from "./utils";
+import { cn } from "../utils";
 
 type PanZoomProps = {
   children: ReactNode;

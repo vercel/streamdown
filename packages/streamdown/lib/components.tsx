@@ -15,12 +15,11 @@ import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
 import { CodeBlock as StaticCodeBlock } from "./code-block/static";
 import { ImageComponent } from "./image";
-import {
-  Mermaid,
-  MermaidDownloadDropdown,
-  MermaidFullscreenButton,
-} from "./mermaid";
-import { TableCopyDropdown, TableDownloadDropdown } from "./table";
+import { Mermaid } from "./mermaid";
+import { MermaidDownloadDropdown } from "./mermaid/download-button";
+import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
+import { TableCopyDropdown } from "./table/copy-dropdown";
+import { TableDownloadDropdown } from "./table/download-dropdown";
 import { cn } from "./utils";
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
