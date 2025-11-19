@@ -95,20 +95,24 @@ The plugin handles all common ideographic punctuation marks:
 
 Language models generate markdown naturally, often placing emphasis markers around phrases that include punctuation. Without CJK-friendly parsing, AI-generated content in Chinese, Japanese, or Korean would have broken formatting.
 
-{/* prettier-ignore */}
 <dl>
   <dt>❌ Without CJK support:</dt>
   <dd>
-    - The model writes: <span lang="ja">`**この用語（読み方など）**について説明します。`</span>
-    - The user sees: <span lang="ja">\*\*この用語（読み方など）\*\*について説明します。</span> (not bold!)
+    - The model writes:{" "}
+    <span lang="ja">`**この用語（読み方など）**について説明します。`</span>- The
+    user sees: <span lang="ja">
+      \*\*この用語（読み方など）\*\*について説明します。
+    </span> (not bold!)
   </dd>
   <dt>✅ With CJK support:</dt>
   <dd>
-    - The model writes: <span lang="ja">`**この用語（読み方など）**について説明します。`</span>
-    - The user sees: <span lang="ja"><strong>この用語（読み方など）</strong>について説明します。</span> (properly bolded!)
+    - The model writes:{" "}
+    <span lang="ja">`**この用語（読み方など）**について説明します。`</span>- The
+    user sees: <span lang="ja">
+      <strong>この用語（読み方など）</strong>について説明します。
+    </span> (properly bolded!)
   </dd>
 </dl>
-```
 
 ## Configuration
 
