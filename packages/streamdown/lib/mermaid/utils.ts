@@ -23,7 +23,7 @@ export const initializeMermaid = async (customConfig?: MermaidConfig) => {
 export const svgToPngBlob = (
   svgString: string,
   options?: { scale?: number }
-) => {
+): Promise<Blob> => {
   const scale = options?.scale ?? 5;
 
   return new Promise((resolve, reject) => {

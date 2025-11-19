@@ -3,7 +3,7 @@
 import { DownloadIcon } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownRuntimeContext } from "../../index";
-import { cn } from "../utils";
+import { cn, save } from "../utils";
 import {
   extractTableDataFromElement,
   tableDataToCSV,
