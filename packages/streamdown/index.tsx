@@ -38,6 +38,7 @@ export type ControlsConfig =
     };
 
 export type StreamdownProps = Options & {
+  mode?: "static" | "streaming";
   BlockComponent?: React.ComponentType<BlockProps>;
   parseMarkdownIntoBlocksFn?: (markdown: string) => string[];
   parseIncompleteMarkdown?: boolean;
@@ -89,6 +90,8 @@ export const StreamdownRuntimeContext =
     isAnimating: false,
   });
 
+export const ModeContext = createContext<"static" | "streaming">("streaming");
+
 type BlockProps = Options & {
   content: string;
   shouldParseIncompleteMarkdown: boolean;
@@ -120,6 +123,7 @@ const defaultShikiTheme: [BundledTheme, BundledTheme] = [
 export const Streamdown = memo(
   ({
     children,
+    mode = "streaming",
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     components,
     rehypePlugins = Object.values(defaultRehypePlugins),
@@ -134,13 +138,14 @@ export const Streamdown = memo(
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     ...props
   }: StreamdownProps) => {
-    // Parse the children to remove incomplete markdown tokens if enabled
+    // All hooks must be called before any conditional returns
     const generatedId = useId();
     const blocks = useMemo(
       () =>
         parseMarkdownIntoBlocksFn(typeof children === "string" ? children : ""),
       [children, parseMarkdownIntoBlocksFn]
     );
+    const runtimeContext = useMemo(() => ({ isAnimating }), [isAnimating]);
 
     useEffect(() => {
       if (
@@ -156,43 +161,73 @@ export const Streamdown = memo(
       }
     }, [rehypePlugins]);
 
-    const runtimeContext = useMemo(() => ({ isAnimating }), [isAnimating]);
-
-    return (
-      <ShikiThemeContext.Provider value={shikiTheme}>
-        <MermaidConfigContext.Provider value={mermaidConfig}>
-          <ControlsContext.Provider value={controls}>
-            <StreamdownRuntimeContext.Provider value={runtimeContext}>
-              <div className={cn("space-y-4", className)}>
-                {blocks.map((block, index) => (
-                  <BlockComponent
+    // Static mode: simple rendering without streaming features
+    if (mode === "static") {
+      return (
+        <ModeContext.Provider value={mode}>
+          <ShikiThemeContext.Provider value={shikiTheme}>
+            <MermaidConfigContext.Provider value={mermaidConfig}>
+              <ControlsContext.Provider value={controls}>
+                <div className={cn("space-y-4", className)}>
+                  <ReactMarkdown
                     components={{
                       ...defaultComponents,
                       ...components,
                     }}
-                    content={block}
-                    index={index}
-                    // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-                    key={`${generatedId}-block-${index}`}
                     rehypePlugins={rehypePlugins}
                     remarkPlugins={remarkPlugins}
-                    shouldParseIncompleteMarkdown={
-                      shouldParseIncompleteMarkdown
-                    }
                     urlTransform={urlTransform}
                     {...props}
-                  />
-                ))}
-              </div>
-            </StreamdownRuntimeContext.Provider>
-          </ControlsContext.Provider>
-        </MermaidConfigContext.Provider>
-      </ShikiThemeContext.Provider>
+                  >
+                    {children}
+                  </ReactMarkdown>
+                </div>
+              </ControlsContext.Provider>
+            </MermaidConfigContext.Provider>
+          </ShikiThemeContext.Provider>
+        </ModeContext.Provider>
+      );
+    }
+
+    // Streaming mode: parse into blocks with memoization and incomplete markdown handling
+    return (
+      <ModeContext.Provider value={mode}>
+        <ShikiThemeContext.Provider value={shikiTheme}>
+          <MermaidConfigContext.Provider value={mermaidConfig}>
+            <ControlsContext.Provider value={controls}>
+              <StreamdownRuntimeContext.Provider value={runtimeContext}>
+                <div className={cn("space-y-4", className)}>
+                  {blocks.map((block, index) => (
+                    <BlockComponent
+                      components={{
+                        ...defaultComponents,
+                        ...components,
+                      }}
+                      content={block}
+                      index={index}
+                      // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+                      key={`${generatedId}-block-${index}`}
+                      rehypePlugins={rehypePlugins}
+                      remarkPlugins={remarkPlugins}
+                      shouldParseIncompleteMarkdown={
+                        shouldParseIncompleteMarkdown
+                      }
+                      urlTransform={urlTransform}
+                      {...props}
+                    />
+                  ))}
+                </div>
+              </StreamdownRuntimeContext.Provider>
+            </ControlsContext.Provider>
+          </MermaidConfigContext.Provider>
+        </ShikiThemeContext.Provider>
+      </ModeContext.Provider>
     );
   },
   (prevProps, nextProps) =>
     prevProps.children === nextProps.children &&
     prevProps.shikiTheme === nextProps.shikiTheme &&
-    prevProps.isAnimating === nextProps.isAnimating
+    prevProps.isAnimating === nextProps.isAnimating &&
+    prevProps.mode === nextProps.mode
 );
 Streamdown.displayName = "Streamdown";

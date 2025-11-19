@@ -20,7 +20,7 @@ import {
   type SpecialLanguage,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-import { ShikiThemeContext, StreamdownRuntimeContext } from "../index";
+import { ModeContext, ShikiThemeContext, StreamdownRuntimeContext } from "../index";
 import { cn, save } from "./utils";
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
@@ -400,11 +400,12 @@ export const CodeBlock = ({
   preClassName,
   ...rest
 }: CodeBlockProps) => {
+  const mode = useContext(ModeContext);
   const [html, setHtml] = useState<string>("");
   const [darkHtml, setDarkHtml] = useState<string>("");
   const [lastHighlightedCode, setLastHighlightedCode] = useState("");
   const [incompleteLine, setIncompleteLine] = useState("");
-  const codeToHighlight = useThrottledDebounce(code);
+  const codeToHighlight = mode === "static" ? code : useThrottledDebounce(code);
   const timeoutRef = useRef(0);
   const mounted = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -430,6 +431,33 @@ export const CodeBlock = ({
       clearTimeout(timeoutRef.current);
     }
 
+    // Static mode: simple, immediate highlighting without streaming optimizations
+    if (mode === "static") {
+      if (codeToHighlight && codeToHighlight !== lastHighlightedCode) {
+        highlighterManager
+          .highlightCode(codeToHighlight, language, preClassName, signal)
+          .then(([light, dark]) => {
+            if (mounted.current && !signal.aborted) {
+              setHtml(light);
+              setDarkHtml(dark);
+              setLastHighlightedCode(codeToHighlight);
+              setIncompleteLine("");
+            }
+          })
+          .catch((err) => {
+            // Silently ignore AbortError
+            if (err.name !== "AbortError") {
+              throw err;
+            }
+          });
+      }
+      return () => {
+        mounted.current = false;
+        abortControllerRef.current?.abort();
+      };
+    }
+
+    // Streaming mode: complex highlighting with incremental updates and throttling
     const [completeCode, currentIncompleteLine] =
       splitCurrentIncompleteLineFromCode(codeToHighlight);
 
@@ -509,7 +537,7 @@ export const CodeBlock = ({
       mounted.current = false;
       abortControllerRef.current?.abort();
     };
-  }, [codeToHighlight, language, preClassName]);
+  }, [codeToHighlight, language, preClassName, mode]);
 
   const incompleteLineHtml = incompleteLine
     ? `<span class="line"><span>${escapeHtml(incompleteLine)}</span></span>`
