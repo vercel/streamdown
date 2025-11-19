@@ -11,6 +11,7 @@ import type { BundledLanguage } from "shiki";
 import { ShikiThemeContext } from "../../index";
 import { cn } from "../utils";
 import { CodeBlockContext } from "./context";
+import { CodeBlockHeader } from "./header";
 import { performHighlight } from "./highlighter";
 import { escapeHtml } from "./utils";
 
@@ -70,14 +71,7 @@ export const CodeBlock = ({
         data-code-block-container
         data-language={language}
       >
-        <div
-          className="flex items-center justify-between bg-muted/80 p-3 text-muted-foreground text-xs"
-          data-code-block-header
-          data-language={language}
-        >
-          <span className="ml-1 font-mono lowercase">{language}</span>
-          <div className="flex items-center gap-2">{children}</div>
-        </div>
+        <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
         <div className="w-full">
           <div className="min-w-full">
             <div
