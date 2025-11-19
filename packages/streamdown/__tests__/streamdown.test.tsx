@@ -197,7 +197,7 @@ And an incomplete [link
     expect(allText).toContain("italic");
   });
 
-  it("should accept mermaidConfig prop", () => {
+  it("should accept mermaid config prop", () => {
     const mermaidConfig: MermaidConfig = {
       theme: "dark",
       themeVariables: {
@@ -206,17 +206,17 @@ And an incomplete [link
     } as MermaidConfig;
 
     const { container } = render(
-      <Streamdown mermaidConfig={mermaidConfig}>Test content</Streamdown>
+      <Streamdown mermaid={{ config: mermaidConfig }}>Test content</Streamdown>
     );
 
-    // Just verify it renders without error when mermaidConfig is provided
+    // Just verify it renders without error when mermaid config is provided
     expect(container.firstElementChild).toBeTruthy();
   });
 
-  it("should render without mermaidConfig", () => {
+  it("should render without mermaid config", () => {
     const { container } = render(<Streamdown>Test content</Streamdown>);
 
-    // Just verify it renders without error when mermaidConfig is not provided
+    // Just verify it renders without error when mermaid config is not provided
     expect(container.firstElementChild).toBeTruthy();
   });
 

@@ -203,27 +203,29 @@ gitGraph
 
 ### Theme Customization
 
-Customize the Mermaid theme using the `mermaidConfig` prop:
+Customize the Mermaid theme using the `mermaid.config` prop:
 
 ```tsx
 import { Streamdown } from 'streamdown';
 import type { MermaidConfig } from 'streamdown';
 
 export default function Page() {
-  const mermaidConfig: MermaidConfig = {
-    theme: 'dark',
-    themeVariables: {
-      primaryColor: '#ff6b6b',
-      primaryTextColor: '#fff',
-      primaryBorderColor: '#ff6b6b',
-      lineColor: '#f5f5f5',
-      secondaryColor: '#4ecdc4',
-      tertiaryColor: '#45b7d1'
-    }
-  };
-
   return (
-    <Streamdown mermaidConfig={mermaidConfig}>
+    <Streamdown
+      mermaid={{
+        config: {
+          theme: 'dark',
+          themeVariables: {
+            primaryColor: '#ff6b6b',
+            primaryTextColor: '#fff',
+            primaryBorderColor: '#ff6b6b',
+            lineColor: '#f5f5f5',
+            secondaryColor: '#4ecdc4',
+            tertiaryColor: '#45b7d1'
+          }
+        }
+      }}
+    >
       {markdown}
     </Streamdown>
   );
@@ -243,7 +245,7 @@ Mermaid includes several built-in themes:
 Example:
 
 ```tsx
-<Streamdown mermaidConfig={{ theme: 'forest' }}>
+<Streamdown mermaid={{ config: { theme: 'forest' } }}>
   {markdown}
 </Streamdown>
 ```
@@ -253,22 +255,103 @@ Example:
 Customize specific diagram types:
 
 ```tsx
-const mermaidConfig: MermaidConfig = {
-  theme: 'base',
-  themeVariables: {
-    fontSize: '16px',
-    fontFamily: 'Inter, sans-serif',
-  },
-  flowchart: {
-    nodeSpacing: 50,
-    rankSpacing: 50,
-    curve: 'basis',
-  },
-  sequence: {
-    actorMargin: 50,
-    boxMargin: 10,
-    boxTextMargin: 5,
-  },
+<Streamdown
+  mermaid={{
+    config: {
+      theme: 'base',
+      themeVariables: {
+        fontSize: '16px',
+        fontFamily: 'Inter, sans-serif',
+      },
+      flowchart: {
+        nodeSpacing: 50,
+        rankSpacing: 50,
+        curve: 'basis',
+      },
+      sequence: {
+        actorMargin: 50,
+        boxMargin: 10,
+        boxTextMargin: 5,
+      },
+    }
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+## Error Handling
+
+### Custom Error Component
+
+When Mermaid diagrams fail to render due to invalid syntax, you can provide a custom error component instead of displaying the default error message. This is especially useful for production environments where you want to control the user experience.
+
+```tsx
+import { Streamdown } from 'streamdown';
+import type { MermaidErrorComponentProps } from 'streamdown';
+
+const CustomMermaidError = ({ error, chart, retry }: MermaidErrorComponentProps) => (
+  <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+    <div className="flex items-center gap-2">
+      <span className="text-xl">⚠️</span>
+      <p className="font-semibold text-amber-900">Couldn't render diagram</p>
+    </div>
+    <p className="mt-2 text-amber-700 text-sm">
+      There was an issue with the diagram syntax.
+    </p>
+    <button
+      onClick={retry}
+      className="mt-3 rounded bg-amber-600 px-4 py-2 text-white text-sm hover:bg-amber-700"
+    >
+      Try Again
+    </button>
+  </div>
+);
+
+export default function Page() {
+  return (
+    <Streamdown
+      mermaid={{
+        errorComponent: CustomMermaidError
+      }}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+The error component receives three props:
+
+- **error** (`string`) - The error message from Mermaid
+- **chart** (`string`) - The original Mermaid diagram code
+- **retry** (`() => void`) - Function to retry rendering the diagram
+
+### Error Component Benefits
+
+- **Production-ready** - Hide technical error details from end users
+- **Custom branding** - Style errors to match your application
+- **Better UX** - Provide helpful actions like retry buttons or support links
+- **Debugging control** - Log errors to your monitoring service
+
+### Example: Logging Errors
+
+```tsx
+const ErrorWithLogging = ({ error, chart, retry }: MermaidErrorComponentProps) => {
+  useEffect(() => {
+    // Log to your error tracking service
+    console.error('Mermaid rendering failed:', error);
+    // Could also send to Sentry, LogRocket, etc.
+  }, [error]);
+
+  return (
+    <div className="text-center p-4">
+      <p className="text-muted-foreground">Unable to display diagram</p>
+      <button onClick={retry} className="mt-2 text-primary text-sm underline">
+        Retry
+      </button>
+    </div>
+  );
 };
 ```
 

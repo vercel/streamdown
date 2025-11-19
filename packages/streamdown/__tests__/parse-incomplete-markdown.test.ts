@@ -45,9 +45,9 @@ describe("parseIncompleteMarkdown", () => {
         "[outer [nested] text](streamdown:incomplete-link)"
       );
 
-      expect(parseIncompleteMarkdown("[link with [inner] content](http://incomplete")).toBe(
-        "[link with [inner] content](streamdown:incomplete-link)"
-      );
+      expect(
+        parseIncompleteMarkdown("[link with [inner] content](http://incomplete")
+      ).toBe("[link with [inner] content](streamdown:incomplete-link)");
 
       expect(parseIncompleteMarkdown("Text [foo [bar] baz](")).toBe(
         "Text [foo [bar] baz](streamdown:incomplete-link)"

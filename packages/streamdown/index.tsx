@@ -13,6 +13,7 @@ import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
+import { MermaidContext } from "./lib/mermaid";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
@@ -37,6 +38,17 @@ export type ControlsConfig =
           };
     };
 
+export type MermaidErrorComponentProps = {
+  error: string;
+  chart: string;
+  retry: () => void;
+};
+
+export type MermaidOptions = {
+  config?: MermaidConfig;
+  errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
+};
+
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
   BlockComponent?: React.ComponentType<BlockProps>;
@@ -44,7 +56,7 @@ export type StreamdownProps = Options & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
-  mermaidConfig?: MermaidConfig;
+  mermaid?: MermaidOptions;
   controls?: ControlsConfig;
   isAnimating?: boolean;
 };
@@ -75,9 +87,8 @@ export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
   "github-dark" as BundledTheme,
 ]);
 
-export const MermaidConfigContext = createContext<MermaidConfig | undefined>(
-  undefined
-);
+// Export the unified context (imported from ./lib/mermaid above)
+export { MermaidContext };
 
 export const ControlsContext = createContext<ControlsConfig>(true);
 
@@ -130,7 +141,7 @@ export const Streamdown = memo(
     remarkPlugins = Object.values(defaultRemarkPlugins),
     className,
     shikiTheme = defaultShikiTheme,
-    mermaidConfig,
+    mermaid,
     controls = true,
     isAnimating = false,
     urlTransform = (value) => value,
@@ -166,7 +177,7 @@ export const Streamdown = memo(
       return (
         <ModeContext.Provider value={mode}>
           <ShikiThemeContext.Provider value={shikiTheme}>
-            <MermaidConfigContext.Provider value={mermaidConfig}>
+            <MermaidContext.Provider value={mermaid}>
               <ControlsContext.Provider value={controls}>
                 <div className={cn("space-y-4", className)}>
                   <ReactMarkdown
@@ -183,7 +194,7 @@ export const Streamdown = memo(
                   </ReactMarkdown>
                 </div>
               </ControlsContext.Provider>
-            </MermaidConfigContext.Provider>
+            </MermaidContext.Provider>
           </ShikiThemeContext.Provider>
         </ModeContext.Provider>
       );
@@ -193,7 +204,7 @@ export const Streamdown = memo(
     return (
       <ModeContext.Provider value={mode}>
         <ShikiThemeContext.Provider value={shikiTheme}>
-          <MermaidConfigContext.Provider value={mermaidConfig}>
+          <MermaidContext.Provider value={mermaid}>
             <ControlsContext.Provider value={controls}>
               <StreamdownRuntimeContext.Provider value={runtimeContext}>
                 <div className={cn("space-y-4", className)}>
@@ -219,7 +230,7 @@ export const Streamdown = memo(
                 </div>
               </StreamdownRuntimeContext.Provider>
             </ControlsContext.Provider>
-          </MermaidConfigContext.Provider>
+          </MermaidContext.Provider>
         </ShikiThemeContext.Provider>
       </ModeContext.Provider>
     );

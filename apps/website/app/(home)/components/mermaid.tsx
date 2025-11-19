@@ -52,8 +52,10 @@ sequenceDiagram
       markdown={mermaidExample}
       speed={60}
       streamdownProps={{
-        mermaidConfig: {
-          theme: "base",
+        mermaid: {
+          config: {
+            theme: "base",
+          },
         },
         controls: true,
       }}

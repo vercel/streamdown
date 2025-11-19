@@ -1,8 +1,14 @@
 import type { MermaidConfig } from "mermaid";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import type { MermaidOptions } from "../../index";
 import { cn } from "../utils";
 import { PanZoom } from "./pan-zoom";
 import { initializeMermaid } from "./utils";
+
+// Create unified context here to avoid import issues in tests
+export const MermaidContext = createContext<MermaidOptions | undefined>(
+  undefined
+);
 
 type MermaidProps = {
   chart: string;
@@ -21,6 +27,9 @@ export const Mermaid = ({
   const [isLoading, setIsLoading] = useState(true);
   const [svgContent, setSvgContent] = useState<string>("");
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
+  const [retryCount, setRetryCount] = useState(0);
+  const mermaidContext = useContext(MermaidContext);
+  const ErrorComponent = mermaidContext?.errorComponent;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"
   useEffect(() => {
@@ -62,7 +71,7 @@ export const Mermaid = ({
     };
 
     renderChart();
-  }, [chart, config]);
+  }, [chart, config, retryCount]);
 
   // Show loading only on initial load when we have no content
   if (isLoading && !svgContent && !lastValidSvg) {
@@ -78,6 +87,14 @@ export const Mermaid = ({
 
   // Only show error if we have no valid SVG to display
   if (error && !svgContent && !lastValidSvg) {
+    const retry = () => setRetryCount((count) => count + 1);
+
+    // Use custom error component if provided
+    if (ErrorComponent) {
+      return <ErrorComponent chart={chart} error={error} retry={retry} />;
+    }
+
+    // Default error display
     return (
       <div
         className={cn(

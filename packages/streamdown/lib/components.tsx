@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
-import { ControlsContext, MermaidConfigContext, ModeContext } from "../index";
+import { ControlsContext, MermaidContext, ModeContext } from "../index";
 import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
@@ -596,7 +596,7 @@ const CodeComponent = ({
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
   ExtraProps) => {
   const inline = node?.position?.start.line === node?.position?.end.line;
-  const mermaidConfig = useContext(MermaidConfigContext);
+  const mermaidContext = useContext(MermaidContext);
   const controlsConfig = useContext(ControlsContext);
   const mode = useContext(ModeContext);
 
@@ -655,15 +655,21 @@ const CodeComponent = ({
           (showDownload || showCopy || showFullscreen) && (
             <div className="flex items-center justify-end gap-2">
               {showDownload && (
-                <MermaidDownloadDropdown chart={code} config={mermaidConfig} />
+                <MermaidDownloadDropdown
+                  chart={code}
+                  config={mermaidContext?.config}
+                />
               )}
               {showCopy && <CodeBlockCopyButton code={code} />}
               {showFullscreen && (
-                <MermaidFullscreenButton chart={code} config={mermaidConfig} />
+                <MermaidFullscreenButton
+                  chart={code}
+                  config={mermaidContext?.config}
+                />
               )}
             </div>
           )}
-        <Mermaid chart={code} config={mermaidConfig} />
+        <Mermaid chart={code} config={mermaidContext?.config} />
       </div>
     );
   }
