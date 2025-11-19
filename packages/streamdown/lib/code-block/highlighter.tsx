@@ -27,13 +27,9 @@ export const getTransformersFromPreClassName = (
 
 export const isLanguageSupported = (
   language: string
-): language is BundledLanguage => {
-  return Object.hasOwn(bundledLanguages, language);
-};
+): language is BundledLanguage => Object.hasOwn(bundledLanguages, language);
 
-export const getFallbackLanguage = (): SpecialLanguage => {
-  return "text";
-};
+export const getFallbackLanguage = (): SpecialLanguage => "text";
 
 export const createHighlighters = async (
   themes: [BundledTheme, BundledTheme]
@@ -68,9 +64,7 @@ export const performHighlight = async (
     darkTheme,
   ]);
 
-  const lang = isLanguageSupported(language)
-    ? language
-    : getFallbackLanguage();
+  const lang = isLanguageSupported(language) ? language : getFallbackLanguage();
 
   // Load the language if supported
   if (isLanguageSupported(language)) {

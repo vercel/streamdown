@@ -859,7 +859,7 @@ Would you like me to show how to conditionally toggle that behavior per app or s
       const result = parseIncompleteMarkdown(text_content);
 
       // Should NOT contain incomplete-link marker
-      expect(result).not.toContain('streamdown:incomplete-link');
+      expect(result).not.toContain("streamdown:incomplete-link");
       // Should preserve original content
       expect(result).toBe(text_content);
     });
@@ -873,7 +873,7 @@ console.log(arr[0]);
 Done with code block.`;
 
       const result = parseIncompleteMarkdown(text);
-      expect(result).not.toContain('streamdown:incomplete-link');
+      expect(result).not.toContain("streamdown:incomplete-link");
       expect(result).toBe(text);
     });
 
@@ -885,7 +885,7 @@ echo "test"
 And here's an [incomplete link`;
 
       const result = parseIncompleteMarkdown(text);
-      expect(result).toContain('streamdown:incomplete-link');
+      expect(result).toContain("streamdown:incomplete-link");
       expect(result).toBe(`Here's a code block:
 \`\`\`bash
 echo "test"

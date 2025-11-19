@@ -4,7 +4,8 @@ import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ShikiThemeContext } from "../index";
-import { CodeBlock, CodeBlockCopyButton } from "../lib/code-block";
+import { CodeBlock } from "../lib/code-block";
+import { CodeBlockCopyButton } from "../lib/code-block/copy-button";
 
 describe("CodeBlockCopyButton", () => {
   const originalClipboard = navigator.clipboard;

@@ -26,7 +26,7 @@ const isInsideCodeBlock = (text: string, position: number): boolean => {
   let currentPos = 0;
 
   while (currentPos < text.length) {
-    const nextTripleBacktick = text.indexOf('```', currentPos);
+    const nextTripleBacktick = text.indexOf("```", currentPos);
 
     if (nextTripleBacktick === -1 || nextTripleBacktick > position) {
       // No more code blocks or we've passed the position
@@ -48,18 +48,23 @@ const isInsideCodeBlock = (text: string, position: number): boolean => {
   // Skip triple backticks as they're for multiline blocks
   let insideInlineBlock = false;
   for (let i = 0; i < position; i++) {
-    if (text[i] === '`') {
+    if (text[i] === "`") {
       // Check if this is part of a triple backtick
-      if (i + 2 < text.length && text[i + 1] === '`' && text[i + 2] === '`') {
+      if (i + 2 < text.length && text[i + 1] === "`" && text[i + 2] === "`") {
         // Skip triple backticks
         i += 2;
         continue;
       }
-      if (i >= 2 && text[i - 1] === '`' && text[i - 2] === '`') {
+      if (i >= 2 && text[i - 1] === "`" && text[i - 2] === "`") {
         // Part of triple backtick, already handled
         continue;
       }
-      if (i >= 1 && text[i - 1] === '`' && i + 1 < text.length && text[i + 1] === '`') {
+      if (
+        i >= 1 &&
+        text[i - 1] === "`" &&
+        i + 1 < text.length &&
+        text[i + 1] === "`"
+      ) {
         // Middle of triple backtick
         continue;
       }
@@ -90,22 +95,21 @@ const handleIncompleteLinksAndImages = (text: string): string => {
       let bracketDepth = 0;
 
       for (let i = lastUrlStart - 1; i >= 0; i--) {
-        if (text[i] === ']') {
-          bracketDepth++;
-        } else if (text[i] === '[') {
+        if (text[i] === "]") {
+          bracketDepth += 1;
+        } else if (text[i] === "[") {
           if (bracketDepth === 0) {
             openBracket = i;
             break;
           }
-          bracketDepth--;
+          bracketDepth += 1;
         }
       }
 
       if (openBracket !== -1) {
-        const isImage = openBracket > 0 && text[openBracket - 1] === '!';
+        const isImage = openBracket > 0 && text[openBracket - 1] === "!";
         const matchStart = isImage ? openBracket - 1 : openBracket;
         const linkText = text.substring(openBracket + 1, lastUrlStart);
-        const partialUrl = text.substring(lastUrlStart + 2);
 
         // Check if this match is inside a code block
         if (isInsideCodeBlock(text, matchStart)) {
@@ -133,9 +137,9 @@ const handleIncompleteLinksAndImages = (text: string): string => {
   let isImage = false;
 
   for (let i = text.length - 1; i >= 0; i--) {
-    if (text[i] === '[') {
+    if (text[i] === "[") {
       // Check if this is part of ![
-      if (i > 0 && text[i - 1] === '!') {
+      if (i > 0 && text[i - 1] === "!") {
         matchStart = i - 1;
         isImage = true;
       } else {
@@ -503,8 +507,8 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
       // If text ends with newline(s), insert underscore before them
       // Use string methods instead of regex to avoid ReDoS vulnerability
       let endIndex = text.length;
-      while (endIndex > 0 && text[endIndex - 1] === '\n') {
-        endIndex--;
+      while (endIndex > 0 && text[endIndex - 1] === "\n") {
+        endIndex += 1;
       }
       if (endIndex < text.length) {
         const textBeforeNewlines = text.slice(0, endIndex);

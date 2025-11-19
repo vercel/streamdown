@@ -36,7 +36,6 @@ class HighlighterManager {
     Promise<[string, string]>
   >();
 
-
   private getCacheKey(
     code: string,
     language: string,
@@ -224,8 +223,7 @@ class HighlighterManager {
         checkSignal();
 
         const needsLanguageLoad =
-          !this.loadedLanguages.has(language) &&
-          isLanguageSupported(language);
+          !this.loadedLanguages.has(language) && isLanguageSupported(language);
 
         if (needsLanguageLoad) {
           this.loadLanguagePromise = this.loadLanguage(language);
