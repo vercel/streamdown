@@ -821,6 +821,79 @@ describe("parseIncompleteMarkdown", () => {
     });
   });
 
+  describe("GitHub issue #227: incomplete-link after code blocks", () => {
+    it("should not add incomplete-link marker after complete code blocks", () => {
+      const text_content = `Precisely.
+
+When full-screen TUI applications like **Vim**, **less**, or **htop** start, they switch the terminal into what's called the **alternate screen buffer**—a second, temporary display area separate from the main scrollback buffer.
+
+### How it works
+They send ANSI escape sequences such as:
+\`\`\`bash
+# Enter alternate screen buffer
+echo -e "\\\\e[?1049h"
+
+# Exit (back to normal buffer)
+echo -e "\\\\e[?1049l"
+\`\`\`
+
+- \`\\\\e[?1049h\` — activates the alternate screen.
+- \`\\\\e[?1049l\` — deactivates it and restores the previous view.
+
+While in this mode:
+- The "scrollback" (your regular terminal history) is hidden.
+- The program gets a fresh, empty screen to draw on.
+- When the program exits, the screen restores exactly as it was before.
+
+### tmux behavior
+\`tmux\` respects these escape sequences by default. When apps use the alternate buffer, tmux holds that screen separately from the main one. That's why, when you scroll in tmux during Vim, you don't see your shell history—you have to leave Vim first.
+
+If someone wants to **disable** this behavior (so the app draws on the main screen and you can scroll back freely), they can set:
+\`\`\`bash
+set -g terminal-overrides 'xterm*:smcup@:rmcup@'
+\`\`\`
+in their \`~/.tmux.conf\`, which disables use of the alternate buffer entirely.
+
+Would you like me to show how to conditionally toggle that behavior per app or session?`;
+
+      const result = parseIncompleteMarkdown(text_content);
+
+      // Should NOT contain incomplete-link marker
+      expect(result).not.toContain('streamdown:incomplete-link');
+      // Should preserve original content
+      expect(result).toBe(text_content);
+    });
+
+    it("should not treat brackets inside complete code blocks as incomplete links", () => {
+      const text = `Here's some code:
+\`\`\`javascript
+const arr = [1, 2, 3];
+console.log(arr[0]);
+\`\`\`
+Done with code block.`;
+
+      const result = parseIncompleteMarkdown(text);
+      expect(result).not.toContain('streamdown:incomplete-link');
+      expect(result).toBe(text);
+    });
+
+    it("should still detect actual incomplete links outside of code blocks", () => {
+      const text = `Here's a code block:
+\`\`\`bash
+echo "test"
+\`\`\`
+And here's an [incomplete link`;
+
+      const result = parseIncompleteMarkdown(text);
+      expect(result).toContain('streamdown:incomplete-link');
+      expect(result).toBe(`Here's a code block:
+\`\`\`bash
+echo "test"
+\`\`\`
+And here's an [incomplete link](streamdown:incomplete-link)`);
+    });
+  });
+
   describe("edge cases", () => {
     it("should handle text ending with formatting characters", () => {
       expect(parseIncompleteMarkdown("Text ending with *")).toBe(
