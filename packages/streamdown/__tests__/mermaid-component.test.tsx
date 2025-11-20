@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { act, render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StreamdownContext } from "../index";
 import { Mermaid } from "../lib/mermaid/index";
@@ -41,10 +41,15 @@ describe("Mermaid Component", () => {
     };
   };
 
-  it("should render loading state initially", () => {
+  it("should render loading state initially", async () => {
     const { container } = renderWithContext(<Mermaid chart={simpleChart} />);
 
     expect(container.textContent).toContain("Loading diagram...");
+
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(container.querySelector("svg")).toBeTruthy();
+    });
   });
 
   it("should render mermaid chart after loading", async () => {
@@ -237,9 +242,16 @@ describe("Mermaid Component", () => {
     });
 
     // Rerender with new chart
-    rerender(<Mermaid chart="graph TD; X-->Y" />);
+    act(() => {
+      rerender(<Mermaid chart="graph TD; X-->Y" />);
+    });
 
     // Should not show loading indicator since we have previous SVG
     expect(container.textContent).not.toContain("Loading diagram...");
+
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(container.querySelector("svg")).toBeTruthy();
+    });
   });
 });

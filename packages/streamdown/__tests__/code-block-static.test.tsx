@@ -31,7 +31,7 @@ describe("CodeBlock (static)", () => {
     mode: "static" as const,
   };
 
-  it("should render CodeBlock with initial plain HTML", () => {
+  it("should render CodeBlock with initial plain HTML", async () => {
     const { container } = render(
       <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="const x = 1;" language="javascript" />
@@ -41,6 +41,11 @@ describe("CodeBlock (static)", () => {
     const codeBlock = container.querySelector("[data-code-block-container]");
     expect(codeBlock).toBeTruthy();
     expect(codeBlock?.getAttribute("data-language")).toBe("javascript");
+
+    // Wait for async highlighting to complete
+    await waitFor(() => {
+      expect(container.querySelector("[data-code-block]")).toBeTruthy();
+    });
   });
 
   it("should render with light and dark versions", async () => {
@@ -105,6 +110,11 @@ describe("CodeBlock (static)", () => {
 
     const codeBlock = container.querySelector("[data-code-block-container]");
     expect(codeBlock?.getAttribute("data-language")).toBe("python");
+
+    // Wait for async highlighting to complete
+    await waitFor(() => {
+      expect(container.querySelector("[data-code-block]")).toBeTruthy();
+    });
   });
 
   it("should handle code updates", async () => {
@@ -135,7 +145,7 @@ describe("CodeBlock (static)", () => {
     });
   });
 
-  it("should include CodeBlockHeader with language", () => {
+  it("should include CodeBlockHeader with language", async () => {
     const { container } = render(
       <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="test" language="typescript" />
@@ -144,9 +154,14 @@ describe("CodeBlock (static)", () => {
 
     const header = container.querySelector("[data-code-block-header]");
     expect(header).toBeTruthy();
+
+    // Wait for async highlighting to complete
+    await waitFor(() => {
+      expect(container.querySelector("[data-code-block]")).toBeTruthy();
+    });
   });
 
-  it("should handle children", () => {
+  it("should handle children", async () => {
     const { container } = render(
       <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="test" language="javascript">
@@ -157,6 +172,11 @@ describe("CodeBlock (static)", () => {
 
     const child = container.querySelector('[data-testid="custom-child"]');
     expect(child).toBeTruthy();
+
+    // Wait for async highlighting to complete
+    await waitFor(() => {
+      expect(container.querySelector("[data-code-block]")).toBeTruthy();
+    });
   });
 
   it("should handle errors silently for AbortError", async () => {
@@ -182,9 +202,14 @@ describe("CodeBlock (static)", () => {
     // Should still render with initial plain HTML
     const codeBlock = container.querySelector("[data-code-block-container]");
     expect(codeBlock).toBeTruthy();
+
+    // Wait for async operation to complete (even though it fails)
+    await waitFor(() => {
+      expect(container.querySelector("[data-code-block]")).toBeTruthy();
+    });
   });
 
-  it("should escape HTML in plain HTML fallback", () => {
+  it("should escape HTML in plain HTML fallback", async () => {
     const { container } = render(
       <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="<div>test</div>" language="html" />
@@ -194,6 +219,11 @@ describe("CodeBlock (static)", () => {
     // Check initial render has escaped HTML
     const codeBlocks = container.querySelectorAll("[data-code-block]");
     expect(codeBlocks.length).toBeGreaterThan(0);
+
+    // Wait for async highlighting to complete
+    await waitFor(() => {
+      expect(container.querySelector("[data-code-block]")).toBeTruthy();
+    });
   });
 
   it("should cleanup on unmount", async () => {
@@ -217,7 +247,7 @@ describe("CodeBlock (static)", () => {
     expect(codeBlock).toBeFalsy();
   });
 
-  it("should pass through additional HTML attributes", () => {
+  it("should pass through additional HTML attributes", async () => {
     const { container } = render(
       <StreamdownContext.Provider value={mockContext}>
         <CodeBlock
@@ -232,5 +262,10 @@ describe("CodeBlock (static)", () => {
     const codeBlocks = container.querySelectorAll("[data-code-block]");
     expect(codeBlocks[0].getAttribute("data-testid")).toBe("custom-code-block");
     expect(codeBlocks[0].getAttribute("id")).toBe("my-code-block");
+
+    // Wait for async highlighting to complete
+    await waitFor(() => {
+      expect(container.querySelector("[data-code-block]")).toBeTruthy();
+    });
   });
 });

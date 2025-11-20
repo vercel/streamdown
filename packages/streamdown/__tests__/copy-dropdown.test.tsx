@@ -1,5 +1,5 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StreamdownContext } from "../index";
 import { TableCopyDropdown } from "../lib/table/copy-dropdown";
 
@@ -141,11 +141,16 @@ describe("TableCopyDropdown", () => {
     fireEvent.click(button!);
 
     const csvButton = getByText("CSV");
-    await fireEvent.click(csvButton);
+    fireEvent.click(csvButton);
 
     await waitFor(() => {
       expect(navigator.clipboard.write).toHaveBeenCalled();
       expect(onCopy).toHaveBeenCalledWith("csv");
+    });
+
+    // Wait for state updates to complete
+    await waitFor(() => {
+      expect(container.querySelector(".absolute")).toBeFalsy();
     });
 
     mockWrapper.removeChild(dropdownContainer);
@@ -169,11 +174,16 @@ describe("TableCopyDropdown", () => {
     fireEvent.click(button!);
 
     const tsvButton = getByText("TSV");
-    await fireEvent.click(tsvButton);
+    fireEvent.click(tsvButton);
 
     await waitFor(() => {
       expect(navigator.clipboard.write).toHaveBeenCalled();
       expect(onCopy).toHaveBeenCalledWith("tsv");
+    });
+
+    // Wait for state updates to complete
+    await waitFor(() => {
+      expect(container.querySelector(".absolute")).toBeFalsy();
     });
 
     mockWrapper.removeChild(dropdownContainer);
@@ -194,7 +204,7 @@ describe("TableCopyDropdown", () => {
     fireEvent.click(button!);
 
     const csvButton = getByText("CSV");
-    await fireEvent.click(csvButton);
+    fireEvent.click(csvButton);
 
     await waitFor(() => {
       // After copying, the icon should change (we can check if the button children changed)
@@ -202,6 +212,11 @@ describe("TableCopyDropdown", () => {
         'button[title="Copy table"]'
       );
       expect(buttonElement).toBeTruthy();
+    });
+
+    // Wait for state updates to complete
+    await waitFor(() => {
+      expect(container.querySelector(".absolute")).toBeFalsy();
     });
 
     mockWrapper.removeChild(dropdownContainer);
@@ -224,7 +239,11 @@ describe("TableCopyDropdown", () => {
     expect(container.querySelector(".absolute")).toBeTruthy();
 
     const csvButton = getByText("CSV");
-    await fireEvent.click(csvButton);
+    fireEvent.click(csvButton);
+
+    await waitFor(() => {
+      expect(navigator.clipboard.write).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(container.querySelector(".absolute")).toBeFalsy();
@@ -390,10 +409,15 @@ describe("TableCopyDropdown", () => {
     fireEvent.click(button!);
 
     const csvButton = getByText("CSV");
-    await fireEvent.click(csvButton);
+    fireEvent.click(csvButton);
 
     await waitFor(() => {
       expect(navigator.clipboard.write).toHaveBeenCalled();
+    });
+
+    // Wait for state updates to complete
+    await waitFor(() => {
+      expect(container.querySelector(".absolute")).toBeFalsy();
     });
 
     // Just verify that the timeout value was accepted (component rendered without error)

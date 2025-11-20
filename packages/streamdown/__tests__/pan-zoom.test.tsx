@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react";
+import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { PanZoom } from "../lib/mermaid/pan-zoom";
 
@@ -182,7 +182,7 @@ describe("PanZoom", () => {
     expect(container.firstElementChild?.className).toContain("w-full");
   });
 
-  it("should handle wheel events for zoom", () => {
+  it("should handle wheel events for zoom", async () => {
     const { container } = render(
       <PanZoom>
         <div>Content</div>
@@ -199,11 +199,15 @@ describe("PanZoom", () => {
       cancelable: true,
     });
 
-    containerDiv?.dispatchEvent(wheelEvent);
+    act(() => {
+      containerDiv?.dispatchEvent(wheelEvent);
+    });
 
-    // Check that zoom changed (transform includes scale > 1)
-    const transform = content?.getAttribute("style");
-    expect(transform).toBeDefined();
+    // Wait for state update to complete
+    await waitFor(() => {
+      const transform = content?.getAttribute("style");
+      expect(transform).toBeDefined();
+    });
   });
 
   it("should use initial zoom value", () => {

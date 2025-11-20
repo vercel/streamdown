@@ -186,9 +186,10 @@ describe("CodeBlockCopyButton", () => {
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("const x = 1;");
 
-    // Fast-forward time
-    act(() => {
+    // Fast-forward time and wait for state update
+    await act(async () => {
       vi.advanceTimersByTime(1000);
+      await Promise.resolve();
     });
 
     // Icon should be reset after timeout
