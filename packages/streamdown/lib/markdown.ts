@@ -1,4 +1,4 @@
-import type { Element, Nodes, Parents } from "hast";
+import type { Element, Nodes } from "hast";
 import { toJsxRuntime } from "hast-util-to-jsx-runtime";
 import { urlAttributes } from "html-url-attributes";
 import type { ComponentType, JSX, ReactElement } from "react";
@@ -38,13 +38,13 @@ export type UrlTransform = (
 
 const safeProtocol = /^(https?|ircs?|mailto|xmpp)$/i;
 
-export function Markdown(options: Readonly<Options>): ReactElement {
+export const Markdown = (options: Readonly<Options>) => {
   const processor = createProcessor(options);
   const file = new VFile(options.children || "");
   return post(processor.runSync(processor.parse(file), file), options);
-}
+};
 
-function createProcessor(options: Readonly<Options>) {
+const createProcessor = (options: Readonly<Options>) => {
   const rehypePlugins = options.rehypePlugins || [];
   const remarkPlugins = options.remarkPlugins || [];
   const remarkRehypeOptions = {
@@ -57,24 +57,12 @@ function createProcessor(options: Readonly<Options>) {
     .use(remarkPlugins)
     .use(remarkRehype, remarkRehypeOptions)
     .use(rehypePlugins);
-}
+};
 
 function post(tree: Nodes, options: Readonly<Options>): ReactElement {
   const urlTransform = options.urlTransform || defaultUrlTransform;
 
-  visit(tree, transform);
-
-  return toJsxRuntime(tree, {
-    Fragment,
-    components: options.components,
-    ignoreInvalidStyle: true,
-    jsx,
-    jsxs,
-    passKeys: true,
-    passNode: true,
-  });
-
-  function transform(node: Nodes, index?: number, parent?: Parents): void {
+  const transform = (node: Nodes): void => {
     if (node.type === "element") {
       let key: string;
 
@@ -91,10 +79,22 @@ function post(tree: Nodes, options: Readonly<Options>): ReactElement {
         }
       }
     }
-  }
+  };
+
+  visit(tree, transform);
+
+  return toJsxRuntime(tree, {
+    Fragment,
+    components: options.components,
+    ignoreInvalidStyle: true,
+    jsx,
+    jsxs,
+    passKeys: true,
+    passNode: true,
+  });
 }
 
-export function defaultUrlTransform(value: string): string {
+export const defaultUrlTransform = (value: string) => {
   const colon = value.indexOf(":");
   const questionMark = value.indexOf("?");
   const numberSign = value.indexOf("#");
@@ -111,4 +111,4 @@ export function defaultUrlTransform(value: string): string {
   }
 
   return "";
-}
+};
