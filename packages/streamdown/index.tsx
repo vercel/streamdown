@@ -1,7 +1,15 @@
 "use client";
 
 import type { MermaidConfig } from "mermaid";
-import { createContext, memo, useEffect, useId, useMemo, useState, useTransition } from "react";
+import {
+  createContext,
+  memo,
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { harden } from "rehype-harden";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
@@ -122,17 +130,34 @@ export const Block = memo(
   },
   (prevProps, nextProps) => {
     // Deep comparison for better memoization
-    if (prevProps.content !== nextProps.content) return false;
-    if (prevProps.shouldParseIncompleteMarkdown !== nextProps.shouldParseIncompleteMarkdown) return false;
-    if (prevProps.index !== nextProps.index) return false;
+    if (prevProps.content !== nextProps.content) {
+      return false;
+    }
+    if (
+      prevProps.shouldParseIncompleteMarkdown !==
+      nextProps.shouldParseIncompleteMarkdown
+    ) {
+      return false;
+    }
+    if (prevProps.index !== nextProps.index) {
+      return false;
+    }
 
     // Check if components object changed (shallow comparison)
     if (prevProps.components !== nextProps.components) {
       // If references differ, check if keys are the same
       const prevKeys = Object.keys(prevProps.components || {});
       const nextKeys = Object.keys(nextProps.components || {});
-      if (prevKeys.length !== nextKeys.length) return false;
-      if (prevKeys.some((key) => prevProps.components?.[key] !== nextProps.components?.[key])) {
+
+      if (prevKeys.length !== nextKeys.length) {
+        return false;
+      }
+      if (
+        prevKeys.some(
+          // @ts-expect-error - key is a string
+          (key) => prevProps.components?.[key] !== nextProps.components?.[key]
+        )
+      ) {
         return false;
       }
     }
@@ -154,8 +179,10 @@ const hashString = (str: string): string => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
+    // biome-ignore lint/suspicious/noBitwiseOperators: "Required"
+    hash = (hash << 5) - hash + char;
+    // biome-ignore lint/suspicious/noBitwiseOperators: "Required"
+    hash &= hash; // Convert to 32bit integer
   }
   return Math.abs(hash).toString(36);
 };
@@ -180,7 +207,7 @@ export const Streamdown = memo(
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
     const generatedId = useId();
-    const [isPending, startTransition] = useTransition();
+    const [_isPending, startTransition] = useTransition();
     const [displayBlocks, setDisplayBlocks] = useState<string[]>([]);
 
     const blocks = useMemo(
@@ -206,7 +233,10 @@ export const Streamdown = memo(
     // Generate stable keys based on content hash + index
     // This prevents re-renders when content doesn't change but still handles position changes
     const blockKeys = useMemo(
-      () => blocksToRender.map((block, idx) => `${generatedId}-${hashString(block)}-${idx}`),
+      () =>
+        blocksToRender.map(
+          (block, idx) => `${generatedId}-${hashString(block)}-${idx}`
+        ),
       [blocksToRender, generatedId]
     );
 
@@ -276,9 +306,7 @@ export const Streamdown = memo(
               key={blockKeys[index]}
               rehypePlugins={rehypePlugins}
               remarkPlugins={remarkPlugins}
-              shouldParseIncompleteMarkdown={
-                shouldParseIncompleteMarkdown
-              }
+              shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
               urlTransform={urlTransform}
               {...props}
             />
