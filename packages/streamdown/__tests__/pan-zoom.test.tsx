@@ -1,4 +1,4 @@
-import { fireEvent, render } from "@testing-library/react";
+import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { PanZoom } from "../lib/mermaid/pan-zoom";
 
@@ -54,7 +54,10 @@ describe("PanZoom", () => {
 
     const initialTransform = content?.getAttribute("style");
 
-    fireEvent.click(zoomInButton!);
+    expect(zoomInButton).toBeTruthy();
+    if (zoomInButton) {
+      fireEvent.click(zoomInButton);
+    }
 
     const newTransform = content?.getAttribute("style");
     expect(newTransform).not.toBe(initialTransform);
@@ -68,7 +71,10 @@ describe("PanZoom", () => {
     );
 
     const zoomOutButton = container.querySelector('button[title="Zoom out"]');
-    fireEvent.click(zoomOutButton!);
+    expect(zoomOutButton).toBeTruthy();
+    if (zoomOutButton) {
+      fireEvent.click(zoomOutButton);
+    }
 
     const content = container.querySelector('[role="application"]');
     const transform = content?.getAttribute("style");
@@ -90,10 +96,16 @@ describe("PanZoom", () => {
     const content = container.querySelector('[role="application"]');
 
     // Zoom in first
-    fireEvent.click(zoomInButton!);
+    expect(zoomInButton).toBeTruthy();
+    if (zoomInButton) {
+      fireEvent.click(zoomInButton);
+    }
 
     // Then reset
-    fireEvent.click(resetButton!);
+    expect(resetButton).toBeTruthy();
+    if (resetButton) {
+      fireEvent.click(resetButton);
+    }
 
     const transform = content?.getAttribute("style");
     expect(transform).toContain("scale(1)");
@@ -155,7 +167,10 @@ describe("PanZoom", () => {
     const content = container.querySelector('[role="application"]');
     const initialCursor = container.firstElementChild?.getAttribute("style");
 
-    fireEvent.pointerDown(content!, { button: 1, clientX: 100, clientY: 100 });
+    expect(content).toBeTruthy();
+    if (content) {
+      fireEvent.pointerDown(content, { button: 1, clientX: 100, clientY: 100 });
+    }
 
     const newCursor = container.firstElementChild?.getAttribute("style");
     expect(newCursor).toBe(initialCursor);
@@ -182,7 +197,7 @@ describe("PanZoom", () => {
     expect(container.firstElementChild?.className).toContain("w-full");
   });
 
-  it("should handle wheel events for zoom", () => {
+  it("should handle wheel events for zoom", async () => {
     const { container } = render(
       <PanZoom>
         <div>Content</div>
@@ -199,11 +214,15 @@ describe("PanZoom", () => {
       cancelable: true,
     });
 
-    containerDiv?.dispatchEvent(wheelEvent);
+    act(() => {
+      containerDiv?.dispatchEvent(wheelEvent);
+    });
 
-    // Check that zoom changed (transform includes scale > 1)
-    const transform = content?.getAttribute("style");
-    expect(transform).toBeDefined();
+    // Wait for state update to complete
+    await waitFor(() => {
+      const transform = content?.getAttribute("style");
+      expect(transform).toBeDefined();
+    });
   });
 
   it("should use initial zoom value", () => {
@@ -227,7 +246,10 @@ describe("PanZoom", () => {
     );
 
     const zoomInButton = container.querySelector('button[title="Zoom in"]');
-    fireEvent.click(zoomInButton!);
+    expect(zoomInButton).toBeTruthy();
+    if (zoomInButton) {
+      fireEvent.click(zoomInButton);
+    }
 
     const content = container.querySelector('[role="application"]');
     const transform = content?.getAttribute("style");

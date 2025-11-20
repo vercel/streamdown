@@ -1,7 +1,15 @@
 "use client";
 
 import type { MermaidConfig } from "mermaid";
-import { createContext, memo, useEffect, useId, useMemo } from "react";
+import {
+  createContext,
+  memo,
+  useEffect,
+  useId,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import { harden } from "rehype-harden";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
@@ -13,7 +21,6 @@ import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
 import { Markdown, type Options } from "./lib/markdown";
-import { MermaidContext } from "./lib/mermaid";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
@@ -21,7 +28,6 @@ import { cn } from "./lib/utils";
 export type { MermaidConfig } from "mermaid";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { defaultUrlTransform } from "./lib/markdown";
-export { MermaidContext } from "./lib/mermaid";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 
@@ -83,23 +89,30 @@ export const defaultRemarkPlugins: Record<string, Pluggable> = {
   cjkFriendlyGfmStrikethrough: [remarkCjkFriendlyGfmStrikethrough, {}],
 } as const;
 
-export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
-  "github-light" as BundledTheme,
-  "github-dark" as BundledTheme,
-]);
+// Stable plugin arrays for cache efficiency - created once at module level
+const defaultRehypePluginsArray = Object.values(defaultRehypePlugins);
+const defaultRemarkPluginsArray = Object.values(defaultRemarkPlugins);
 
-export const ControlsContext = createContext<ControlsConfig>(true);
-
-export type StreamdownRuntimeContextType = {
+// Combined context for better performance - reduces React tree depth from 5 nested providers to 1
+export type StreamdownContextType = {
+  shikiTheme: [BundledTheme, BundledTheme];
+  controls: ControlsConfig;
   isAnimating: boolean;
+  mode: "static" | "streaming";
+  mermaid?: MermaidOptions;
 };
 
-export const StreamdownRuntimeContext =
-  createContext<StreamdownRuntimeContextType>({
-    isAnimating: false,
-  });
+const defaultStreamdownContext: StreamdownContextType = {
+  shikiTheme: ["github-light" as BundledTheme, "github-dark" as BundledTheme],
+  controls: true,
+  isAnimating: false,
+  mode: "streaming",
+  mermaid: undefined,
+};
 
-export const ModeContext = createContext<"static" | "streaming">("streaming");
+export const StreamdownContext = createContext<StreamdownContextType>(
+  defaultStreamdownContext
+);
 
 type BlockProps = Options & {
   content: string;
@@ -119,7 +132,57 @@ export const Block = memo(
 
     return <Markdown {...props}>{parsedContent}</Markdown>;
   },
-  (prevProps, nextProps) => prevProps.content === nextProps.content
+  (prevProps, nextProps) => {
+    // Deep comparison for better memoization
+    if (prevProps.content !== nextProps.content) {
+      return false;
+    }
+    if (
+      prevProps.shouldParseIncompleteMarkdown !==
+      nextProps.shouldParseIncompleteMarkdown
+    ) {
+      return false;
+    }
+    if (prevProps.index !== nextProps.index) {
+      return false;
+    }
+
+    // Check if components object changed (shallow comparison)
+    if (prevProps.components !== nextProps.components) {
+      // If references differ, check if keys are the same
+      const prevKeys = Object.keys(prevProps.components || {});
+      const nextKeys = Object.keys(nextProps.components || {});
+
+      if (prevKeys.length !== nextKeys.length) {
+        return false;
+      }
+      if (
+        prevKeys.some(
+          // @ts-expect-error - key is a string
+          (key) => prevProps.components?.[key] !== nextProps.components?.[key]
+        )
+      ) {
+        return false;
+      }
+    }
+
+    // Check if rehypePlugins changed (reference comparison)
+    if (prevProps.rehypePlugins !== nextProps.rehypePlugins) {
+      return false;
+    }
+
+    // Check if remarkPlugins changed (reference comparison)
+    if (prevProps.remarkPlugins !== nextProps.remarkPlugins) {
+      return false;
+    }
+
+    // Check if urlTransform changed (reference comparison)
+    if (prevProps.urlTransform !== nextProps.urlTransform) {
+      return false;
+    }
+
+    return true;
+  }
 );
 
 Block.displayName = "Block";
@@ -129,14 +192,27 @@ const defaultShikiTheme: [BundledTheme, BundledTheme] = [
   "github-dark",
 ];
 
+// Simple hash function for stable keys
+const hashString = (str: string): string => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    // biome-ignore lint/suspicious/noBitwiseOperators: "Required"
+    hash = (hash << 5) - hash + char;
+    // biome-ignore lint/suspicious/noBitwiseOperators: "Required"
+    hash &= hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(36);
+};
+
 export const Streamdown = memo(
   ({
     children,
     mode = "streaming",
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     components,
-    rehypePlugins = Object.values(defaultRehypePlugins),
-    remarkPlugins = Object.values(defaultRemarkPlugins),
+    rehypePlugins = defaultRehypePluginsArray,
+    remarkPlugins = defaultRemarkPluginsArray,
     className,
     shikiTheme = defaultShikiTheme,
     mermaid,
@@ -149,12 +225,59 @@ export const Streamdown = memo(
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
     const generatedId = useId();
+    const [_isPending, startTransition] = useTransition();
+    const [displayBlocks, setDisplayBlocks] = useState<string[]>([]);
+
     const blocks = useMemo(
       () =>
         parseMarkdownIntoBlocksFn(typeof children === "string" ? children : ""),
       [children, parseMarkdownIntoBlocksFn]
     );
-    const runtimeContext = useMemo(() => ({ isAnimating }), [isAnimating]);
+
+    // Use transition for block updates in streaming mode to avoid blocking UI
+    useEffect(() => {
+      if (mode === "streaming") {
+        startTransition(() => {
+          setDisplayBlocks(blocks);
+        });
+      } else {
+        setDisplayBlocks(blocks);
+      }
+    }, [blocks, mode]);
+
+    // Use displayBlocks for rendering to leverage useTransition
+    const blocksToRender = mode === "streaming" ? displayBlocks : blocks;
+
+    // Generate stable keys based on content hash + index
+    // This prevents re-renders when content doesn't change but still handles position changes
+    const blockKeys = useMemo(
+      () =>
+        blocksToRender.map(
+          (block, idx) => `${generatedId}-${hashString(block)}-${idx}`
+        ),
+      [blocksToRender, generatedId]
+    );
+
+    // Combined context value - single object reduces React tree overhead
+    const contextValue = useMemo<StreamdownContextType>(
+      () => ({
+        shikiTheme,
+        controls,
+        isAnimating,
+        mode,
+        mermaid,
+      }),
+      [shikiTheme, controls, isAnimating, mode, mermaid]
+    );
+
+    // Memoize merged components to avoid recreating on every render
+    const mergedComponents = useMemo(
+      () => ({
+        ...defaultComponents,
+        ...components,
+      }),
+      [components]
+    );
 
     useEffect(() => {
       if (
@@ -173,64 +296,41 @@ export const Streamdown = memo(
     // Static mode: simple rendering without streaming features
     if (mode === "static") {
       return (
-        <ModeContext.Provider value={mode}>
-          <ShikiThemeContext.Provider value={shikiTheme}>
-            <MermaidContext.Provider value={mermaid}>
-              <ControlsContext.Provider value={controls}>
-                <div className={cn("space-y-4", className)}>
-                  <Markdown
-                    components={{
-                      ...defaultComponents,
-                      ...components,
-                    }}
-                    rehypePlugins={rehypePlugins}
-                    remarkPlugins={remarkPlugins}
-                    urlTransform={urlTransform}
-                    {...props}
-                  >
-                    {children}
-                  </Markdown>
-                </div>
-              </ControlsContext.Provider>
-            </MermaidContext.Provider>
-          </ShikiThemeContext.Provider>
-        </ModeContext.Provider>
+        <StreamdownContext.Provider value={contextValue}>
+          <div className={cn("space-y-4", className)}>
+            <Markdown
+              components={mergedComponents}
+              rehypePlugins={rehypePlugins}
+              remarkPlugins={remarkPlugins}
+              urlTransform={urlTransform}
+              {...props}
+            >
+              {children}
+            </Markdown>
+          </div>
+        </StreamdownContext.Provider>
       );
     }
 
     // Streaming mode: parse into blocks with memoization and incomplete markdown handling
     return (
-      <ModeContext.Provider value={mode}>
-        <ShikiThemeContext.Provider value={shikiTheme}>
-          <MermaidContext.Provider value={mermaid}>
-            <ControlsContext.Provider value={controls}>
-              <StreamdownRuntimeContext.Provider value={runtimeContext}>
-                <div className={cn("space-y-4", className)}>
-                  {blocks.map((block, index) => (
-                    <BlockComponent
-                      components={{
-                        ...defaultComponents,
-                        ...components,
-                      }}
-                      content={block}
-                      index={index}
-                      // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-                      key={`${generatedId}-block-${index}`}
-                      rehypePlugins={rehypePlugins}
-                      remarkPlugins={remarkPlugins}
-                      shouldParseIncompleteMarkdown={
-                        shouldParseIncompleteMarkdown
-                      }
-                      urlTransform={urlTransform}
-                      {...props}
-                    />
-                  ))}
-                </div>
-              </StreamdownRuntimeContext.Provider>
-            </ControlsContext.Provider>
-          </MermaidContext.Provider>
-        </ShikiThemeContext.Provider>
-      </ModeContext.Provider>
+      <StreamdownContext.Provider value={contextValue}>
+        <div className={cn("space-y-4", className)}>
+          {blocksToRender.map((block, index) => (
+            <BlockComponent
+              components={mergedComponents}
+              content={block}
+              index={index}
+              key={blockKeys[index]}
+              rehypePlugins={rehypePlugins}
+              remarkPlugins={remarkPlugins}
+              shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
+              urlTransform={urlTransform}
+              {...props}
+            />
+          ))}
+        </div>
+      </StreamdownContext.Provider>
     );
   },
   (prevProps, nextProps) =>

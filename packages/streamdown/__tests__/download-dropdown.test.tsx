@@ -1,6 +1,6 @@
 import { fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { StreamdownRuntimeContext } from "../index";
+import { StreamdownContext } from "../index";
 import {
   TableDownloadButton,
   TableDownloadDropdown,
@@ -57,9 +57,16 @@ describe("TableDownloadButton", () => {
 
   it("should render button with default icon", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -70,11 +77,18 @@ describe("TableDownloadButton", () => {
 
   it("should render button with custom children", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton>
           <span>Custom Download</span>
         </TableDownloadButton>
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -83,9 +97,16 @@ describe("TableDownloadButton", () => {
 
   it("should be disabled when animating", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: true,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -107,7 +128,9 @@ describe("TableDownloadButton", () => {
     const createElementSpy = vi
       .spyOn(document, "createElement")
       .mockImplementation((tag) => {
-        if (tag === "a") return mockAnchor;
+        if (tag === "a") {
+          return mockAnchor;
+        }
         return originalCreateElement(tag);
       });
     const appendChildSpy = vi
@@ -121,7 +144,9 @@ describe("TableDownloadButton", () => {
       .mockReturnValue("blob:mock");
     const revokeObjectURLSpy = vi
       .spyOn(URL, "revokeObjectURL")
-      .mockImplementation(() => {});
+      .mockImplementation(() => {
+        // Intentionally empty mock
+      });
 
     // Create wrapper and render button inside it properly
     const wrapper = document.createElement("div");
@@ -133,14 +158,24 @@ describe("TableDownloadButton", () => {
     wrapper.appendChild(buttonDiv);
 
     render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton onDownload={onDownload} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: buttonDiv }
     );
 
     const button = buttonDiv.querySelector("button");
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(onDownload).toHaveBeenCalled();
 
@@ -166,7 +201,9 @@ describe("TableDownloadButton", () => {
     const createElementSpy = vi
       .spyOn(document, "createElement")
       .mockImplementation((tag) => {
-        if (tag === "a") return mockAnchor;
+        if (tag === "a") {
+          return mockAnchor;
+        }
         return originalCreateElement(tag);
       });
     const appendChildSpy = vi
@@ -180,7 +217,9 @@ describe("TableDownloadButton", () => {
       .mockReturnValue("blob:mock");
     const revokeObjectURLSpy = vi
       .spyOn(URL, "revokeObjectURL")
-      .mockImplementation(() => {});
+      .mockImplementation(() => {
+        // Intentionally empty mock
+      });
 
     // Create wrapper and render button inside it properly
     const wrapper = document.createElement("div");
@@ -192,16 +231,26 @@ describe("TableDownloadButton", () => {
     wrapper.appendChild(buttonDiv);
 
     render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton format="markdown" onDownload={onDownload} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: buttonDiv }
     );
 
     const button = buttonDiv.querySelector("button");
     expect(button?.getAttribute("title")).toContain("MARKDOWN");
 
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(onDownload).toHaveBeenCalled();
 
@@ -227,7 +276,9 @@ describe("TableDownloadButton", () => {
     const createElementSpy = vi
       .spyOn(document, "createElement")
       .mockImplementation((tag) => {
-        if (tag === "a") return mockAnchor;
+        if (tag === "a") {
+          return mockAnchor;
+        }
         return originalCreateElement(tag);
       });
     const appendChildSpy = vi
@@ -241,7 +292,9 @@ describe("TableDownloadButton", () => {
       .mockReturnValue("blob:mock");
     const revokeObjectURLSpy = vi
       .spyOn(URL, "revokeObjectURL")
-      .mockImplementation(() => {});
+      .mockImplementation(() => {
+        // Intentionally empty mock
+      });
 
     // Create wrapper and render button inside it properly
     const wrapper = document.createElement("div");
@@ -253,14 +306,24 @@ describe("TableDownloadButton", () => {
     wrapper.appendChild(buttonDiv);
 
     render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton filename="custom-table" onDownload={onDownload} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: buttonDiv }
     );
 
     const button = buttonDiv.querySelector("button");
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(onDownload).toHaveBeenCalled();
 
@@ -280,14 +343,24 @@ describe("TableDownloadButton", () => {
     document.body.appendChild(buttonDiv);
 
     render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton onError={onError} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: buttonDiv }
     );
 
     const button = buttonDiv.querySelector("button");
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(onError).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -300,9 +373,16 @@ describe("TableDownloadButton", () => {
 
   it("should apply custom className", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton className="custom-button-class" />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -347,9 +427,16 @@ describe("TableDownloadDropdown", () => {
 
   it("should render dropdown button", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -359,11 +446,18 @@ describe("TableDownloadDropdown", () => {
 
   it("should render custom children", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown>
           <span>Custom Text</span>
         </TableDownloadDropdown>
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -372,9 +466,16 @@ describe("TableDownloadDropdown", () => {
 
   it("should be disabled when animating", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: true,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -384,9 +485,16 @@ describe("TableDownloadDropdown", () => {
 
   it("should toggle dropdown on button click", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -396,24 +504,39 @@ describe("TableDownloadDropdown", () => {
     expect(container.querySelector(".absolute")).toBeFalsy();
 
     // Click to open
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
     expect(container.querySelector(".absolute")).toBeTruthy();
 
     // Click to close
-    fireEvent.click(button!);
+    if (button) {
+      fireEvent.click(button);
+    }
     expect(container.querySelector(".absolute")).toBeFalsy();
   });
 
   it("should show CSV and Markdown options when open", () => {
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
     const button = container.querySelector('button[title="Download table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(getByText("CSV")).toBeTruthy();
     expect(getByText("Markdown")).toBeTruthy();
@@ -428,14 +551,24 @@ describe("TableDownloadDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown onDownload={onDownload} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: dropdownContainer }
     );
 
     const button = container.querySelector('button[title="Download table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     fireEvent.click(csvButton);
@@ -459,14 +592,24 @@ describe("TableDownloadDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown onDownload={onDownload} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: dropdownContainer }
     );
 
     const button = container.querySelector('button[title="Download table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const markdownButton = getByText("Markdown");
     fireEvent.click(markdownButton);
@@ -483,14 +626,24 @@ describe("TableDownloadDropdown", () => {
 
   it("should close dropdown on outside click", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
     const button = container.querySelector('button[title="Download table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(container.querySelector(".absolute")).toBeTruthy();
 
@@ -508,14 +661,24 @@ describe("TableDownloadDropdown", () => {
     document.body.appendChild(dropdownDiv);
 
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown onError={onError} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: dropdownDiv }
     );
 
     const button = container.querySelector('button[title="Download table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     fireEvent.click(csvButton);
@@ -531,9 +694,16 @@ describe("TableDownloadDropdown", () => {
 
   it("should apply custom className", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown className="custom-dropdown-class" />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -545,9 +715,16 @@ describe("TableDownloadDropdown", () => {
     const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
 
     const { unmount } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 

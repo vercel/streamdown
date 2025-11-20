@@ -8,8 +8,17 @@ import {
 } from "react";
 import type { BundledLanguage } from "shiki";
 import { useThrottledDebounce } from "../../hooks/use-throttled-debouce";
-import { ModeContext, ShikiThemeContext } from "../../index";
+import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
+import {
+  codeBlockClassName,
+  darkModeClassNames,
+  lineDiffClassNames,
+  lineFocusedClassNames,
+  lineHighlightClassNames,
+  lineNumberClassNames,
+  wordHighlightClassNames,
+} from "./classnames";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
 import { highlighterManager } from "./highlight-manager";
@@ -33,9 +42,8 @@ export const CodeBlock = ({
   preClassName,
   ...rest
 }: CodeBlockProps) => {
-  const mode = useContext(ModeContext);
+  const { shikiTheme } = useContext(StreamdownContext);
   const [html, setHtml] = useState<string>("");
-  const [darkHtml, setDarkHtml] = useState<string>("");
   const [lastHighlightedCode, setLastHighlightedCode] = useState("");
   const [incompleteLine, setIncompleteLine] = useState("");
   const codeToHighlight = useThrottledDebounce(code);
@@ -43,13 +51,14 @@ export const CodeBlock = ({
   const mounted = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastHighlightTime = useRef(0);
-  const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
+  const [lightTheme, darkTheme] = shikiTheme;
 
   useEffect(() => {
     highlighterManager.initializeHighlighters([lightTheme, darkTheme]);
   }, [lightTheme, darkTheme]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: "adding lastHighlightedCode to dependency array will trigger re-runs"
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Required"
   useEffect(() => {
     mounted.current = true;
 
@@ -64,33 +73,6 @@ export const CodeBlock = ({
       clearTimeout(timeoutRef.current);
     }
 
-    // Static mode: simple, immediate highlighting without streaming optimizations
-    if (mode === "static") {
-      if (codeToHighlight && codeToHighlight !== lastHighlightedCode) {
-        highlighterManager
-          .highlightCode(codeToHighlight, language, preClassName, signal)
-          .then(([light, dark]) => {
-            if (mounted.current && !signal.aborted) {
-              setHtml(light);
-              setDarkHtml(dark);
-              setLastHighlightedCode(codeToHighlight);
-              setIncompleteLine("");
-            }
-          })
-          .catch((err) => {
-            // Silently ignore AbortError
-            if (err.name !== "AbortError") {
-              throw err;
-            }
-          });
-      }
-      return () => {
-        mounted.current = false;
-        abortControllerRef.current?.abort();
-      };
-    }
-
-    // Streaming mode: complex highlighting with incremental updates and throttling
     const [completeCode, currentIncompleteLine] =
       splitCurrentIncompleteLineFromCode(codeToHighlight);
 
@@ -112,12 +94,11 @@ export const CodeBlock = ({
         lastHighlightTime.current = now;
         highlighterManager
           .highlightCode(completeCode, language, preClassName, signal)
-          .then(([light, dark]) => {
+          .then((highlightedHtml) => {
             if (mounted.current && !signal.aborted) {
               // Use startTransition to mark these updates as non-urgent
               startTransition(() => {
-                setHtml(light);
-                setDarkHtml(dark);
+                setHtml(highlightedHtml);
                 setLastHighlightedCode(completeCode);
                 setIncompleteLine(currentIncompleteLine);
               });
@@ -147,12 +128,11 @@ export const CodeBlock = ({
       ) {
         highlighterManager
           .highlightCode(codeToHighlight, language, preClassName, signal)
-          .then(([light, dark]) => {
+          .then((highlightedHtml) => {
             if (mounted.current && !signal.aborted) {
               // Use startTransition to mark these updates as non-urgent
               startTransition(() => {
-                setHtml(light);
-                setDarkHtml(dark);
+                setHtml(highlightedHtml);
                 setLastHighlightedCode(codeToHighlight);
                 setIncompleteLine("");
               });
@@ -170,7 +150,7 @@ export const CodeBlock = ({
       mounted.current = false;
       abortControllerRef.current?.abort();
     };
-  }, [codeToHighlight, language, preClassName, mode]);
+  }, [codeToHighlight, language, preClassName]);
 
   const incompleteLineHtml = incompleteLine
     ? `<span class="line"><span>${escapeHtml(incompleteLine)}</span></span>`
@@ -184,32 +164,25 @@ export const CodeBlock = ({
         data-language={language}
       >
         <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
-        <div className="w-full">
-          <div className="min-w-full">
-            <div
-              className={cn("overflow-x-auto dark:hidden", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{
-                __html: incompleteLineHtml ? html + incompleteLineHtml : html,
-              }}
-              data-code-block
-              data-language={language}
-              {...rest}
-            />
-            <div
-              className={cn("hidden overflow-x-auto dark:block", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{
-                __html: incompleteLineHtml
-                  ? darkHtml + incompleteLineHtml
-                  : darkHtml,
-              }}
-              data-code-block
-              data-language={language}
-              {...rest}
-            />
-          </div>
-        </div>
+        <div
+          className={cn(
+            lineNumberClassNames,
+            codeBlockClassName,
+            darkModeClassNames,
+            lineHighlightClassNames,
+            lineDiffClassNames,
+            lineFocusedClassNames,
+            wordHighlightClassNames,
+            className
+          )}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+          dangerouslySetInnerHTML={{
+            __html: incompleteLineHtml ? html + incompleteLineHtml : html,
+          }}
+          data-code-block
+          data-language={language}
+          {...rest}
+        />
       </div>
     </CodeBlockContext.Provider>
   );

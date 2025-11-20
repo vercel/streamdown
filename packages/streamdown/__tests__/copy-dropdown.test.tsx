@@ -1,6 +1,6 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { StreamdownRuntimeContext } from "../index";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { StreamdownContext } from "../index";
 import { TableCopyDropdown } from "../lib/table/copy-dropdown";
 
 describe("TableCopyDropdown", () => {
@@ -32,7 +32,10 @@ describe("TableCopyDropdown", () => {
 
     // Mock ClipboardItem
     global.ClipboardItem = class ClipboardItem {
-      constructor(public data: Record<string, Blob>) {}
+      data: Record<string, Blob>;
+      constructor(data: Record<string, Blob>) {
+        this.data = data;
+      }
     } as any;
 
     // Mock clipboard API
@@ -51,9 +54,16 @@ describe("TableCopyDropdown", () => {
 
   it("should render dropdown button", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -63,11 +73,18 @@ describe("TableCopyDropdown", () => {
 
   it("should render custom children", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown>
           <span>Custom Copy</span>
         </TableCopyDropdown>
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -76,9 +93,16 @@ describe("TableCopyDropdown", () => {
 
   it("should be disabled when animating", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: true,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -88,9 +112,16 @@ describe("TableCopyDropdown", () => {
 
   it("should toggle dropdown on button click", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -100,24 +131,39 @@ describe("TableCopyDropdown", () => {
     expect(container.querySelector(".absolute")).toBeFalsy();
 
     // Click to open
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
     expect(container.querySelector(".absolute")).toBeTruthy();
 
     // Click to close
-    fireEvent.click(button!);
+    if (button) {
+      fireEvent.click(button);
+    }
     expect(container.querySelector(".absolute")).toBeFalsy();
   });
 
   it("should show CSV and TSV options when open", () => {
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(getByText("CSV")).toBeTruthy();
     expect(getByText("TSV")).toBeTruthy();
@@ -131,21 +177,36 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown onCopy={onCopy} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: dropdownContainer }
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
-    await fireEvent.click(csvButton);
+    fireEvent.click(csvButton);
 
     await waitFor(() => {
       expect(navigator.clipboard.write).toHaveBeenCalled();
       expect(onCopy).toHaveBeenCalledWith("csv");
+    });
+
+    // Wait for state updates to complete
+    await waitFor(() => {
+      expect(container.querySelector(".absolute")).toBeFalsy();
     });
 
     mockWrapper.removeChild(dropdownContainer);
@@ -159,21 +220,36 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown onCopy={onCopy} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: dropdownContainer }
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const tsvButton = getByText("TSV");
-    await fireEvent.click(tsvButton);
+    fireEvent.click(tsvButton);
 
     await waitFor(() => {
       expect(navigator.clipboard.write).toHaveBeenCalled();
       expect(onCopy).toHaveBeenCalledWith("tsv");
+    });
+
+    // Wait for state updates to complete
+    await waitFor(() => {
+      expect(container.querySelector(".absolute")).toBeFalsy();
     });
 
     mockWrapper.removeChild(dropdownContainer);
@@ -184,17 +260,27 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: dropdownContainer }
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
-    await fireEvent.click(csvButton);
+    fireEvent.click(csvButton);
 
     await waitFor(() => {
       // After copying, the icon should change (we can check if the button children changed)
@@ -202,6 +288,11 @@ describe("TableCopyDropdown", () => {
         'button[title="Copy table"]'
       );
       expect(buttonElement).toBeTruthy();
+    });
+
+    // Wait for state updates to complete
+    await waitFor(() => {
+      expect(container.querySelector(".absolute")).toBeFalsy();
     });
 
     mockWrapper.removeChild(dropdownContainer);
@@ -212,19 +303,33 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: dropdownContainer }
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(container.querySelector(".absolute")).toBeTruthy();
 
     const csvButton = getByText("CSV");
-    await fireEvent.click(csvButton);
+    fireEvent.click(csvButton);
+
+    await waitFor(() => {
+      expect(navigator.clipboard.write).toHaveBeenCalled();
+    });
 
     await waitFor(() => {
       expect(container.querySelector(".absolute")).toBeFalsy();
@@ -235,14 +340,24 @@ describe("TableCopyDropdown", () => {
 
   it("should close dropdown on outside click", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(container.querySelector(".absolute")).toBeTruthy();
 
@@ -260,14 +375,24 @@ describe("TableCopyDropdown", () => {
     document.body.appendChild(dropdownDiv);
 
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown onError={onError} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: dropdownDiv }
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     await fireEvent.click(csvButton);
@@ -297,14 +422,24 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown onError={onError} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: dropdownContainer }
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     await fireEvent.click(csvButton);
@@ -340,14 +475,24 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown onError={onError} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: dropdownContainer }
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     await fireEvent.click(csvButton);
@@ -365,9 +510,16 @@ describe("TableCopyDropdown", () => {
 
   it("should apply custom className", () => {
     const { container } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown className="custom-copy-class" />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -380,20 +532,35 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown timeout={100} />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: dropdownContainer }
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
-    await fireEvent.click(csvButton);
+    fireEvent.click(csvButton);
 
     await waitFor(() => {
       expect(navigator.clipboard.write).toHaveBeenCalled();
+    });
+
+    // Wait for state updates to complete
+    await waitFor(() => {
+      expect(container.querySelector(".absolute")).toBeFalsy();
     });
 
     // Just verify that the timeout value was accepted (component rendered without error)
@@ -406,9 +573,16 @@ describe("TableCopyDropdown", () => {
     const clearTimeoutSpy = vi.spyOn(window, "clearTimeout");
 
     const { unmount } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 
@@ -421,9 +595,16 @@ describe("TableCopyDropdown", () => {
     const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
 
     const { unmount } = render(
-      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
-      </StreamdownRuntimeContext.Provider>,
+      </StreamdownContext.Provider>,
       { container: mockWrapper }
     );
 

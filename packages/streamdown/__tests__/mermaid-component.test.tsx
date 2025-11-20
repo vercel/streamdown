@@ -1,6 +1,7 @@
-import { render, waitFor } from "@testing-library/react";
+import { act, render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Mermaid, MermaidContext } from "../lib/mermaid/index";
+import { StreamdownContext } from "../index";
+import { Mermaid } from "../lib/mermaid/index";
 
 // Mock the mermaid utils
 vi.mock("../lib/mermaid/utils", () => ({
@@ -14,14 +15,45 @@ vi.mock("../lib/mermaid/utils", () => ({
 describe("Mermaid Component", () => {
   const simpleChart = "graph TD;\n    A-->B;";
 
-  it("should render loading state initially", () => {
-    const { container } = render(<Mermaid chart={simpleChart} />);
+  const defaultContext = {
+    shikiTheme: ["github-light", "github-dark"] as [string, string],
+    controls: true,
+    isAnimating: false,
+    mode: "streaming" as const,
+  };
+
+  const renderWithContext = (ui: React.ReactElement, contextOverrides = {}) => {
+    const contextValue = { ...defaultContext, ...contextOverrides };
+    const result = render(
+      <StreamdownContext.Provider value={contextValue}>
+        {ui}
+      </StreamdownContext.Provider>
+    );
+
+    return {
+      ...result,
+      rerender: (newUi: React.ReactElement) =>
+        result.rerender(
+          <StreamdownContext.Provider value={contextValue}>
+            {newUi}
+          </StreamdownContext.Provider>
+        ),
+    };
+  };
+
+  it("should render loading state initially", async () => {
+    const { container } = renderWithContext(<Mermaid chart={simpleChart} />);
 
     expect(container.textContent).toContain("Loading diagram...");
+
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(container.querySelector("svg")).toBeTruthy();
+    });
   });
 
   it("should render mermaid chart after loading", async () => {
-    const { container } = render(<Mermaid chart={simpleChart} />);
+    const { container } = renderWithContext(<Mermaid chart={simpleChart} />);
 
     await waitFor(() => {
       const svg = container.querySelector("svg");
@@ -30,7 +62,7 @@ describe("Mermaid Component", () => {
   });
 
   it("should apply custom className", async () => {
-    const { container } = render(
+    const { container } = renderWithContext(
       <Mermaid chart={simpleChart} className="custom-mermaid" />
     );
 
@@ -48,7 +80,7 @@ describe("Mermaid Component", () => {
       new Error("Invalid syntax")
     );
 
-    const { container } = render(<Mermaid chart="invalid chart" />);
+    const { container } = renderWithContext(<Mermaid chart="invalid chart" />);
 
     await waitFor(() => {
       expect(container.textContent).toContain("Mermaid Error");
@@ -61,7 +93,7 @@ describe("Mermaid Component", () => {
     // Mock to throw an error
     (initializeMermaid as any).mockRejectedValueOnce(new Error("Parse error"));
 
-    const { container } = render(<Mermaid chart="bad syntax" />);
+    const { container } = renderWithContext(<Mermaid chart="bad syntax" />);
 
     await waitFor(() => {
       const details = container.querySelector("details");
@@ -84,11 +116,9 @@ describe("Mermaid Component", () => {
       retry: () => void;
     }) => <div data-testid="custom-error">Custom Error: {error}</div>;
 
-    const { container } = render(
-      <MermaidContext.Provider value={{ errorComponent: CustomError }}>
-        <Mermaid chart="invalid" />
-      </MermaidContext.Provider>
-    );
+    const { container } = renderWithContext(<Mermaid chart="invalid" />, {
+      mermaid: { errorComponent: CustomError },
+    });
 
     await waitFor(() => {
       const customError = container.querySelector(
@@ -100,7 +130,7 @@ describe("Mermaid Component", () => {
   });
 
   it("should render in fullscreen mode", async () => {
-    const { container } = render(
+    const { container } = renderWithContext(
       <Mermaid chart={simpleChart} fullscreen={true} />
     );
 
@@ -115,7 +145,7 @@ describe("Mermaid Component", () => {
     const { initializeMermaid } = await import("../lib/mermaid/utils");
 
     const config = { theme: "dark" };
-    render(<Mermaid chart={simpleChart} config={config} />);
+    renderWithContext(<Mermaid chart={simpleChart} config={config} />);
 
     await waitFor(() => {
       expect(initializeMermaid).toHaveBeenCalledWith(config);
@@ -132,7 +162,9 @@ describe("Mermaid Component", () => {
       }),
     });
 
-    const { container, rerender } = render(<Mermaid chart={simpleChart} />);
+    const { container, rerender } = renderWithContext(
+      <Mermaid chart={simpleChart} />
+    );
 
     await waitFor(() => {
       const svg = container.querySelector('[data-testid="valid-svg"]');
@@ -152,7 +184,7 @@ describe("Mermaid Component", () => {
   });
 
   it("should have aria-label on chart container", async () => {
-    const { container } = render(<Mermaid chart={simpleChart} />);
+    const { container } = renderWithContext(<Mermaid chart={simpleChart} />);
 
     await waitFor(() => {
       const chartContainer = container.querySelector(
@@ -163,7 +195,7 @@ describe("Mermaid Component", () => {
   });
 
   it("should have role img on chart container", async () => {
-    const { container } = render(<Mermaid chart={simpleChart} />);
+    const { container } = renderWithContext(<Mermaid chart={simpleChart} />);
 
     await waitFor(() => {
       const chartContainer = container.querySelector('[role="img"]');
@@ -182,7 +214,7 @@ describe("Mermaid Component", () => {
       render: mockRender,
     });
 
-    const { rerender } = render(<Mermaid chart="graph TD; A-->B" />);
+    const { rerender } = renderWithContext(<Mermaid chart="graph TD; A-->B" />);
 
     await waitFor(() => {
       expect(mockRender).toHaveBeenCalled();
@@ -204,16 +236,25 @@ describe("Mermaid Component", () => {
   });
 
   it("should not show loading indicator when SVG is already loaded", async () => {
-    const { container, rerender } = render(<Mermaid chart={simpleChart} />);
+    const { container, rerender } = renderWithContext(
+      <Mermaid chart={simpleChart} />
+    );
 
     await waitFor(() => {
       expect(container.querySelector("svg")).toBeTruthy();
     });
 
     // Rerender with new chart
-    rerender(<Mermaid chart="graph TD; X-->Y" />);
+    act(() => {
+      rerender(<Mermaid chart="graph TD; X-->Y" />);
+    });
 
     // Should not show loading indicator since we have previous SVG
     expect(container.textContent).not.toContain("Loading diagram...");
+
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(container.querySelector("svg")).toBeTruthy();
+    });
   });
 });

@@ -1,6 +1,6 @@
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
-import { StreamdownRuntimeContext } from "../../index";
+import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
 import {
   extractTableDataFromElement,
@@ -27,7 +27,7 @@ export const TableCopyDropdown = ({
   const [isCopied, setIsCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef(0);
-  const { isAnimating } = useContext(StreamdownRuntimeContext);
+  const { isAnimating } = useContext(StreamdownContext);
 
   const copyTableData = async (format: "csv" | "tsv") => {
     if (typeof window === "undefined" || !navigator?.clipboard?.write) {

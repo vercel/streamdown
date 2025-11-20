@@ -1,7 +1,7 @@
 import { Maximize2Icon, XIcon } from "lucide-react";
 import type { MermaidConfig } from "mermaid";
 import { type ComponentProps, useContext, useEffect, useState } from "react";
-import { StreamdownRuntimeContext } from "../../index";
+import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
 import { Mermaid } from ".";
 
@@ -38,7 +38,7 @@ export const MermaidFullscreenButton = ({
   ...props
 }: MermaidFullscreenButtonProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { isAnimating } = useContext(StreamdownRuntimeContext);
+  const { isAnimating } = useContext(StreamdownContext);
 
   const handleToggle = () => {
     setIsFullscreen(!isFullscreen);

@@ -19,64 +19,66 @@ const hasCompleteCodeBlock = (text: string): boolean => {
   );
 };
 
+// Cache for code block state to avoid recalculating
+let codeBlockCache: boolean[] | null = null;
+let codeBlockCacheText = "";
+
+// Build code block state map for entire text (called once per text)
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "State machine logic for tracking code block boundaries"
+const buildCodeBlockState = (text: string): boolean[] => {
+  const len = text.length;
+  const state = new Array(len).fill(false);
+  let insideMultilineBlock = false;
+  let insideInlineBlock = false;
+
+  for (let i = 0; i < len; i++) {
+    const char = text[i];
+    const next1 = i + 1 < len ? text[i + 1] : "";
+    const next2 = i + 2 < len ? text[i + 2] : "";
+    const prev1 = i > 0 ? text[i - 1] : "";
+    const prev2 = i > 1 ? text[i - 2] : "";
+
+    // Check for triple backticks
+    if (char === "`" && next1 === "`" && next2 === "`") {
+      insideMultilineBlock = !insideMultilineBlock;
+      state[i] = state[i + 1] = state[i + 2] = insideMultilineBlock;
+      i += 2;
+      continue;
+    }
+
+    // Check for single backticks (not part of triple)
+    if (char === "`") {
+      const isPartOfTriple =
+        (next1 === "`" && next2 === "`") ||
+        (prev1 === "`" && next1 === "`") ||
+        (prev2 === "`" && prev1 === "`");
+
+      if (!(isPartOfTriple || insideMultilineBlock)) {
+        insideInlineBlock = !insideInlineBlock;
+      }
+    }
+
+    state[i] = insideMultilineBlock || insideInlineBlock;
+  }
+
+  return state;
+};
+
 // Helper function to check if a position is inside a code block (either inline or multiline)
 const isInsideCodeBlock = (text: string, position: number): boolean => {
-  // Check for multiline code blocks (```)
-  let insideMultilineBlock = false;
-  let currentPos = 0;
-
-  while (currentPos < text.length) {
-    const nextTripleBacktick = text.indexOf("```", currentPos);
-
-    if (nextTripleBacktick === -1 || nextTripleBacktick > position) {
-      // No more code blocks or we've passed the position
-      break;
-    }
-
-    if (nextTripleBacktick <= position) {
-      insideMultilineBlock = !insideMultilineBlock;
-      currentPos = nextTripleBacktick + 3;
-    }
+  // Use cache if text hasn't changed
+  if (codeBlockCacheText !== text) {
+    codeBlockCacheText = text;
+    codeBlockCache = buildCodeBlockState(text);
   }
 
-  if (insideMultilineBlock) {
-    return true;
-  }
-
-  // Check for inline code blocks (`)
-  // We need to count single backticks from the start to the position
-  // Skip triple backticks as they're for multiline blocks
-  let insideInlineBlock = false;
-  for (let i = 0; i < position; i++) {
-    if (text[i] === "`") {
-      // Check if this is part of a triple backtick
-      if (i + 2 < text.length && text[i + 1] === "`" && text[i + 2] === "`") {
-        // Skip triple backticks
-        i += 2;
-        continue;
-      }
-      if (i >= 2 && text[i - 1] === "`" && text[i - 2] === "`") {
-        // Part of triple backtick, already handled
-        continue;
-      }
-      if (
-        i >= 1 &&
-        text[i - 1] === "`" &&
-        i + 1 < text.length &&
-        text[i + 1] === "`"
-      ) {
-        // Middle of triple backtick
-        continue;
-      }
-      // This is a single backtick
-      insideInlineBlock = !insideInlineBlock;
-    }
-  }
-
-  return insideInlineBlock;
+  return codeBlockCache && position < codeBlockCache.length
+    ? codeBlockCache[position]
+    : false;
 };
 
 // Handles incomplete links and images by preserving them with a special marker
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex link/image parsing logic with multiple edge cases"
 const handleIncompleteLinksAndImages = (text: string): string => {
   // First check for incomplete URLs: [text](partial-url or ![text](partial-url without closing )
   // Use string methods instead of regex to avoid ReDoS vulnerability

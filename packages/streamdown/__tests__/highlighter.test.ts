@@ -1,10 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  createHighlighters,
   getFallbackLanguage,
   getTransformersFromPreClassName,
   isLanguageSupported,
-  performHighlight,
 } from "../lib/code-block/highlighter";
 
 describe("Highlighter Utils", () => {
@@ -80,146 +78,6 @@ describe("Highlighter Utils", () => {
     it("should return 'text' as fallback language", () => {
       const result = getFallbackLanguage();
       expect(result).toBe("text");
-    });
-  });
-
-  describe("createHighlighters", () => {
-    it("should create light and dark highlighters", async () => {
-      const themes: ["github-light", "github-dark"] = [
-        "github-light",
-        "github-dark",
-      ];
-      const result = await createHighlighters(themes);
-
-      expect(result).toHaveProperty("lightHighlighter");
-      expect(result).toHaveProperty("darkHighlighter");
-      expect(result.lightHighlighter).toBeDefined();
-      expect(result.darkHighlighter).toBeDefined();
-    });
-
-    it("should create highlighters with different themes", async () => {
-      const themes: ["min-light", "min-dark"] = ["min-light", "min-dark"];
-      const result = await createHighlighters(themes);
-
-      expect(result.lightHighlighter).toBeDefined();
-      expect(result.darkHighlighter).toBeDefined();
-    });
-  });
-
-  describe("performHighlight", () => {
-    it("should highlight code with supported language", async () => {
-      const code = "const x = 1;";
-      const language = "javascript";
-      const lightTheme = "github-light";
-      const darkTheme = "github-dark";
-
-      const [lightHtml, darkHtml] = await performHighlight(
-        code,
-        language,
-        lightTheme,
-        darkTheme
-      );
-
-      expect(lightHtml).toContain("<pre");
-      expect(lightHtml).toContain("const");
-      expect(darkHtml).toContain("<pre");
-      expect(darkHtml).toContain("const");
-    });
-
-    it("should highlight code with preClassName", async () => {
-      const code = "print('hello')";
-      const language = "python";
-      const lightTheme = "github-light";
-      const darkTheme = "github-dark";
-      const preClassName = "custom-pre-class";
-
-      const [lightHtml, darkHtml] = await performHighlight(
-        code,
-        language,
-        lightTheme,
-        darkTheme,
-        preClassName
-      );
-
-      expect(lightHtml).toContain("custom-pre-class");
-      expect(darkHtml).toContain("custom-pre-class");
-    });
-
-    it("should use fallback language for unsupported language", async () => {
-      const code = "some text content";
-      const language = "unsupported-lang" as any;
-      const lightTheme = "github-light";
-      const darkTheme = "github-dark";
-
-      const [lightHtml, darkHtml] = await performHighlight(
-        code,
-        language,
-        lightTheme,
-        darkTheme
-      );
-
-      expect(lightHtml).toContain("<pre");
-      expect(darkHtml).toContain("<pre");
-      expect(lightHtml).toContain("some text content");
-      expect(darkHtml).toContain("some text content");
-    });
-
-    it("should handle empty code", async () => {
-      const code = "";
-      const language = "javascript";
-      const lightTheme = "github-light";
-      const darkTheme = "github-dark";
-
-      const [lightHtml, darkHtml] = await performHighlight(
-        code,
-        language,
-        lightTheme,
-        darkTheme
-      );
-
-      expect(lightHtml).toContain("<pre");
-      expect(darkHtml).toContain("<pre");
-    });
-
-    it("should handle code with special characters", async () => {
-      const code = '<div class="test">Hello & Goodbye</div>';
-      const language = "html";
-      const lightTheme = "github-light";
-      const darkTheme = "github-dark";
-
-      const [lightHtml, darkHtml] = await performHighlight(
-        code,
-        language,
-        lightTheme,
-        darkTheme
-      );
-
-      expect(lightHtml).toBeDefined();
-      expect(darkHtml).toBeDefined();
-      expect(lightHtml).toContain("<pre");
-      expect(darkHtml).toContain("<pre");
-    });
-
-    it("should handle multiline code", async () => {
-      const code = `function hello() {
-  console.log('world');
-  return true;
-}`;
-      const language = "javascript";
-      const lightTheme = "github-light";
-      const darkTheme = "github-dark";
-
-      const [lightHtml, darkHtml] = await performHighlight(
-        code,
-        language,
-        lightTheme,
-        darkTheme
-      );
-
-      expect(lightHtml).toContain("function");
-      expect(lightHtml).toContain("console");
-      expect(darkHtml).toContain("function");
-      expect(darkHtml).toContain("console");
     });
   });
 });

@@ -1,14 +1,9 @@
 import type { MermaidConfig } from "mermaid";
-import { createContext, useContext, useEffect, useState } from "react";
-import type { MermaidOptions } from "../../index";
+import { useContext, useEffect, useState } from "react";
+import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
 import { PanZoom } from "./pan-zoom";
 import { initializeMermaid } from "./utils";
-
-// Create unified context here to avoid import issues in tests
-export const MermaidContext = createContext<MermaidOptions | undefined>(
-  undefined
-);
 
 type MermaidProps = {
   chart: string;
@@ -28,7 +23,7 @@ export const Mermaid = ({
   const [svgContent, setSvgContent] = useState<string>("");
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
-  const mermaidContext = useContext(MermaidContext);
+  const { mermaid: mermaidContext } = useContext(StreamdownContext);
   const ErrorComponent = mermaidContext?.errorComponent;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"

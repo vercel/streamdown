@@ -35,7 +35,7 @@ const createCharacterChunks = (
     chunks.push(content.substring(0, i));
   }
   // Add final chunk if not already included
-  if (chunks[chunks.length - 1] !== content) {
+  if (chunks.at(-1) !== content) {
     chunks.push(content);
   }
   return chunks;

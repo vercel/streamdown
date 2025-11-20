@@ -6,8 +6,17 @@ import {
   useState,
 } from "react";
 import type { BundledLanguage } from "shiki";
-import { ShikiThemeContext } from "../../index";
+import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
+import {
+  codeBlockClassName,
+  darkModeClassNames,
+  lineDiffClassNames,
+  lineFocusedClassNames,
+  lineHighlightClassNames,
+  lineNumberClassNames,
+  wordHighlightClassNames,
+} from "./classnames";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
 import { highlighterManager } from "./highlight-manager";
@@ -33,11 +42,9 @@ export const CodeBlock = ({
   preClassName,
   ...rest
 }: CodeBlockProps) => {
-  const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
+  const { shikiTheme } = useContext(StreamdownContext);
+  const [lightTheme, darkTheme] = shikiTheme;
   const [html, setHtml] = useState<string>(createPlainHtml(code, preClassName));
-  const [darkHtml, setDarkHtml] = useState<string>(
-    createPlainHtml(code, preClassName)
-  );
   const mounted = useRef(false);
 
   useEffect(() => {
@@ -49,23 +56,19 @@ export const CodeBlock = ({
 
     highlighterManager
       .highlightCode(code, language, preClassName)
-      .then(([light, dark]) => {
+      .then((highlightedHtml) => {
         if (mounted.current) {
-          setHtml(light);
-          setDarkHtml(dark);
+          setHtml(highlightedHtml);
         }
       })
-      .catch((err) => {
-        // Silently ignore AbortError
-        if (err.name !== "AbortError") {
-          throw err;
-        }
+      .catch(() => {
+        // Ignore errors - component may have unmounted
       });
 
     return () => {
       mounted.current = false;
     };
-  }, [code, language, preClassName, lightTheme, darkTheme]);
+  }, [code, language, preClassName]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
@@ -75,26 +78,23 @@ export const CodeBlock = ({
         data-language={language}
       >
         <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
-        <div className="w-full">
-          <div className="min-w-full">
-            <div
-              className={cn("overflow-x-auto dark:hidden", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: html }}
-              data-code-block
-              data-language={language}
-              {...rest}
-            />
-            <div
-              className={cn("hidden overflow-x-auto dark:block", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: darkHtml }}
-              data-code-block
-              data-language={language}
-              {...rest}
-            />
-          </div>
-        </div>
+        <div
+          className={cn(
+            lineNumberClassNames,
+            codeBlockClassName,
+            darkModeClassNames,
+            lineHighlightClassNames,
+            lineDiffClassNames,
+            lineFocusedClassNames,
+            wordHighlightClassNames,
+            className
+          )}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+          dangerouslySetInnerHTML={{ __html: html }}
+          data-code-block
+          data-language={language}
+          {...rest}
+        />
       </div>
     </CodeBlockContext.Provider>
   );

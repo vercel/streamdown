@@ -8,7 +8,7 @@ import {
   useContext,
 } from "react";
 import type { BundledLanguage } from "shiki";
-import { ControlsContext, MermaidContext, ModeContext } from "../index";
+import { StreamdownContext } from "../index";
 import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
@@ -309,7 +309,7 @@ MemoH6.displayName = "MarkdownH6";
 type TableProps = WithNode<JSX.IntrinsicElements["table"]>;
 const MemoTable = memo<TableProps>(
   ({ children, className, node, ...props }: TableProps) => {
-    const controlsConfig = useContext(ControlsContext);
+    const { controls: controlsConfig } = useContext(StreamdownContext);
     const showTableControls = shouldShowControls(controlsConfig, "table");
 
     return (
@@ -596,9 +596,11 @@ const CodeComponent = ({
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
   ExtraProps) => {
   const inline = node?.position?.start.line === node?.position?.end.line;
-  const mermaidContext = useContext(MermaidContext);
-  const controlsConfig = useContext(ControlsContext);
-  const mode = useContext(ModeContext);
+  const {
+    mermaid: mermaidContext,
+    controls: controlsConfig,
+    mode,
+  } = useContext(StreamdownContext);
 
   const CodeBlockComponent = mode === "static" ? StaticCodeBlock : CodeBlock;
 

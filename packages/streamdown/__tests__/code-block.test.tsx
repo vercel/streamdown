@@ -3,7 +3,7 @@ import path from "node:path";
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ShikiThemeContext } from "../index";
+import { StreamdownContext } from "../index";
 import { CodeBlock } from "../lib/code-block";
 import { CodeBlockCopyButton } from "../lib/code-block/copy-button";
 
@@ -186,9 +186,10 @@ describe("CodeBlockCopyButton", () => {
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith("const x = 1;");
 
-    // Fast-forward time
-    act(() => {
+    // Fast-forward time and wait for state update
+    await act(async () => {
       vi.advanceTimersByTime(1000);
+      await Promise.resolve();
     });
 
     // Icon should be reset after timeout
@@ -203,12 +204,19 @@ describe("CodeBlock with multiple languages", () => {
     const jsCode = "console.log('hello world!');";
 
     const { container } = render(
-      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
         <div>
           <CodeBlock code={pythonCode} language="python" />
           <CodeBlock code={jsCode} language="javascript" />
         </div>
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     // Wait for both code blocks to render
@@ -238,12 +246,19 @@ describe("CodeBlock with multiple languages", () => {
     const code2 = "const y = 2;";
 
     const { container } = render(
-      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
         <div>
           <CodeBlock code={code1} language="javascript" />
           <CodeBlock code={code2} language="javascript" />
         </div>
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     await waitFor(
@@ -274,7 +289,14 @@ describe("CodeBlock with multiple languages", () => {
     ];
 
     const { container } = render(
-      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
         <div>
           {languages.map((item) => (
             <CodeBlock
@@ -284,7 +306,7 @@ describe("CodeBlock with multiple languages", () => {
             />
           ))}
         </div>
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     await waitFor(
@@ -306,9 +328,16 @@ describe("CodeBlock with multiple languages", () => {
 
   it("should have data attributes on container, header, and code block elements", async () => {
     const { container } = render(
-      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
         <CodeBlock code="const x = 1;" language="javascript" />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     await waitFor(
@@ -367,9 +396,16 @@ describe("CodeBlock with multiple languages", () => {
     };
 
     const { container } = render(
-      <ShikiThemeContext.Provider value={["github-light", "github-dark"]}>
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
         <StreamingCodeBlock />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     // Simulate streaming by updating in chunks

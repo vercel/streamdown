@@ -1,7 +1,7 @@
 import { DownloadIcon } from "lucide-react";
 import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useRef, useState } from "react";
-import { StreamdownRuntimeContext } from "../../index";
+import { StreamdownContext } from "../../index";
 import { cn, save } from "../utils";
 import { initializeMermaid, svgToPngBlob } from "./utils";
 
@@ -24,7 +24,7 @@ export const MermaidDownloadDropdown = ({
 }: MermaidDownloadDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { isAnimating } = useContext(StreamdownRuntimeContext);
+  const { isAnimating } = useContext(StreamdownContext);
   const downloadMermaid = async (format: "mmd" | "png" | "svg") => {
     try {
       if (format === "mmd") {
