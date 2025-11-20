@@ -1,11 +1,10 @@
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import type { MermaidConfig } from "mermaid";
 import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Mermaid } from "../lib/mermaid";
 import { MermaidDownloadDropdown } from "../lib/mermaid/download-button";
 import { MermaidFullscreenButton } from "../lib/mermaid/fullscreen-button";
-import { PanZoom } from "../lib/mermaid/pan-zoom";
 
 const { saveMock } = vi.hoisted(() => ({
   saveMock: vi.fn(),
@@ -596,5 +595,4 @@ describe("Mermaid", () => {
       });
     });
   });
-
 });

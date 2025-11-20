@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cn, save } from "../lib/utils";
 
 // Setup global URL mocks before any tests run
-if (typeof URL.createObjectURL === 'undefined') {
+if (typeof URL.createObjectURL === "undefined") {
   URL.createObjectURL = vi.fn();
   URL.revokeObjectURL = vi.fn();
 }
@@ -80,8 +80,12 @@ describe("save utility", () => {
   let clickSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    createObjectURLSpy = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock-url");
-    revokeObjectURLSpy = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    createObjectURLSpy = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:mock-url");
+    revokeObjectURLSpy = vi
+      .spyOn(URL, "revokeObjectURL")
+      .mockImplementation(() => {});
     clickSpy = vi.fn();
 
     const mockAnchor = {
@@ -90,9 +94,15 @@ describe("save utility", () => {
       click: clickSpy,
     } as unknown as HTMLAnchorElement;
 
-    createElementSpy = vi.spyOn(document, "createElement").mockReturnValue(mockAnchor);
-    appendChildSpy = vi.spyOn(document.body, "appendChild").mockImplementation(() => mockAnchor);
-    removeChildSpy = vi.spyOn(document.body, "removeChild").mockImplementation(() => mockAnchor);
+    createElementSpy = vi
+      .spyOn(document, "createElement")
+      .mockReturnValue(mockAnchor);
+    appendChildSpy = vi
+      .spyOn(document.body, "appendChild")
+      .mockImplementation(() => mockAnchor);
+    removeChildSpy = vi
+      .spyOn(document.body, "removeChild")
+      .mockImplementation(() => mockAnchor);
   });
 
   afterEach(() => {
@@ -106,9 +116,7 @@ describe("save utility", () => {
 
     save(filename, content, mimeType);
 
-    expect(createObjectURLSpy).toHaveBeenCalledWith(
-      expect.any(Blob)
-    );
+    expect(createObjectURLSpy).toHaveBeenCalledWith(expect.any(Blob));
     expect(createElementSpy).toHaveBeenCalledWith("a");
     expect(appendChildSpy).toHaveBeenCalled();
     expect(clickSpy).toHaveBeenCalled();
@@ -118,7 +126,9 @@ describe("save utility", () => {
 
   it("should create and trigger download with Blob content", () => {
     const filename = "test.json";
-    const content = new Blob(['{"key": "value"}'], { type: "application/json" });
+    const content = new Blob(['{"key": "value"}'], {
+      type: "application/json",
+    });
     const mimeType = "application/json";
 
     save(filename, content, mimeType);
@@ -138,7 +148,8 @@ describe("save utility", () => {
 
     save(filename, content, mimeType);
 
-    const mockAnchor = createElementSpy.mock.results[0].value as HTMLAnchorElement;
+    const mockAnchor = createElementSpy.mock.results[0]
+      .value as HTMLAnchorElement;
     expect(mockAnchor.href).toBe("blob:mock-url");
     expect(mockAnchor.download).toBe(filename);
   });

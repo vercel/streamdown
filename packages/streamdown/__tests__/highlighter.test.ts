@@ -44,7 +44,10 @@ describe("Highlighter Utils", () => {
 
       if (transformer.pre) {
         const result = transformer.pre.call(mockContext, mockNode);
-        expect(mockContext.addClassToHast).toHaveBeenCalledWith(mockNode, "test-class");
+        expect(mockContext.addClassToHast).toHaveBeenCalledWith(
+          mockNode,
+          "test-class"
+        );
         expect(result).toBe(mockNode);
       }
     });
@@ -82,7 +85,10 @@ describe("Highlighter Utils", () => {
 
   describe("createHighlighters", () => {
     it("should create light and dark highlighters", async () => {
-      const themes: ["github-light", "github-dark"] = ["github-light", "github-dark"];
+      const themes: ["github-light", "github-dark"] = [
+        "github-light",
+        "github-dark",
+      ];
       const result = await createHighlighters(themes);
 
       expect(result).toHaveProperty("lightHighlighter");

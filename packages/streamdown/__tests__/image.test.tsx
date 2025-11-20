@@ -1,9 +1,9 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ImageComponent } from "../lib/image";
 
 // Setup global URL mocks before any tests run
-if (typeof URL.createObjectURL === 'undefined') {
+if (typeof URL.createObjectURL === "undefined") {
   URL.createObjectURL = vi.fn();
   URL.revokeObjectURL = vi.fn();
 }
@@ -38,9 +38,9 @@ describe("ImageComponent", () => {
   it("should render image with src and alt", () => {
     const { container } = render(
       <ImageComponent
+        alt="Test image"
         node={null as any}
         src="https://example.com/image.png"
-        alt="Test image"
       />
     );
 
@@ -53,13 +53,15 @@ describe("ImageComponent", () => {
   it("should render wrapper with correct classes", () => {
     const { container } = render(
       <ImageComponent
+        alt="Test"
         node={null as any}
         src="https://example.com/image.png"
-        alt="Test"
       />
     );
 
-    const wrapper = container.querySelector('[data-streamdown="image-wrapper"]');
+    const wrapper = container.querySelector(
+      '[data-streamdown="image-wrapper"]'
+    );
     expect(wrapper).toBeTruthy();
     expect(wrapper?.className).toContain("group");
     expect(wrapper?.className).toContain("relative");
@@ -68,9 +70,9 @@ describe("ImageComponent", () => {
   it("should render download button", () => {
     const { container } = render(
       <ImageComponent
+        alt="Test"
         node={null as any}
         src="https://example.com/image.png"
-        alt="Test"
       />
     );
 
@@ -81,10 +83,10 @@ describe("ImageComponent", () => {
   it("should apply custom className to image", () => {
     const { container } = render(
       <ImageComponent
-        node={null as any}
-        src="https://example.com/image.png"
         alt="Test"
         className="custom-class"
+        node={null as any}
+        src="https://example.com/image.png"
       />
     );
 
@@ -102,9 +104,9 @@ describe("ImageComponent", () => {
 
     const { container } = render(
       <ImageComponent
+        alt="Test"
         node={null as any}
         src="https://example.com/image.png"
-        alt="Test"
       />
     );
 
@@ -126,9 +128,9 @@ describe("ImageComponent", () => {
 
     const { container } = render(
       <ImageComponent
+        alt="My Image"
         node={null as any}
         src="https://example.com/noextension"
-        alt="My Image"
       />
     );
 
@@ -142,7 +144,9 @@ describe("ImageComponent", () => {
 
   it("should use default extension when blob type is unknown", async () => {
     const { save } = await import("../lib/utils");
-    const mockBlob = new Blob(["image data"], { type: "application/octet-stream" });
+    const mockBlob = new Blob(["image data"], {
+      type: "application/octet-stream",
+    });
 
     (global.fetch as any).mockResolvedValueOnce({
       blob: async () => mockBlob,
@@ -150,9 +154,9 @@ describe("ImageComponent", () => {
 
     const { container } = render(
       <ImageComponent
+        alt="Test"
         node={null as any}
         src="https://example.com/noext"
-        alt="Test"
       />
     );
 
@@ -160,7 +164,11 @@ describe("ImageComponent", () => {
     fireEvent.click(button!);
 
     await waitFor(() => {
-      expect(save).toHaveBeenCalledWith("Test.png", mockBlob, "application/octet-stream");
+      expect(save).toHaveBeenCalledWith(
+        "Test.png",
+        mockBlob,
+        "application/octet-stream"
+      );
     });
   });
 
@@ -182,9 +190,9 @@ describe("ImageComponent", () => {
 
       const { container, unmount } = render(
         <ImageComponent
+          alt="Test"
           node={null as any}
           src="https://example.com/test"
-          alt="Test"
         />
       );
 
@@ -210,9 +218,9 @@ describe("ImageComponent", () => {
 
     const { container } = render(
       <ImageComponent
+        alt="My Custom Name"
         node={null as any}
         src="https://example.com/"
-        alt="My Custom Name"
       />
     );
 
@@ -220,7 +228,11 @@ describe("ImageComponent", () => {
     fireEvent.click(button!);
 
     await waitFor(() => {
-      expect(save).toHaveBeenCalledWith("My Custom Name.png", mockBlob, "image/png");
+      expect(save).toHaveBeenCalledWith(
+        "My Custom Name.png",
+        mockBlob,
+        "image/png"
+      );
     });
   });
 
@@ -233,10 +245,7 @@ describe("ImageComponent", () => {
     });
 
     const { container } = render(
-      <ImageComponent
-        node={null as any}
-        src="https://example.com/"
-      />
+      <ImageComponent node={null as any} src="https://example.com/" />
     );
 
     const button = container.querySelector('button[title="Download image"]');
@@ -252,9 +261,9 @@ describe("ImageComponent", () => {
 
     const { container } = render(
       <ImageComponent
+        alt="Test"
         node={null as any}
         src="https://example.com/image.png"
-        alt="Test"
       />
     );
 
@@ -274,9 +283,9 @@ describe("ImageComponent", () => {
 
     const { container, rerender } = render(
       <ImageComponent
+        alt="Test"
         node={null as any}
         src="https://example.com/image.png"
-        alt="Test"
       />
     );
 
@@ -299,9 +308,9 @@ describe("ImageComponent", () => {
 
     const { container } = render(
       <ImageComponent
+        alt="My Image.jpg"
         node={null as any}
         src="https://example.com/"
-        alt="My Image.jpg"
       />
     );
 
@@ -316,12 +325,12 @@ describe("ImageComponent", () => {
   it("should pass through additional props to img element", () => {
     const { container } = render(
       <ImageComponent
+        alt="Test"
+        data-testid="custom-image"
+        loading="lazy"
         node={null as any}
         src="https://example.com/image.png"
-        alt="Test"
         title="Test Title"
-        loading="lazy"
-        data-testid="custom-image"
       />
     );
 

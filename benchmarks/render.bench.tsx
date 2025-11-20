@@ -1,12 +1,11 @@
-import { bench, describe } from "vitest";
-import { render, cleanup } from "@testing-library/react";
-import React from "react";
-import { Streamdown } from "../packages/streamdown";
+import { cleanup, render } from "@testing-library/react";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import { bench, describe } from "vitest";
+import { Streamdown } from "../packages/streamdown";
 import { fixtures } from "./fixtures";
 
 // Cleanup after each benchmark to prevent memory leaks
@@ -29,7 +28,9 @@ describe("Render Time: Streamdown vs React Markdown", () => {
     bench(
       "React Markdown",
       () => {
-        render(<ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>);
+        render(
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        );
       },
       { afterEach: cleanupRender }
     );
@@ -49,7 +50,9 @@ describe("Render Time: Streamdown vs React Markdown", () => {
     bench(
       "React Markdown (baseline)",
       () => {
-        render(<ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>);
+        render(
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        );
       },
       { afterEach: cleanupRender }
     );
@@ -71,8 +74,8 @@ describe("Render Time: Streamdown vs React Markdown", () => {
       () => {
         render(
           <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkMath]}
             rehypePlugins={[rehypeKatex, rehypeRaw]}
+            remarkPlugins={[remarkGfm, remarkMath]}
           >
             {content}
           </ReactMarkdown>
@@ -98,8 +101,8 @@ describe("Render Time: Streamdown vs React Markdown", () => {
       () => {
         render(
           <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkMath]}
             rehypePlugins={[rehypeKatex, rehypeRaw]}
+            remarkPlugins={[remarkGfm, remarkMath]}
           >
             {content}
           </ReactMarkdown>
@@ -125,8 +128,8 @@ describe("Render Time: Streamdown vs React Markdown", () => {
       () => {
         render(
           <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkMath]}
             rehypePlugins={[rehypeKatex, rehypeRaw]}
+            remarkPlugins={[remarkGfm, remarkMath]}
           >
             {content}
           </ReactMarkdown>
@@ -152,8 +155,8 @@ describe("Render Time: Streamdown vs React Markdown", () => {
       () => {
         render(
           <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkMath]}
             rehypePlugins={[rehypeKatex, rehypeRaw]}
+            remarkPlugins={[remarkGfm, remarkMath]}
           >
             {content}
           </ReactMarkdown>
@@ -185,7 +188,9 @@ describe("Render Time: Streamdown vs React Markdown", () => {
     bench(
       "React Markdown",
       () => {
-        render(<ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>);
+        render(
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        );
       },
       { afterEach: cleanupRender }
     );
@@ -223,7 +228,9 @@ describe("Render Time: With Incomplete Markdown", () => {
     bench(
       "React Markdown (no protection)",
       () => {
-        render(<ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>);
+        render(
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        );
       },
       { afterEach: cleanupRender }
     );
@@ -254,7 +261,9 @@ describe("Re-render Performance", () => {
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         );
         for (let i = 0; i < 10; i++) {
-          rerender(<ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>);
+          rerender(
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+          );
         }
       },
       { afterEach: cleanupRender }
@@ -296,7 +305,11 @@ describe("Re-render Performance", () => {
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{chunks[0]}</ReactMarkdown>
         );
         for (let i = 1; i < chunks.length; i++) {
-          rerender(<ReactMarkdown remarkPlugins={[remarkGfm]}>{chunks[i]}</ReactMarkdown>);
+          rerender(
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {chunks[i]}
+            </ReactMarkdown>
+          );
         }
       },
       { afterEach: cleanupRender }

@@ -6,7 +6,7 @@ import { Mermaid, MermaidContext } from "../lib/mermaid/index";
 vi.mock("../lib/mermaid/utils", () => ({
   initializeMermaid: vi.fn().mockResolvedValue({
     render: vi.fn().mockResolvedValue({
-      svg: '<svg><text>Mocked Diagram</text></svg>',
+      svg: "<svg><text>Mocked Diagram</text></svg>",
     }),
   }),
 }));
@@ -44,7 +44,9 @@ describe("Mermaid Component", () => {
     const { initializeMermaid } = await import("../lib/mermaid/utils");
 
     // Mock to throw an error
-    (initializeMermaid as any).mockRejectedValueOnce(new Error("Invalid syntax"));
+    (initializeMermaid as any).mockRejectedValueOnce(
+      new Error("Invalid syntax")
+    );
 
     const { container } = render(<Mermaid chart="invalid chart" />);
 
@@ -74,9 +76,13 @@ describe("Mermaid Component", () => {
     // Mock to throw an error
     (initializeMermaid as any).mockRejectedValueOnce(new Error("Test error"));
 
-    const CustomError = ({ error }: { error: string; chart: string; retry: () => void }) => (
-      <div data-testid="custom-error">Custom Error: {error}</div>
-    );
+    const CustomError = ({
+      error,
+    }: {
+      error: string;
+      chart: string;
+      retry: () => void;
+    }) => <div data-testid="custom-error">Custom Error: {error}</div>;
 
     const { container } = render(
       <MermaidContext.Provider value={{ errorComponent: CustomError }}>
@@ -85,14 +91,18 @@ describe("Mermaid Component", () => {
     );
 
     await waitFor(() => {
-      const customError = container.querySelector('[data-testid="custom-error"]');
+      const customError = container.querySelector(
+        '[data-testid="custom-error"]'
+      );
       expect(customError).toBeTruthy();
       expect(customError?.textContent).toContain("Test error");
     });
   });
 
   it("should render in fullscreen mode", async () => {
-    const { container } = render(<Mermaid chart={simpleChart} fullscreen={true} />);
+    const { container } = render(
+      <Mermaid chart={simpleChart} fullscreen={true} />
+    );
 
     await waitFor(() => {
       // Check for fullscreen-specific classes
@@ -145,7 +155,9 @@ describe("Mermaid Component", () => {
     const { container } = render(<Mermaid chart={simpleChart} />);
 
     await waitFor(() => {
-      const chartContainer = container.querySelector('[aria-label="Mermaid chart"]');
+      const chartContainer = container.querySelector(
+        '[aria-label="Mermaid chart"]'
+      );
       expect(chartContainer).toBeTruthy();
     });
   });
@@ -163,7 +175,7 @@ describe("Mermaid Component", () => {
     const { initializeMermaid } = await import("../lib/mermaid/utils");
 
     const mockRender = vi.fn().mockResolvedValue({
-      svg: '<svg><text>Chart</text></svg>',
+      svg: "<svg><text>Chart</text></svg>",
     });
 
     (initializeMermaid as any).mockResolvedValue({

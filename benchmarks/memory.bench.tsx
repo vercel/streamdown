@@ -1,12 +1,11 @@
-import { bench, describe } from "vitest";
-import { render, cleanup } from "@testing-library/react";
-import React from "react";
-import { Streamdown } from "../packages/streamdown";
+import { cleanup, render } from "@testing-library/react";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import { bench, describe } from "vitest";
+import { Streamdown } from "../packages/streamdown";
 import { parseMarkdownIntoBlocks } from "../packages/streamdown/lib/parse-blocks";
 import { parseIncompleteMarkdown } from "../packages/streamdown/lib/parse-incomplete-markdown";
 import { fixtures } from "./fixtures";
@@ -101,7 +100,9 @@ describe("Memory Usage: Component Rendering", () => {
     bench("React Markdown", () => {
       measureMemory(() => {
         render(
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{fixtures.small}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {fixtures.small}
+          </ReactMarkdown>
         );
         cleanup();
       }, 50);
@@ -127,8 +128,8 @@ describe("Memory Usage: Component Rendering", () => {
       measureMemory(() => {
         render(
           <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkMath]}
             rehypePlugins={[rehypeKatex, rehypeRaw]}
+            remarkPlugins={[remarkGfm, remarkMath]}
           >
             {fixtures.medium}
           </ReactMarkdown>
@@ -157,8 +158,8 @@ describe("Memory Usage: Component Rendering", () => {
       measureMemory(() => {
         render(
           <ReactMarkdown
-            remarkPlugins={[remarkGfm, remarkMath]}
             rehypePlugins={[rehypeKatex, rehypeRaw]}
+            remarkPlugins={[remarkGfm, remarkMath]}
           >
             {fixtures.large}
           </ReactMarkdown>
@@ -186,7 +187,9 @@ describe("Memory Usage: Component Rendering", () => {
     bench("React Markdown", () => {
       measureMemory(() => {
         render(
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{fixtures.codeHeavy}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {fixtures.codeHeavy}
+          </ReactMarkdown>
         );
         cleanup();
       }, 25);
@@ -228,7 +231,11 @@ describe("Memory Usage: Streaming Simulation", () => {
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{chunks[0]}</ReactMarkdown>
         );
         for (let i = 1; i < chunks.length; i++) {
-          rerender(<ReactMarkdown remarkPlugins={[remarkGfm]}>{chunks[i]}</ReactMarkdown>);
+          rerender(
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {chunks[i]}
+            </ReactMarkdown>
+          );
         }
         cleanup();
       }, 20);

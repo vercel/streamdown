@@ -198,7 +198,9 @@ describe("TableCopyDropdown", () => {
 
     await waitFor(() => {
       // After copying, the icon should change (we can check if the button children changed)
-      const buttonElement = container.querySelector('button[title="Copy table"]');
+      const buttonElement = container.querySelector(
+        'button[title="Copy table"]'
+      );
       expect(buttonElement).toBeTruthy();
     });
 
@@ -271,9 +273,11 @@ describe("TableCopyDropdown", () => {
     await fireEvent.click(csvButton);
 
     await waitFor(() => {
-      expect(onError).toHaveBeenCalledWith(expect.objectContaining({
-        message: "Table not found"
-      }));
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Table not found",
+        })
+      );
     });
 
     document.body.removeChild(dropdownDiv);
@@ -306,9 +310,11 @@ describe("TableCopyDropdown", () => {
     await fireEvent.click(csvButton);
 
     await waitFor(() => {
-      expect(onError).toHaveBeenCalledWith(expect.objectContaining({
-        message: "Clipboard API not available"
-      }));
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Clipboard API not available",
+        })
+      );
     });
 
     // Restore clipboard API
@@ -347,9 +353,11 @@ describe("TableCopyDropdown", () => {
     await fireEvent.click(csvButton);
 
     await waitFor(() => {
-      expect(onError).toHaveBeenCalledWith(expect.objectContaining({
-        message: "Clipboard write failed"
-      }));
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Clipboard write failed",
+        })
+      );
     });
 
     mockWrapper.removeChild(dropdownContainer);

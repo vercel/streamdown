@@ -1,8 +1,8 @@
 import { render } from "@testing-library/react";
 import React from "react";
-import type { Options } from "../lib/markdown";
 import { describe, expect, it } from "vitest";
 import { components as importedComponents } from "../lib/components";
+import type { Options } from "../lib/markdown";
 
 // Type assertion: we know all components are defined in our implementation
 type RequiredComponents = Required<NonNullable<Options["components"]>>;

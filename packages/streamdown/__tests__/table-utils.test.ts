@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 import {
   escapeMarkdownTableCell,
   extractTableDataFromElement,
+  type TableData,
   tableDataToCSV,
   tableDataToMarkdown,
   tableDataToTSV,
-  type TableData,
 } from "../lib/table/utils";
 
 describe("Table Utils", () => {
@@ -133,9 +133,7 @@ describe("Table Utils", () => {
 
       const result = tableDataToCSV(data);
 
-      expect(result).toBe(
-        "Name,Age,City\nJohn,30,New York\nJane,25,London"
-      );
+      expect(result).toBe("Name,Age,City\nJohn,30,New York\nJane,25,London");
     });
 
     it("should escape commas in values", () => {
@@ -319,9 +317,7 @@ describe("Table Utils", () => {
 
       const result = tableDataToMarkdown(data);
 
-      expect(result).toBe(
-        "| Header |\n| --- |\n| Value \\| With \\| Pipes |"
-      );
+      expect(result).toBe("| Header |\n| --- |\n| Value \\| With \\| Pipes |");
     });
 
     it("should escape backslashes in values", () => {
@@ -343,7 +339,9 @@ describe("Table Utils", () => {
 
       const result = tableDataToMarkdown(data);
 
-      expect(result).toBe("| Col1 | Col2 | Col3 |\n| --- | --- | --- |\n| A | B |  |");
+      expect(result).toBe(
+        "| Col1 | Col2 | Col3 |\n| --- | --- | --- |\n| A | B |  |"
+      );
     });
 
     it("should return empty string if no headers", () => {

@@ -1,5 +1,5 @@
 import { fireEvent, render } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { PanZoom } from "../lib/mermaid/pan-zoom";
 
 describe("PanZoom", () => {
@@ -22,7 +22,9 @@ describe("PanZoom", () => {
 
     const zoomInButton = container.querySelector('button[title="Zoom in"]');
     const zoomOutButton = container.querySelector('button[title="Zoom out"]');
-    const resetButton = container.querySelector('button[title="Reset zoom and pan"]');
+    const resetButton = container.querySelector(
+      'button[title="Reset zoom and pan"]'
+    );
 
     expect(zoomInButton).toBeTruthy();
     expect(zoomOutButton).toBeTruthy();
@@ -82,7 +84,9 @@ describe("PanZoom", () => {
     );
 
     const zoomInButton = container.querySelector('button[title="Zoom in"]');
-    const resetButton = container.querySelector('button[title="Reset zoom and pan"]');
+    const resetButton = container.querySelector(
+      'button[title="Reset zoom and pan"]'
+    );
     const content = container.querySelector('[role="application"]');
 
     // Zoom in first
@@ -128,15 +132,17 @@ describe("PanZoom", () => {
       </PanZoom>
     );
 
-    const content = container.querySelector('[role="application"]') as HTMLElement;
+    const content = container.querySelector(
+      '[role="application"]'
+    ) as HTMLElement;
 
     // Verify the content div exists and has the pointer down handler attached
     expect(content).toBeTruthy();
-    expect(content.getAttribute('role')).toBe('application');
+    expect(content.getAttribute("role")).toBe("application");
 
     // Check that the initial cursor is set to grab
     const containerDiv = container.firstElementChild as HTMLElement;
-    expect(containerDiv.style.cursor).toBe('grab');
+    expect(containerDiv.style.cursor).toBe("grab");
   });
 
   it("should ignore non-primary pointer down", () => {
@@ -260,7 +266,9 @@ describe("PanZoom", () => {
       </PanZoom>
     );
 
-    const content = container.querySelector('[role="application"]') as HTMLElement;
+    const content = container.querySelector(
+      '[role="application"]'
+    ) as HTMLElement;
 
     // Check the actual style property, not the attribute string
     expect(content?.style.touchAction).toBe("none");

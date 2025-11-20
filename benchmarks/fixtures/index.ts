@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const fixturesDir = __dirname;
+const fixturesDir = import.meta.dirname;
 
 export const fixtures = {
   small: readFileSync(join(fixturesDir, "small.md"), "utf-8"),

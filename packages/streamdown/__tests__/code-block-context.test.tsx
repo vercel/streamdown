@@ -1,6 +1,9 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { CodeBlockContext, useCodeBlockContext } from "../lib/code-block/context";
+import {
+  CodeBlockContext,
+  useCodeBlockContext,
+} from "../lib/code-block/context";
 
 describe("CodeBlockContext", () => {
   it("should provide code value through context", () => {

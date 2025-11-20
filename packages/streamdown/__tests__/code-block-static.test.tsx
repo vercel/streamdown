@@ -1,23 +1,27 @@
 import { render, waitFor } from "@testing-library/react";
-import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ShikiThemeContext } from "../index";
 import { CodeBlock } from "../lib/code-block/static";
 
 // Mock the highlighter module
 vi.mock("../lib/code-block/highlighter", () => ({
-  performHighlight: vi.fn((code, language, lightTheme, darkTheme, preClassName) => {
-    const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const preClass = preClassName || "";
-    return Promise.resolve([
-      `<pre class="${preClass} light-theme"><code>${escapedCode}</code></pre>`,
-      `<pre class="${preClass} dark-theme"><code>${escapedCode}</code></pre>`,
-    ]);
-  }),
+  performHighlight: vi.fn(
+    (code, language, lightTheme, darkTheme, preClassName) => {
+      const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const preClass = preClassName || "";
+      return Promise.resolve([
+        `<pre class="${preClass} light-theme"><code>${escapedCode}</code></pre>`,
+        `<pre class="${preClass} dark-theme"><code>${escapedCode}</code></pre>`,
+      ]);
+    }
+  ),
 }));
 
 describe("CodeBlock (static)", () => {
-  const mockThemes: ["github-light", "github-dark"] = ["github-light", "github-dark"];
+  const mockThemes: ["github-light", "github-dark"] = [
+    "github-light",
+    "github-dark",
+  ];
 
   it("should render CodeBlock with initial plain HTML", () => {
     const { container } = render(
@@ -26,9 +30,9 @@ describe("CodeBlock (static)", () => {
       </ShikiThemeContext.Provider>
     );
 
-    const codeBlock = container.querySelector('[data-code-block-container]');
+    const codeBlock = container.querySelector("[data-code-block-container]");
     expect(codeBlock).toBeTruthy();
-    expect(codeBlock?.getAttribute('data-language')).toBe('javascript');
+    expect(codeBlock?.getAttribute("data-language")).toBe("javascript");
   });
 
   it("should render with light and dark versions", async () => {
@@ -39,8 +43,12 @@ describe("CodeBlock (static)", () => {
     );
 
     await waitFor(() => {
-      const lightBlock = container.querySelector('[data-code-block].dark\\:hidden');
-      const darkBlock = container.querySelector('[data-code-block].dark\\:block');
+      const lightBlock = container.querySelector(
+        "[data-code-block].dark\\:hidden"
+      );
+      const darkBlock = container.querySelector(
+        "[data-code-block].dark\\:block"
+      );
 
       expect(lightBlock).toBeTruthy();
       expect(darkBlock).toBeTruthy();
@@ -50,27 +58,33 @@ describe("CodeBlock (static)", () => {
   it("should apply custom className", async () => {
     const { container } = render(
       <ShikiThemeContext.Provider value={mockThemes}>
-        <CodeBlock code="test" language="javascript" className="custom-class" />
+        <CodeBlock className="custom-class" code="test" language="javascript" />
       </ShikiThemeContext.Provider>
     );
 
     await waitFor(() => {
-      const codeBlocks = container.querySelectorAll('[data-code-block]');
-      expect(codeBlocks[0].className).toContain('custom-class');
-      expect(codeBlocks[1].className).toContain('custom-class');
+      const codeBlocks = container.querySelectorAll("[data-code-block]");
+      expect(codeBlocks[0].className).toContain("custom-class");
+      expect(codeBlocks[1].className).toContain("custom-class");
     });
   });
 
   it("should apply preClassName", async () => {
     const { container } = render(
       <ShikiThemeContext.Provider value={mockThemes}>
-        <CodeBlock code="test" language="javascript" preClassName="custom-pre" />
+        <CodeBlock
+          code="test"
+          language="javascript"
+          preClassName="custom-pre"
+        />
       </ShikiThemeContext.Provider>
     );
 
     await waitFor(() => {
-      const lightBlock = container.querySelector('[data-code-block].dark\\:hidden');
-      expect(lightBlock?.innerHTML).toContain('custom-pre');
+      const lightBlock = container.querySelector(
+        "[data-code-block].dark\\:hidden"
+      );
+      expect(lightBlock?.innerHTML).toContain("custom-pre");
     });
   });
 
@@ -81,8 +95,8 @@ describe("CodeBlock (static)", () => {
       </ShikiThemeContext.Provider>
     );
 
-    const codeBlock = container.querySelector('[data-code-block-container]');
-    expect(codeBlock?.getAttribute('data-language')).toBe('python');
+    const codeBlock = container.querySelector("[data-code-block-container]");
+    expect(codeBlock?.getAttribute("data-language")).toBe("python");
   });
 
   it("should handle code updates", async () => {
@@ -93,8 +107,10 @@ describe("CodeBlock (static)", () => {
     );
 
     await waitFor(() => {
-      const lightBlock = container.querySelector('[data-code-block].dark\\:hidden');
-      expect(lightBlock?.innerHTML).toContain('const x = 1;');
+      const lightBlock = container.querySelector(
+        "[data-code-block].dark\\:hidden"
+      );
+      expect(lightBlock?.innerHTML).toContain("const x = 1;");
     });
 
     rerender(
@@ -104,8 +120,10 @@ describe("CodeBlock (static)", () => {
     );
 
     await waitFor(() => {
-      const lightBlock = container.querySelector('[data-code-block].dark\\:hidden');
-      expect(lightBlock?.innerHTML).toContain('const y = 2;');
+      const lightBlock = container.querySelector(
+        "[data-code-block].dark\\:hidden"
+      );
+      expect(lightBlock?.innerHTML).toContain("const y = 2;");
     });
   });
 
@@ -116,7 +134,7 @@ describe("CodeBlock (static)", () => {
       </ShikiThemeContext.Provider>
     );
 
-    const header = container.querySelector('[data-code-block-header]');
+    const header = container.querySelector("[data-code-block-header]");
     expect(header).toBeTruthy();
   });
 
@@ -151,7 +169,7 @@ describe("CodeBlock (static)", () => {
     );
 
     // Should still render with initial plain HTML
-    const codeBlock = container.querySelector('[data-code-block-container]');
+    const codeBlock = container.querySelector("[data-code-block-container]");
     expect(codeBlock).toBeTruthy();
   });
 
@@ -163,7 +181,7 @@ describe("CodeBlock (static)", () => {
     );
 
     // Check initial render has escaped HTML
-    const codeBlocks = container.querySelectorAll('[data-code-block]');
+    const codeBlocks = container.querySelectorAll("[data-code-block]");
     expect(codeBlocks.length).toBeGreaterThan(0);
   });
 
@@ -175,14 +193,16 @@ describe("CodeBlock (static)", () => {
     );
 
     await waitFor(() => {
-      const lightBlock = container.querySelector('[data-code-block].dark\\:hidden');
+      const lightBlock = container.querySelector(
+        "[data-code-block].dark\\:hidden"
+      );
       expect(lightBlock).toBeTruthy();
     });
 
     unmount();
 
     // Component should be unmounted
-    const codeBlock = container.querySelector('[data-code-block-container]');
+    const codeBlock = container.querySelector("[data-code-block-container]");
     expect(codeBlock).toBeFalsy();
   });
 
@@ -191,15 +211,15 @@ describe("CodeBlock (static)", () => {
       <ShikiThemeContext.Provider value={mockThemes}>
         <CodeBlock
           code="test"
-          language="javascript"
           data-testid="custom-code-block"
           id="my-code-block"
+          language="javascript"
         />
       </ShikiThemeContext.Provider>
     );
 
-    const codeBlocks = container.querySelectorAll('[data-code-block]');
-    expect(codeBlocks[0].getAttribute('data-testid')).toBe('custom-code-block');
-    expect(codeBlocks[0].getAttribute('id')).toBe('my-code-block');
+    const codeBlocks = container.querySelectorAll("[data-code-block]");
+    expect(codeBlocks[0].getAttribute("data-testid")).toBe("custom-code-block");
+    expect(codeBlocks[0].getAttribute("id")).toBe("my-code-block");
   });
 });

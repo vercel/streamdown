@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StreamdownRuntimeContext } from "../index";
 import {
@@ -7,7 +7,7 @@ import {
 } from "../lib/table/download-dropdown";
 
 // Setup global URL mocks before any tests run
-if (typeof URL.createObjectURL === 'undefined') {
+if (typeof URL.createObjectURL === "undefined") {
   URL.createObjectURL = vi.fn();
   URL.revokeObjectURL = vi.fn();
 }
@@ -104,14 +104,24 @@ describe("TableDownloadButton", () => {
     } as unknown as HTMLAnchorElement;
 
     const originalCreateElement = document.createElement.bind(document);
-    const createElementSpy = vi.spyOn(document, "createElement").mockImplementation((tag) => {
-      if (tag === "a") return mockAnchor;
-      return originalCreateElement(tag);
-    });
-    const appendChildSpy = vi.spyOn(document.body, "appendChild").mockImplementation(() => mockAnchor);
-    const removeChildSpy = vi.spyOn(document.body, "removeChild").mockImplementation(() => mockAnchor);
-    const createObjectURLSpy = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
-    const revokeObjectURLSpy = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    const createElementSpy = vi
+      .spyOn(document, "createElement")
+      .mockImplementation((tag) => {
+        if (tag === "a") return mockAnchor;
+        return originalCreateElement(tag);
+      });
+    const appendChildSpy = vi
+      .spyOn(document.body, "appendChild")
+      .mockImplementation(() => mockAnchor);
+    const removeChildSpy = vi
+      .spyOn(document.body, "removeChild")
+      .mockImplementation(() => mockAnchor);
+    const createObjectURLSpy = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:mock");
+    const revokeObjectURLSpy = vi
+      .spyOn(URL, "revokeObjectURL")
+      .mockImplementation(() => {});
 
     // Create wrapper and render button inside it properly
     const wrapper = document.createElement("div");
@@ -153,14 +163,24 @@ describe("TableDownloadButton", () => {
     } as unknown as HTMLAnchorElement;
 
     const originalCreateElement = document.createElement.bind(document);
-    const createElementSpy = vi.spyOn(document, "createElement").mockImplementation((tag) => {
-      if (tag === "a") return mockAnchor;
-      return originalCreateElement(tag);
-    });
-    const appendChildSpy = vi.spyOn(document.body, "appendChild").mockImplementation(() => mockAnchor);
-    const removeChildSpy = vi.spyOn(document.body, "removeChild").mockImplementation(() => mockAnchor);
-    const createObjectURLSpy = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
-    const revokeObjectURLSpy = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    const createElementSpy = vi
+      .spyOn(document, "createElement")
+      .mockImplementation((tag) => {
+        if (tag === "a") return mockAnchor;
+        return originalCreateElement(tag);
+      });
+    const appendChildSpy = vi
+      .spyOn(document.body, "appendChild")
+      .mockImplementation(() => mockAnchor);
+    const removeChildSpy = vi
+      .spyOn(document.body, "removeChild")
+      .mockImplementation(() => mockAnchor);
+    const createObjectURLSpy = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:mock");
+    const revokeObjectURLSpy = vi
+      .spyOn(URL, "revokeObjectURL")
+      .mockImplementation(() => {});
 
     // Create wrapper and render button inside it properly
     const wrapper = document.createElement("div");
@@ -204,14 +224,24 @@ describe("TableDownloadButton", () => {
     } as unknown as HTMLAnchorElement;
 
     const originalCreateElement = document.createElement.bind(document);
-    const createElementSpy = vi.spyOn(document, "createElement").mockImplementation((tag) => {
-      if (tag === "a") return mockAnchor;
-      return originalCreateElement(tag);
-    });
-    const appendChildSpy = vi.spyOn(document.body, "appendChild").mockImplementation(() => mockAnchor);
-    const removeChildSpy = vi.spyOn(document.body, "removeChild").mockImplementation(() => mockAnchor);
-    const createObjectURLSpy = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:mock");
-    const revokeObjectURLSpy = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+    const createElementSpy = vi
+      .spyOn(document, "createElement")
+      .mockImplementation((tag) => {
+        if (tag === "a") return mockAnchor;
+        return originalCreateElement(tag);
+      });
+    const appendChildSpy = vi
+      .spyOn(document.body, "appendChild")
+      .mockImplementation(() => mockAnchor);
+    const removeChildSpy = vi
+      .spyOn(document.body, "removeChild")
+      .mockImplementation(() => mockAnchor);
+    const createObjectURLSpy = vi
+      .spyOn(URL, "createObjectURL")
+      .mockReturnValue("blob:mock");
+    const revokeObjectURLSpy = vi
+      .spyOn(URL, "revokeObjectURL")
+      .mockImplementation(() => {});
 
     // Create wrapper and render button inside it properly
     const wrapper = document.createElement("div");
@@ -259,9 +289,11 @@ describe("TableDownloadButton", () => {
     const button = buttonDiv.querySelector("button");
     fireEvent.click(button!);
 
-    expect(onError).toHaveBeenCalledWith(expect.objectContaining({
-      message: "Table not found"
-    }));
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Table not found",
+      })
+    );
 
     document.body.removeChild(buttonDiv);
   });
@@ -488,9 +520,11 @@ describe("TableDownloadDropdown", () => {
     const csvButton = getByText("CSV");
     fireEvent.click(csvButton);
 
-    expect(onError).toHaveBeenCalledWith(expect.objectContaining({
-      message: "Table not found"
-    }));
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Table not found",
+      })
+    );
 
     document.body.removeChild(dropdownDiv);
   });

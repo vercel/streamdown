@@ -1,7 +1,7 @@
+import { Lexer } from "marked";
 import { bench, describe } from "vitest";
 import { parseMarkdownIntoBlocks } from "../packages/streamdown/lib/parse-blocks";
 import { parseIncompleteMarkdown } from "../packages/streamdown/lib/parse-incomplete-markdown";
-import { Lexer } from "marked";
 import { fixtures } from "./fixtures";
 
 describe("Parse Time: Streamdown vs Marked", () => {
