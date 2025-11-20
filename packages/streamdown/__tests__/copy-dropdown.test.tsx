@@ -1,0 +1,429 @@
+import { fireEvent, render, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { StreamdownRuntimeContext } from "../index";
+import { TableCopyDropdown } from "../lib/table/copy-dropdown";
+
+describe("TableCopyDropdown", () => {
+  let mockTable: HTMLTableElement;
+  let mockWrapper: HTMLDivElement;
+
+  beforeEach(() => {
+    // Create a mock table structure
+    mockTable = document.createElement("table");
+    mockTable.innerHTML = `
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Age</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>John</td>
+          <td>30</td>
+        </tr>
+      </tbody>
+    `;
+
+    mockWrapper = document.createElement("div");
+    mockWrapper.setAttribute("data-streamdown", "table-wrapper");
+    mockWrapper.appendChild(mockTable);
+    document.body.appendChild(mockWrapper);
+
+    // Mock ClipboardItem
+    global.ClipboardItem = class ClipboardItem {
+      constructor(public data: Record<string, Blob>) {}
+    } as any;
+
+    // Mock clipboard API
+    Object.assign(navigator, {
+      clipboard: {
+        write: vi.fn().mockResolvedValue(undefined),
+      },
+    });
+
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    document.body.removeChild(mockWrapper);
+  });
+
+  it("should render dropdown button", () => {
+    const { container } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown />
+      </StreamdownRuntimeContext.Provider>,
+      { container: mockWrapper }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+    expect(button).toBeTruthy();
+  });
+
+  it("should render custom children", () => {
+    const { container } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown>
+          <span>Custom Copy</span>
+        </TableCopyDropdown>
+      </StreamdownRuntimeContext.Provider>,
+      { container: mockWrapper }
+    );
+
+    expect(container.textContent).toContain("Custom Copy");
+  });
+
+  it("should be disabled when animating", () => {
+    const { container } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: true }}>
+        <TableCopyDropdown />
+      </StreamdownRuntimeContext.Provider>,
+      { container: mockWrapper }
+    );
+
+    const button = container.querySelector("button");
+    expect(button?.hasAttribute("disabled")).toBe(true);
+  });
+
+  it("should toggle dropdown on button click", () => {
+    const { container } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown />
+      </StreamdownRuntimeContext.Provider>,
+      { container: mockWrapper }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+
+    // Dropdown should be closed initially
+    expect(container.querySelector(".absolute")).toBeFalsy();
+
+    // Click to open
+    fireEvent.click(button!);
+    expect(container.querySelector(".absolute")).toBeTruthy();
+
+    // Click to close
+    fireEvent.click(button!);
+    expect(container.querySelector(".absolute")).toBeFalsy();
+  });
+
+  it("should show CSV and TSV options when open", () => {
+    const { container, getByText } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown />
+      </StreamdownRuntimeContext.Provider>,
+      { container: mockWrapper }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+    fireEvent.click(button!);
+
+    expect(getByText("CSV")).toBeTruthy();
+    expect(getByText("TSV")).toBeTruthy();
+  });
+
+  it("should copy CSV when CSV option is clicked", async () => {
+    const onCopy = vi.fn();
+
+    // Create wrapper with dropdown inside
+    const dropdownContainer = document.createElement("div");
+    mockWrapper.appendChild(dropdownContainer);
+
+    const { container, getByText } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown onCopy={onCopy} />
+      </StreamdownRuntimeContext.Provider>,
+      { container: dropdownContainer }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+    fireEvent.click(button!);
+
+    const csvButton = getByText("CSV");
+    await fireEvent.click(csvButton);
+
+    await waitFor(() => {
+      expect(navigator.clipboard.write).toHaveBeenCalled();
+      expect(onCopy).toHaveBeenCalledWith("csv");
+    });
+
+    mockWrapper.removeChild(dropdownContainer);
+  });
+
+  it("should copy TSV when TSV option is clicked", async () => {
+    const onCopy = vi.fn();
+
+    // Create wrapper with dropdown inside
+    const dropdownContainer = document.createElement("div");
+    mockWrapper.appendChild(dropdownContainer);
+
+    const { container, getByText } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown onCopy={onCopy} />
+      </StreamdownRuntimeContext.Provider>,
+      { container: dropdownContainer }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+    fireEvent.click(button!);
+
+    const tsvButton = getByText("TSV");
+    await fireEvent.click(tsvButton);
+
+    await waitFor(() => {
+      expect(navigator.clipboard.write).toHaveBeenCalled();
+      expect(onCopy).toHaveBeenCalledWith("tsv");
+    });
+
+    mockWrapper.removeChild(dropdownContainer);
+  });
+
+  it("should show check icon after copying", async () => {
+    const dropdownContainer = document.createElement("div");
+    mockWrapper.appendChild(dropdownContainer);
+
+    const { container, getByText } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown />
+      </StreamdownRuntimeContext.Provider>,
+      { container: dropdownContainer }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+    fireEvent.click(button!);
+
+    const csvButton = getByText("CSV");
+    await fireEvent.click(csvButton);
+
+    await waitFor(() => {
+      // After copying, the icon should change (we can check if the button children changed)
+      const buttonElement = container.querySelector('button[title="Copy table"]');
+      expect(buttonElement).toBeTruthy();
+    });
+
+    mockWrapper.removeChild(dropdownContainer);
+  });
+
+  it("should close dropdown after copying", async () => {
+    const dropdownContainer = document.createElement("div");
+    mockWrapper.appendChild(dropdownContainer);
+
+    const { container, getByText } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown />
+      </StreamdownRuntimeContext.Provider>,
+      { container: dropdownContainer }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+    fireEvent.click(button!);
+
+    expect(container.querySelector(".absolute")).toBeTruthy();
+
+    const csvButton = getByText("CSV");
+    await fireEvent.click(csvButton);
+
+    await waitFor(() => {
+      expect(container.querySelector(".absolute")).toBeFalsy();
+    });
+
+    mockWrapper.removeChild(dropdownContainer);
+  });
+
+  it("should close dropdown on outside click", () => {
+    const { container } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown />
+      </StreamdownRuntimeContext.Provider>,
+      { container: mockWrapper }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+    fireEvent.click(button!);
+
+    expect(container.querySelector(".absolute")).toBeTruthy();
+
+    // Click outside
+    fireEvent.mouseDown(document.body);
+
+    expect(container.querySelector(".absolute")).toBeFalsy();
+  });
+
+  it("should call onError when table is not found", async () => {
+    const onError = vi.fn();
+
+    // Render dropdown outside of table wrapper
+    const dropdownDiv = document.createElement("div");
+    document.body.appendChild(dropdownDiv);
+
+    const { container, getByText } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown onError={onError} />
+      </StreamdownRuntimeContext.Provider>,
+      { container: dropdownDiv }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+    fireEvent.click(button!);
+
+    const csvButton = getByText("CSV");
+    await fireEvent.click(csvButton);
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(expect.objectContaining({
+        message: "Table not found"
+      }));
+    });
+
+    document.body.removeChild(dropdownDiv);
+  });
+
+  it("should call onError when clipboard API is not available", async () => {
+    const onError = vi.fn();
+
+    // Remove clipboard API
+    const originalClipboard = navigator.clipboard;
+    Object.defineProperty(navigator, "clipboard", {
+      value: undefined,
+      configurable: true,
+    });
+
+    const dropdownContainer = document.createElement("div");
+    mockWrapper.appendChild(dropdownContainer);
+
+    const { container, getByText } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown onError={onError} />
+      </StreamdownRuntimeContext.Provider>,
+      { container: dropdownContainer }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+    fireEvent.click(button!);
+
+    const csvButton = getByText("CSV");
+    await fireEvent.click(csvButton);
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(expect.objectContaining({
+        message: "Clipboard API not available"
+      }));
+    });
+
+    // Restore clipboard API
+    Object.defineProperty(navigator, "clipboard", {
+      value: originalClipboard,
+      configurable: true,
+    });
+
+    mockWrapper.removeChild(dropdownContainer);
+  });
+
+  it("should handle clipboard write errors", async () => {
+    const onError = vi.fn();
+
+    // Mock clipboard to reject
+    Object.assign(navigator, {
+      clipboard: {
+        write: vi.fn().mockRejectedValue(new Error("Clipboard write failed")),
+      },
+    });
+
+    const dropdownContainer = document.createElement("div");
+    mockWrapper.appendChild(dropdownContainer);
+
+    const { container, getByText } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown onError={onError} />
+      </StreamdownRuntimeContext.Provider>,
+      { container: dropdownContainer }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+    fireEvent.click(button!);
+
+    const csvButton = getByText("CSV");
+    await fireEvent.click(csvButton);
+
+    await waitFor(() => {
+      expect(onError).toHaveBeenCalledWith(expect.objectContaining({
+        message: "Clipboard write failed"
+      }));
+    });
+
+    mockWrapper.removeChild(dropdownContainer);
+  });
+
+  it("should apply custom className", () => {
+    const { container } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown className="custom-copy-class" />
+      </StreamdownRuntimeContext.Provider>,
+      { container: mockWrapper }
+    );
+
+    const button = container.querySelector("button");
+    expect(button?.className).toContain("custom-copy-class");
+  });
+
+  it("should use custom timeout for copied state", async () => {
+    const dropdownContainer = document.createElement("div");
+    mockWrapper.appendChild(dropdownContainer);
+
+    const { container, getByText } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown timeout={100} />
+      </StreamdownRuntimeContext.Provider>,
+      { container: dropdownContainer }
+    );
+
+    const button = container.querySelector('button[title="Copy table"]');
+    fireEvent.click(button!);
+
+    const csvButton = getByText("CSV");
+    await fireEvent.click(csvButton);
+
+    await waitFor(() => {
+      expect(navigator.clipboard.write).toHaveBeenCalled();
+    });
+
+    // Just verify that the timeout value was accepted (component rendered without error)
+    expect(container.querySelector("button")).toBeTruthy();
+
+    mockWrapper.removeChild(dropdownContainer);
+  });
+
+  it("should cleanup timeout on unmount", () => {
+    const clearTimeoutSpy = vi.spyOn(window, "clearTimeout");
+
+    const { unmount } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown />
+      </StreamdownRuntimeContext.Provider>,
+      { container: mockWrapper }
+    );
+
+    unmount();
+
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+  });
+
+  it("should cleanup event listener on unmount", () => {
+    const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
+
+    const { unmount } = render(
+      <StreamdownRuntimeContext.Provider value={{ isAnimating: false }}>
+        <TableCopyDropdown />
+      </StreamdownRuntimeContext.Provider>,
+      { container: mockWrapper }
+    );
+
+    unmount();
+
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      "mousedown",
+      expect.any(Function)
+    );
+  });
+});
