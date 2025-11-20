@@ -3,18 +3,19 @@ import { describe, expect, it, vi } from "vitest";
 import { ShikiThemeContext } from "../index";
 import { CodeBlock } from "../lib/code-block/static";
 
-// Mock the highlighter module
-vi.mock("../lib/code-block/highlighter", () => ({
-  performHighlight: vi.fn(
-    (code, language, lightTheme, darkTheme, preClassName) => {
+// Mock the highlight manager module
+vi.mock("../lib/code-block/highlight-manager", () => ({
+  highlighterManager: {
+    initializeHighlighters: vi.fn(() => Promise.resolve()),
+    highlightCode: vi.fn((code, language, preClassName) => {
       const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const preClass = preClassName || "";
       return Promise.resolve([
         `<pre class="${preClass} light-theme"><code>${escapedCode}</code></pre>`,
         `<pre class="${preClass} dark-theme"><code>${escapedCode}</code></pre>`,
       ]);
-    }
-  ),
+    }),
+  },
 }));
 
 describe("CodeBlock (static)", () => {
@@ -152,14 +153,17 @@ describe("CodeBlock (static)", () => {
   });
 
   it("should handle errors silently for AbortError", async () => {
-    const mockPerformHighlight = vi.fn(() => {
+    const mockHighlightCode = vi.fn(() => {
       const error = new Error("Aborted");
       error.name = "AbortError";
       return Promise.reject(error);
     });
 
-    vi.doMock("../lib/code-block/highlighter", () => ({
-      performHighlight: mockPerformHighlight,
+    vi.doMock("../lib/code-block/highlight-manager", () => ({
+      highlighterManager: {
+        initializeHighlighters: vi.fn(() => Promise.resolve()),
+        highlightCode: mockHighlightCode,
+      },
     }));
 
     const { container } = render(

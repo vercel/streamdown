@@ -10,7 +10,7 @@ import { ShikiThemeContext } from "../../index";
 import { cn } from "../utils";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
-import { performHighlight } from "./highlighter";
+import { highlighterManager } from "./highlight-manager";
 import { escapeHtml } from "./utils";
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
@@ -41,9 +41,14 @@ export const CodeBlock = ({
   const mounted = useRef(false);
 
   useEffect(() => {
+    highlighterManager.initializeHighlighters([lightTheme, darkTheme]);
+  }, [lightTheme, darkTheme]);
+
+  useEffect(() => {
     mounted.current = true;
 
-    performHighlight(code, language, lightTheme, darkTheme, preClassName)
+    highlighterManager
+      .highlightCode(code, language, preClassName)
       .then(([light, dark]) => {
         if (mounted.current) {
           setHtml(light);
