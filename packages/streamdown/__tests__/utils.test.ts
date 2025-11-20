@@ -85,7 +85,9 @@ describe("save utility", () => {
       .mockReturnValue("blob:mock-url");
     revokeObjectURLSpy = vi
       .spyOn(URL, "revokeObjectURL")
-      .mockImplementation(() => {});
+      .mockImplementation(() => {
+        // Intentionally empty mock
+      });
     clickSpy = vi.fn();
 
     const mockAnchor = {

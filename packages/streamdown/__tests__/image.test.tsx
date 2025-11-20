@@ -23,7 +23,9 @@ describe("ImageComponent", () => {
     global.fetch = vi.fn();
 
     // Mock console.error to suppress error logs in tests
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {
+      // Intentionally empty to suppress console output during tests
+    });
   });
 
   afterEach(() => {
@@ -111,7 +113,10 @@ describe("ImageComponent", () => {
     );
 
     const button = container.querySelector('button[title="Download image"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     await waitFor(() => {
       expect(save).toHaveBeenCalledWith("image.png", mockBlob, "image/png");
@@ -135,7 +140,10 @@ describe("ImageComponent", () => {
     );
 
     const button = container.querySelector('button[title="Download image"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     await waitFor(() => {
       expect(save).toHaveBeenCalledWith("My Image.jpg", mockBlob, "image/jpeg");
@@ -161,7 +169,10 @@ describe("ImageComponent", () => {
     );
 
     const button = container.querySelector('button[title="Download image"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     await waitFor(() => {
       expect(save).toHaveBeenCalledWith(
@@ -197,7 +208,10 @@ describe("ImageComponent", () => {
       );
 
       const button = container.querySelector('button[title="Download image"]');
-      fireEvent.click(button!);
+      expect(button).toBeTruthy();
+      if (button) {
+        fireEvent.click(button);
+      }
 
       await waitFor(() => {
         expect(save).toHaveBeenCalledWith(`Test.${extension}`, mockBlob, type);
@@ -225,7 +239,10 @@ describe("ImageComponent", () => {
     );
 
     const button = container.querySelector('button[title="Download image"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     await waitFor(() => {
       expect(save).toHaveBeenCalledWith(
@@ -249,7 +266,10 @@ describe("ImageComponent", () => {
     );
 
     const button = container.querySelector('button[title="Download image"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     await waitFor(() => {
       expect(save).toHaveBeenCalledWith("image.png", mockBlob, "image/png");
@@ -268,7 +288,10 @@ describe("ImageComponent", () => {
     );
 
     const button = container.querySelector('button[title="Download image"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     await waitFor(() => {
       expect(console.error).toHaveBeenCalledWith(
@@ -315,7 +338,10 @@ describe("ImageComponent", () => {
     );
 
     const button = container.querySelector('button[title="Download image"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     await waitFor(() => {
       expect(save).toHaveBeenCalledWith("My Image.png", mockBlob, "image/png");

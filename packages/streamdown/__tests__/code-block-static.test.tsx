@@ -7,7 +7,7 @@ import { CodeBlock } from "../lib/code-block/static";
 vi.mock("../lib/code-block/highlight-manager", () => ({
   highlighterManager: {
     initializeHighlighters: vi.fn(() => Promise.resolve()),
-    highlightCode: vi.fn((code, language, preClassName) => {
+    highlightCode: vi.fn((code, _language, preClassName) => {
       const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const preClass = preClassName || "";
       // Return single HTML string with CSS variables (dual-theme support)

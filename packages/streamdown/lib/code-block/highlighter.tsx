@@ -50,6 +50,7 @@ export const createHighlighters = async (
   return { lightHighlighter, darkHighlighter };
 };
 
+// biome-ignore lint/nursery/useMaxParams: This function needs all 5 parameters for dual-theme highlighting
 export const performHighlight = async (
   code: string,
   language: BundledLanguage,

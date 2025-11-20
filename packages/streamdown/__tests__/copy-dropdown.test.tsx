@@ -32,7 +32,10 @@ describe("TableCopyDropdown", () => {
 
     // Mock ClipboardItem
     global.ClipboardItem = class ClipboardItem {
-      constructor(public data: Record<string, Blob>) {}
+      data: Record<string, Blob>;
+      constructor(data: Record<string, Blob>) {
+        this.data = data;
+      }
     } as any;
 
     // Mock clipboard API
@@ -128,11 +131,16 @@ describe("TableCopyDropdown", () => {
     expect(container.querySelector(".absolute")).toBeFalsy();
 
     // Click to open
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
     expect(container.querySelector(".absolute")).toBeTruthy();
 
     // Click to close
-    fireEvent.click(button!);
+    if (button) {
+      fireEvent.click(button);
+    }
     expect(container.querySelector(".absolute")).toBeFalsy();
   });
 
@@ -152,7 +160,10 @@ describe("TableCopyDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(getByText("CSV")).toBeTruthy();
     expect(getByText("TSV")).toBeTruthy();
@@ -180,7 +191,10 @@ describe("TableCopyDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     fireEvent.click(csvButton);
@@ -220,7 +234,10 @@ describe("TableCopyDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const tsvButton = getByText("TSV");
     fireEvent.click(tsvButton);
@@ -257,7 +274,10 @@ describe("TableCopyDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     fireEvent.click(csvButton);
@@ -297,7 +317,10 @@ describe("TableCopyDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(container.querySelector(".absolute")).toBeTruthy();
 
@@ -331,7 +354,10 @@ describe("TableCopyDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(container.querySelector(".absolute")).toBeTruthy();
 
@@ -363,7 +389,10 @@ describe("TableCopyDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     await fireEvent.click(csvButton);
@@ -407,7 +436,10 @@ describe("TableCopyDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     await fireEvent.click(csvButton);
@@ -457,7 +489,10 @@ describe("TableCopyDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     await fireEvent.click(csvButton);
@@ -511,7 +546,10 @@ describe("TableCopyDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Copy table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     fireEvent.click(csvButton);

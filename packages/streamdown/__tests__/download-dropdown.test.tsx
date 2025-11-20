@@ -128,7 +128,9 @@ describe("TableDownloadButton", () => {
     const createElementSpy = vi
       .spyOn(document, "createElement")
       .mockImplementation((tag) => {
-        if (tag === "a") return mockAnchor;
+        if (tag === "a") {
+          return mockAnchor;
+        }
         return originalCreateElement(tag);
       });
     const appendChildSpy = vi
@@ -142,7 +144,9 @@ describe("TableDownloadButton", () => {
       .mockReturnValue("blob:mock");
     const revokeObjectURLSpy = vi
       .spyOn(URL, "revokeObjectURL")
-      .mockImplementation(() => {});
+      .mockImplementation(() => {
+        // Intentionally empty mock
+      });
 
     // Create wrapper and render button inside it properly
     const wrapper = document.createElement("div");
@@ -168,7 +172,10 @@ describe("TableDownloadButton", () => {
     );
 
     const button = buttonDiv.querySelector("button");
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(onDownload).toHaveBeenCalled();
 
@@ -194,7 +201,9 @@ describe("TableDownloadButton", () => {
     const createElementSpy = vi
       .spyOn(document, "createElement")
       .mockImplementation((tag) => {
-        if (tag === "a") return mockAnchor;
+        if (tag === "a") {
+          return mockAnchor;
+        }
         return originalCreateElement(tag);
       });
     const appendChildSpy = vi
@@ -208,7 +217,9 @@ describe("TableDownloadButton", () => {
       .mockReturnValue("blob:mock");
     const revokeObjectURLSpy = vi
       .spyOn(URL, "revokeObjectURL")
-      .mockImplementation(() => {});
+      .mockImplementation(() => {
+        // Intentionally empty mock
+      });
 
     // Create wrapper and render button inside it properly
     const wrapper = document.createElement("div");
@@ -236,7 +247,10 @@ describe("TableDownloadButton", () => {
     const button = buttonDiv.querySelector("button");
     expect(button?.getAttribute("title")).toContain("MARKDOWN");
 
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(onDownload).toHaveBeenCalled();
 
@@ -262,7 +276,9 @@ describe("TableDownloadButton", () => {
     const createElementSpy = vi
       .spyOn(document, "createElement")
       .mockImplementation((tag) => {
-        if (tag === "a") return mockAnchor;
+        if (tag === "a") {
+          return mockAnchor;
+        }
         return originalCreateElement(tag);
       });
     const appendChildSpy = vi
@@ -276,7 +292,9 @@ describe("TableDownloadButton", () => {
       .mockReturnValue("blob:mock");
     const revokeObjectURLSpy = vi
       .spyOn(URL, "revokeObjectURL")
-      .mockImplementation(() => {});
+      .mockImplementation(() => {
+        // Intentionally empty mock
+      });
 
     // Create wrapper and render button inside it properly
     const wrapper = document.createElement("div");
@@ -302,7 +320,10 @@ describe("TableDownloadButton", () => {
     );
 
     const button = buttonDiv.querySelector("button");
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(onDownload).toHaveBeenCalled();
 
@@ -336,7 +357,10 @@ describe("TableDownloadButton", () => {
     );
 
     const button = buttonDiv.querySelector("button");
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(onError).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -480,11 +504,16 @@ describe("TableDownloadDropdown", () => {
     expect(container.querySelector(".absolute")).toBeFalsy();
 
     // Click to open
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
     expect(container.querySelector(".absolute")).toBeTruthy();
 
     // Click to close
-    fireEvent.click(button!);
+    if (button) {
+      fireEvent.click(button);
+    }
     expect(container.querySelector(".absolute")).toBeFalsy();
   });
 
@@ -504,7 +533,10 @@ describe("TableDownloadDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Download table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(getByText("CSV")).toBeTruthy();
     expect(getByText("Markdown")).toBeTruthy();
@@ -533,7 +565,10 @@ describe("TableDownloadDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Download table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     fireEvent.click(csvButton);
@@ -571,7 +606,10 @@ describe("TableDownloadDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Download table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const markdownButton = getByText("Markdown");
     fireEvent.click(markdownButton);
@@ -602,7 +640,10 @@ describe("TableDownloadDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Download table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     expect(container.querySelector(".absolute")).toBeTruthy();
 
@@ -634,7 +675,10 @@ describe("TableDownloadDropdown", () => {
     );
 
     const button = container.querySelector('button[title="Download table"]');
-    fireEvent.click(button!);
+    expect(button).toBeTruthy();
+    if (button) {
+      fireEvent.click(button);
+    }
 
     const csvButton = getByText("CSV");
     fireEvent.click(csvButton);

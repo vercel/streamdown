@@ -64,7 +64,6 @@ describe("Incomplete Markdown Parsing", () => {
 
     bench("no processing (baseline)", () => {
       // Baseline - just return the text
-      content;
     });
   });
 
@@ -77,7 +76,6 @@ describe("Incomplete Markdown Parsing", () => {
 
     bench("no processing (baseline)", () => {
       // Baseline - just return the text
-      content;
     });
   });
 
@@ -90,7 +88,6 @@ describe("Incomplete Markdown Parsing", () => {
 
     bench("no processing (baseline)", () => {
       // Baseline - just return the text
-      content;
     });
   });
 });

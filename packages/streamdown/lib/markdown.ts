@@ -39,10 +39,10 @@ export type UrlTransform = (
 const safeProtocol = /^(https?|ircs?|mailto|xmpp)$/i;
 
 // LRU Cache for unified processors
-// biome-ignore lint/suspicious/noExplicitAny: Processor type is complex and varies with plugins
 class ProcessorCache {
-  private cache = new Map<string, any>();
-  private maxSize = 100;
+  // biome-ignore lint/suspicious/noExplicitAny: Processor type is complex and varies with plugins
+  private readonly cache = new Map<string, any>();
+  private readonly maxSize = 100;
 
   private generateCacheKey(options: Readonly<Options>): string {
     const rehypePlugins = options.rehypePlugins || [];
@@ -93,6 +93,7 @@ class ProcessorCache {
     return processor;
   }
 
+  // biome-ignore lint/suspicious/noExplicitAny: Processor type is complex and varies with plugins
   set(options: Readonly<Options>, processor: any): void {
     const key = this.generateCacheKey(options);
 
@@ -153,6 +154,7 @@ const createProcessor = (options: Readonly<Options>) => {
 function post(tree: Nodes, options: Readonly<Options>): ReactElement {
   const urlTransform = options.urlTransform || defaultUrlTransform;
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complex tree transformation logic required for markdown processing
   const transform = (node: Nodes): void => {
     if (node.type === "element") {
       let key: string;
