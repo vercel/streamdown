@@ -8,14 +8,4 @@ export const CodeBlockContext = createContext<CodeBlockContextType>({
   code: "",
 });
 
-export const useCodeBlockContext = () => {
-  const context = useContext(CodeBlockContext);
-
-  if (!context) {
-    throw new Error(
-      "useCodeBlockContext must be used within a CodeBlockProvider"
-    );
-  }
-
-  return context;
-};
+export const useCodeBlockContext = () => useContext(CodeBlockContext);

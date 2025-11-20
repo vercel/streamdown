@@ -61,11 +61,8 @@ export const CodeBlock = ({
           setHtml(highlightedHtml);
         }
       })
-      .catch((err) => {
-        // Silently ignore AbortError
-        if (err.name !== "AbortError") {
-          throw err;
-        }
+      .catch(() => {
+        // Ignore errors - component may have unmounted
       });
 
     return () => {

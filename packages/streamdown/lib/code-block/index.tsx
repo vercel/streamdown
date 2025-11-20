@@ -42,7 +42,7 @@ export const CodeBlock = ({
   preClassName,
   ...rest
 }: CodeBlockProps) => {
-  const { mode, shikiTheme } = useContext(StreamdownContext);
+  const { shikiTheme } = useContext(StreamdownContext);
   const [html, setHtml] = useState<string>("");
   const [lastHighlightedCode, setLastHighlightedCode] = useState("");
   const [incompleteLine, setIncompleteLine] = useState("");
@@ -73,32 +73,6 @@ export const CodeBlock = ({
       clearTimeout(timeoutRef.current);
     }
 
-    // Static mode: simple, immediate highlighting without streaming optimizations
-    if (mode === "static") {
-      if (codeToHighlight && codeToHighlight !== lastHighlightedCode) {
-        highlighterManager
-          .highlightCode(codeToHighlight, language, preClassName, signal)
-          .then((highlightedHtml) => {
-            if (mounted.current && !signal.aborted) {
-              setHtml(highlightedHtml);
-              setLastHighlightedCode(codeToHighlight);
-              setIncompleteLine("");
-            }
-          })
-          .catch((err) => {
-            // Silently ignore AbortError
-            if (err.name !== "AbortError") {
-              throw err;
-            }
-          });
-      }
-      return () => {
-        mounted.current = false;
-        abortControllerRef.current?.abort();
-      };
-    }
-
-    // Streaming mode: complex highlighting with incremental updates and throttling
     const [completeCode, currentIncompleteLine] =
       splitCurrentIncompleteLineFromCode(codeToHighlight);
 
@@ -176,7 +150,7 @@ export const CodeBlock = ({
       mounted.current = false;
       abortControllerRef.current?.abort();
     };
-  }, [codeToHighlight, language, preClassName, mode]);
+  }, [codeToHighlight, language, preClassName]);
 
   const incompleteLineHtml = incompleteLine
     ? `<span class="line"><span>${escapeHtml(incompleteLine)}</span></span>`
