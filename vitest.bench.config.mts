@@ -8,6 +8,7 @@ export default defineConfig({
     include: ["benchmarks/**/*.bench.{ts,tsx}"],
     environment: "jsdom",
     globals: true,
+    setupFiles: ["./benchmarks/setup.ts"],
     benchmark: {
       include: ["benchmarks/**/*.bench.{ts,tsx}"],
       reporters: ["default"],
