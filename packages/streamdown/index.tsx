@@ -1,7 +1,7 @@
 "use client";
 
 import type { MermaidConfig } from "mermaid";
-import { createContext, memo, useEffect, useId, useMemo } from "react";
+import { createContext, memo, useEffect, useId, useMemo, useState, useTransition } from "react";
 import { harden } from "rehype-harden";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
@@ -120,7 +120,26 @@ export const Block = memo(
 
     return <Markdown {...props}>{parsedContent}</Markdown>;
   },
-  (prevProps, nextProps) => prevProps.content === nextProps.content
+  (prevProps, nextProps) => {
+    // Deep comparison for better memoization
+    if (prevProps.content !== nextProps.content) return false;
+    if (prevProps.shouldParseIncompleteMarkdown !== nextProps.shouldParseIncompleteMarkdown) return false;
+    if (prevProps.index !== nextProps.index) return false;
+
+    // Check if components object changed (shallow comparison)
+    if (prevProps.components !== nextProps.components) {
+      // If references differ, check if keys are the same
+      const prevKeys = Object.keys(prevProps.components || {});
+      const nextKeys = Object.keys(nextProps.components || {});
+      if (prevKeys.length !== nextKeys.length) return false;
+      if (prevKeys.some((key) => prevProps.components?.[key] !== nextProps.components?.[key])) {
+        return false;
+      }
+    }
+
+    // Plugins are unlikely to change frequently, skip deep check
+    return true;
+  }
 );
 
 Block.displayName = "Block";
@@ -129,6 +148,17 @@ const defaultShikiTheme: [BundledTheme, BundledTheme] = [
   "github-light",
   "github-dark",
 ];
+
+// Simple hash function for stable keys
+const hashString = (str: string): string => {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(36);
+};
 
 export const Streamdown = memo(
   ({
@@ -150,10 +180,34 @@ export const Streamdown = memo(
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
     const generatedId = useId();
+    const [isPending, startTransition] = useTransition();
+    const [displayBlocks, setDisplayBlocks] = useState<string[]>([]);
+
     const blocks = useMemo(
       () =>
         parseMarkdownIntoBlocksFn(typeof children === "string" ? children : ""),
       [children, parseMarkdownIntoBlocksFn]
+    );
+
+    // Use transition for block updates in streaming mode to avoid blocking UI
+    useEffect(() => {
+      if (mode === "streaming") {
+        startTransition(() => {
+          setDisplayBlocks(blocks);
+        });
+      } else {
+        setDisplayBlocks(blocks);
+      }
+    }, [blocks, mode]);
+
+    // Use displayBlocks for rendering to leverage useTransition
+    const blocksToRender = mode === "streaming" ? displayBlocks : blocks;
+
+    // Generate stable keys based on content hash + index
+    // This prevents re-renders when content doesn't change but still handles position changes
+    const blockKeys = useMemo(
+      () => blocksToRender.map((block, idx) => `${generatedId}-${hashString(block)}-${idx}`),
+      [blocksToRender, generatedId]
     );
 
     // Combined context value - single object reduces React tree overhead
@@ -166,6 +220,15 @@ export const Streamdown = memo(
         mermaid,
       }),
       [shikiTheme, controls, isAnimating, mode, mermaid]
+    );
+
+    // Memoize merged components to avoid recreating on every render
+    const mergedComponents = useMemo(
+      () => ({
+        ...defaultComponents,
+        ...components,
+      }),
+      [components]
     );
 
     useEffect(() => {
@@ -188,10 +251,7 @@ export const Streamdown = memo(
         <StreamdownContext.Provider value={contextValue}>
           <div className={cn("space-y-4", className)}>
             <Markdown
-              components={{
-                ...defaultComponents,
-                ...components,
-              }}
+              components={mergedComponents}
               rehypePlugins={rehypePlugins}
               remarkPlugins={remarkPlugins}
               urlTransform={urlTransform}
@@ -208,16 +268,12 @@ export const Streamdown = memo(
     return (
       <StreamdownContext.Provider value={contextValue}>
         <div className={cn("space-y-4", className)}>
-          {blocks.map((block, index) => (
+          {blocksToRender.map((block, index) => (
             <BlockComponent
-              components={{
-                ...defaultComponents,
-                ...components,
-              }}
+              components={mergedComponents}
               content={block}
               index={index}
-              // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-              key={`${generatedId}-block-${index}`}
+              key={blockKeys[index]}
               rehypePlugins={rehypePlugins}
               remarkPlugins={remarkPlugins}
               shouldParseIncompleteMarkdown={
