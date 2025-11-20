@@ -36,9 +36,6 @@ export const CodeBlock = ({
   const { shikiTheme } = useContext(StreamdownContext);
   const [lightTheme, darkTheme] = shikiTheme;
   const [html, setHtml] = useState<string>(createPlainHtml(code, preClassName));
-  const [darkHtml, setDarkHtml] = useState<string>(
-    createPlainHtml(code, preClassName)
-  );
   const mounted = useRef(false);
 
   useEffect(() => {
@@ -50,10 +47,9 @@ export const CodeBlock = ({
 
     highlighterManager
       .highlightCode(code, language, preClassName)
-      .then(([light, dark]) => {
+      .then((highlightedHtml) => {
         if (mounted.current) {
-          setHtml(light);
-          setDarkHtml(dark);
+          setHtml(highlightedHtml);
         }
       })
       .catch((err) => {
@@ -79,17 +75,9 @@ export const CodeBlock = ({
         <div className="w-full">
           <div className="min-w-full">
             <div
-              className={cn("overflow-x-auto dark:hidden", className)}
+              className={cn("overflow-x-auto", className)}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               dangerouslySetInnerHTML={{ __html: html }}
-              data-code-block
-              data-language={language}
-              {...rest}
-            />
-            <div
-              className={cn("hidden overflow-x-auto dark:block", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: darkHtml }}
               data-code-block
               data-language={language}
               {...rest}

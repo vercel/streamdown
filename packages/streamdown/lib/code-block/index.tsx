@@ -35,7 +35,6 @@ export const CodeBlock = ({
 }: CodeBlockProps) => {
   const { mode, shikiTheme } = useContext(StreamdownContext);
   const [html, setHtml] = useState<string>("");
-  const [darkHtml, setDarkHtml] = useState<string>("");
   const [lastHighlightedCode, setLastHighlightedCode] = useState("");
   const [incompleteLine, setIncompleteLine] = useState("");
   const codeToHighlight = useThrottledDebounce(code);
@@ -69,10 +68,9 @@ export const CodeBlock = ({
       if (codeToHighlight && codeToHighlight !== lastHighlightedCode) {
         highlighterManager
           .highlightCode(codeToHighlight, language, preClassName, signal)
-          .then(([light, dark]) => {
+          .then((highlightedHtml) => {
             if (mounted.current && !signal.aborted) {
-              setHtml(light);
-              setDarkHtml(dark);
+              setHtml(highlightedHtml);
               setLastHighlightedCode(codeToHighlight);
               setIncompleteLine("");
             }
@@ -112,12 +110,11 @@ export const CodeBlock = ({
         lastHighlightTime.current = now;
         highlighterManager
           .highlightCode(completeCode, language, preClassName, signal)
-          .then(([light, dark]) => {
+          .then((highlightedHtml) => {
             if (mounted.current && !signal.aborted) {
               // Use startTransition to mark these updates as non-urgent
               startTransition(() => {
-                setHtml(light);
-                setDarkHtml(dark);
+                setHtml(highlightedHtml);
                 setLastHighlightedCode(completeCode);
                 setIncompleteLine(currentIncompleteLine);
               });
@@ -147,12 +144,11 @@ export const CodeBlock = ({
       ) {
         highlighterManager
           .highlightCode(codeToHighlight, language, preClassName, signal)
-          .then(([light, dark]) => {
+          .then((highlightedHtml) => {
             if (mounted.current && !signal.aborted) {
               // Use startTransition to mark these updates as non-urgent
               startTransition(() => {
-                setHtml(light);
-                setDarkHtml(dark);
+                setHtml(highlightedHtml);
                 setLastHighlightedCode(codeToHighlight);
                 setIncompleteLine("");
               });
@@ -187,22 +183,10 @@ export const CodeBlock = ({
         <div className="w-full">
           <div className="min-w-full">
             <div
-              className={cn("overflow-x-auto dark:hidden", className)}
+              className={cn("overflow-x-auto", className)}
               // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               dangerouslySetInnerHTML={{
                 __html: incompleteLineHtml ? html + incompleteLineHtml : html,
-              }}
-              data-code-block
-              data-language={language}
-              {...rest}
-            />
-            <div
-              className={cn("hidden overflow-x-auto dark:block", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{
-                __html: incompleteLineHtml
-                  ? darkHtml + incompleteLineHtml
-                  : darkHtml,
               }}
               data-code-block
               data-language={language}

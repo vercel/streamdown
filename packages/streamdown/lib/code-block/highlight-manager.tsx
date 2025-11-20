@@ -11,12 +11,8 @@ import {
 } from "./highlighter";
 
 class HighlighterManager {
-  private lightHighlighter: Awaited<
-    ReturnType<typeof createHighlighter>
-  > | null = null;
-  private darkHighlighter: Awaited<
-    ReturnType<typeof createHighlighter>
-  > | null = null;
+  private highlighter: Awaited<ReturnType<typeof createHighlighter>> | null =
+    null;
   private lightTheme: BundledTheme | null = null;
   private darkTheme: BundledTheme | null = null;
   private readonly loadedLanguages: Set<BundledLanguage> = new Set();
@@ -24,15 +20,13 @@ class HighlighterManager {
   private loadLanguagePromise: Promise<void> | null = null;
 
   // LRU cache for highlighted code - increased from 50 to 500 for code-heavy documents
-  private readonly cache = new Map<string, [string, string]>();
+  // Now caching single HTML string instead of tuple
+  private readonly cache = new Map<string, string>();
   private cacheKeys: string[] = [];
   private readonly MAX_CACHE_SIZE = 500;
 
   // Queue to deduplicate concurrent highlight requests
-  private readonly highlightQueue = new Map<
-    string,
-    Promise<[string, string]>
-  >();
+  private readonly highlightQueue = new Map<string, Promise<string>>();
 
   private getCacheKey(
     code: string,
@@ -42,7 +36,7 @@ class HighlighterManager {
     return `${language}::${preClassName || ""}::${code}`;
   }
 
-  private addToCache(key: string, value: [string, string]): void {
+  private addToCache(key: string, value: string): void {
     // Remove oldest entry if cache is full
     if (this.cache.size >= this.MAX_CACHE_SIZE) {
       const oldestKey = this.cacheKeys.shift();
@@ -54,23 +48,21 @@ class HighlighterManager {
     this.cacheKeys.push(key);
   }
 
-  private needsHighlightersInitialization(
+  private needsHighlighterInitialization(
     themes: [BundledTheme, BundledTheme]
-  ): [boolean, boolean] {
+  ): boolean {
     const [lightTheme, darkTheme] = themes;
-    // Check if we need to recreate highlighters due to theme change
-    const needsLightRecreation =
-      !this.lightHighlighter || this.lightTheme !== lightTheme;
-    const needsDarkRecreation =
-      !this.darkHighlighter || this.darkTheme !== darkTheme;
-    return [needsLightRecreation, needsDarkRecreation];
+    // Check if we need to recreate highlighter due to theme change
+    return (
+      !this.highlighter ||
+      this.lightTheme !== lightTheme ||
+      this.darkTheme !== darkTheme
+    );
   }
 
-  private async ensureHighlightersInitialized(
-    themes: [BundledTheme, BundledTheme],
-    needsThemeRecreation: [boolean, boolean]
+  private async ensureHighlighterInitialized(
+    themes: [BundledTheme, BundledTheme]
   ): Promise<void> {
-    const [needsLightRecreation, needsDarkRecreation] = needsThemeRecreation;
     const [lightTheme, darkTheme] = themes;
     const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
 
@@ -80,33 +72,19 @@ class HighlighterManager {
     this.cacheKeys = [];
     this.highlightQueue.clear();
 
-    // Create or recreate light highlighter if needed
-    if (needsLightRecreation) {
-      this.lightHighlighter = await createHighlighter({
-        themes: [lightTheme],
-        langs: [],
-        engine: jsEngine,
-      });
-      this.lightTheme = lightTheme;
-    }
-
-    // Create or recreate dark highlighter if needed
-    if (needsDarkRecreation) {
-      this.darkHighlighter = await createHighlighter({
-        themes: [darkTheme],
-        langs: [],
-        engine: jsEngine,
-      });
-      this.darkTheme = darkTheme;
-    }
+    // Create single highlighter with both themes
+    this.highlighter = await createHighlighter({
+      themes: [lightTheme, darkTheme],
+      langs: [],
+      engine: jsEngine,
+    });
+    this.lightTheme = lightTheme;
+    this.darkTheme = darkTheme;
   }
 
   private async loadLanguage(language: BundledLanguage): Promise<void> {
-    // Load the language in parallel for both highlighters
-    await Promise.all([
-      this.darkHighlighter?.loadLanguage(language),
-      this.lightHighlighter?.loadLanguage(language),
-    ]);
+    // Load the language for the single highlighter
+    await this.highlighter?.loadLanguage(language);
     this.loadedLanguages.add(language);
   }
 
@@ -117,32 +95,27 @@ class HighlighterManager {
     if (this.initializationPromise) {
       await this.initializationPromise;
     }
-    const needsThemeRecreation = this.needsHighlightersInitialization(themes);
-    const [needsLightRecreation, needsDarkRecreation] = needsThemeRecreation;
+    const needsRecreation = this.needsHighlighterInitialization(themes);
 
-    if (needsLightRecreation || needsDarkRecreation) {
-      // Initialize or load language
-      this.initializationPromise = this.ensureHighlightersInitialized(
-        themes,
-        needsThemeRecreation
-      );
+    if (needsRecreation) {
+      // Initialize highlighter with both themes
+      this.initializationPromise = this.ensureHighlighterInitialized(themes);
       await this.initializationPromise;
       this.initializationPromise = null;
     }
   }
 
-  private performHighlights(
+  private performHighlight(
     code: string,
     language: BundledLanguage,
     preClassName?: string
-  ): [string, string] {
+  ): string {
     const lang = isLanguageSupported(language)
       ? language
       : getFallbackLanguage();
 
     if (
-      this.lightHighlighter === null ||
-      this.darkHighlighter === null ||
+      this.highlighter === null ||
       this.lightTheme === null ||
       this.darkTheme === null
     ) {
@@ -153,19 +126,16 @@ class HighlighterManager {
 
     const transformers = getTransformersFromPreClassName(preClassName);
 
-    // Do expensive synchronous work (still blocks, but after yielding)
-    const light = this.lightHighlighter.codeToHtml(code, {
+    // Use Shiki's dual-theme support - single pass highlighting with CSS variables
+    // This automatically handles light/dark mode switching via CSS
+    return this.highlighter.codeToHtml(code, {
       lang,
-      theme: this.lightTheme,
+      themes: {
+        light: this.lightTheme,
+        dark: this.darkTheme,
+      },
       transformers,
     });
-
-    const dark = this.darkHighlighter.codeToHtml(code, {
-      lang,
-      theme: this.darkTheme,
-      transformers,
-    });
-    return [light, dark];
   }
 
   // biome-ignore lint/suspicious/useAwait: "async is simpler than wrapping the cache return in a promise"
@@ -174,7 +144,7 @@ class HighlighterManager {
     language: BundledLanguage,
     preClassName?: string,
     signal?: AbortSignal
-  ): Promise<[string, string]> {
+  ): Promise<string> {
     // Check cache first
     const cacheKey = this.getCacheKey(code, language, preClassName);
     const cached = this.cache.get(cacheKey);
@@ -231,7 +201,7 @@ class HighlighterManager {
         // Check again after await
         checkSignal();
 
-        const result = this.performHighlights(code, language, preClassName);
+        const result = this.performHighlight(code, language, preClassName);
         this.addToCache(cacheKey, result);
         return result;
       } finally {
