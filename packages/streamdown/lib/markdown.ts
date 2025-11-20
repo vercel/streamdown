@@ -38,10 +38,99 @@ export type UrlTransform = (
 
 const safeProtocol = /^(https?|ircs?|mailto|xmpp)$/i;
 
+// LRU Cache for unified processors
+// biome-ignore lint/suspicious/noExplicitAny: Processor type is complex and varies with plugins
+class ProcessorCache {
+  private cache = new Map<string, any>();
+  private maxSize = 100;
+
+  private generateCacheKey(options: Readonly<Options>): string {
+    const rehypePlugins = options.rehypePlugins || [];
+    const remarkPlugins = options.remarkPlugins || [];
+    const remarkRehypeOptions = options.remarkRehypeOptions || {};
+
+    // Create a stable key from plugin configurations
+    const serializePlugins = (plugins: PluggableList): string => {
+      return JSON.stringify(
+        plugins.map((plugin) => {
+          if (Array.isArray(plugin)) {
+            // Plugin with options: [plugin, options]
+            const [pluginFn, pluginOptions] = plugin;
+            return {
+              name:
+                typeof pluginFn === "function" ? pluginFn.name : String(pluginFn),
+              options: pluginOptions,
+            };
+          }
+          // Plugin without options
+          return {
+            name: typeof plugin === "function" ? plugin.name : String(plugin),
+            options: null,
+          };
+        })
+      );
+    };
+
+    const rehypeKey = serializePlugins(rehypePlugins);
+    const remarkKey = serializePlugins(remarkPlugins);
+    const optionsKey = JSON.stringify(remarkRehypeOptions);
+
+    return `${remarkKey}::${rehypeKey}::${optionsKey}`;
+  }
+
+  get(options: Readonly<Options>) {
+    const key = this.generateCacheKey(options);
+    const processor = this.cache.get(key);
+
+    if (processor) {
+      // Move to end (most recently used)
+      this.cache.delete(key);
+      this.cache.set(key, processor);
+    }
+
+    return processor;
+  }
+
+  set(options: Readonly<Options>, processor: any): void {
+    const key = this.generateCacheKey(options);
+
+    // Remove oldest entry if cache is full
+    if (this.cache.size >= this.maxSize) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey) {
+        this.cache.delete(firstKey);
+      }
+    }
+
+    this.cache.set(key, processor);
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+}
+
+// Global processor cache instance
+const processorCache = new ProcessorCache();
+
 export const Markdown = (options: Readonly<Options>) => {
-  const processor = createProcessor(options);
+  const processor = getCachedProcessor(options);
   const file = new VFile(options.children || "");
-  return post(processor.runSync(processor.parse(file), file), options);
+  // biome-ignore lint/suspicious/noExplicitAny: runSync return type varies with processor configuration
+  return post(processor.runSync(processor.parse(file), file) as any, options);
+};
+
+const getCachedProcessor = (options: Readonly<Options>) => {
+  // Try to get from cache first
+  const cached = processorCache.get(options);
+  if (cached) {
+    return cached;
+  }
+
+  // Create new processor and cache it
+  const processor = createProcessor(options);
+  processorCache.set(options, processor);
+  return processor;
 };
 
 const createProcessor = (options: Readonly<Options>) => {

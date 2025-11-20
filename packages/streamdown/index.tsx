@@ -89,6 +89,10 @@ export const defaultRemarkPlugins: Record<string, Pluggable> = {
   cjkFriendlyGfmStrikethrough: [remarkCjkFriendlyGfmStrikethrough, {}],
 } as const;
 
+// Stable plugin arrays for cache efficiency - created once at module level
+const defaultRehypePluginsArray = Object.values(defaultRehypePlugins);
+const defaultRemarkPluginsArray = Object.values(defaultRemarkPlugins);
+
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export type StreamdownContextType = {
   shikiTheme: [BundledTheme, BundledTheme];
@@ -193,8 +197,8 @@ export const Streamdown = memo(
     mode = "streaming",
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     components,
-    rehypePlugins = Object.values(defaultRehypePlugins),
-    remarkPlugins = Object.values(defaultRemarkPlugins),
+    rehypePlugins = defaultRehypePluginsArray,
+    remarkPlugins = defaultRemarkPluginsArray,
     className,
     shikiTheme = defaultShikiTheme,
     mermaid,
