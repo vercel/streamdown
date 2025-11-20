@@ -8,6 +8,15 @@ import {
 import type { BundledLanguage } from "shiki";
 import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
+import {
+  codeBlockClassName,
+  darkModeClassNames,
+  lineDiffClassNames,
+  lineFocusedClassNames,
+  lineHighlightClassNames,
+  lineNumberClassNames,
+  wordHighlightClassNames,
+} from "./classnames";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
 import { highlighterManager } from "./highlight-manager";
@@ -62,7 +71,7 @@ export const CodeBlock = ({
     return () => {
       mounted.current = false;
     };
-  }, [code, language, preClassName, lightTheme, darkTheme]);
+  }, [code, language, preClassName]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
@@ -72,18 +81,23 @@ export const CodeBlock = ({
         data-language={language}
       >
         <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
-        <div className="w-full">
-          <div className="min-w-full">
-            <div
-              className={cn("overflow-x-auto", className)}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{ __html: html }}
-              data-code-block
-              data-language={language}
-              {...rest}
-            />
-          </div>
-        </div>
+        <div
+          className={cn(
+            lineNumberClassNames,
+            codeBlockClassName,
+            darkModeClassNames,
+            lineHighlightClassNames,
+            lineDiffClassNames,
+            lineFocusedClassNames,
+            wordHighlightClassNames,
+            className
+          )}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+          dangerouslySetInnerHTML={{ __html: html }}
+          data-code-block
+          data-language={language}
+          {...rest}
+        />
       </div>
     </CodeBlockContext.Provider>
   );

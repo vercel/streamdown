@@ -10,6 +10,15 @@ import type { BundledLanguage } from "shiki";
 import { useThrottledDebounce } from "../../hooks/use-throttled-debouce";
 import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
+import {
+  codeBlockClassName,
+  darkModeClassNames,
+  lineDiffClassNames,
+  lineFocusedClassNames,
+  lineHighlightClassNames,
+  lineNumberClassNames,
+  wordHighlightClassNames,
+} from "./classnames";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
 import { highlighterManager } from "./highlight-manager";
@@ -24,70 +33,6 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   language: BundledLanguage;
   preClassName?: string;
 };
-
-const lineNumberClassNames = cn(
-  "[&_code]:[counter-reset:line]",
-  "[&_code]:[counter-increment:line_0]",
-  "[&_.line]:before:content-[counter(line)]",
-  "[&_.line]:before:inline-block",
-  "[&_.line]:before:[counter-increment:line]",
-  "[&_.line]:before:w-4",
-  "[&_.line]:before:mr-4",
-  "[&_.line]:before:text-[13px]",
-  "[&_.line]:before:text-right",
-  "[&_.line]:before:text-muted-foreground/50",
-  "[&_.line]:before:font-mono",
-  "[&_.line]:before:select-none"
-);
-
-const darkModeClassNames = cn(
-  "dark:[&_.shiki]:!text-[var(--shiki-dark)]",
-  "dark:[&_.shiki]:!bg-[var(--shiki-dark-bg)]",
-  "dark:[&_.shiki]:![font-style:var(--shiki-dark-font-style)]",
-  "dark:[&_.shiki]:![font-weight:var(--shiki-dark-font-weight)]",
-  "dark:[&_.shiki]:![text-decoration:var(--shiki-dark-text-decoration)]",
-  "dark:[&_.shiki_span]:!text-[var(--shiki-dark)]",
-  "dark:[&_.shiki_span]:![font-style:var(--shiki-dark-font-style)]",
-  "dark:[&_.shiki_span]:![font-weight:var(--shiki-dark-font-weight)]",
-  "dark:[&_.shiki_span]:![text-decoration:var(--shiki-dark-text-decoration)]"
-);
-
-const lineHighlightClassNames = cn(
-  "[&_.line.highlighted]:bg-blue-50",
-  "[&_.line.highlighted]:after:bg-blue-500",
-  "[&_.line.highlighted]:after:absolute",
-  "[&_.line.highlighted]:after:left-0",
-  "[&_.line.highlighted]:after:top-0",
-  "[&_.line.highlighted]:after:bottom-0",
-  "[&_.line.highlighted]:after:w-0.5",
-  "dark:[&_.line.highlighted]:!bg-blue-500/10"
-);
-
-const lineDiffClassNames = cn(
-  "[&_.line.diff]:after:absolute",
-  "[&_.line.diff]:after:left-0",
-  "[&_.line.diff]:after:top-0",
-  "[&_.line.diff]:after:bottom-0",
-  "[&_.line.diff]:after:w-0.5",
-  "[&_.line.diff.add]:bg-emerald-50",
-  "[&_.line.diff.add]:after:bg-emerald-500",
-  "[&_.line.diff.remove]:bg-rose-50",
-  "[&_.line.diff.remove]:after:bg-rose-500",
-  "dark:[&_.line.diff.add]:!bg-emerald-500/10",
-  "dark:[&_.line.diff.remove]:!bg-rose-500/10"
-);
-
-const lineFocusedClassNames = cn(
-  "[&_code:has(.focused)_.line]:blur-[2px]",
-  "[&_code:has(.focused)_.line.focused]:blur-none"
-);
-
-const wordHighlightClassNames = cn(
-  "[&_.highlighted-word]:bg-blue-50",
-  "dark:[&_.highlighted-word]:!bg-blue-500/10"
-);
-
-const codeBlockClassName = cn("[&_.shiki]:!bg-[var(--shiki-bg)]");
 
 export const CodeBlock = ({
   code,
@@ -113,6 +58,7 @@ export const CodeBlock = ({
   }, [lightTheme, darkTheme]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: "adding lastHighlightedCode to dependency array will trigger re-runs"
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Required"
   useEffect(() => {
     mounted.current = true;
 
@@ -244,30 +190,25 @@ export const CodeBlock = ({
         data-language={language}
       >
         <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
-        <div className="w-full">
-          <div className="min-w-full">
-            <div
-              className={cn(
-                "overflow-x-auto",
-                lineNumberClassNames,
-                codeBlockClassName,
-                darkModeClassNames,
-                lineHighlightClassNames,
-                lineDiffClassNames,
-                lineFocusedClassNames,
-                wordHighlightClassNames,
-                className
-              )}
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-              dangerouslySetInnerHTML={{
-                __html: incompleteLineHtml ? html + incompleteLineHtml : html,
-              }}
-              data-code-block
-              data-language={language}
-              {...rest}
-            />
-          </div>
-        </div>
+        <div
+          className={cn(
+            lineNumberClassNames,
+            codeBlockClassName,
+            darkModeClassNames,
+            lineHighlightClassNames,
+            lineDiffClassNames,
+            lineFocusedClassNames,
+            wordHighlightClassNames,
+            className
+          )}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
+          dangerouslySetInnerHTML={{
+            __html: incompleteLineHtml ? html + incompleteLineHtml : html,
+          }}
+          data-code-block
+          data-language={language}
+          {...rest}
+        />
       </div>
     </CodeBlockContext.Provider>
   );
