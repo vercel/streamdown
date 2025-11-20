@@ -4,6 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import Image from "next/image";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { Streamdown } from "streamdown";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,8 +36,8 @@ export const Chat = ({ models }: ChatProps) => {
   const [model, setModel] = useState(models[0].value);
 
   return (
-    <div className="mx-auto flex h-screen max-w-4xl flex-col divide-y border-x">
-      <div className="flex flex-1 divide-x overflow-hidden">
+    <div className="mx-auto flex h-screen flex-col divide-y overflow-hidden border-x">
+      <div className="flex h-full flex-1 divide-x overflow-hidden">
         <div className="flex-1 space-y-4 overflow-y-auto bg-black p-4 text-white">
           {messages.map((message) => (
             <div key={message.id}>
@@ -44,7 +45,7 @@ export const Chat = ({ models }: ChatProps) => {
                 {message.role === "user" ? "User: " : "AI: "}
               </span>
               {message.parts.map((part, index) => {
-                const key = `${part.type}-${index}-${part.type === "file" ? part.url : (part.text?.slice(0, 50) ?? "")}`;
+                const key = `${message.id}-${index}`;
                 switch (part.type) {
                   case "text":
                     return (
@@ -81,6 +82,7 @@ export const Chat = ({ models }: ChatProps) => {
             </div>
           ))}
         </div>
+
         <div className="flex-1 space-y-4 overflow-y-auto p-4">
           {messages.map((message) => (
             <div key={message.id}>
@@ -88,7 +90,48 @@ export const Chat = ({ models }: ChatProps) => {
                 {message.role === "user" ? "User: " : "AI: "}
               </span>
               {message.parts.map((part, index) => {
-                const key = `${part.type}-${index}-${part.type === "file" ? part.url : (part.text?.slice(0, 50) ?? "")}`;
+                const key = `${message.id}-${index}`;
+                switch (part.type) {
+                  case "text":
+                    return <ReactMarkdown key={key}>{part.text}</ReactMarkdown>;
+                  case "reasoning":
+                    return (
+                      <pre className="italic" key={key}>
+                        {part.text}
+                      </pre>
+                    );
+                  case "file":
+                    return (
+                      <div key={key}>
+                        {part.mediaType.startsWith("image") ? (
+                          <Image
+                            alt={part.filename ?? "An image attachment"}
+                            height={100}
+                            src={part.url}
+                            unoptimized
+                            width={100}
+                          />
+                        ) : (
+                          <div>File: {part.filename}</div>
+                        )}
+                      </div>
+                    );
+                  default:
+                    return null;
+                }
+              })}
+            </div>
+          ))}
+        </div>
+
+        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+          {messages.map((message) => (
+            <div key={message.id}>
+              <span className="font-bold">
+                {message.role === "user" ? "User: " : "AI: "}
+              </span>
+              {message.parts.map((part, index) => {
+                const key = `${message.id}-${index}`;
                 switch (part.type) {
                   case "text":
                     return (
