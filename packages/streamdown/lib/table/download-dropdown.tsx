@@ -1,6 +1,6 @@
 import { DownloadIcon } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
-import { StreamdownRuntimeContext } from "../../index";
+import { StreamdownContext } from "../../index";
 import { cn, save } from "../utils";
 import {
   extractTableDataFromElement,
@@ -25,7 +25,7 @@ export const TableDownloadButton = ({
   format = "csv",
   filename,
 }: TableDownloadButtonProps) => {
-  const { isAnimating } = useContext(StreamdownRuntimeContext);
+  const { isAnimating } = useContext(StreamdownContext);
 
   const downloadTableData = (event: React.MouseEvent<HTMLButtonElement>) => {
     try {
@@ -110,7 +110,7 @@ export const TableDownloadDropdown = ({
 }: TableDownloadDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { isAnimating } = useContext(StreamdownRuntimeContext);
+  const { isAnimating } = useContext(StreamdownContext);
 
   const downloadTableData = (format: "csv" | "markdown") => {
     try {

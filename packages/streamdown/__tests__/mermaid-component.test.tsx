@@ -1,6 +1,6 @@
 import { render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Mermaid, MermaidContext } from "../lib/mermaid/index";
+import { Mermaid, StreamdownContext } from "../lib/mermaid/index";
 
 // Mock the mermaid utils
 vi.mock("../lib/mermaid/utils", () => ({
@@ -85,9 +85,9 @@ describe("Mermaid Component", () => {
     }) => <div data-testid="custom-error">Custom Error: {error}</div>;
 
     const { container } = render(
-      <MermaidContext.Provider value={{ errorComponent: CustomError }}>
+      <StreamdownContext.Provider value={{ shikiTheme: ["github-light", "github-dark"], controls: true, isAnimating: false, mode: "streaming" as const, mermaid: { errorComponent: CustomError } }}>
         <Mermaid chart="invalid" />
-      </MermaidContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     await waitFor(() => {

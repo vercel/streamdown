@@ -1,6 +1,6 @@
 import { render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ShikiThemeContext } from "../index";
+import { StreamdownContext } from "../index";
 import { CodeBlock } from "../lib/code-block/static";
 
 // Mock the highlight manager module
@@ -24,11 +24,18 @@ describe("CodeBlock (static)", () => {
     "github-dark",
   ];
 
+  const mockContext = {
+    shikiTheme: mockThemes,
+    controls: true,
+    isAnimating: false,
+    mode: "static" as const,
+  };
+
   it("should render CodeBlock with initial plain HTML", () => {
     const { container } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="const x = 1;" language="javascript" />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     const codeBlock = container.querySelector("[data-code-block-container]");
@@ -38,9 +45,9 @@ describe("CodeBlock (static)", () => {
 
   it("should render with light and dark versions", async () => {
     const { container } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="const x = 1;" language="javascript" />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     await waitFor(() => {
@@ -58,9 +65,9 @@ describe("CodeBlock (static)", () => {
 
   it("should apply custom className", async () => {
     const { container } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock className="custom-class" code="test" language="javascript" />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     await waitFor(() => {
@@ -72,13 +79,13 @@ describe("CodeBlock (static)", () => {
 
   it("should apply preClassName", async () => {
     const { container } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock
           code="test"
           language="javascript"
           preClassName="custom-pre"
         />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     await waitFor(() => {
@@ -91,9 +98,9 @@ describe("CodeBlock (static)", () => {
 
   it("should render with different language", async () => {
     const { container } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="print('hello')" language="python" />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     const codeBlock = container.querySelector("[data-code-block-container]");
@@ -102,9 +109,9 @@ describe("CodeBlock (static)", () => {
 
   it("should handle code updates", async () => {
     const { container, rerender } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="const x = 1;" language="javascript" />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     await waitFor(() => {
@@ -115,9 +122,9 @@ describe("CodeBlock (static)", () => {
     });
 
     rerender(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="const y = 2;" language="javascript" />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     await waitFor(() => {
@@ -130,9 +137,9 @@ describe("CodeBlock (static)", () => {
 
   it("should include CodeBlockHeader with language", () => {
     const { container } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="test" language="typescript" />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     const header = container.querySelector("[data-code-block-header]");
@@ -141,11 +148,11 @@ describe("CodeBlock (static)", () => {
 
   it("should handle children", () => {
     const { container } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="test" language="javascript">
           <div data-testid="custom-child">Custom content</div>
         </CodeBlock>
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     const child = container.querySelector('[data-testid="custom-child"]');
@@ -167,9 +174,9 @@ describe("CodeBlock (static)", () => {
     }));
 
     const { container } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="test" language="javascript" />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     // Should still render with initial plain HTML
@@ -179,9 +186,9 @@ describe("CodeBlock (static)", () => {
 
   it("should escape HTML in plain HTML fallback", () => {
     const { container } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="<div>test</div>" language="html" />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     // Check initial render has escaped HTML
@@ -191,9 +198,9 @@ describe("CodeBlock (static)", () => {
 
   it("should cleanup on unmount", async () => {
     const { unmount, container } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="test" language="javascript" />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     await waitFor(() => {
@@ -212,14 +219,14 @@ describe("CodeBlock (static)", () => {
 
   it("should pass through additional HTML attributes", () => {
     const { container } = render(
-      <ShikiThemeContext.Provider value={mockThemes}>
+      <StreamdownContext.Provider value={mockContext}>
         <CodeBlock
           code="test"
           data-testid="custom-code-block"
           id="my-code-block"
           language="javascript"
         />
-      </ShikiThemeContext.Provider>
+      </StreamdownContext.Provider>
     );
 
     const codeBlocks = container.querySelectorAll("[data-code-block]");

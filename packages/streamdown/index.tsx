@@ -13,7 +13,6 @@ import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
 import { Markdown, type Options } from "./lib/markdown";
-import { MermaidContext } from "./lib/mermaid";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 import { cn } from "./lib/utils";
@@ -21,7 +20,6 @@ import { cn } from "./lib/utils";
 export type { MermaidConfig } from "mermaid";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { defaultUrlTransform } from "./lib/markdown";
-export { MermaidContext } from "./lib/mermaid";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 
@@ -83,23 +81,26 @@ export const defaultRemarkPlugins: Record<string, Pluggable> = {
   cjkFriendlyGfmStrikethrough: [remarkCjkFriendlyGfmStrikethrough, {}],
 } as const;
 
-export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
-  "github-light" as BundledTheme,
-  "github-dark" as BundledTheme,
-]);
-
-export const ControlsContext = createContext<ControlsConfig>(true);
-
-export type StreamdownRuntimeContextType = {
+// Combined context for better performance - reduces React tree depth from 5 nested providers to 1
+export type StreamdownContextType = {
+  shikiTheme: [BundledTheme, BundledTheme];
+  controls: ControlsConfig;
   isAnimating: boolean;
+  mode: "static" | "streaming";
+  mermaid?: MermaidOptions;
 };
 
-export const StreamdownRuntimeContext =
-  createContext<StreamdownRuntimeContextType>({
-    isAnimating: false,
-  });
+const defaultStreamdownContext: StreamdownContextType = {
+  shikiTheme: ["github-light" as BundledTheme, "github-dark" as BundledTheme],
+  controls: true,
+  isAnimating: false,
+  mode: "streaming",
+  mermaid: undefined,
+};
 
-export const ModeContext = createContext<"static" | "streaming">("streaming");
+export const StreamdownContext = createContext<StreamdownContextType>(
+  defaultStreamdownContext
+);
 
 type BlockProps = Options & {
   content: string;
@@ -154,7 +155,18 @@ export const Streamdown = memo(
         parseMarkdownIntoBlocksFn(typeof children === "string" ? children : ""),
       [children, parseMarkdownIntoBlocksFn]
     );
-    const runtimeContext = useMemo(() => ({ isAnimating }), [isAnimating]);
+
+    // Combined context value - single object reduces React tree overhead
+    const contextValue = useMemo<StreamdownContextType>(
+      () => ({
+        shikiTheme,
+        controls,
+        isAnimating,
+        mode,
+        mermaid,
+      }),
+      [shikiTheme, controls, isAnimating, mode, mermaid]
+    );
 
     useEffect(() => {
       if (
@@ -173,64 +185,50 @@ export const Streamdown = memo(
     // Static mode: simple rendering without streaming features
     if (mode === "static") {
       return (
-        <ModeContext.Provider value={mode}>
-          <ShikiThemeContext.Provider value={shikiTheme}>
-            <MermaidContext.Provider value={mermaid}>
-              <ControlsContext.Provider value={controls}>
-                <div className={cn("space-y-4", className)}>
-                  <Markdown
-                    components={{
-                      ...defaultComponents,
-                      ...components,
-                    }}
-                    rehypePlugins={rehypePlugins}
-                    remarkPlugins={remarkPlugins}
-                    urlTransform={urlTransform}
-                    {...props}
-                  >
-                    {children}
-                  </Markdown>
-                </div>
-              </ControlsContext.Provider>
-            </MermaidContext.Provider>
-          </ShikiThemeContext.Provider>
-        </ModeContext.Provider>
+        <StreamdownContext.Provider value={contextValue}>
+          <div className={cn("space-y-4", className)}>
+            <Markdown
+              components={{
+                ...defaultComponents,
+                ...components,
+              }}
+              rehypePlugins={rehypePlugins}
+              remarkPlugins={remarkPlugins}
+              urlTransform={urlTransform}
+              {...props}
+            >
+              {children}
+            </Markdown>
+          </div>
+        </StreamdownContext.Provider>
       );
     }
 
     // Streaming mode: parse into blocks with memoization and incomplete markdown handling
     return (
-      <ModeContext.Provider value={mode}>
-        <ShikiThemeContext.Provider value={shikiTheme}>
-          <MermaidContext.Provider value={mermaid}>
-            <ControlsContext.Provider value={controls}>
-              <StreamdownRuntimeContext.Provider value={runtimeContext}>
-                <div className={cn("space-y-4", className)}>
-                  {blocks.map((block, index) => (
-                    <BlockComponent
-                      components={{
-                        ...defaultComponents,
-                        ...components,
-                      }}
-                      content={block}
-                      index={index}
-                      // biome-ignore lint/suspicious/noArrayIndexKey: "required"
-                      key={`${generatedId}-block-${index}`}
-                      rehypePlugins={rehypePlugins}
-                      remarkPlugins={remarkPlugins}
-                      shouldParseIncompleteMarkdown={
-                        shouldParseIncompleteMarkdown
-                      }
-                      urlTransform={urlTransform}
-                      {...props}
-                    />
-                  ))}
-                </div>
-              </StreamdownRuntimeContext.Provider>
-            </ControlsContext.Provider>
-          </MermaidContext.Provider>
-        </ShikiThemeContext.Provider>
-      </ModeContext.Provider>
+      <StreamdownContext.Provider value={contextValue}>
+        <div className={cn("space-y-4", className)}>
+          {blocks.map((block, index) => (
+            <BlockComponent
+              components={{
+                ...defaultComponents,
+                ...components,
+              }}
+              content={block}
+              index={index}
+              // biome-ignore lint/suspicious/noArrayIndexKey: "required"
+              key={`${generatedId}-block-${index}`}
+              rehypePlugins={rehypePlugins}
+              remarkPlugins={remarkPlugins}
+              shouldParseIncompleteMarkdown={
+                shouldParseIncompleteMarkdown
+              }
+              urlTransform={urlTransform}
+              {...props}
+            />
+          ))}
+        </div>
+      </StreamdownContext.Provider>
     );
   },
   (prevProps, nextProps) =>

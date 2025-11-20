@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import type { BundledLanguage } from "shiki";
-import { ShikiThemeContext } from "../../index";
+import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
@@ -33,7 +33,8 @@ export const CodeBlock = ({
   preClassName,
   ...rest
 }: CodeBlockProps) => {
-  const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
+  const { shikiTheme } = useContext(StreamdownContext);
+  const [lightTheme, darkTheme] = shikiTheme;
   const [html, setHtml] = useState<string>(createPlainHtml(code, preClassName));
   const [darkHtml, setDarkHtml] = useState<string>(
     createPlainHtml(code, preClassName)

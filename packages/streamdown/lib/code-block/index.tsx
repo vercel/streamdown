@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { BundledLanguage } from "shiki";
 import { useThrottledDebounce } from "../../hooks/use-throttled-debouce";
-import { ModeContext, ShikiThemeContext } from "../../index";
+import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
@@ -33,7 +33,7 @@ export const CodeBlock = ({
   preClassName,
   ...rest
 }: CodeBlockProps) => {
-  const mode = useContext(ModeContext);
+  const { mode, shikiTheme } = useContext(StreamdownContext);
   const [html, setHtml] = useState<string>("");
   const [darkHtml, setDarkHtml] = useState<string>("");
   const [lastHighlightedCode, setLastHighlightedCode] = useState("");
@@ -43,7 +43,7 @@ export const CodeBlock = ({
   const mounted = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastHighlightTime = useRef(0);
-  const [lightTheme, darkTheme] = useContext(ShikiThemeContext);
+  const [lightTheme, darkTheme] = shikiTheme;
 
   useEffect(() => {
     highlighterManager.initializeHighlighters([lightTheme, darkTheme]);

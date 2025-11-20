@@ -1,7 +1,7 @@
 import { DownloadIcon } from "lucide-react";
 import { type ComponentProps, useContext } from "react";
 import type { BundledLanguage } from "shiki";
-import { StreamdownRuntimeContext } from "../../index";
+import { StreamdownContext } from "../../index";
 import { cn, save } from "../utils";
 import { useCodeBlockContext } from "./context";
 
@@ -332,7 +332,7 @@ export const CodeBlockDownloadButton = ({
   language?: BundledLanguage;
 }) => {
   const { code: contextCode } = useCodeBlockContext();
-  const { isAnimating } = useContext(StreamdownRuntimeContext);
+  const { isAnimating } = useContext(StreamdownContext);
   const code = propCode ?? contextCode;
   const extension =
     language && language in languageExtensionMap

@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { StreamdownRuntimeContext } from "../../index";
+import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
 import { useCodeBlockContext } from "./context";
 
@@ -28,7 +28,7 @@ export const CodeBlockCopyButton = ({
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
   const { code: contextCode } = useCodeBlockContext();
-  const { isAnimating } = useContext(StreamdownRuntimeContext);
+  const { isAnimating } = useContext(StreamdownContext);
   const code = propCode ?? contextCode;
 
   const copyToClipboard = async () => {
