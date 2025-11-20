@@ -7,7 +7,6 @@ import {
   memo,
   useContext,
 } from "react";
-import type { ExtraProps, Options } from "react-markdown";
 import type { BundledLanguage } from "shiki";
 import { ControlsContext, MermaidContext, ModeContext } from "../index";
 import { CodeBlock } from "./code-block";
@@ -15,6 +14,7 @@ import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
 import { CodeBlock as StaticCodeBlock } from "./code-block/static";
 import { ImageComponent } from "./image";
+import type { ExtraProps, Options } from "./markdown";
 import { Mermaid } from "./mermaid";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";

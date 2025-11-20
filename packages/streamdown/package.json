@@ -34,6 +34,7 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
+    "@types/hast": "^3.0.4",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.2",
@@ -50,11 +51,13 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "hast": "^1.0.0",
+    "hast-util-to-jsx-runtime": "^2.3.6",
+    "html-url-attributes": "^3.0.1",
     "katex": "^0.16.22",
     "lucide-react": "^0.542.0",
     "marked": "^16.2.1",
     "mermaid": "^11.11.0",
-    "react-markdown": "^10.1.0",
     "rehype-harden": "^1.1.5",
     "rehype-katex": "^7.0.1",
     "rehype-raw": "^7.0.0",
@@ -62,7 +65,11 @@
     "remark-cjk-friendly-gfm-strikethrough": "^1.2.3",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
     "shiki": "^3.12.2",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "unist-util-visit": "^5.0.0",
+    "vfile": "^6.0.3"
   }
 }

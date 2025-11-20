@@ -3,12 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 
 // Mock the dependencies
-vi.mock("react-markdown", () => ({
-  default: ({
+vi.mock("../lib/markdown", () => ({
+  Markdown: ({
     children,
-    allowedImagePrefixes,
-    allowedLinkPrefixes,
-    defaultOrigin,
     rehypePlugins,
     remarkPlugins,
     components,
@@ -24,6 +21,7 @@ vi.mock("react-markdown", () => ({
       </div>
     );
   },
+  defaultUrlTransform: (url: string) => url,
 }));
 
 vi.mock("rehype-katex", () => ({

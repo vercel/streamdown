@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import React from "react";
-import type { Options } from "react-markdown";
+import type { Options } from "../lib/markdown";
 import { describe, expect, it } from "vitest";
 import { components as importedComponents } from "../lib/components";
 

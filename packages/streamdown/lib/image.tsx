@@ -1,6 +1,6 @@
 import { DownloadIcon } from "lucide-react";
 import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
-import type { ExtraProps } from "react-markdown";
+import type { ExtraProps } from "./markdown";
 import { cn, save } from "./utils";
 
 const fileExtensionPattern = /\.[^/.]+$/;

@@ -2,7 +2,6 @@
 
 import type { MermaidConfig } from "mermaid";
 import { createContext, memo, useEffect, useId, useMemo } from "react";
-import ReactMarkdown, { type Options } from "react-markdown";
 import { harden } from "rehype-harden";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
@@ -13,6 +12,7 @@ import remarkMath from "remark-math";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
+import { Markdown, type Options } from "./lib/markdown";
 import { MermaidContext } from "./lib/mermaid";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
@@ -20,7 +20,8 @@ import { cn } from "./lib/utils";
 
 export type { MermaidConfig } from "mermaid";
 // biome-ignore lint/performance/noBarrelFile: "required"
-export { defaultUrlTransform } from "react-markdown";
+export { defaultUrlTransform } from "./lib/markdown";
+export { MermaidContext } from "./lib/mermaid";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 
@@ -87,9 +88,6 @@ export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
   "github-dark" as BundledTheme,
 ]);
 
-// Export the unified context (imported from ./lib/mermaid above)
-export { MermaidContext };
-
 export const ControlsContext = createContext<ControlsConfig>(true);
 
 export type StreamdownRuntimeContextType = {
@@ -119,7 +117,7 @@ export const Block = memo(
       [content, shouldParseIncompleteMarkdown]
     );
 
-    return <ReactMarkdown {...props}>{parsedContent}</ReactMarkdown>;
+    return <Markdown {...props}>{parsedContent}</Markdown>;
   },
   (prevProps, nextProps) => prevProps.content === nextProps.content
 );
@@ -180,7 +178,7 @@ export const Streamdown = memo(
             <MermaidContext.Provider value={mermaid}>
               <ControlsContext.Provider value={controls}>
                 <div className={cn("space-y-4", className)}>
-                  <ReactMarkdown
+                  <Markdown
                     components={{
                       ...defaultComponents,
                       ...components,
@@ -191,7 +189,7 @@ export const Streamdown = memo(
                     {...props}
                   >
                     {children}
-                  </ReactMarkdown>
+                  </Markdown>
                 </div>
               </ControlsContext.Provider>
             </MermaidContext.Provider>
