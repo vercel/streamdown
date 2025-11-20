@@ -8,7 +8,7 @@ A drop-in replacement for react-markdown, designed for AI-powered streaming.
 
 Formatting Markdown is easy, but when you tokenize and stream it, new challenges arise. Streamdown is built specifically to handle the unique requirements of streaming Markdown content from AI models, providing seamless formatting even with incomplete or unterminated Markdown blocks.
 
-Streamdown powers the [AI Elements Response](https://ai-sdk.dev/elements/components/response) component but can be installed as a standalone package for your own streaming needs.
+Streamdown powers the [AI Elements Message](https://ai-sdk.dev/elements/components/message) component but can be installed as a standalone package for your own streaming needs.
 
 ## Features
 
@@ -41,7 +41,7 @@ Make sure the path matches the location of the `node_modules` folder in your pro
 You can use Streamdown in your React application like this:
 
 ```tsx
-import { Streamdown } from 'streamdown';
+import { Streamdown } from "streamdown";
 
 export default function Page() {
   const markdown = "# Hello World\n\nThis is **streaming** markdown!";
