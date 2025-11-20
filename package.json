@@ -10,6 +10,11 @@
     "test:coverage": "turbo run test:coverage",
     "test:ui": "turbo run test:ui",
     "check-types": "turbo run check-types",
+    "benchmark": "vitest bench --run --config vitest.bench.config.ts",
+    "benchmark:parse": "vitest bench --run --config vitest.bench.config.ts benchmarks/parse.bench.ts",
+    "benchmark:render": "vitest bench --run --config vitest.bench.config.ts benchmarks/render.bench.tsx",
+    "benchmark:memory": "vitest bench --run --config vitest.bench.config.ts benchmarks/memory.bench.tsx",
+    "benchmark:streaming": "vitest bench --run --config vitest.bench.config.ts benchmarks/streaming.bench.tsx",
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "changeset:publish": "pnpm build && changeset publish"
@@ -17,9 +22,24 @@
   "devDependencies": {
     "@biomejs/biome": "2.3.6",
     "@changesets/cli": "^2.29.7",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^19.2.6",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "jsdom": "^26.1.0",
+    "marked": "^16.4.2",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
     "turbo": "^2.6.1",
     "typescript": "5.9.3",
-    "ultracite": "6.3.4"
+    "ultracite": "6.3.4",
+    "vitest": "^3.2.4"
   },
   "packageManager": "pnpm@10.22.0",
   "engines": {
