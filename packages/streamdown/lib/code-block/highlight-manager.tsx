@@ -23,10 +23,10 @@ class HighlighterManager {
   private initializationPromise: Promise<void> | null = null;
   private loadLanguagePromise: Promise<void> | null = null;
 
-  // LRU cache for highlighted code
+  // LRU cache for highlighted code - increased from 50 to 500 for code-heavy documents
   private readonly cache = new Map<string, [string, string]>();
   private cacheKeys: string[] = [];
-  private readonly MAX_CACHE_SIZE = 50;
+  private readonly MAX_CACHE_SIZE = 500;
 
   // Queue to deduplicate concurrent highlight requests
   private readonly highlightQueue = new Map<
@@ -102,9 +102,11 @@ class HighlighterManager {
   }
 
   private async loadLanguage(language: BundledLanguage): Promise<void> {
-    // Load the language
-    await this.darkHighlighter?.loadLanguage(language);
-    await this.lightHighlighter?.loadLanguage(language);
+    // Load the language in parallel for both highlighters
+    await Promise.all([
+      this.darkHighlighter?.loadLanguage(language),
+      this.lightHighlighter?.loadLanguage(language),
+    ]);
     this.loadedLanguages.add(language);
   }
 
@@ -198,10 +200,7 @@ class HighlighterManager {
     // Create promise for this highlight operation
     const highlightPromise = (async () => {
       try {
-        // Yield to browser before expensive work
-        await new Promise((resolve) => setTimeout(resolve, 0));
-
-        // Check if aborted after yielding
+        // Check if aborted before starting
         checkSignal();
 
         // Wait for initialization to complete before proceeding
