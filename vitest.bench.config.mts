@@ -10,6 +10,7 @@ export default defineConfig({
     globals: true,
     benchmark: {
       include: ["benchmarks/**/*.bench.{ts,tsx}"],
+      reporters: ["default"],
     },
   },
   resolve: {

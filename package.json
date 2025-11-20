@@ -10,7 +10,7 @@
     "test:coverage": "turbo run test:coverage",
     "test:ui": "turbo run test:ui",
     "check-types": "turbo run check-types",
-    "benchmark": "vitest bench --run --config vitest.bench.config.mts",
+    "benchmark": "vitest bench --run --config vitest.bench.config.mts > benchmark-results.txt",
     "benchmark:parse": "vitest bench --run --config vitest.bench.config.mts benchmarks/parse.bench.ts",
     "benchmark:render": "vitest bench --run --config vitest.bench.config.mts benchmarks/render.bench.tsx",
     "benchmark:memory": "vitest bench --run --config vitest.bench.config.mts benchmarks/memory.bench.tsx",

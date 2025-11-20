@@ -10,73 +10,32 @@ import { parseMarkdownIntoBlocks } from "../packages/streamdown/lib/parse-blocks
 import { parseIncompleteMarkdown } from "../packages/streamdown/lib/parse-incomplete-markdown";
 import { fixtures } from "./fixtures";
 
-// Helper to measure memory usage
-interface MemoryResult {
-  heapUsed: number;
-  external: number;
-}
-
-const measureMemory = (fn: () => void, iterations = 100): MemoryResult => {
-  // Force GC if available
-  if (global.gc) {
-    global.gc();
-  }
-
-  const beforeHeap = process.memoryUsage().heapUsed;
-  const beforeExternal = process.memoryUsage().external;
-
-  // Run multiple iterations to get measurable memory impact
-  for (let i = 0; i < iterations; i++) {
-    fn();
-  }
-
-  const afterHeap = process.memoryUsage().heapUsed;
-  const afterExternal = process.memoryUsage().external;
-
-  return {
-    heapUsed: (afterHeap - beforeHeap) / iterations,
-    external: (afterExternal - beforeExternal) / iterations,
-  };
-};
-
 describe("Memory Usage: Parse Operations", () => {
   describe("parseMarkdownIntoBlocks", () => {
     bench("Small document", () => {
-      measureMemory(() => {
-        parseMarkdownIntoBlocks(fixtures.small);
-      });
+      parseMarkdownIntoBlocks(fixtures.small);
     });
 
     bench("Medium document", () => {
-      measureMemory(() => {
-        parseMarkdownIntoBlocks(fixtures.medium);
-      });
+      parseMarkdownIntoBlocks(fixtures.medium);
     });
 
     bench("Large document", () => {
-      measureMemory(() => {
-        parseMarkdownIntoBlocks(fixtures.large);
-      });
+      parseMarkdownIntoBlocks(fixtures.large);
     });
   });
 
   describe("parseIncompleteMarkdown", () => {
     bench("Small document", () => {
-      measureMemory(() => {
-        parseIncompleteMarkdown(fixtures.small);
-      });
+      parseIncompleteMarkdown(fixtures.small);
     });
 
     bench("Streaming document (incomplete tokens)", () => {
-      measureMemory(() => {
-        parseIncompleteMarkdown(fixtures.streaming);
-      });
+      parseIncompleteMarkdown(fixtures.streaming);
     });
 
     bench("Large document", () => {
-      measureMemory(() => {
-        parseIncompleteMarkdown(fixtures.large);
-      });
+      parseIncompleteMarkdown(fixtures.large);
     });
   });
 });
@@ -84,115 +43,91 @@ describe("Memory Usage: Parse Operations", () => {
 describe("Memory Usage: Component Rendering", () => {
   describe("Small Document", () => {
     bench("Streamdown (static)", () => {
-      measureMemory(() => {
-        render(<Streamdown mode="static">{fixtures.small}</Streamdown>);
-        cleanup();
-      }, 50);
+      render(<Streamdown mode="static">{fixtures.small}</Streamdown>);
+      cleanup();
     });
 
     bench("Streamdown (streaming)", () => {
-      measureMemory(() => {
-        render(<Streamdown mode="streaming">{fixtures.small}</Streamdown>);
-        cleanup();
-      }, 50);
+      render(<Streamdown mode="streaming">{fixtures.small}</Streamdown>);
+      cleanup();
     });
 
     bench("React Markdown", () => {
-      measureMemory(() => {
-        render(
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {fixtures.small}
-          </ReactMarkdown>
-        );
-        cleanup();
-      }, 50);
+      render(
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {fixtures.small}
+        </ReactMarkdown>
+      );
+      cleanup();
     });
   });
 
   describe("Medium Document", () => {
     bench("Streamdown (static)", () => {
-      measureMemory(() => {
-        render(<Streamdown mode="static">{fixtures.medium}</Streamdown>);
-        cleanup();
-      }, 50);
+      render(<Streamdown mode="static">{fixtures.medium}</Streamdown>);
+      cleanup();
     });
 
     bench("Streamdown (streaming)", () => {
-      measureMemory(() => {
-        render(<Streamdown mode="streaming">{fixtures.medium}</Streamdown>);
-        cleanup();
-      }, 50);
+      render(<Streamdown mode="streaming">{fixtures.medium}</Streamdown>);
+      cleanup();
     });
 
     bench("React Markdown", () => {
-      measureMemory(() => {
-        render(
-          <ReactMarkdown
-            rehypePlugins={[rehypeKatex, rehypeRaw]}
-            remarkPlugins={[remarkGfm, remarkMath]}
-          >
-            {fixtures.medium}
-          </ReactMarkdown>
-        );
-        cleanup();
-      }, 50);
+      render(
+        <ReactMarkdown
+          rehypePlugins={[rehypeKatex, rehypeRaw]}
+          remarkPlugins={[remarkGfm, remarkMath]}
+        >
+          {fixtures.medium}
+        </ReactMarkdown>
+      );
+      cleanup();
     });
   });
 
   describe("Large Document", () => {
     bench("Streamdown (static)", () => {
-      measureMemory(() => {
-        render(<Streamdown mode="static">{fixtures.large}</Streamdown>);
-        cleanup();
-      }, 25);
+      render(<Streamdown mode="static">{fixtures.large}</Streamdown>);
+      cleanup();
     });
 
     bench("Streamdown (streaming)", () => {
-      measureMemory(() => {
-        render(<Streamdown mode="streaming">{fixtures.large}</Streamdown>);
-        cleanup();
-      }, 25);
+      render(<Streamdown mode="streaming">{fixtures.large}</Streamdown>);
+      cleanup();
     });
 
     bench("React Markdown", () => {
-      measureMemory(() => {
-        render(
-          <ReactMarkdown
-            rehypePlugins={[rehypeKatex, rehypeRaw]}
-            remarkPlugins={[remarkGfm, remarkMath]}
-          >
-            {fixtures.large}
-          </ReactMarkdown>
-        );
-        cleanup();
-      }, 25);
+      render(
+        <ReactMarkdown
+          rehypePlugins={[rehypeKatex, rehypeRaw]}
+          remarkPlugins={[remarkGfm, remarkMath]}
+        >
+          {fixtures.large}
+        </ReactMarkdown>
+      );
+      cleanup();
     });
   });
 
   describe("Code Heavy Document", () => {
     bench("Streamdown (static)", () => {
-      measureMemory(() => {
-        render(<Streamdown mode="static">{fixtures.codeHeavy}</Streamdown>);
-        cleanup();
-      }, 25);
+      render(<Streamdown mode="static">{fixtures.codeHeavy}</Streamdown>);
+      cleanup();
     });
 
     bench("Streamdown (streaming)", () => {
-      measureMemory(() => {
-        render(<Streamdown mode="streaming">{fixtures.codeHeavy}</Streamdown>);
-        cleanup();
-      }, 25);
+      render(<Streamdown mode="streaming">{fixtures.codeHeavy}</Streamdown>);
+      cleanup();
     });
 
     bench("React Markdown", () => {
-      measureMemory(() => {
-        render(
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {fixtures.codeHeavy}
-          </ReactMarkdown>
-        );
-        cleanup();
-      }, 25);
+      render(
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {fixtures.codeHeavy}
+        </ReactMarkdown>
+      );
+      cleanup();
     });
   });
 });
@@ -208,37 +143,33 @@ describe("Memory Usage: Streaming Simulation", () => {
     ];
 
     bench("Streamdown (streaming)", () => {
-      measureMemory(() => {
-        const { rerender } = render(
+      const { rerender } = render(
+        <Streamdown mode="streaming" parseIncompleteMarkdown>
+          {chunks[0]}
+        </Streamdown>
+      );
+      for (let i = 1; i < chunks.length; i++) {
+        rerender(
           <Streamdown mode="streaming" parseIncompleteMarkdown>
-            {chunks[0]}
+            {chunks[i]}
           </Streamdown>
         );
-        for (let i = 1; i < chunks.length; i++) {
-          rerender(
-            <Streamdown mode="streaming" parseIncompleteMarkdown>
-              {chunks[i]}
-            </Streamdown>
-          );
-        }
-        cleanup();
-      }, 20);
+      }
+      cleanup();
     });
 
     bench("React Markdown", () => {
-      measureMemory(() => {
-        const { rerender } = render(
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{chunks[0]}</ReactMarkdown>
+      const { rerender } = render(
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{chunks[0]}</ReactMarkdown>
+      );
+      for (let i = 1; i < chunks.length; i++) {
+        rerender(
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {chunks[i]}
+          </ReactMarkdown>
         );
-        for (let i = 1; i < chunks.length; i++) {
-          rerender(
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {chunks[i]}
-            </ReactMarkdown>
-          );
-        }
-        cleanup();
-      }, 20);
+      }
+      cleanup();
     });
   });
 });
