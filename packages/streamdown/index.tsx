@@ -166,7 +166,21 @@ export const Block = memo(
       }
     }
 
-    // Plugins are unlikely to change frequently, skip deep check
+    // Check if rehypePlugins changed (reference comparison)
+    if (prevProps.rehypePlugins !== nextProps.rehypePlugins) {
+      return false;
+    }
+
+    // Check if remarkPlugins changed (reference comparison)
+    if (prevProps.remarkPlugins !== nextProps.remarkPlugins) {
+      return false;
+    }
+
+    // Check if urlTransform changed (reference comparison)
+    if (prevProps.urlTransform !== nextProps.urlTransform) {
+      return false;
+    }
+
     return true;
   }
 );
