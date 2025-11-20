@@ -10,10 +10,10 @@ vi.mock("../lib/code-block/highlight-manager", () => ({
     highlightCode: vi.fn((code, language, preClassName) => {
       const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const preClass = preClassName || "";
-      return Promise.resolve([
-        `<pre class="${preClass} light-theme"><code>${escapedCode}</code></pre>`,
-        `<pre class="${preClass} dark-theme"><code>${escapedCode}</code></pre>`,
-      ]);
+      // Return single HTML string with CSS variables (dual-theme support)
+      return Promise.resolve(
+        `<pre class="${preClass}" style="--shiki-light:#000;--shiki-dark:#fff;--shiki-light-bg:#fff;--shiki-dark-bg:#000"><code>${escapedCode}</code></pre>`
+      );
     }),
   },
 }));
@@ -48,7 +48,7 @@ describe("CodeBlock (static)", () => {
     });
   });
 
-  it("should render with light and dark versions", async () => {
+  it("should render with light and dark theme support via CSS variables", async () => {
     const { container } = render(
       <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="const x = 1;" language="javascript" />
@@ -56,15 +56,14 @@ describe("CodeBlock (static)", () => {
     );
 
     await waitFor(() => {
-      const lightBlock = container.querySelector(
-        "[data-code-block].dark\\:hidden"
-      );
-      const darkBlock = container.querySelector(
-        "[data-code-block].dark\\:block"
-      );
+      const codeBlock = container.querySelector("[data-code-block]");
+      const pre = codeBlock?.querySelector("pre");
 
-      expect(lightBlock).toBeTruthy();
-      expect(darkBlock).toBeTruthy();
+      expect(codeBlock).toBeTruthy();
+      expect(pre).toBeTruthy();
+      // Check for CSS variables that enable dual-theme support
+      expect(pre?.style.getPropertyValue("--shiki-light")).toBeTruthy();
+      expect(pre?.style.getPropertyValue("--shiki-dark")).toBeTruthy();
     });
   });
 
@@ -76,9 +75,8 @@ describe("CodeBlock (static)", () => {
     );
 
     await waitFor(() => {
-      const codeBlocks = container.querySelectorAll("[data-code-block]");
-      expect(codeBlocks[0].className).toContain("custom-class");
-      expect(codeBlocks[1].className).toContain("custom-class");
+      const codeBlock = container.querySelector("[data-code-block]");
+      expect(codeBlock?.className).toContain("custom-class");
     });
   });
 
@@ -94,10 +92,8 @@ describe("CodeBlock (static)", () => {
     );
 
     await waitFor(() => {
-      const lightBlock = container.querySelector(
-        "[data-code-block].dark\\:hidden"
-      );
-      expect(lightBlock?.innerHTML).toContain("custom-pre");
+      const codeBlock = container.querySelector("[data-code-block]");
+      expect(codeBlock?.innerHTML).toContain("custom-pre");
     });
   });
 
@@ -125,10 +121,8 @@ describe("CodeBlock (static)", () => {
     );
 
     await waitFor(() => {
-      const lightBlock = container.querySelector(
-        "[data-code-block].dark\\:hidden"
-      );
-      expect(lightBlock?.innerHTML).toContain("const x = 1;");
+      const codeBlock = container.querySelector("[data-code-block]");
+      expect(codeBlock?.innerHTML).toContain("const x = 1;");
     });
 
     rerender(
@@ -138,10 +132,8 @@ describe("CodeBlock (static)", () => {
     );
 
     await waitFor(() => {
-      const lightBlock = container.querySelector(
-        "[data-code-block].dark\\:hidden"
-      );
-      expect(lightBlock?.innerHTML).toContain("const y = 2;");
+      const codeBlock = container.querySelector("[data-code-block]");
+      expect(codeBlock?.innerHTML).toContain("const y = 2;");
     });
   });
 
@@ -234,10 +226,8 @@ describe("CodeBlock (static)", () => {
     );
 
     await waitFor(() => {
-      const lightBlock = container.querySelector(
-        "[data-code-block].dark\\:hidden"
-      );
-      expect(lightBlock).toBeTruthy();
+      const codeBlock = container.querySelector("[data-code-block]");
+      expect(codeBlock).toBeTruthy();
     });
 
     unmount();
@@ -259,9 +249,9 @@ describe("CodeBlock (static)", () => {
       </StreamdownContext.Provider>
     );
 
-    const codeBlocks = container.querySelectorAll("[data-code-block]");
-    expect(codeBlocks[0].getAttribute("data-testid")).toBe("custom-code-block");
-    expect(codeBlocks[0].getAttribute("id")).toBe("my-code-block");
+    const codeBlock = container.querySelector("[data-code-block]");
+    expect(codeBlock?.getAttribute("data-testid")).toBe("custom-code-block");
+    expect(codeBlock?.getAttribute("id")).toBe("my-code-block");
 
     // Wait for async highlighting to complete
     await waitFor(() => {
