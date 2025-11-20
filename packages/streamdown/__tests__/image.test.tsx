@@ -1,0 +1,333 @@
+import { fireEvent, render, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { ImageComponent } from "../lib/image";
+
+// Setup global URL mocks before any tests run
+if (typeof URL.createObjectURL === 'undefined') {
+  URL.createObjectURL = vi.fn();
+  URL.revokeObjectURL = vi.fn();
+}
+
+// Mock the save utility
+vi.mock("../lib/utils", async () => {
+  const actual = await vi.importActual("../lib/utils");
+  return {
+    ...actual,
+    save: vi.fn(),
+  };
+});
+
+describe("ImageComponent", () => {
+  beforeEach(() => {
+    // Mock fetch
+    global.fetch = vi.fn();
+
+    // Mock console.error to suppress error logs in tests
+    vi.spyOn(console, "error").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should render null when src is not provided", () => {
+    const { container } = render(<ImageComponent node={null as any} />);
+    expect(container.firstChild).toBeNull();
+  });
+
+  it("should render image with src and alt", () => {
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/image.png"
+        alt="Test image"
+      />
+    );
+
+    const img = container.querySelector('img[data-streamdown="image"]');
+    expect(img).toBeTruthy();
+    expect(img?.getAttribute("src")).toBe("https://example.com/image.png");
+    expect(img?.getAttribute("alt")).toBe("Test image");
+  });
+
+  it("should render wrapper with correct classes", () => {
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/image.png"
+        alt="Test"
+      />
+    );
+
+    const wrapper = container.querySelector('[data-streamdown="image-wrapper"]');
+    expect(wrapper).toBeTruthy();
+    expect(wrapper?.className).toContain("group");
+    expect(wrapper?.className).toContain("relative");
+  });
+
+  it("should render download button", () => {
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/image.png"
+        alt="Test"
+      />
+    );
+
+    const button = container.querySelector('button[title="Download image"]');
+    expect(button).toBeTruthy();
+  });
+
+  it("should apply custom className to image", () => {
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/image.png"
+        alt="Test"
+        className="custom-class"
+      />
+    );
+
+    const img = container.querySelector('img[data-streamdown="image"]');
+    expect(img?.className).toContain("custom-class");
+  });
+
+  it("should download image with extension from URL", async () => {
+    const { save } = await import("../lib/utils");
+    const mockBlob = new Blob(["image data"], { type: "image/png" });
+
+    (global.fetch as any).mockResolvedValueOnce({
+      blob: async () => mockBlob,
+    });
+
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/image.png"
+        alt="Test"
+      />
+    );
+
+    const button = container.querySelector('button[title="Download image"]');
+    fireEvent.click(button!);
+
+    await waitFor(() => {
+      expect(save).toHaveBeenCalledWith("image.png", mockBlob, "image/png");
+    });
+  });
+
+  it("should download image with extension from blob type when URL has no extension", async () => {
+    const { save } = await import("../lib/utils");
+    const mockBlob = new Blob(["image data"], { type: "image/jpeg" });
+
+    (global.fetch as any).mockResolvedValueOnce({
+      blob: async () => mockBlob,
+    });
+
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/noextension"
+        alt="My Image"
+      />
+    );
+
+    const button = container.querySelector('button[title="Download image"]');
+    fireEvent.click(button!);
+
+    await waitFor(() => {
+      expect(save).toHaveBeenCalledWith("My Image.jpg", mockBlob, "image/jpeg");
+    });
+  });
+
+  it("should use default extension when blob type is unknown", async () => {
+    const { save } = await import("../lib/utils");
+    const mockBlob = new Blob(["image data"], { type: "application/octet-stream" });
+
+    (global.fetch as any).mockResolvedValueOnce({
+      blob: async () => mockBlob,
+    });
+
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/noext"
+        alt="Test"
+      />
+    );
+
+    const button = container.querySelector('button[title="Download image"]');
+    fireEvent.click(button!);
+
+    await waitFor(() => {
+      expect(save).toHaveBeenCalledWith("Test.png", mockBlob, "application/octet-stream");
+    });
+  });
+
+  it("should handle different image types from blob", async () => {
+    const { save } = await import("../lib/utils");
+
+    const testCases = [
+      { type: "image/svg+xml", extension: "svg" },
+      { type: "image/gif", extension: "gif" },
+      { type: "image/webp", extension: "webp" },
+      { type: "image/png", extension: "png" },
+    ];
+
+    for (const { type, extension } of testCases) {
+      const mockBlob = new Blob(["data"], { type });
+      (global.fetch as any).mockResolvedValueOnce({
+        blob: async () => mockBlob,
+      });
+
+      const { container, unmount } = render(
+        <ImageComponent
+          node={null as any}
+          src="https://example.com/test"
+          alt="Test"
+        />
+      );
+
+      const button = container.querySelector('button[title="Download image"]');
+      fireEvent.click(button!);
+
+      await waitFor(() => {
+        expect(save).toHaveBeenCalledWith(`Test.${extension}`, mockBlob, type);
+      });
+
+      unmount();
+      vi.clearAllMocks();
+    }
+  });
+
+  it("should use alt text as filename when URL has no name", async () => {
+    const { save } = await import("../lib/utils");
+    const mockBlob = new Blob(["data"], { type: "image/png" });
+
+    (global.fetch as any).mockResolvedValueOnce({
+      blob: async () => mockBlob,
+    });
+
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/"
+        alt="My Custom Name"
+      />
+    );
+
+    const button = container.querySelector('button[title="Download image"]');
+    fireEvent.click(button!);
+
+    await waitFor(() => {
+      expect(save).toHaveBeenCalledWith("My Custom Name.png", mockBlob, "image/png");
+    });
+  });
+
+  it("should use 'image' as default filename when no alt or filename available", async () => {
+    const { save } = await import("../lib/utils");
+    const mockBlob = new Blob(["data"], { type: "image/png" });
+
+    (global.fetch as any).mockResolvedValueOnce({
+      blob: async () => mockBlob,
+    });
+
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/"
+      />
+    );
+
+    const button = container.querySelector('button[title="Download image"]');
+    fireEvent.click(button!);
+
+    await waitFor(() => {
+      expect(save).toHaveBeenCalledWith("image.png", mockBlob, "image/png");
+    });
+  });
+
+  it("should handle fetch errors gracefully", async () => {
+    (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
+
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/image.png"
+        alt="Test"
+      />
+    );
+
+    const button = container.querySelector('button[title="Download image"]');
+    fireEvent.click(button!);
+
+    await waitFor(() => {
+      expect(console.error).toHaveBeenCalledWith(
+        "Failed to download image:",
+        expect.any(Error)
+      );
+    });
+  });
+
+  it("should not attempt download when src is undefined in download handler", async () => {
+    const { save } = await import("../lib/utils");
+
+    const { container, rerender } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/image.png"
+        alt="Test"
+      />
+    );
+
+    // Rerender without src
+    rerender(<ImageComponent node={null as any} />);
+
+    // Since component returns null without src, there's no button to click
+    const button = container.querySelector('button[title="Download image"]');
+    expect(button).toBeFalsy();
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it("should remove extension from alt text when used as filename", async () => {
+    const { save } = await import("../lib/utils");
+    const mockBlob = new Blob(["data"], { type: "image/png" });
+
+    (global.fetch as any).mockResolvedValueOnce({
+      blob: async () => mockBlob,
+    });
+
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/"
+        alt="My Image.jpg"
+      />
+    );
+
+    const button = container.querySelector('button[title="Download image"]');
+    fireEvent.click(button!);
+
+    await waitFor(() => {
+      expect(save).toHaveBeenCalledWith("My Image.png", mockBlob, "image/png");
+    });
+  });
+
+  it("should pass through additional props to img element", () => {
+    const { container } = render(
+      <ImageComponent
+        node={null as any}
+        src="https://example.com/image.png"
+        alt="Test"
+        title="Test Title"
+        loading="lazy"
+        data-testid="custom-image"
+      />
+    );
+
+    const img = container.querySelector('img[data-streamdown="image"]');
+    expect(img?.getAttribute("title")).toBe("Test Title");
+    expect(img?.getAttribute("loading")).toBe("lazy");
+    expect(img?.getAttribute("data-testid")).toBe("custom-image");
+  });
+});
