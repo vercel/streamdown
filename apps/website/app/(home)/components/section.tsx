@@ -85,7 +85,7 @@ export const Section = ({
   };
 
   return (
-    <section className="space-y-16 pt-16">
+    <section className="not-fumadocs-codeblock space-y-16 pt-16">
       <div className="mx-auto max-w-3xl space-y-4 px-4 text-center sm:px-8">
         <h2 className="text-pretty font-semibold text-2xl tracking-tighter sm:text-3xl md:text-4xl">
           {title}
@@ -103,7 +103,7 @@ export const Section = ({
             <div className="w-full bg-dashed p-4 text-center font-medium text-muted-foreground text-sm">
               With react-markdown
             </div>
-            <div className="h-[400px] overflow-y-auto bg-background p-4">
+            <div className="h-[400px] overflow-y-auto bg-background p-4 text-sm">
               <ReactMarkdown>{content}</ReactMarkdown>
             </div>
           </div>
