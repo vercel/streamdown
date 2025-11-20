@@ -596,7 +596,11 @@ const CodeComponent = ({
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
   ExtraProps) => {
   const inline = node?.position?.start.line === node?.position?.end.line;
-  const { mermaid: mermaidContext, controls: controlsConfig, mode } = useContext(StreamdownContext);
+  const {
+    mermaid: mermaidContext,
+    controls: controlsConfig,
+    mode,
+  } = useContext(StreamdownContext);
 
   const CodeBlockComponent = mode === "static" ? StaticCodeBlock : CodeBlock;
 

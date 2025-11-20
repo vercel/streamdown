@@ -51,7 +51,14 @@ describe("TableCopyDropdown", () => {
 
   it("should render dropdown button", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -63,7 +70,14 @@ describe("TableCopyDropdown", () => {
 
   it("should render custom children", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown>
           <span>Custom Copy</span>
         </TableCopyDropdown>
@@ -76,7 +90,14 @@ describe("TableCopyDropdown", () => {
 
   it("should be disabled when animating", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: true, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: true,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -88,7 +109,14 @@ describe("TableCopyDropdown", () => {
 
   it("should toggle dropdown on button click", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -110,7 +138,14 @@ describe("TableCopyDropdown", () => {
 
   it("should show CSV and TSV options when open", () => {
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -131,7 +166,14 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown onCopy={onCopy} />
       </StreamdownContext.Provider>,
       { container: dropdownContainer }
@@ -164,7 +206,14 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown onCopy={onCopy} />
       </StreamdownContext.Provider>,
       { container: dropdownContainer }
@@ -194,7 +243,14 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
       </StreamdownContext.Provider>,
       { container: dropdownContainer }
@@ -227,7 +283,14 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
       </StreamdownContext.Provider>,
       { container: dropdownContainer }
@@ -254,7 +317,14 @@ describe("TableCopyDropdown", () => {
 
   it("should close dropdown on outside click", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -279,7 +349,14 @@ describe("TableCopyDropdown", () => {
     document.body.appendChild(dropdownDiv);
 
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown onError={onError} />
       </StreamdownContext.Provider>,
       { container: dropdownDiv }
@@ -316,7 +393,14 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown onError={onError} />
       </StreamdownContext.Provider>,
       { container: dropdownContainer }
@@ -359,7 +443,14 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown onError={onError} />
       </StreamdownContext.Provider>,
       { container: dropdownContainer }
@@ -384,7 +475,14 @@ describe("TableCopyDropdown", () => {
 
   it("should apply custom className", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown className="custom-copy-class" />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -399,7 +497,14 @@ describe("TableCopyDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown timeout={100} />
       </StreamdownContext.Provider>,
       { container: dropdownContainer }
@@ -430,7 +535,14 @@ describe("TableCopyDropdown", () => {
     const clearTimeoutSpy = vi.spyOn(window, "clearTimeout");
 
     const { unmount } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -445,7 +557,14 @@ describe("TableCopyDropdown", () => {
     const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
 
     const { unmount } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableCopyDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }

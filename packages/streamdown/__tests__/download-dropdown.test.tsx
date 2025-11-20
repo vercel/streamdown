@@ -57,7 +57,14 @@ describe("TableDownloadButton", () => {
 
   it("should render button with default icon", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -70,7 +77,14 @@ describe("TableDownloadButton", () => {
 
   it("should render button with custom children", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton>
           <span>Custom Download</span>
         </TableDownloadButton>
@@ -83,7 +97,14 @@ describe("TableDownloadButton", () => {
 
   it("should be disabled when animating", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: true, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: true,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -133,7 +154,14 @@ describe("TableDownloadButton", () => {
     wrapper.appendChild(buttonDiv);
 
     render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton onDownload={onDownload} />
       </StreamdownContext.Provider>,
       { container: buttonDiv }
@@ -192,7 +220,14 @@ describe("TableDownloadButton", () => {
     wrapper.appendChild(buttonDiv);
 
     render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton format="markdown" onDownload={onDownload} />
       </StreamdownContext.Provider>,
       { container: buttonDiv }
@@ -253,7 +288,14 @@ describe("TableDownloadButton", () => {
     wrapper.appendChild(buttonDiv);
 
     render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton filename="custom-table" onDownload={onDownload} />
       </StreamdownContext.Provider>,
       { container: buttonDiv }
@@ -280,7 +322,14 @@ describe("TableDownloadButton", () => {
     document.body.appendChild(buttonDiv);
 
     render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton onError={onError} />
       </StreamdownContext.Provider>,
       { container: buttonDiv }
@@ -300,7 +349,14 @@ describe("TableDownloadButton", () => {
 
   it("should apply custom className", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadButton className="custom-button-class" />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -347,7 +403,14 @@ describe("TableDownloadDropdown", () => {
 
   it("should render dropdown button", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -359,7 +422,14 @@ describe("TableDownloadDropdown", () => {
 
   it("should render custom children", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown>
           <span>Custom Text</span>
         </TableDownloadDropdown>
@@ -372,7 +442,14 @@ describe("TableDownloadDropdown", () => {
 
   it("should be disabled when animating", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: true, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: true,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -384,7 +461,14 @@ describe("TableDownloadDropdown", () => {
 
   it("should toggle dropdown on button click", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -406,7 +490,14 @@ describe("TableDownloadDropdown", () => {
 
   it("should show CSV and Markdown options when open", () => {
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -428,7 +519,14 @@ describe("TableDownloadDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown onDownload={onDownload} />
       </StreamdownContext.Provider>,
       { container: dropdownContainer }
@@ -459,7 +557,14 @@ describe("TableDownloadDropdown", () => {
     mockWrapper.appendChild(dropdownContainer);
 
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown onDownload={onDownload} />
       </StreamdownContext.Provider>,
       { container: dropdownContainer }
@@ -483,7 +588,14 @@ describe("TableDownloadDropdown", () => {
 
   it("should close dropdown on outside click", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -508,7 +620,14 @@ describe("TableDownloadDropdown", () => {
     document.body.appendChild(dropdownDiv);
 
     const { container, getByText } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown onError={onError} />
       </StreamdownContext.Provider>,
       { container: dropdownDiv }
@@ -531,7 +650,14 @@ describe("TableDownloadDropdown", () => {
 
   it("should apply custom className", () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown className="custom-dropdown-class" />
       </StreamdownContext.Provider>,
       { container: mockWrapper }
@@ -545,7 +671,14 @@ describe("TableDownloadDropdown", () => {
     const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
 
     const { unmount } = render(
-      <StreamdownContext.Provider value={{ isAnimating: false, mode: "streaming", shikiTheme: ["github-light", "github-dark"], controls: true }}>
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
         <TableDownloadDropdown />
       </StreamdownContext.Provider>,
       { container: mockWrapper }

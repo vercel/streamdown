@@ -204,7 +204,14 @@ describe("CodeBlock with multiple languages", () => {
     const jsCode = "console.log('hello world!');";
 
     const { container } = render(
-      <StreamdownContext.Provider value={{ shikiTheme: ["github-light", "github-dark"], controls: true, isAnimating: false, mode: "streaming" as const }}>
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
         <div>
           <CodeBlock code={pythonCode} language="python" />
           <CodeBlock code={jsCode} language="javascript" />
@@ -239,7 +246,14 @@ describe("CodeBlock with multiple languages", () => {
     const code2 = "const y = 2;";
 
     const { container } = render(
-      <StreamdownContext.Provider value={{ shikiTheme: ["github-light", "github-dark"], controls: true, isAnimating: false, mode: "streaming" as const }}>
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
         <div>
           <CodeBlock code={code1} language="javascript" />
           <CodeBlock code={code2} language="javascript" />
@@ -275,7 +289,14 @@ describe("CodeBlock with multiple languages", () => {
     ];
 
     const { container } = render(
-      <StreamdownContext.Provider value={{ shikiTheme: ["github-light", "github-dark"], controls: true, isAnimating: false, mode: "streaming" as const }}>
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
         <div>
           {languages.map((item) => (
             <CodeBlock
@@ -307,7 +328,14 @@ describe("CodeBlock with multiple languages", () => {
 
   it("should have data attributes on container, header, and code block elements", async () => {
     const { container } = render(
-      <StreamdownContext.Provider value={{ shikiTheme: ["github-light", "github-dark"], controls: true, isAnimating: false, mode: "streaming" as const }}>
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
         <CodeBlock code="const x = 1;" language="javascript" />
       </StreamdownContext.Provider>
     );
@@ -368,7 +396,14 @@ describe("CodeBlock with multiple languages", () => {
     };
 
     const { container } = render(
-      <StreamdownContext.Provider value={{ shikiTheme: ["github-light", "github-dark"], controls: true, isAnimating: false, mode: "streaming" as const }}>
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
         <StreamingCodeBlock />
       </StreamdownContext.Provider>
     );

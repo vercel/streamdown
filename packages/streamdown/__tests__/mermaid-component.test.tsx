@@ -116,10 +116,9 @@ describe("Mermaid Component", () => {
       retry: () => void;
     }) => <div data-testid="custom-error">Custom Error: {error}</div>;
 
-    const { container } = renderWithContext(
-      <Mermaid chart="invalid" />,
-      { mermaid: { errorComponent: CustomError } }
-    );
+    const { container } = renderWithContext(<Mermaid chart="invalid" />, {
+      mermaid: { errorComponent: CustomError },
+    });
 
     await waitFor(() => {
       const customError = container.querySelector(
@@ -163,7 +162,9 @@ describe("Mermaid Component", () => {
       }),
     });
 
-    const { container, rerender } = renderWithContext(<Mermaid chart={simpleChart} />);
+    const { container, rerender } = renderWithContext(
+      <Mermaid chart={simpleChart} />
+    );
 
     await waitFor(() => {
       const svg = container.querySelector('[data-testid="valid-svg"]');
@@ -235,7 +236,9 @@ describe("Mermaid Component", () => {
   });
 
   it("should not show loading indicator when SVG is already loaded", async () => {
-    const { container, rerender } = renderWithContext(<Mermaid chart={simpleChart} />);
+    const { container, rerender } = renderWithContext(
+      <Mermaid chart={simpleChart} />
+    );
 
     await waitFor(() => {
       expect(container.querySelector("svg")).toBeTruthy();

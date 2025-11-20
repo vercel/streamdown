@@ -58,7 +58,9 @@ class ProcessorCache {
             const [pluginFn, pluginOptions] = plugin;
             return {
               name:
-                typeof pluginFn === "function" ? pluginFn.name : String(pluginFn),
+                typeof pluginFn === "function"
+                  ? pluginFn.name
+                  : String(pluginFn),
               options: pluginOptions,
             };
           }

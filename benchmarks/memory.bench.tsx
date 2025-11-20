@@ -164,9 +164,7 @@ describe("Memory Usage: Streaming Simulation", () => {
       );
       for (let i = 1; i < chunks.length; i++) {
         rerender(
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {chunks[i]}
-          </ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{chunks[i]}</ReactMarkdown>
         );
       }
       cleanup();
