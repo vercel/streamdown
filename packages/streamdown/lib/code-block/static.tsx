@@ -27,14 +27,9 @@ export const CodeBlock = ({
 }: CodeBlockProps) => {
   const { shikiTheme } = useContext(StreamdownContext);
   const [result, setResult] = useState<TokensResult | null>(null);
-  const mounted = useRef(false);
 
   useEffect(() => {
-    if (mounted.current) {
-      return;
-    }
-
-    mounted.current = true;
+    let cancelled = false;
 
     codeToTokens(code, {
       lang: language,
@@ -42,10 +37,14 @@ export const CodeBlock = ({
         light: shikiTheme[0],
         dark: shikiTheme[1],
       },
-    }).then(setResult);
+    }).then((newResult) => {
+      if (!cancelled) {
+        setResult(newResult);
+      }
+    });
 
     return () => {
-      mounted.current = false;
+      cancelled = true;
     };
   }, [code, language, shikiTheme]);
 
