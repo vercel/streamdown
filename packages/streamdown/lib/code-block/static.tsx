@@ -1,9 +1,10 @@
 import { type HTMLAttributes, useContext, useEffect, useState } from "react";
-import { type BundledLanguage, codeToTokens, type TokensResult } from "shiki";
+import type { BundledLanguage, TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
+import { createShiki } from "./highlight";
 
 type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
@@ -25,17 +26,20 @@ export const CodeBlock = ({
   useEffect(() => {
     let cancelled = false;
 
-    codeToTokens(code, {
-      lang: language,
-      themes: {
-        light: shikiTheme[0],
-        dark: shikiTheme[1],
-      },
-    }).then((newResult) => {
-      if (!cancelled) {
-        setResult(newResult);
-      }
-    });
+    createShiki(language, shikiTheme)
+      .then((highlighter) =>
+        highlighter.codeToTokens(code, {
+          themes: {
+            light: shikiTheme[0],
+            dark: shikiTheme[1],
+          },
+        })
+      )
+      .then((newResult) => {
+        if (!cancelled) {
+          setResult(newResult);
+        }
+      });
 
     return () => {
       cancelled = true;
