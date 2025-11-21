@@ -248,14 +248,15 @@ export const Streamdown = memo(
     // Use displayBlocks for rendering to leverage useTransition
     const blocksToRender = mode === "streaming" ? displayBlocks : blocks;
 
-    // Generate stable keys based on content hash + index
-    // This prevents re-renders when content doesn't change but still handles position changes
+    // Generate stable keys based on index only
+    // Don't use content hash - that causes unmount/remount when content changes
+    // React will handle content updates via props changes and memo comparison
     const blockKeys = useMemo(
       () =>
         blocksToRender.map(
-          (block, idx) => `${generatedId}-${hashString(block)}-${idx}`
+          (block, idx) => `${generatedId}-${idx}`
         ),
-      [blocksToRender, generatedId]
+      [blocksToRender.length, generatedId]
     );
 
     // Combined context value - single object reduces React tree overhead

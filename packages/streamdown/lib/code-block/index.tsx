@@ -28,7 +28,6 @@ export const CodeBlock = ({
   ...rest
 }: CodeBlockProps) => {
   const { shikiTheme } = useContext(StreamdownContext);
-  const [result, setResult] = useState<TokensResult | null>(null);
 
   // Memoize the raw fallback tokens to avoid recomputing on every render
   const raw: TokensResult = useMemo(
@@ -48,9 +47,16 @@ export const CodeBlock = ({
     [code]
   );
 
+  // Initialize with raw tokens to prevent flash
+  // Use a function initializer to only compute on mount
+  const [result, setResult] = useState<TokensResult>(() => raw);
+
   // Combine both effects into one to reduce re-renders
   useEffect(() => {
     let cancelled = false;
+
+    // Don't reset to raw - keep showing old highlighted code until new highlighting loads
+    // This prevents the flash of unstyled content
 
     createShiki(language, shikiTheme)
       .then((highlighter) => {
@@ -71,7 +77,7 @@ export const CodeBlock = ({
         }
       })
       .catch((error) => {
-        // Silently fail and use raw tokens
+        // Silently fail and keep using current tokens (old highlighted or raw)
         console.error("Failed to highlight code:", error);
       });
 
@@ -87,7 +93,7 @@ export const CodeBlock = ({
         <CodeBlockBody
           className={className}
           language={language}
-          result={result ?? raw}
+          result={result}
           {...rest}
         />
       </CodeBlockContainer>
