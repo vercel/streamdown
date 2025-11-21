@@ -46,7 +46,7 @@ describe("Node Attribute Fix", () => {
 
       // ✅ Verify correct attributes ARE present
       expect(ol?.getAttribute("data-streamdown")).toBe("ordered-list");
-      expect(ol?.className).toContain("ml-4");
+      expect(ol?.className).toContain("list-inside");
     });
 
     it("should NOT render node attribute in UL element", () => {

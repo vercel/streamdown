@@ -23,9 +23,9 @@ describe("Markdown Components", () => {
       );
       const ol = container.querySelector("ol");
       expect(ol).toBeTruthy();
-      expect(ol?.className).toContain("ml-4");
+      expect(ol?.className).toContain("list-inside");
       expect(ol?.className).toContain("list-decimal");
-      expect(ol?.className).toContain("list-outside");
+      expect(ol?.className).toContain("whitespace-normal");
     });
 
     it("should render unordered list with correct classes", () => {
@@ -41,9 +41,9 @@ describe("Markdown Components", () => {
       );
       const ul = container.querySelector("ul");
       expect(ul).toBeTruthy();
-      expect(ul?.className).toContain("ml-4");
+      expect(ul?.className).toContain("list-inside");
       expect(ul?.className).toContain("list-disc");
-      expect(ul?.className).toContain("list-outside");
+      expect(ul?.className).toContain("whitespace-normal");
     });
 
     it("should render list item with correct classes", () => {
