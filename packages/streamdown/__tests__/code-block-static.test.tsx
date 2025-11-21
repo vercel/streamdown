@@ -1,21 +1,28 @@
 import { render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import type { Highlighter } from "shiki";
 import { StreamdownContext } from "../index";
 import { CodeBlock } from "../lib/code-block/static";
 
-// Mock the highlight manager module
-vi.mock("../lib/code-block/highlight-manager", () => ({
-  highlighterManager: {
-    initializeHighlighters: vi.fn(() => Promise.resolve()),
-    highlightCode: vi.fn((code, _language, preClassName) => {
-      const escapedCode = code.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const preClass = preClassName || "";
-      // Return single HTML string with CSS variables (dual-theme support)
-      return Promise.resolve(
-        `<pre class="${preClass}" style="--shiki-light:#000;--shiki-dark:#fff;--shiki-light-bg:#fff;--shiki-dark-bg:#000"><code>${escapedCode}</code></pre>`
-      );
-    }),
-  },
+// Mock the highlight module
+vi.mock("../lib/code-block/highlight", () => ({
+  createShiki: vi.fn(() =>
+    Promise.resolve({
+      codeToTokens: vi.fn((code, _options) => ({
+        bg: "rgb(255, 255, 255)",
+        fg: "rgb(36, 41, 46)",
+        tokens: code.split("\n").map((line: string) => [
+          {
+            content: line,
+            color: "rgb(36, 41, 46)",
+            bgColor: "transparent",
+            htmlStyle: {},
+            offset: 0,
+          },
+        ]),
+      })),
+    } as unknown as Highlighter)
+  ),
 }));
 
 describe("CodeBlock (static)", () => {
@@ -48,7 +55,7 @@ describe("CodeBlock (static)", () => {
     });
   });
 
-  it("should render with light and dark theme support via CSS variables", async () => {
+  it("should render with light and dark theme support via token colors", async () => {
     const { container } = render(
       <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="const x = 1;" language="javascript" />
@@ -57,13 +64,10 @@ describe("CodeBlock (static)", () => {
 
     await waitFor(() => {
       const codeBlock = container.querySelector("[data-code-block]");
-      const pre = codeBlock?.querySelector("pre");
-
       expect(codeBlock).toBeTruthy();
-      expect(pre).toBeTruthy();
-      // Check for CSS variables that enable dual-theme support
-      expect(pre?.style.getPropertyValue("--shiki-light")).toBeTruthy();
-      expect(pre?.style.getPropertyValue("--shiki-dark")).toBeTruthy();
+      // Check that the code block has background and foreground colors
+      expect(codeBlock?.style.backgroundColor).toBeTruthy();
+      expect(codeBlock?.style.color).toBeTruthy();
     });
   });
 
@@ -80,20 +84,16 @@ describe("CodeBlock (static)", () => {
     });
   });
 
-  it("should apply preClassName", async () => {
+  it("should apply custom className to pre element", async () => {
     const { container } = render(
       <StreamdownContext.Provider value={mockContext}>
-        <CodeBlock
-          code="test"
-          language="javascript"
-          preClassName="custom-pre"
-        />
+        <CodeBlock code="test" className="custom-class" language="javascript" />
       </StreamdownContext.Provider>
     );
 
     await waitFor(() => {
       const codeBlock = container.querySelector("[data-code-block]");
-      expect(codeBlock?.innerHTML).toContain("custom-pre");
+      expect(codeBlock?.className).toContain("custom-class");
     });
   });
 
@@ -122,7 +122,7 @@ describe("CodeBlock (static)", () => {
 
     await waitFor(() => {
       const codeBlock = container.querySelector("[data-code-block]");
-      expect(codeBlock?.innerHTML).toContain("const x = 1;");
+      expect(codeBlock?.textContent).toContain("const x = 1;");
     });
 
     rerender(
@@ -133,7 +133,7 @@ describe("CodeBlock (static)", () => {
 
     await waitFor(() => {
       const codeBlock = container.querySelector("[data-code-block]");
-      expect(codeBlock?.innerHTML).toContain("const y = 2;");
+      expect(codeBlock?.textContent).toContain("const y = 2;");
     });
   });
 
@@ -171,31 +171,18 @@ describe("CodeBlock (static)", () => {
     });
   });
 
-  it("should handle errors silently for AbortError", async () => {
-    const mockHighlightCode = vi.fn(() => {
-      const error = new Error("Aborted");
-      error.name = "AbortError";
-      return Promise.reject(error);
-    });
-
-    vi.doMock("../lib/code-block/highlight-manager", () => ({
-      highlighterManager: {
-        initializeHighlighters: vi.fn(() => Promise.resolve()),
-        highlightCode: mockHighlightCode,
-      },
-    }));
-
+  it("should render with fallback when highlighter is not ready", async () => {
     const { container } = render(
       <StreamdownContext.Provider value={mockContext}>
         <CodeBlock code="test" language="javascript" />
       </StreamdownContext.Provider>
     );
 
-    // Should still render with initial plain HTML
+    // Should render container immediately
     const codeBlock = container.querySelector("[data-code-block-container]");
     expect(codeBlock).toBeTruthy();
 
-    // Wait for async operation to complete (even though it fails)
+    // Should render code block with fallback raw tokens
     await waitFor(() => {
       expect(container.querySelector("[data-code-block]")).toBeTruthy();
     });
