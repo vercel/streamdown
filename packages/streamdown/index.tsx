@@ -248,14 +248,15 @@ export const Streamdown = memo(
     // Use displayBlocks for rendering to leverage useTransition
     const blocksToRender = mode === "streaming" ? displayBlocks : blocks;
 
-    // Generate stable keys based on content hash + index
-    // This prevents re-renders when content doesn't change but still handles position changes
+    // Generate stable keys based on index only
+    // Don't use content hash - that causes unmount/remount when content changes
+    // React will handle content updates via props changes and memo comparison
     const blockKeys = useMemo(
       () =>
         blocksToRender.map(
-          (block, idx) => `${generatedId}-${hashString(block)}-${idx}`
+          (block, idx) => `${generatedId}-${idx}`
         ),
-      [blocksToRender, generatedId]
+      [blocksToRender.length, generatedId]
     );
 
     // Combined context value - single object reduces React tree overhead
@@ -317,17 +318,26 @@ export const Streamdown = memo(
       <StreamdownContext.Provider value={contextValue}>
         <div className={cn("space-y-4", className)}>
           {blocksToRender.map((block, index) => (
-            <BlockComponent
-              components={mergedComponents}
-              content={block}
-              index={index}
+            <div
               key={blockKeys[index]}
-              rehypePlugins={rehypePlugins}
-              remarkPlugins={remarkPlugins}
-              shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-              urlTransform={urlTransform}
-              {...props}
-            />
+              style={{
+                // Use content-visibility to skip rendering off-screen blocks
+                contentVisibility: "auto",
+                // Provide a hint for layout to prevent layout shifts
+                containIntrinsicSize: "auto 100px",
+              }}
+            >
+              <BlockComponent
+                components={mergedComponents}
+                content={block}
+                index={index}
+                rehypePlugins={rehypePlugins}
+                remarkPlugins={remarkPlugins}
+                shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
+                urlTransform={urlTransform}
+                {...props}
+              />
+            </div>
           ))}
         </div>
       </StreamdownContext.Provider>

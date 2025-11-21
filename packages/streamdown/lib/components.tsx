@@ -12,7 +12,6 @@ import { StreamdownContext } from "../index";
 import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
-import { CodeBlock as StaticCodeBlock } from "./code-block/static";
 import { ImageComponent } from "./image";
 import type { ExtraProps, Options } from "./markdown";
 import { Mermaid } from "./mermaid";
@@ -596,13 +595,8 @@ const CodeComponent = ({
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
   ExtraProps) => {
   const inline = node?.position?.start.line === node?.position?.end.line;
-  const {
-    mermaid: mermaidContext,
-    controls: controlsConfig,
-    mode,
-  } = useContext(StreamdownContext);
-
-  const CodeBlockComponent = mode === "static" ? StaticCodeBlock : CodeBlock;
+  const { mermaid: mermaidContext, controls: controlsConfig } =
+    useContext(StreamdownContext);
 
   if (inline) {
     return (
@@ -679,7 +673,7 @@ const CodeComponent = ({
   const showCodeControls = shouldShowControls(controlsConfig, "code");
 
   return (
-    <CodeBlockComponent
+    <CodeBlock
       className={cn("overflow-x-auto border-border border-t", className)}
       code={code}
       data-language={language}
@@ -693,7 +687,7 @@ const CodeComponent = ({
           <CodeBlockCopyButton />
         </>
       )}
-    </CodeBlockComponent>
+    </CodeBlock>
   );
 };
 
