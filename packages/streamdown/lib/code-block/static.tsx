@@ -2,6 +2,7 @@ import { type HTMLAttributes, useContext, useEffect, useState } from "react";
 import type { BundledLanguage, Highlighter, TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
 import { CodeBlockBody } from "./body";
+import { CodeBlockContainer } from "./container";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
 import { createShiki } from "./highlight";
@@ -74,11 +75,7 @@ export const CodeBlock = ({
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
-      <div
-        className="my-4 w-full overflow-hidden rounded-xl border border-border"
-        data-code-block-container
-        data-language={language}
-      >
+      <CodeBlockContainer language={language}>
         <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
         <CodeBlockBody
           className={className}
@@ -86,7 +83,7 @@ export const CodeBlock = ({
           result={result ?? raw}
           {...rest}
         />
-      </div>
+      </CodeBlockContainer>
     </CodeBlockContext.Provider>
   );
 };
