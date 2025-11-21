@@ -1,8 +1,8 @@
 import {
   type BundledLanguage,
   type BundledTheme,
-  type Highlighter,
   createHighlighter,
+  type Highlighter,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
@@ -17,7 +17,7 @@ const getCacheKey = (
   themes: [BundledTheme, BundledTheme]
 ) => `${language}-${themes[0]}-${themes[1]}`;
 
-export const createShiki = async (
+export const createShiki = (
   language: BundledLanguage,
   shikiTheme: [BundledTheme, BundledTheme]
 ) => {
@@ -25,7 +25,7 @@ export const createShiki = async (
 
   // Return cached highlighter if it exists
   if (highlighterCache.has(cacheKey)) {
-    return highlighterCache.get(cacheKey)!;
+    return highlighterCache.get(cacheKey) as Promise<Highlighter>;
   }
 
   // Create new highlighter and cache it

@@ -23,13 +23,7 @@ const LINE_NUMBER_CLASSES = cn(
 );
 
 export const CodeBlockBody = memo(
-  ({
-    children,
-    result,
-    language,
-    className,
-    ...rest
-  }: CodeBlockBodyProps) => {
+  ({ children, result, language, className, ...rest }: CodeBlockBodyProps) => {
     // Memoize the pre style object
     const preStyle = useMemo(
       () => ({

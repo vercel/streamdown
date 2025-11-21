@@ -54,7 +54,9 @@ export const CodeBlock = ({
 
     createShiki(language, shikiTheme)
       .then((highlighter) => {
-        if (cancelled) return;
+        if (cancelled) {
+          return;
+        }
 
         const newResult = highlighter.codeToTokens(code, {
           lang: language,
