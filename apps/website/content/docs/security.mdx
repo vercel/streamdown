@@ -200,36 +200,6 @@ Relative URLs will be resolved against this origin:
 
 Becomes: `https://your-app.com/docs/guide`
 
-## Custom URL Transform
+## Advanced URL Handling
 
-For advanced URL handling, use the `urlTransform` prop:
-
-```tsx
-import { Streamdown, defaultUrlTransform } from 'streamdown';
-
-export default function Page() {
-  const customUrlTransform = (url: string) => {
-    // First apply default transform
-    const transformed = defaultUrlTransform(url);
-
-    // Add your custom logic
-    if (transformed.startsWith('http://')) {
-      // Upgrade to HTTPS
-      return transformed.replace('http://', 'https://');
-    }
-
-    // Block specific domains
-    if (transformed.includes('untrusted-site.com')) {
-      return 'https://your-app.com/blocked';
-    }
-
-    return transformed;
-  };
-
-  return (
-    <Streamdown urlTransform={customUrlTransform}>
-      {markdown}
-    </Streamdown>
-  );
-}
-```
+For advanced URL handling beyond what `rehype-harden` provides, you can create a custom rehype plugin. This gives you full control over URL transformation and validation in your markdown content.

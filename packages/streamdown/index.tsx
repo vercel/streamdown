@@ -27,7 +27,6 @@ import { cn } from "./lib/utils";
 
 export type { MermaidConfig } from "mermaid";
 // biome-ignore lint/performance/noBarrelFile: "required"
-export { defaultUrlTransform } from "./lib/markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 
@@ -176,11 +175,6 @@ export const Block = memo(
       return false;
     }
 
-    // Check if urlTransform changed (reference comparison)
-    if (prevProps.urlTransform !== nextProps.urlTransform) {
-      return false;
-    }
-
     return true;
   }
 );
@@ -218,7 +212,6 @@ export const Streamdown = memo(
     mermaid,
     controls = true,
     isAnimating = false,
-    urlTransform = (value) => value,
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     ...props
@@ -303,7 +296,6 @@ export const Streamdown = memo(
               components={mergedComponents}
               rehypePlugins={rehypePlugins}
               remarkPlugins={remarkPlugins}
-              urlTransform={urlTransform}
               {...props}
             >
               {children}
@@ -334,7 +326,6 @@ export const Streamdown = memo(
                 rehypePlugins={rehypePlugins}
                 remarkPlugins={remarkPlugins}
                 shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-                urlTransform={urlTransform}
                 {...props}
               />
             </div>
