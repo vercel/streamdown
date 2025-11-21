@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Streamdown } from "streamdown";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,21 @@ export const Chat = ({ models }: ChatProps) => {
     }),
   });
   const [input, setInput] = useState("");
-  const [model, setModel] = useState(models[0].value);
+  const [model, setModel] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("chat-model");
+      return saved && models.some((m) => m.value === saved)
+        ? saved
+        : models[0].value;
+    }
+    return models[0].value;
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("chat-model", model);
+    }
+  }, [model]);
 
   return (
     <div className="mx-auto flex h-screen flex-col divide-y overflow-hidden border-x">
