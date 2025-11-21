@@ -11,7 +11,7 @@ import { CodeBlockBody } from "./body";
 import { CodeBlockContainer } from "./container";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
-import { createShiki } from "./highlight";
+import { getHighlightedTokens } from "./highlight";
 
 type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
@@ -47,44 +47,28 @@ export const CodeBlock = ({
     [code]
   );
 
-  // Initialize with raw tokens to prevent flash
-  // Use a function initializer to only compute on mount
-  const [result, setResult] = useState<TokensResult>(() => raw);
+  // Try to get cached result immediately
+  const cachedResult = useMemo(
+    () => getHighlightedTokens(code, language, shikiTheme),
+    [code, language, shikiTheme]
+  );
 
-  // Combine both effects into one to reduce re-renders
+  // Use cached result if available, otherwise use raw
+  const [result, setResult] = useState<TokensResult>(cachedResult || raw);
+
+  // Subscribe to highlighting updates only if not cached
   useEffect(() => {
-    let cancelled = false;
+    if (cachedResult) {
+      // Already cached, use it immediately
+      setResult(cachedResult);
+      return;
+    }
 
-    // Don't reset to raw - keep showing old highlighted code until new highlighting loads
-    // This prevents the flash of unstyled content
-
-    createShiki(language, shikiTheme)
-      .then((highlighter) => {
-        if (cancelled) {
-          return;
-        }
-
-        const newResult = highlighter.codeToTokens(code, {
-          lang: language,
-          themes: {
-            light: shikiTheme[0],
-            dark: shikiTheme[1],
-          },
-        });
-
-        if (!cancelled) {
-          setResult(newResult);
-        }
-      })
-      .catch((error) => {
-        // Silently fail and keep using current tokens (old highlighted or raw)
-        console.error("Failed to highlight code:", error);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [code, language, shikiTheme]);
+    // Not cached, subscribe to updates
+    getHighlightedTokens(code, language, shikiTheme, (highlightedResult) => {
+      setResult(highlightedResult);
+    });
+  }, [code, language, shikiTheme, cachedResult]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>

@@ -9,6 +9,7 @@ type CodeBlockContainerProps = ComponentProps<"div"> & {
 export const CodeBlockContainer = ({
   className,
   language,
+  style,
   ...props
 }: CodeBlockContainerProps) => (
   <div
@@ -18,6 +19,14 @@ export const CodeBlockContainer = ({
     )}
     data-code-block-container
     data-language={language}
+    style={{
+      // Use content-visibility to skip rendering off-screen blocks
+      // This can significantly improve performance for large documents
+      contentVisibility: "auto",
+      // Provide a hint for layout to prevent layout shifts
+      containIntrinsicSize: "auto 200px",
+      ...style,
+    }}
     {...props}
   />
 );
