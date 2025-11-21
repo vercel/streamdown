@@ -1,10 +1,4 @@
-import {
-  type HTMLAttributes,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type HTMLAttributes, useContext, useEffect, useState } from "react";
 import { type BundledLanguage, codeToTokens, type TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
 import { CodeBlockBody } from "./body";
