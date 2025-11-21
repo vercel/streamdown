@@ -186,19 +186,6 @@ const defaultShikiTheme: [BundledTheme, BundledTheme] = [
   "github-dark",
 ];
 
-// Simple hash function for stable keys
-const hashString = (str: string): string => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    // biome-ignore lint/suspicious/noBitwiseOperators: "Required"
-    hash = (hash << 5) - hash + char;
-    // biome-ignore lint/suspicious/noBitwiseOperators: "Required"
-    hash &= hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash).toString(36);
-};
-
 export const Streamdown = memo(
   ({
     children,
@@ -244,11 +231,9 @@ export const Streamdown = memo(
     // Generate stable keys based on index only
     // Don't use content hash - that causes unmount/remount when content changes
     // React will handle content updates via props changes and memo comparison
+    // biome-ignore lint/correctness/useExhaustiveDependencies: "we're using the blocksToRender length"
     const blockKeys = useMemo(
-      () =>
-        blocksToRender.map(
-          (block, idx) => `${generatedId}-${idx}`
-        ),
+      () => blocksToRender.map((_block, idx) => `${generatedId}-${idx}`),
       [blocksToRender.length, generatedId]
     );
 

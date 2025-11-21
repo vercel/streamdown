@@ -70,7 +70,7 @@ export const getHighlightedTokens = (
 
   // Return cached result if available
   if (tokensCache.has(tokensCacheKey)) {
-    return tokensCache.get(tokensCacheKey)!;
+    return tokensCache.get(tokensCacheKey) as TokensResult;
   }
 
   // Subscribe callback if provided
@@ -78,7 +78,10 @@ export const getHighlightedTokens = (
     if (!subscribers.has(tokensCacheKey)) {
       subscribers.set(tokensCacheKey, new Set());
     }
-    subscribers.get(tokensCacheKey)!.add(callback);
+
+    const subs = subscribers.get(tokensCacheKey) as Set<() => void>;
+
+    subs.add(callback);
   }
 
   // Start highlighting in background
@@ -112,13 +115,4 @@ export const getHighlightedTokens = (
     });
 
   return null;
-};
-
-// Subscribe to highlighter updates
-export const subscribeToHighlighter = (
-  cacheKey: string,
-  callback: () => void
-): (() => void) => {
-  // This is a no-op for now since we're using a different approach
-  return () => {};
 };
