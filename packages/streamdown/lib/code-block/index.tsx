@@ -156,6 +156,21 @@ export const CodeBlock = ({
     ? `<span class="line"><span>${escapeHtml(incompleteLine)}</span></span>`
     : "";
 
+  // Generate fallback HTML for initial render or when highlighting is in progress
+  const fallbackHtml = code
+    ? code
+        .split("\n")
+        .map((line) => `<span class="line"><span>${escapeHtml(line)}</span></span>`)
+        .join("")
+    : "";
+
+  // Use highlighted HTML if available, otherwise use fallback
+  const displayHtml = html
+    ? incompleteLineHtml
+      ? html + incompleteLineHtml
+      : html
+    : fallbackHtml;
+
   return (
     <CodeBlockContext.Provider value={{ code }}>
       <div
@@ -177,7 +192,7 @@ export const CodeBlock = ({
           )}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
           dangerouslySetInnerHTML={{
-            __html: incompleteLineHtml ? html + incompleteLineHtml : html,
+            __html: displayHtml,
           }}
           data-code-block
           data-language={language}
