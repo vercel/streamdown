@@ -71,8 +71,6 @@ export const CodeBlock = ({
     ]),
   };
 
-  console.log("result", result);
-
   return (
     <CodeBlockContext.Provider value={{ code }}>
       <CodeBlockContainer language={language}>
