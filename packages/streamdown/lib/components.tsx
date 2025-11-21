@@ -118,10 +118,7 @@ type OlProps = WithNode<JSX.IntrinsicElements["ol"]>;
 const MemoOl = memo<OlProps>(
   ({ children, className, node, ...props }: OlProps) => (
     <ol
-      className={cn(
-        "ml-4 list-outside list-decimal whitespace-normal",
-        className
-      )}
+      className={cn("list-inside list-decimal whitespace-normal", className)}
       data-streamdown="ordered-list"
       {...props}
     >
@@ -152,7 +149,7 @@ type UlProps = WithNode<JSX.IntrinsicElements["ul"]>;
 const MemoUl = memo<UlProps>(
   ({ children, className, node, ...props }: UlProps) => (
     <ul
-      className={cn("ml-4 list-outside list-disc whitespace-normal", className)}
+      className={cn("list-inside list-disc whitespace-normal", className)}
       data-streamdown="unordered-list"
       {...props}
     >
