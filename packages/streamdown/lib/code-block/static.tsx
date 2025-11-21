@@ -1,5 +1,11 @@
-import { type HTMLAttributes, useContext, useEffect, useState } from "react";
-import type { BundledLanguage, Highlighter, TokensResult } from "shiki";
+import {
+  type HTMLAttributes,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import type { BundledLanguage, TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContainer } from "./container";
@@ -23,53 +29,54 @@ export const CodeBlock = ({
 }: CodeBlockProps) => {
   const { shikiTheme } = useContext(StreamdownContext);
   const [result, setResult] = useState<TokensResult | null>(null);
-  const [highlighter, setHighlighter] = useState<Highlighter | null>(null);
 
-  useEffect(() => {
-    if (highlighter) {
-      return;
-    }
+  // Memoize the raw fallback tokens to avoid recomputing on every render
+  const raw: TokensResult = useMemo(
+    () => ({
+      bg: "transparent",
+      fg: "inherit",
+      tokens: code.split("\n").map((line) => [
+        {
+          content: line,
+          color: "inherit",
+          bgColor: "transparent",
+          htmlStyle: {},
+          offset: 0,
+        },
+      ]),
+    }),
+    [code]
+  );
 
-    createShiki(language, shikiTheme).then(setHighlighter);
-  }, [language, shikiTheme, highlighter]);
-
+  // Combine both effects into one to reduce re-renders
   useEffect(() => {
     let cancelled = false;
 
-    if (!highlighter) {
-      return;
-    }
+    createShiki(language, shikiTheme)
+      .then((highlighter) => {
+        if (cancelled) return;
 
-    const newResult = highlighter.codeToTokens(code, {
-      lang: language,
-      themes: {
-        light: shikiTheme[0],
-        dark: shikiTheme[1],
-      },
-    });
+        const newResult = highlighter.codeToTokens(code, {
+          lang: language,
+          themes: {
+            light: shikiTheme[0],
+            dark: shikiTheme[1],
+          },
+        });
 
-    if (!cancelled) {
-      setResult(newResult);
-    }
+        if (!cancelled) {
+          setResult(newResult);
+        }
+      })
+      .catch((error) => {
+        // Silently fail and use raw tokens
+        console.error("Failed to highlight code:", error);
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [code, highlighter, shikiTheme, language]);
-
-  const raw: TokensResult = {
-    bg: "transparent",
-    fg: "inherit",
-    tokens: code.split("\n").map((line) => [
-      {
-        content: line,
-        color: "inherit",
-        bgColor: "transparent",
-        htmlStyle: {},
-        offset: 0,
-      },
-    ]),
-  };
+  }, [code, language, shikiTheme]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
