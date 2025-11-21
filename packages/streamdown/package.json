@@ -26,7 +26,9 @@
     "build": "tsup",
     "test": "vitest run",
     "test:ui": "vitest --ui run",
-    "test:coverage": "vitest --coverage run"
+    "test:coverage": "vitest --coverage run",
+    "bench": "vitest bench run",
+    "bench:ui": "vitest bench --ui run"
   },
   "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
   "license": "Apache-2.0",

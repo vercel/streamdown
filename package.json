@@ -12,7 +12,9 @@
     "check-types": "turbo run check-types",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:publish": "pnpm build && changeset publish"
+    "changeset:publish": "pnpm build && changeset publish",
+    "bench": "turbo run bench",
+    "bench:ui": "turbo run bench:ui"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.6",
