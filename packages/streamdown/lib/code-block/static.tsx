@@ -1,5 +1,5 @@
 import { type HTMLAttributes, useContext, useEffect, useState } from "react";
-import type { BundledLanguage, TokensResult } from "shiki";
+import type { BundledLanguage, Highlighter, TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContext } from "./context";
@@ -22,29 +22,39 @@ export const CodeBlock = ({
 }: CodeBlockProps) => {
   const { shikiTheme } = useContext(StreamdownContext);
   const [result, setResult] = useState<TokensResult | null>(null);
+  const [highlighter, setHighlighter] = useState<Highlighter | null>(null);
+
+  useEffect(() => {
+    if (highlighter) {
+      return;
+    }
+
+    createShiki(language, shikiTheme).then(setHighlighter);
+  }, [language, shikiTheme, highlighter]);
 
   useEffect(() => {
     let cancelled = false;
 
-    createShiki(language, shikiTheme)
-      .then((highlighter) =>
-        highlighter.codeToTokens(code, {
-          themes: {
-            light: shikiTheme[0],
-            dark: shikiTheme[1],
-          },
-        })
-      )
-      .then((newResult) => {
-        if (!cancelled) {
-          setResult(newResult);
-        }
-      });
+    if (!highlighter) {
+      return;
+    }
+
+    const newResult = highlighter.codeToTokens(code, {
+      lang: language,
+      themes: {
+        light: shikiTheme[0],
+        dark: shikiTheme[1],
+      },
+    });
+
+    if (!cancelled) {
+      setResult(newResult);
+    }
 
     return () => {
       cancelled = true;
     };
-  }, [code, language, shikiTheme]);
+  }, [code, highlighter, shikiTheme, language]);
 
   const raw: TokensResult = {
     bg: "transparent",
@@ -59,6 +69,8 @@ export const CodeBlock = ({
       },
     ]),
   };
+
+  console.log("result", result);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
