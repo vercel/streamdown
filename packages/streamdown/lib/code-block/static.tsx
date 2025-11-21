@@ -5,33 +5,16 @@ import {
   useRef,
   useState,
 } from "react";
-import type { BundledLanguage } from "shiki";
+import { type BundledLanguage, codeToTokens, type TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
-import { cn } from "../utils";
-import {
-  codeBlockClassName,
-  darkModeClassNames,
-  lineDiffClassNames,
-  lineFocusedClassNames,
-  lineHighlightClassNames,
-  lineNumberClassNames,
-  wordHighlightClassNames,
-} from "./classnames";
+import { CodeBlockBody } from "./body";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
-import { highlighterManager } from "./highlight-manager";
-import { escapeHtml } from "./utils";
 
-type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
+type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
   language: BundledLanguage;
   preClassName?: string;
-};
-
-const createPlainHtml = (code: string, className?: string) => {
-  const escapedCode = escapeHtml(code);
-
-  return `<pre class="${className || ""}"><code>${escapedCode}</code></pre>`;
 };
 
 export const CodeBlock = ({
@@ -43,32 +26,42 @@ export const CodeBlock = ({
   ...rest
 }: CodeBlockProps) => {
   const { shikiTheme } = useContext(StreamdownContext);
-  const [lightTheme, darkTheme] = shikiTheme;
-  const [html, setHtml] = useState<string>(createPlainHtml(code, preClassName));
+  const [result, setResult] = useState<TokensResult | null>(null);
   const mounted = useRef(false);
 
   useEffect(() => {
-    highlighterManager.initializeHighlighters([lightTheme, darkTheme]);
-  }, [lightTheme, darkTheme]);
+    if (mounted.current) {
+      return;
+    }
 
-  useEffect(() => {
     mounted.current = true;
 
-    highlighterManager
-      .highlightCode(code, language, preClassName)
-      .then((highlightedHtml) => {
-        if (mounted.current) {
-          setHtml(highlightedHtml);
-        }
-      })
-      .catch(() => {
-        // Ignore errors - component may have unmounted
-      });
+    codeToTokens(code, {
+      lang: language,
+      themes: {
+        light: shikiTheme[0],
+        dark: shikiTheme[1],
+      },
+    }).then(setResult);
 
     return () => {
       mounted.current = false;
     };
-  }, [code, language, preClassName]);
+  }, [code, language, shikiTheme]);
+
+  const raw: TokensResult = {
+    bg: "transparent",
+    fg: "inherit",
+    tokens: code.split("\n").map((line) => [
+      {
+        content: line,
+        color: "inherit",
+        bgColor: "transparent",
+        htmlStyle: {},
+        offset: 0,
+      },
+    ]),
+  };
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
@@ -78,21 +71,10 @@ export const CodeBlock = ({
         data-language={language}
       >
         <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
-        <div
-          className={cn(
-            lineNumberClassNames,
-            codeBlockClassName,
-            darkModeClassNames,
-            lineHighlightClassNames,
-            lineDiffClassNames,
-            lineFocusedClassNames,
-            wordHighlightClassNames,
-            className
-          )}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-          dangerouslySetInnerHTML={{ __html: html }}
-          data-code-block
-          data-language={language}
+        <CodeBlockBody
+          className={className}
+          language={language}
+          result={result ?? raw}
           {...rest}
         />
       </div>

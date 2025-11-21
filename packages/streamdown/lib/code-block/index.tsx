@@ -1,34 +1,17 @@
 import {
   type HTMLAttributes,
-  startTransition,
   useContext,
   useEffect,
   useRef,
   useState,
 } from "react";
-import type { BundledLanguage } from "shiki";
-import { useThrottledDebounce } from "../../hooks/use-throttled-debouce";
+import { type BundledLanguage, codeToTokens, type TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
-import { cn } from "../utils";
-import {
-  codeBlockClassName,
-  darkModeClassNames,
-  lineDiffClassNames,
-  lineFocusedClassNames,
-  lineHighlightClassNames,
-  lineNumberClassNames,
-  wordHighlightClassNames,
-} from "./classnames";
+import { CodeBlockBody } from "./body";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
-import { highlighterManager } from "./highlight-manager";
-import {
-  escapeHtml,
-  getHighlightThrottling,
-  splitCurrentIncompleteLineFromCode,
-} from "./utils";
 
-type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
+type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
   language: BundledLanguage;
   preClassName?: string;
@@ -43,133 +26,42 @@ export const CodeBlock = ({
   ...rest
 }: CodeBlockProps) => {
   const { shikiTheme } = useContext(StreamdownContext);
-  const [html, setHtml] = useState<string>("");
-  const [lastHighlightedCode, setLastHighlightedCode] = useState("");
-  const [incompleteLine, setIncompleteLine] = useState("");
-  const codeToHighlight = useThrottledDebounce(code);
-  const timeoutRef = useRef(0);
+  const [result, setResult] = useState<TokensResult | null>(null);
   const mounted = useRef(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const lastHighlightTime = useRef(0);
-  const [lightTheme, darkTheme] = shikiTheme;
 
   useEffect(() => {
-    highlighterManager.initializeHighlighters([lightTheme, darkTheme]);
-  }, [lightTheme, darkTheme]);
+    if (mounted.current) {
+      return;
+    }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: "adding lastHighlightedCode to dependency array will trigger re-runs"
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Required"
-  useEffect(() => {
     mounted.current = true;
 
-    // Cancel previous highlight operations
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
+    codeToTokens(code, {
+      lang: language,
+      themes: {
+        light: shikiTheme[0],
+        dark: shikiTheme[1],
+      },
+    }).then(setResult);
 
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    const [completeCode, currentIncompleteLine] =
-      splitCurrentIncompleteLineFromCode(codeToHighlight);
-
-    // Adaptive throttling based on code size
-    const lineCount = codeToHighlight.split("\n").length;
-
-    const { minHighlightInterval, debounceMs } =
-      getHighlightThrottling(lineCount);
-
-    if (completeCode && completeCode !== lastHighlightedCode) {
-      const now = Date.now();
-      const timeSinceLastHighlight = now - lastHighlightTime.current;
-
-      // Throttle: only highlight if enough time has passed OR streaming has stopped
-      if (
-        timeSinceLastHighlight > minHighlightInterval ||
-        !currentIncompleteLine
-      ) {
-        lastHighlightTime.current = now;
-        highlighterManager
-          .highlightCode(completeCode, language, preClassName, signal)
-          .then((highlightedHtml) => {
-            if (mounted.current && !signal.aborted) {
-              // Use startTransition to mark these updates as non-urgent
-              startTransition(() => {
-                setHtml(highlightedHtml);
-                setLastHighlightedCode(completeCode);
-                setIncompleteLine(currentIncompleteLine);
-              });
-            }
-          })
-          .catch((err) => {
-            // Silently ignore AbortError
-            if (err.name !== "AbortError") {
-              throw err;
-            }
-          });
-      } else {
-        // Skip this highlight, let debounce handle it
-        setIncompleteLine(currentIncompleteLine);
-      }
-    } else {
-      // set incomplete line immediately here for incremental streaming updates
-      setIncompleteLine(currentIncompleteLine);
-    }
-
-    // Debounce full highlight (e.g. in case streaming stops)
-    timeoutRef.current = window.setTimeout(() => {
-      if (
-        currentIncompleteLine &&
-        codeToHighlight !== lastHighlightedCode &&
-        !signal.aborted
-      ) {
-        highlighterManager
-          .highlightCode(codeToHighlight, language, preClassName, signal)
-          .then((highlightedHtml) => {
-            if (mounted.current && !signal.aborted) {
-              // Use startTransition to mark these updates as non-urgent
-              startTransition(() => {
-                setHtml(highlightedHtml);
-                setLastHighlightedCode(codeToHighlight);
-                setIncompleteLine("");
-              });
-            }
-          })
-          .catch((err) => {
-            // Silently ignore AbortError
-            if (err.name !== "AbortError") {
-              throw err;
-            }
-          });
-      }
-    }, debounceMs);
     return () => {
       mounted.current = false;
-      abortControllerRef.current?.abort();
     };
-  }, [codeToHighlight, language, preClassName]);
+  }, [code, language, shikiTheme]);
 
-  const incompleteLineHtml = incompleteLine
-    ? `<span class="line"><span>${escapeHtml(incompleteLine)}</span></span>`
-    : "";
-
-  // Generate fallback HTML for initial render or when highlighting is in progress
-  const fallbackHtml = code
-    ? code
-        .split("\n")
-        .map((line) => `<span class="line"><span>${escapeHtml(line)}</span></span>`)
-        .join("")
-    : "";
-
-  // Use highlighted HTML if available, otherwise use fallback
-  const displayHtml = html
-    ? incompleteLineHtml
-      ? html + incompleteLineHtml
-      : html
-    : fallbackHtml;
+  const raw: TokensResult = {
+    bg: "transparent",
+    fg: "inherit",
+    tokens: code.split("\n").map((line) => [
+      {
+        content: line,
+        color: "inherit",
+        bgColor: "transparent",
+        htmlStyle: {},
+        offset: 0,
+      },
+    ]),
+  };
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
@@ -179,23 +71,10 @@ export const CodeBlock = ({
         data-language={language}
       >
         <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
-        <div
-          className={cn(
-            lineNumberClassNames,
-            codeBlockClassName,
-            darkModeClassNames,
-            lineHighlightClassNames,
-            lineDiffClassNames,
-            lineFocusedClassNames,
-            wordHighlightClassNames,
-            className
-          )}
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-          dangerouslySetInnerHTML={{
-            __html: displayHtml,
-          }}
-          data-code-block
-          data-language={language}
+        <CodeBlockBody
+          className={className}
+          language={language}
+          result={result ?? raw}
           {...rest}
         />
       </div>
