@@ -30,11 +30,26 @@ const isWordChar = (char: string): boolean => {
 };
 
 // Helper function to check if we have a complete code block
+// OPTIMIZATION: Hybrid approach - use regex for small texts, loop for large
 const hasCompleteCodeBlock = (text: string): boolean => {
-  const tripleBackticks = (text.match(/```/g) || []).length;
-  return (
-    tripleBackticks > 0 && tripleBackticks % 2 === 0 && text.includes("\n")
-  );
+  if (!text.includes("\n")) return false;
+
+  // For small/medium texts (< 5KB), use regex (faster for small strings)
+  // For large texts, use loop-based counting (avoids array allocation)
+  if (text.length < 5000) {
+    const tripleBackticks = (text.match(/```/g) || []).length;
+    return tripleBackticks > 0 && tripleBackticks % 2 === 0;
+  }
+
+  let tripleBackticks = 0;
+  for (let i = 0; i < text.length - 2; i++) {
+    if (text[i] === "`" && text[i + 1] === "`" && text[i + 2] === "`") {
+      tripleBackticks++;
+      i += 2; // Skip next 2 characters
+    }
+  }
+
+  return tripleBackticks > 0 && tripleBackticks % 2 === 0;
 };
 
 // Cache for code block state to avoid recalculating
@@ -237,7 +252,19 @@ const handleIncompleteBold = (text: string): string => {
       }
     }
 
-    const asteriskPairs = (text.match(/\*\*/g) || []).length;
+    // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
+    let asteriskPairs;
+    if (text.length < 3000) {
+      asteriskPairs = (text.match(/\*\*/g) || []).length;
+    } else {
+      asteriskPairs = 0;
+      for (let i = 0; i < text.length - 1; i++) {
+        if (text[i] === "*" && text[i + 1] === "*") {
+          asteriskPairs++;
+          i++; // Skip next character
+        }
+      }
+    }
     if (asteriskPairs % 2 === 1) {
       return `${text}**`;
     }
@@ -282,7 +309,19 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
       }
     }
 
-    const underscorePairs = (text.match(/__/g) || []).length;
+    // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
+    let underscorePairs;
+    if (text.length < 3000) {
+      underscorePairs = (text.match(/__/g) || []).length;
+    } else {
+      underscorePairs = 0;
+      for (let i = 0; i < text.length - 1; i++) {
+        if (text[i] === "_" && text[i + 1] === "_") {
+          underscorePairs++;
+          i++; // Skip next character
+        }
+      }
+    }
     if (underscorePairs % 2 === 1) {
       return `${text}__`;
     }
@@ -460,6 +499,9 @@ const isWithinMathBlock = (text: string, position: number): boolean => {
 // Counts single underscores that are not part of double underscores, not escaped, and not in math blocks
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
 const countSingleUnderscores = (text: string): number => {
+  // OPTIMIZATION: For large texts, if there are no dollar signs, skip math block checking entirely
+  const hasMathBlocks = text.includes("$");
+
   let count = 0;
   const len = text.length;
 
@@ -474,8 +516,8 @@ const countSingleUnderscores = (text: string): number => {
       continue;
     }
 
-    // Skip if within math block
-    if (isWithinMathBlock(text, index)) {
+    // Skip if within math block (only check if text has dollar signs)
+    if (hasMathBlocks && isWithinMathBlock(text, index)) {
       continue;
     }
 
@@ -609,7 +651,19 @@ const handleIncompleteInlineCode = (text: string): string => {
   }
 
   // Check if we're inside a multi-line code block (complete or incomplete)
-  const allTripleBackticks = (text.match(/```/g) || []).length;
+  // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
+  let allTripleBackticks;
+  if (text.length < 3000) {
+    allTripleBackticks = (text.match(/```/g) || []).length;
+  } else {
+    allTripleBackticks = 0;
+    for (let i = 0; i < text.length - 2; i++) {
+      if (text[i] === "`" && text[i + 1] === "`" && text[i + 2] === "`") {
+        allTripleBackticks++;
+        i += 2; // Skip next 2 characters
+      }
+    }
+  }
   const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
 
   // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
@@ -671,7 +725,19 @@ const handleIncompleteStrikethrough = (text: string): string => {
       return text;
     }
 
-    const tildePairs = (text.match(/~~/g) || []).length;
+    // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
+    let tildePairs;
+    if (text.length < 3000) {
+      tildePairs = (text.match(/~~/g) || []).length;
+    } else {
+      tildePairs = 0;
+      for (let i = 0; i < text.length - 1; i++) {
+        if (text[i] === "~" && text[i + 1] === "~") {
+          tildePairs++;
+          i++; // Skip next character
+        }
+      }
+    }
     if (tildePairs % 2 === 1) {
       return `${text}~~`;
     }
@@ -682,8 +748,19 @@ const handleIncompleteStrikethrough = (text: string): string => {
 
 // Completes incomplete block KaTeX formatting ($$)
 const handleIncompleteBlockKatex = (text: string): string => {
-  // Count all $$ pairs in the text
-  const dollarPairs = (text.match(/\$\$/g) || []).length;
+  // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
+  let dollarPairs;
+  if (text.length < 3000) {
+    dollarPairs = (text.match(/\$\$/g) || []).length;
+  } else {
+    dollarPairs = 0;
+    for (let i = 0; i < text.length - 1; i++) {
+      if (text[i] === "$" && text[i + 1] === "$") {
+        dollarPairs++;
+        i++; // Skip next character
+      }
+    }
+  }
 
   // If we have an even number of $$, the block is complete
   if (dollarPairs % 2 === 0) {
@@ -706,17 +783,26 @@ const handleIncompleteBlockKatex = (text: string): string => {
 };
 
 // Counts triple asterisks that are not part of quadruple or more asterisks
+// OPTIMIZATION: Count *** without regex to avoid allocation
 const countTripleAsterisks = (text: string): number => {
   let count = 0;
-  const matches = text.match(/\*+/g) || [];
+  let consecutiveAsterisks = 0;
 
-  for (const match of matches) {
-    // Count how many complete triple asterisks are in this sequence
-    const asteriskCount = match.length;
-    if (asteriskCount >= 3) {
-      // Each group of exactly 3 asterisks counts as one triple asterisk marker
-      count += Math.floor(asteriskCount / 3);
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] === "*") {
+      consecutiveAsterisks++;
+    } else {
+      // End of asterisk sequence
+      if (consecutiveAsterisks >= 3) {
+        count += Math.floor(consecutiveAsterisks / 3);
+      }
+      consecutiveAsterisks = 0;
     }
+  }
+
+  // Handle trailing asterisks
+  if (consecutiveAsterisks >= 3) {
+    count += Math.floor(consecutiveAsterisks / 3);
   }
 
   return count;
@@ -763,6 +849,12 @@ export const parseIncompleteMarkdown = (text: string): string => {
   if (!text || typeof text !== "string") {
     return text;
   }
+
+  // OPTIMIZATION: Clear caches at the start of each parse to ensure fresh state
+  // This also prevents memory leaks from holding references to old text
+  codeBlockCacheText = "";
+  codeBlockCache = null;
+  mathBlockCache = null;
 
   let result = text;
 
