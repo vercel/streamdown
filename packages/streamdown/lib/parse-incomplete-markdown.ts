@@ -32,28 +32,11 @@ const isWordChar = (char: string): boolean => {
 };
 
 // Helper function to check if we have a complete code block
-// OPTIMIZATION: Hybrid approach - use regex for small texts, loop for large
 const hasCompleteCodeBlock = (text: string): boolean => {
-  if (!text.includes("\n")) {
-    return false;
-  }
-
-  // For small/medium texts (< 5KB), use regex (faster for small strings)
-  // For large texts, use loop-based counting (avoids array allocation)
-  if (text.length < 5000) {
-    const tripleBackticks = (text.match(/```/g) || []).length;
-    return tripleBackticks > 0 && tripleBackticks % 2 === 0;
-  }
-
-  let tripleBackticks = 0;
-  for (let i = 0; i < text.length - 2; i += 1) {
-    if (text[i] === "`" && text[i + 1] === "`" && text[i + 2] === "`") {
-      tripleBackticks += 1;
-      i += 2; // Skip next 2 characters
-    }
-  }
-
-  return tripleBackticks > 0 && tripleBackticks % 2 === 0;
+  const tripleBackticks = (text.match(/```/g) || []).length;
+  return (
+    tripleBackticks > 0 && tripleBackticks % 2 === 0 && text.includes("\n")
+  );
 };
 
 const linkImagePattern = /(!?\[)([^\]]*?)$/;
@@ -147,19 +130,7 @@ const handleIncompleteBold = (text: string): string => {
       }
     }
 
-    // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
-    let asteriskPairs: number;
-    if (text.length < 3000) {
-      asteriskPairs = (text.match(/\*\*/g) || []).length;
-    } else {
-      asteriskPairs = 0;
-      for (let i = 0; i < text.length - 1; i += 1) {
-        if (text[i] === "*" && text[i + 1] === "*") {
-          asteriskPairs += 1;
-          i += 1; // Skip next character
-        }
-      }
-    }
+    const asteriskPairs = (text.match(/\*\*/g) || []).length;
     if (asteriskPairs % 2 === 1) {
       return `${text}**`;
     }
@@ -205,19 +176,7 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
       }
     }
 
-    // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
-    let underscorePairs: number;
-    if (text.length < 3000) {
-      underscorePairs = (text.match(/__/g) || []).length;
-    } else {
-      underscorePairs = 0;
-      for (let i = 0; i < text.length - 1; i += 1) {
-        if (text[i] === "_" && text[i + 1] === "_") {
-          underscorePairs += 1;
-          i += 1; // Skip next character
-        }
-      }
-    }
+    const underscorePairs = (text.match(/__/g) || []).length;
     if (underscorePairs % 2 === 1) {
       return `${text}__`;
     }
@@ -536,19 +495,7 @@ const handleIncompleteInlineCode = (text: string): string => {
   }
 
   // Check if we're inside a multi-line code block (complete or incomplete)
-  // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
-  let allTripleBackticks: number;
-  if (text.length < 3000) {
-    allTripleBackticks = (text.match(/```/g) || []).length;
-  } else {
-    allTripleBackticks = 0;
-    for (let i = 0; i < text.length - 2; i += 1) {
-      if (text[i] === "`" && text[i + 1] === "`" && text[i + 2] === "`") {
-        allTripleBackticks += 1;
-        i += 2; // Skip next 2 characters
-      }
-    }
-  }
+  const allTripleBackticks = (text.match(/```/g) || []).length;
   const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
 
   // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
@@ -611,19 +558,7 @@ const handleIncompleteStrikethrough = (text: string): string => {
       return text;
     }
 
-    // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
-    let tildePairs: number;
-    if (text.length < 3000) {
-      tildePairs = (text.match(/~~/g) || []).length;
-    } else {
-      tildePairs = 0;
-      for (let i = 0; i < text.length - 1; i += 1) {
-        if (text[i] === "~" && text[i + 1] === "~") {
-          tildePairs += 1;
-          i += 1; // Skip next character
-        }
-      }
-    }
+    const tildePairs = (text.match(/~~/g) || []).length;
     if (tildePairs % 2 === 1) {
       return `${text}~~`;
     }
@@ -634,19 +569,8 @@ const handleIncompleteStrikethrough = (text: string): string => {
 
 // Completes incomplete block KaTeX formatting ($$)
 const handleIncompleteBlockKatex = (text: string): string => {
-  // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
-  let dollarPairs: number;
-  if (text.length < 3000) {
-    dollarPairs = (text.match(/\$\$/g) || []).length;
-  } else {
-    dollarPairs = 0;
-    for (let i = 0; i < text.length - 1; i += 1) {
-      if (text[i] === "$" && text[i + 1] === "$") {
-        dollarPairs += 1;
-        i += 1; // Skip next character
-      }
-    }
-  }
+  // Count all $$ pairs in the text
+  const dollarPairs = (text.match(/\$\$/g) || []).length;
 
   // If we have an even number of $$, the block is complete
   if (dollarPairs % 2 === 0) {
