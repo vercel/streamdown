@@ -11,6 +11,24 @@ const letterNumberUnderscorePattern = /[\p{L}\p{N}_]/u;
 const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
 const fourOrMoreAsterisksPattern = /^\*{4,}$/;
 
+// OPTIMIZATION: Precompute which characters are word characters
+// Using ASCII fast path before falling back to Unicode regex
+const isWordChar = (char: string): boolean => {
+  if (!char) return false;
+  const code = char.charCodeAt(0);
+  // ASCII optimization: a-z, A-Z, 0-9, _
+  if (
+    (code >= 48 && code <= 57) || // 0-9
+    (code >= 65 && code <= 90) || // A-Z
+    (code >= 97 && code <= 122) || // a-z
+    code === 95 // _
+  ) {
+    return true;
+  }
+  // Fallback to regex for Unicode characters (less common)
+  return letterNumberUnderscorePattern.test(char);
+};
+
 // Helper function to check if we have a complete code block
 const hasCompleteCodeBlock = (text: string): boolean => {
   const tripleBackticks = (text.match(/```/g) || []).length;
@@ -273,54 +291,61 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   return text;
 };
 
+// OPTIMIZED: Counts single asterisks without split("").reduce()
 // Counts single asterisks that are not part of double asterisks, not escaped, not list markers, and not word-internal
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
 const countSingleAsterisks = (text: string): number => {
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
-  return text.split("").reduce((acc, char, index) => {
-    if (char === "*") {
-      const prevChar = text[index - 1];
-      const nextChar = text[index + 1];
-      // Skip if escaped with backslash
-      if (prevChar === "\\") {
-        return acc;
-      }
-      // Skip if asterisk is word-internal (between word characters)
-      if (
-        prevChar &&
-        nextChar &&
-        letterNumberUnderscorePattern.test(prevChar) &&
-        letterNumberUnderscorePattern.test(nextChar)
-      ) {
-        return acc;
-      }
-      // Check if this is a list marker (asterisk at start of line followed by space)
-      // Look backwards to find the start of the current line
-      let lineStartIndex = index;
-      for (let i = index - 1; i >= 0; i--) {
-        if (text[i] === "\n") {
-          lineStartIndex = i + 1;
-          break;
-        }
-        if (i === 0) {
-          lineStartIndex = 0;
-          break;
-        }
-      }
-      // Check if this asterisk is at the beginning of a line (with optional whitespace)
-      const beforeAsterisk = text.substring(lineStartIndex, index);
-      if (
-        beforeAsterisk.trim() === "" &&
-        (nextChar === " " || nextChar === "\t")
-      ) {
-        // This is likely a list marker, don't count it
-        return acc;
-      }
-      if (prevChar !== "*" && nextChar !== "*") {
-        return acc + 1;
+  let count = 0;
+  const len = text.length;
+
+  for (let index = 0; index < len; index++) {
+    if (text[index] !== "*") continue;
+
+    const prevChar = index > 0 ? text[index - 1] : "";
+    const nextChar = index < len - 1 ? text[index + 1] : "";
+
+    // Skip if escaped with backslash
+    if (prevChar === "\\") {
+      continue;
+    }
+
+    // Skip if part of ** or ***
+    if (prevChar === "*" || nextChar === "*") {
+      continue;
+    }
+
+    // Skip if asterisk is word-internal (between word characters)
+    if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
+      continue;
+    }
+
+    // Check if this is a list marker (asterisk at start of line followed by space)
+    // Look backwards to find the start of the current line
+    let lineStartIndex = 0;
+    for (let i = index - 1; i >= 0; i--) {
+      if (text[i] === "\n") {
+        lineStartIndex = i + 1;
+        break;
       }
     }
-    return acc;
-  }, 0);
+
+    // Check if this asterisk is at the beginning of a line (with optional whitespace)
+    let isListMarker = true;
+    for (let i = lineStartIndex; i < index; i++) {
+      if (text[i] !== " " && text[i] !== "\t") {
+        isListMarker = false;
+        break;
+      }
+    }
+
+    if (isListMarker && (nextChar === " " || nextChar === "\t")) {
+      continue;
+    }
+
+    count++;
+  }
+
+  return count;
 };
 
 // Completes incomplete italic formatting with single asterisks (*)
@@ -346,12 +371,7 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
         // Check if asterisk is word-internal (between word characters)
         const prevChar = i > 0 ? text[i - 1] : "";
         const nextChar = i < text.length - 1 ? text[i + 1] : "";
-        if (
-          prevChar &&
-          nextChar &&
-          letterNumberUnderscorePattern.test(prevChar) &&
-          letterNumberUnderscorePattern.test(nextChar)
-        ) {
+        if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
           continue;
         }
 
@@ -416,36 +436,43 @@ const isWithinMathBlock = (text: string, position: number): boolean => {
   return inInlineMath || inBlockMath;
 };
 
+// OPTIMIZED: Counts single underscores without split("").reduce()
 // Counts single underscores that are not part of double underscores, not escaped, and not in math blocks
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
 const countSingleUnderscores = (text: string): number => {
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
-  return text.split("").reduce((acc, char, index) => {
-    if (char === "_") {
-      const prevChar = text[index - 1];
-      const nextChar = text[index + 1];
-      // Skip if escaped with backslash
-      if (prevChar === "\\") {
-        return acc;
-      }
-      // Skip if within math block
-      if (isWithinMathBlock(text, index)) {
-        return acc;
-      }
-      // Skip if underscore is word-internal (between word characters)
-      if (
-        prevChar &&
-        nextChar &&
-        letterNumberUnderscorePattern.test(prevChar) &&
-        letterNumberUnderscorePattern.test(nextChar)
-      ) {
-        return acc;
-      }
-      if (prevChar !== "_" && nextChar !== "_") {
-        return acc + 1;
-      }
+  let count = 0;
+  const len = text.length;
+
+  for (let index = 0; index < len; index++) {
+    if (text[index] !== "_") continue;
+
+    const prevChar = index > 0 ? text[index - 1] : "";
+    const nextChar = index < len - 1 ? text[index + 1] : "";
+
+    // Skip if escaped with backslash
+    if (prevChar === "\\") {
+      continue;
     }
-    return acc;
-  }, 0);
+
+    // Skip if within math block
+    if (isWithinMathBlock(text, index)) {
+      continue;
+    }
+
+    // Skip if part of __
+    if (prevChar === "_" || nextChar === "_") {
+      continue;
+    }
+
+    // Skip if underscore is word-internal (between word characters)
+    if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
+      continue;
+    }
+
+    count++;
+  }
+
+  return count;
 };
 
 // Completes incomplete italic formatting with single underscores (_)
@@ -472,12 +499,7 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
         // Check if underscore is word-internal (between word characters)
         const prevChar = i > 0 ? text[i - 1] : "";
         const nextChar = i < text.length - 1 ? text[i + 1] : "";
-        if (
-          prevChar &&
-          nextChar &&
-          letterNumberUnderscorePattern.test(prevChar) &&
-          letterNumberUnderscorePattern.test(nextChar)
-        ) {
+        if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
           continue;
         }
 
