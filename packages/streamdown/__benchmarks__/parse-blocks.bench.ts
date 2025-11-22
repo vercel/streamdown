@@ -23,17 +23,29 @@ This is paragraph 2.
     (_, i) => `## Section ${i}\n\nParagraph ${i}`
   ).join("\n\n");
 
-  bench("single block", () => {
-    parseMarkdownIntoBlocks(singleBlock);
-  });
+  bench(
+    "single block",
+    () => {
+      parseMarkdownIntoBlocks(singleBlock);
+    },
+    { iterations: 1000 }
+  );
 
-  bench("multiple blocks (10)", () => {
-    parseMarkdownIntoBlocks(multipleBlocks);
-  });
+  bench(
+    "multiple blocks (10)",
+    () => {
+      parseMarkdownIntoBlocks(multipleBlocks);
+    },
+    { iterations: 1000 }
+  );
 
-  bench("many blocks (100)", () => {
-    parseMarkdownIntoBlocks(manyBlocks);
-  });
+  bench(
+    "many blocks (100)",
+    () => {
+      parseMarkdownIntoBlocks(manyBlocks);
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("parseMarkdownIntoBlocks - Code Blocks", () => {
@@ -64,17 +76,29 @@ let z = 3;
 
   const largeCodeBlock = `\`\`\`javascript\n${"const x = 1;\n".repeat(1000)}\`\`\``;
 
-  bench("single code block", () => {
-    parseMarkdownIntoBlocks(singleCodeBlock);
-  });
+  bench(
+    "single code block",
+    () => {
+      parseMarkdownIntoBlocks(singleCodeBlock);
+    },
+    { iterations: 1000 }
+  );
 
-  bench("multiple code blocks", () => {
-    parseMarkdownIntoBlocks(multipleCodeBlocks);
-  });
+  bench(
+    "multiple code blocks",
+    () => {
+      parseMarkdownIntoBlocks(multipleCodeBlocks);
+    },
+    { iterations: 1000 }
+  );
 
-  bench("large code block (1000 lines)", () => {
-    parseMarkdownIntoBlocks(largeCodeBlock);
-  });
+  bench(
+    "large code block (1000 lines)",
+    () => {
+      parseMarkdownIntoBlocks(largeCodeBlock);
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("parseMarkdownIntoBlocks - Math Blocks", () => {
@@ -115,17 +139,29 @@ $$
 More text
 `;
 
-  bench("simple math block", () => {
-    parseMarkdownIntoBlocks(simpleMath);
-  });
+  bench(
+    "simple math block",
+    () => {
+      parseMarkdownIntoBlocks(simpleMath);
+    },
+    { iterations: 1000 }
+  );
 
-  bench("complex math blocks", () => {
-    parseMarkdownIntoBlocks(complexMath);
-  });
+  bench(
+    "complex math blocks",
+    () => {
+      parseMarkdownIntoBlocks(complexMath);
+    },
+    { iterations: 1000 }
+  );
 
-  bench("math with split delimiters", () => {
-    parseMarkdownIntoBlocks(mathWithSplitDelimiters);
-  });
+  bench(
+    "math with split delimiters",
+    () => {
+      parseMarkdownIntoBlocks(mathWithSplitDelimiters);
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("parseMarkdownIntoBlocks - HTML Blocks", () => {
@@ -157,17 +193,29 @@ Some markdown
 More markdown
 `;
 
-  bench("simple HTML block", () => {
-    parseMarkdownIntoBlocks(simpleHTML);
-  });
+  bench(
+    "simple HTML block",
+    () => {
+      parseMarkdownIntoBlocks(simpleHTML);
+    },
+    { iterations: 1000 }
+  );
 
-  bench("nested HTML block", () => {
-    parseMarkdownIntoBlocks(nestedHTML);
-  });
+  bench(
+    "nested HTML block",
+    () => {
+      parseMarkdownIntoBlocks(nestedHTML);
+    },
+    { iterations: 1000 }
+  );
 
-  bench("multiple HTML blocks", () => {
-    parseMarkdownIntoBlocks(multipleHTMLBlocks);
-  });
+  bench(
+    "multiple HTML blocks",
+    () => {
+      parseMarkdownIntoBlocks(multipleHTMLBlocks);
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("parseMarkdownIntoBlocks - Footnotes", () => {
@@ -186,13 +234,21 @@ Text[^1] with[^2] many[^3] footnotes[^4].
 ${Array.from({ length: 10 }, (_, i) => `[^${i + 1}]: Footnote ${i + 1}`).join("\n")}
 `;
 
-  bench("document with footnotes", () => {
-    parseMarkdownIntoBlocks(withFootnotes);
-  });
+  bench(
+    "document with footnotes",
+    () => {
+      parseMarkdownIntoBlocks(withFootnotes);
+    },
+    { iterations: 1000 }
+  );
 
-  bench("document with many footnotes", () => {
-    parseMarkdownIntoBlocks(manyFootnotes);
-  });
+  bench(
+    "document with many footnotes",
+    () => {
+      parseMarkdownIntoBlocks(manyFootnotes);
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("parseMarkdownIntoBlocks - Tables", () => {
@@ -209,13 +265,21 @@ describe("parseMarkdownIntoBlocks - Tables", () => {
 ${Array.from({ length: 100 }, (_, i) => `| C${i}1 | C${i}2 | C${i}3 | C${i}4 | C${i}5 |`).join("\n")}
 `;
 
-  bench("simple table", () => {
-    parseMarkdownIntoBlocks(simpleTable);
-  });
+  bench(
+    "simple table",
+    () => {
+      parseMarkdownIntoBlocks(simpleTable);
+    },
+    { iterations: 1000 }
+  );
 
-  bench("large table (100 rows)", () => {
-    parseMarkdownIntoBlocks(largeTable);
-  });
+  bench(
+    "large table (100 rows)",
+    () => {
+      parseMarkdownIntoBlocks(largeTable);
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("parseMarkdownIntoBlocks - Streaming Simulation", () => {
@@ -225,11 +289,15 @@ describe("parseMarkdownIntoBlocks - Streaming Simulation", () => {
     (_, i) => baseText + "This is streaming text. ".repeat(i)
   );
 
-  bench("streaming text (50 incremental steps)", () => {
-    for (const step of streamingSteps) {
-      parseMarkdownIntoBlocks(step);
-    }
-  });
+  bench(
+    "streaming text (50 incremental steps)",
+    () => {
+      for (const step of streamingSteps) {
+        parseMarkdownIntoBlocks(step);
+      }
+    },
+    { iterations: 1000 }
+  );
 
   const codeStreamingSteps = [
     "```javascript",
@@ -243,11 +311,15 @@ describe("parseMarkdownIntoBlocks - Streaming Simulation", () => {
     "```javascript\nconst x = 1;\n```",
   ];
 
-  bench("streaming code block (9 steps)", () => {
-    for (const step of codeStreamingSteps) {
-      parseMarkdownIntoBlocks(step);
-    }
-  });
+  bench(
+    "streaming code block (9 steps)",
+    () => {
+      for (const step of codeStreamingSteps) {
+        parseMarkdownIntoBlocks(step);
+      }
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("parseMarkdownIntoBlocks - Mixed Content", () => {
@@ -297,13 +369,21 @@ $$
 For more info, see [documentation](https://example.com).
 `;
 
-  bench("realistic AI response", () => {
-    parseMarkdownIntoBlocks(realistic);
-  });
-
-  bench("realistic AI response (10x)", () => {
-    for (let i = 0; i < 10; i++) {
+  bench(
+    "realistic AI response",
+    () => {
       parseMarkdownIntoBlocks(realistic);
-    }
-  });
+    },
+    { iterations: 1000 }
+  );
+
+  bench(
+    "realistic AI response (10x)",
+    () => {
+      for (let i = 0; i < 10; i++) {
+        parseMarkdownIntoBlocks(realistic);
+      }
+    },
+    { iterations: 1000 }
+  );
 });

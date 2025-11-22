@@ -231,47 +231,79 @@ ${Array.from({ length: 20 }, (_, i) => `| Value ${i}1 | Value ${i}2 | Value ${i}
 };
 
 describe("Streamdown vs React-Markdown - Simple Content", () => {
-  bench("streamdown - simple", () => {
-    Markdown({ children: samples.simple });
-  });
+  bench(
+    "streamdown - simple",
+    () => {
+      Markdown({ children: samples.simple });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("react-markdown - simple", () => {
-    ReactMarkdown({ children: samples.simple });
-  });
+  bench(
+    "react-markdown - simple",
+    () => {
+      ReactMarkdown({ children: samples.simple });
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("Streamdown vs React-Markdown - Medium Content", () => {
-  bench("streamdown - medium", () => {
-    Markdown({ children: samples.medium });
-  });
+  bench(
+    "streamdown - medium",
+    () => {
+      Markdown({ children: samples.medium });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("react-markdown - medium", () => {
-    ReactMarkdown({ children: samples.medium });
-  });
+  bench(
+    "react-markdown - medium",
+    () => {
+      ReactMarkdown({ children: samples.medium });
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("Streamdown vs React-Markdown - GFM Features", () => {
-  bench("streamdown - gfm (no plugins)", () => {
-    Markdown({ children: samples.gfm });
-  });
+  bench(
+    "streamdown - gfm (no plugins)",
+    () => {
+      Markdown({ children: samples.gfm });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("streamdown - gfm (with plugin)", () => {
-    Markdown({
-      children: samples.gfm,
-      remarkPlugins: [remarkGfm],
-    });
-  });
+  bench(
+    "streamdown - gfm (with plugin)",
+    () => {
+      Markdown({
+        children: samples.gfm,
+        remarkPlugins: [remarkGfm],
+      });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("react-markdown - gfm (no plugins)", () => {
-    ReactMarkdown({ children: samples.gfm });
-  });
+  bench(
+    "react-markdown - gfm (no plugins)",
+    () => {
+      ReactMarkdown({ children: samples.gfm });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("react-markdown - gfm (with plugin)", () => {
-    ReactMarkdown({
-      children: samples.gfm,
-      remarkPlugins: [remarkGfm],
-    });
-  });
+  bench(
+    "react-markdown - gfm (with plugin)",
+    () => {
+      ReactMarkdown({
+        children: samples.gfm,
+        remarkPlugins: [remarkGfm],
+      });
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("Streamdown vs React-Markdown - Math Rendering", () => {
@@ -280,19 +312,27 @@ describe("Streamdown vs React-Markdown - Math Rendering", () => {
     rehypePlugins: [rehypeKatex],
   };
 
-  bench("streamdown - math", () => {
-    Markdown({
-      children: samples.math,
-      ...mathPlugins,
-    });
-  });
+  bench(
+    "streamdown - math",
+    () => {
+      Markdown({
+        children: samples.math,
+        ...mathPlugins,
+      });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("react-markdown - math", () => {
-    ReactMarkdown({
-      children: samples.math,
-      ...mathPlugins,
-    });
-  });
+  bench(
+    "react-markdown - math",
+    () => {
+      ReactMarkdown({
+        children: samples.math,
+        ...mathPlugins,
+      });
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("Streamdown vs React-Markdown - Complex Content", () => {
@@ -301,27 +341,43 @@ describe("Streamdown vs React-Markdown - Complex Content", () => {
     rehypePlugins: [rehypeRaw, rehypeKatex],
   };
 
-  bench("streamdown - complex (no plugins)", () => {
-    Markdown({ children: samples.complex });
-  });
+  bench(
+    "streamdown - complex (no plugins)",
+    () => {
+      Markdown({ children: samples.complex });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("streamdown - complex (with plugins)", () => {
-    Markdown({
-      children: samples.complex,
-      ...plugins,
-    });
-  });
+  bench(
+    "streamdown - complex (with plugins)",
+    () => {
+      Markdown({
+        children: samples.complex,
+        ...plugins,
+      });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("react-markdown - complex (no plugins)", () => {
-    ReactMarkdown({ children: samples.complex });
-  });
+  bench(
+    "react-markdown - complex (no plugins)",
+    () => {
+      ReactMarkdown({ children: samples.complex });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("react-markdown - complex (with plugins)", () => {
-    ReactMarkdown({
-      children: samples.complex,
-      ...plugins,
-    });
-  });
+  bench(
+    "react-markdown - complex (with plugins)",
+    () => {
+      ReactMarkdown({
+        children: samples.complex,
+        ...plugins,
+      });
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("Streamdown vs React-Markdown - Large Content", () => {
@@ -329,19 +385,27 @@ describe("Streamdown vs React-Markdown - Large Content", () => {
     remarkPlugins: [remarkGfm],
   };
 
-  bench("streamdown - huge document", () => {
-    Markdown({
-      children: samples.huge,
-      ...plugins,
-    });
-  });
+  bench(
+    "streamdown - huge document",
+    () => {
+      Markdown({
+        children: samples.huge,
+        ...plugins,
+      });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("react-markdown - huge document", () => {
-    ReactMarkdown({
-      children: samples.huge,
-      ...plugins,
-    });
-  });
+  bench(
+    "react-markdown - huge document",
+    () => {
+      ReactMarkdown({
+        children: samples.huge,
+        ...plugins,
+      });
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("Streamdown vs React-Markdown - Processor Caching", () => {
@@ -353,33 +417,49 @@ describe("Streamdown vs React-Markdown - Processor Caching", () => {
   Markdown({ children: samples.medium, ...plugins });
   ReactMarkdown({ children: samples.medium, ...plugins });
 
-  bench("streamdown - cached processor", () => {
-    Markdown({
-      children: samples.medium,
-      ...plugins,
-    });
-  });
+  bench(
+    "streamdown - cached processor",
+    () => {
+      Markdown({
+        children: samples.medium,
+        ...plugins,
+      });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("react-markdown - cached processor", () => {
-    ReactMarkdown({
-      children: samples.medium,
-      ...plugins,
-    });
-  });
+  bench(
+    "react-markdown - cached processor",
+    () => {
+      ReactMarkdown({
+        children: samples.medium,
+        ...plugins,
+      });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("streamdown - cached processor, different content", () => {
-    Markdown({
-      children: samples.gfm,
-      ...plugins,
-    });
-  });
+  bench(
+    "streamdown - cached processor, different content",
+    () => {
+      Markdown({
+        children: samples.gfm,
+        ...plugins,
+      });
+    },
+    { iterations: 1000 }
+  );
 
-  bench("react-markdown - cached processor, different content", () => {
-    ReactMarkdown({
-      children: samples.gfm,
-      ...plugins,
-    });
-  });
+  bench(
+    "react-markdown - cached processor, different content",
+    () => {
+      ReactMarkdown({
+        children: samples.gfm,
+        ...plugins,
+      });
+    },
+    { iterations: 1000 }
+  );
 });
 
 describe("Streamdown vs React-Markdown - Streaming Simulation", () => {
@@ -393,21 +473,29 @@ describe("Streamdown vs React-Markdown - Streaming Simulation", () => {
     rehypePlugins: [rehypeKatex],
   };
 
-  bench("streamdown - streaming (20 incremental parses)", () => {
-    for (const step of streamingSteps) {
-      Markdown({
-        children: step,
-        ...plugins,
-      });
-    }
-  });
+  bench(
+    "streamdown - streaming (20 incremental parses)",
+    () => {
+      for (const step of streamingSteps) {
+        Markdown({
+          children: step,
+          ...plugins,
+        });
+      }
+    },
+    { iterations: 1000 }
+  );
 
-  bench("react-markdown - streaming (20 incremental parses)", () => {
-    for (const step of streamingSteps) {
-      ReactMarkdown({
-        children: step,
-        ...plugins,
-      });
-    }
-  });
+  bench(
+    "react-markdown - streaming (20 incremental parses)",
+    () => {
+      for (const step of streamingSteps) {
+        ReactMarkdown({
+          children: step,
+          ...plugins,
+        });
+      }
+    },
+    { iterations: 1000 }
+  );
 });
