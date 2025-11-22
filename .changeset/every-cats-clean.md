@@ -1,5 +1,0 @@
----
-"streamdown": patch
----
-
-Performance optimizations
