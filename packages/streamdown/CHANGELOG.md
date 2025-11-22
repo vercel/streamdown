@@ -1,5 +1,24 @@
 # streamdown
 
+## 1.6.0
+
+### Minor Changes
+
+- 6f19ee0: Remove dependency on react-markdown
+- 52db013: Implement Static mode
+
+### Patch Changes
+
+- 4e12df6: Performance optimizations
+- 606209d: Rebuild syntax highlighting
+- 093cd5c: Remove urlTransform and defaultUrlTransform
+- 28ab339: Fix incomplete link termination in code blocks
+- b55cbdc: Fix security issues, improve performance
+- 872da1a: Allow for custom error components for Mermaid diagrams
+- 090c82e: Fix list CSS
+- 22cbaeb: Added the ability to export mermaid diagrams to svg and png alongside mmd
+- 936af5b: Add PanZoom component and tests for zoom and pan functionality
+
 ## 1.5.1
 
 ### Patch Changes
