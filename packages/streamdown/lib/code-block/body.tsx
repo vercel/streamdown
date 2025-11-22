@@ -67,5 +67,13 @@ export const CodeBlockBody = memo(
         </code>
       </pre>
     );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison: only re-render if result tokens actually changed
+    return (
+      prevProps.result === nextProps.result &&
+      prevProps.language === nextProps.language &&
+      prevProps.className === nextProps.className
+    );
   }
 );
