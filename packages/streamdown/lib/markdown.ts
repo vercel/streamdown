@@ -7,7 +7,6 @@ import type { Options as RemarkRehypeOptions } from "remark-rehype";
 import remarkRehype from "remark-rehype";
 import type { PluggableList } from "unified";
 import { unified } from "unified";
-import { VFile } from "vfile";
 
 export type ExtraProps = {
   node?: Element | undefined;
@@ -107,9 +106,12 @@ const processorCache = new ProcessorCache();
 
 export const Markdown = (options: Readonly<Options>) => {
   const processor = getCachedProcessor(options);
-  const file = new VFile(options.children || "");
+  const content = options.children || "";
   // biome-ignore lint/suspicious/noExplicitAny: runSync return type varies with processor configuration
-  return post(processor.runSync(processor.parse(file), file) as any, options);
+  return post(
+    processor.runSync(processor.parse(content), content) as any,
+    options
+  );
 };
 
 const getCachedProcessor = (options: Readonly<Options>) => {
