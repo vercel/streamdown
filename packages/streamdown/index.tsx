@@ -295,25 +295,16 @@ export const Streamdown = memo(
       <StreamdownContext.Provider value={contextValue}>
         <div className={cn("space-y-4", className)}>
           {blocksToRender.map((block, index) => (
-            <div
+            <BlockComponent
+              components={mergedComponents}
+              content={block}
+              index={index}
               key={blockKeys[index]}
-              style={{
-                // Use content-visibility to skip rendering off-screen blocks
-                contentVisibility: "auto",
-                // Provide a hint for layout to prevent layout shifts
-                containIntrinsicSize: "auto 100px",
-              }}
-            >
-              <BlockComponent
-                components={mergedComponents}
-                content={block}
-                index={index}
-                rehypePlugins={rehypePlugins}
-                remarkPlugins={remarkPlugins}
-                shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-                {...props}
-              />
-            </div>
+              rehypePlugins={rehypePlugins}
+              remarkPlugins={remarkPlugins}
+              shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
+              {...props}
+            />
           ))}
         </div>
       </StreamdownContext.Provider>
