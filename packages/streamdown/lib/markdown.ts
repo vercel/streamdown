@@ -7,7 +7,6 @@ import type { Options as RemarkRehypeOptions } from "remark-rehype";
 import remarkRehype from "remark-rehype";
 import type { PluggableList } from "unified";
 import { unified } from "unified";
-import { VFile } from "vfile";
 
 export type ExtraProps = {
   node?: Element | undefined;
@@ -27,46 +26,95 @@ export type Options = {
   remarkRehypeOptions?: Readonly<RemarkRehypeOptions>;
 };
 
+// Stable references for common cases
+const EMPTY_PLUGINS: PluggableList = [];
+const DEFAULT_REMARK_REHYPE_OPTIONS = { allowDangerousHtml: true };
+
+// Plugin name cache for faster serialization
+// biome-ignore lint/complexity/noBannedTypes: "Need Function type for plugin caching"
+const pluginNameCache = new WeakMap<Function, string>();
+
 // LRU Cache for unified processors
 class ProcessorCache {
   // biome-ignore lint/suspicious/noExplicitAny: Processor type is complex and varies with plugins
   private readonly cache = new Map<string, any>();
+  private readonly keyCache = new WeakMap<Readonly<Options>, string>();
   private readonly maxSize = 100;
 
-  private generateCacheKey(options: Readonly<Options>): string {
-    const rehypePlugins = options.rehypePlugins || [];
-    const remarkPlugins = options.remarkPlugins || [];
-    const remarkRehypeOptions = options.remarkRehypeOptions || {};
+  generateCacheKey(options: Readonly<Options>): string {
+    // Check WeakMap cache first for faster lookups (before any processing)
+    const cachedKey = this.keyCache.get(options);
+    if (cachedKey) {
+      return cachedKey;
+    }
 
-    // Create a stable key from plugin configurations
-    const serializePlugins = (plugins: PluggableList): string => {
-      return JSON.stringify(
-        plugins.map((plugin) => {
-          if (Array.isArray(plugin)) {
-            // Plugin with options: [plugin, options]
-            const [pluginFn, pluginOptions] = plugin;
-            return {
-              name:
-                typeof pluginFn === "function"
-                  ? pluginFn.name
-                  : String(pluginFn),
-              options: pluginOptions,
-            };
+    const rehypePlugins = options.rehypePlugins;
+    const remarkPlugins = options.remarkPlugins;
+    const remarkRehypeOptions = options.remarkRehypeOptions;
+
+    // Fast path for no plugins (most common case)
+    if (!(rehypePlugins || remarkPlugins || remarkRehypeOptions)) {
+      const key = "default";
+      this.keyCache.set(options, key);
+      return key;
+    }
+
+    // Optimize serialization for plugins
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Plugin serialization requires checking multiple plugin formats"
+    const serializePlugins = (plugins: PluggableList | undefined): string => {
+      if (!plugins || plugins.length === 0) {
+        return "";
+      }
+
+      let result = "";
+      for (let i = 0; i < plugins.length; i += 1) {
+        const plugin = plugins[i];
+        if (i > 0) {
+          result += ",";
+        }
+
+        if (Array.isArray(plugin)) {
+          // Plugin with options: [plugin, options]
+          const [pluginFn, pluginOptions] = plugin;
+          if (typeof pluginFn === "function") {
+            let name = pluginNameCache.get(pluginFn);
+            if (!name) {
+              name = pluginFn.name;
+              pluginNameCache.set(pluginFn, name);
+            }
+            result += name;
+          } else {
+            result += String(pluginFn);
           }
+          result += ":";
+          result += JSON.stringify(pluginOptions);
+        } else if (typeof plugin === "function") {
           // Plugin without options
-          return {
-            name: typeof plugin === "function" ? plugin.name : String(plugin),
-            options: null,
-          };
-        })
-      );
+          let name = pluginNameCache.get(plugin);
+          if (!name) {
+            name = plugin.name;
+            pluginNameCache.set(plugin, name);
+          }
+          result += name;
+        } else {
+          result += String(plugin);
+        }
+      }
+      return result;
     };
 
     const rehypeKey = serializePlugins(rehypePlugins);
     const remarkKey = serializePlugins(remarkPlugins);
-    const optionsKey = JSON.stringify(remarkRehypeOptions);
+    const optionsKey = remarkRehypeOptions
+      ? JSON.stringify(remarkRehypeOptions)
+      : "";
 
-    return `${remarkKey}::${rehypeKey}::${optionsKey}`;
+    const key = `${remarkKey}::${rehypeKey}::${optionsKey}`;
+
+    // Cache the key in WeakMap for this options object
+    this.keyCache.set(options, key);
+
+    return key;
   }
 
   get(options: Readonly<Options>) {
@@ -99,6 +147,7 @@ class ProcessorCache {
 
   clear(): void {
     this.cache.clear();
+    // Note: WeakMap doesn't need manual clearing
   }
 }
 
@@ -107,9 +156,12 @@ const processorCache = new ProcessorCache();
 
 export const Markdown = (options: Readonly<Options>) => {
   const processor = getCachedProcessor(options);
-  const file = new VFile(options.children || "");
-  // biome-ignore lint/suspicious/noExplicitAny: runSync return type varies with processor configuration
-  return post(processor.runSync(processor.parse(file), file) as any, options);
+  const content = options.children || "";
+  return post(
+    // biome-ignore lint/suspicious/noExplicitAny: runSync return type varies with processor configuration
+    processor.runSync(processor.parse(content), content) as any,
+    options
+  );
 };
 
 const getCachedProcessor = (options: Readonly<Options>) => {
@@ -126,12 +178,11 @@ const getCachedProcessor = (options: Readonly<Options>) => {
 };
 
 const createProcessor = (options: Readonly<Options>) => {
-  const rehypePlugins = options.rehypePlugins || [];
-  const remarkPlugins = options.remarkPlugins || [];
-  const remarkRehypeOptions = {
-    allowDangerousHtml: true,
-    ...options.remarkRehypeOptions,
-  };
+  const rehypePlugins = options.rehypePlugins || EMPTY_PLUGINS;
+  const remarkPlugins = options.remarkPlugins || EMPTY_PLUGINS;
+  const remarkRehypeOptions = options.remarkRehypeOptions
+    ? { ...DEFAULT_REMARK_REHYPE_OPTIONS, ...options.remarkRehypeOptions }
+    : DEFAULT_REMARK_REHYPE_OPTIONS;
 
   return unified()
     .use(remarkParse)

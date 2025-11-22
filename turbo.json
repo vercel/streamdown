@@ -22,6 +22,12 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "bench": {
+      "dependsOn": ["^bench"]
+    },
+    "bench:ui": {
+      "dependsOn": ["^bench:ui"]
     }
   }
 }

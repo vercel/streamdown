@@ -43,3 +43,6 @@ package-lock.json
 
 # Fumadocs
 .source
+
+# Benchmarks
+results.txt

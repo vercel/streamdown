@@ -16,7 +16,7 @@ const highlighterCache = new Map<string, Promise<Highlighter>>();
 const tokensCache = new Map<string, TokensResult>();
 
 // Subscribers for token cache updates
-const subscribers = new Map<string, Set<() => void>>();
+const subscribers = new Map<string, Set<(result: TokensResult) => void>>();
 
 // Helper to generate cache key for highlighter
 const getHighlighterCacheKey = (
@@ -79,7 +79,9 @@ export const getHighlightedTokens = (
       subscribers.set(tokensCacheKey, new Set());
     }
 
-    const subs = subscribers.get(tokensCacheKey) as Set<() => void>;
+    const subs = subscribers.get(tokensCacheKey) as Set<
+      (result: TokensResult) => void
+    >;
 
     subs.add(callback);
   }

@@ -2,7 +2,7 @@ import { HomeLayout } from "@/components/geistdocs/home-layout";
 
 const Layout = ({ children }: LayoutProps<"/">) => (
   <HomeLayout>
-    <div className="bg-sidebar pt-0 pb-8 sm:pb-32">{children}</div>
+    <div className="bg-sidebar pt-0">{children}</div>
   </HomeLayout>
 );
 

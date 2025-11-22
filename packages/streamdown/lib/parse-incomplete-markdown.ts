@@ -11,12 +11,49 @@ const letterNumberUnderscorePattern = /[\p{L}\p{N}_]/u;
 const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
 const fourOrMoreAsterisksPattern = /^\*{4,}$/;
 
+// OPTIMIZATION: Precompute which characters are word characters
+// Using ASCII fast path before falling back to Unicode regex
+const isWordChar = (char: string): boolean => {
+  if (!char) {
+    return false;
+  }
+  const code = char.charCodeAt(0);
+  // ASCII optimization: a-z, A-Z, 0-9, _
+  if (
+    (code >= 48 && code <= 57) || // 0-9
+    (code >= 65 && code <= 90) || // A-Z
+    (code >= 97 && code <= 122) || // a-z
+    code === 95 // _
+  ) {
+    return true;
+  }
+  // Fallback to regex for Unicode characters (less common)
+  return letterNumberUnderscorePattern.test(char);
+};
+
 // Helper function to check if we have a complete code block
+// OPTIMIZATION: Hybrid approach - use regex for small texts, loop for large
 const hasCompleteCodeBlock = (text: string): boolean => {
-  const tripleBackticks = (text.match(/```/g) || []).length;
-  return (
-    tripleBackticks > 0 && tripleBackticks % 2 === 0 && text.includes("\n")
-  );
+  if (!text.includes("\n")) {
+    return false;
+  }
+
+  // For small/medium texts (< 5KB), use regex (faster for small strings)
+  // For large texts, use loop-based counting (avoids array allocation)
+  if (text.length < 5000) {
+    const tripleBackticks = (text.match(/```/g) || []).length;
+    return tripleBackticks > 0 && tripleBackticks % 2 === 0;
+  }
+
+  let tripleBackticks = 0;
+  for (let i = 0; i < text.length - 2; i += 1) {
+    if (text[i] === "`" && text[i + 1] === "`" && text[i + 2] === "`") {
+      tripleBackticks += 1;
+      i += 2; // Skip next 2 characters
+    }
+  }
+
+  return tripleBackticks > 0 && tripleBackticks % 2 === 0;
 };
 
 // Cache for code block state to avoid recalculating
@@ -179,6 +216,7 @@ const handleIncompleteLinksAndImages = (text: string): string => {
 };
 
 // Completes incomplete bold formatting (**)
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex markdown parsing logic with multiple edge cases"
 const handleIncompleteBold = (text: string): string => {
   // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
@@ -219,7 +257,19 @@ const handleIncompleteBold = (text: string): string => {
       }
     }
 
-    const asteriskPairs = (text.match(/\*\*/g) || []).length;
+    // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
+    let asteriskPairs: number;
+    if (text.length < 3000) {
+      asteriskPairs = (text.match(/\*\*/g) || []).length;
+    } else {
+      asteriskPairs = 0;
+      for (let i = 0; i < text.length - 1; i += 1) {
+        if (text[i] === "*" && text[i + 1] === "*") {
+          asteriskPairs += 1;
+          i += 1; // Skip next character
+        }
+      }
+    }
     if (asteriskPairs % 2 === 1) {
       return `${text}**`;
     }
@@ -229,6 +279,7 @@ const handleIncompleteBold = (text: string): string => {
 };
 
 // Completes incomplete italic formatting with double underscores (__)
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex markdown parsing logic with multiple edge cases"
 const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   const italicMatch = text.match(italicPattern);
 
@@ -264,7 +315,19 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
       }
     }
 
-    const underscorePairs = (text.match(/__/g) || []).length;
+    // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
+    let underscorePairs: number;
+    if (text.length < 3000) {
+      underscorePairs = (text.match(/__/g) || []).length;
+    } else {
+      underscorePairs = 0;
+      for (let i = 0; i < text.length - 1; i += 1) {
+        if (text[i] === "_" && text[i + 1] === "_") {
+          underscorePairs += 1;
+          i += 1; // Skip next character
+        }
+      }
+    }
     if (underscorePairs % 2 === 1) {
       return `${text}__`;
     }
@@ -273,54 +336,63 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   return text;
 };
 
+// OPTIMIZATION: Counts single asterisks without split("").reduce()
 // Counts single asterisks that are not part of double asterisks, not escaped, not list markers, and not word-internal
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
 const countSingleAsterisks = (text: string): number => {
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
-  return text.split("").reduce((acc, char, index) => {
-    if (char === "*") {
-      const prevChar = text[index - 1];
-      const nextChar = text[index + 1];
-      // Skip if escaped with backslash
-      if (prevChar === "\\") {
-        return acc;
-      }
-      // Skip if asterisk is word-internal (between word characters)
-      if (
-        prevChar &&
-        nextChar &&
-        letterNumberUnderscorePattern.test(prevChar) &&
-        letterNumberUnderscorePattern.test(nextChar)
-      ) {
-        return acc;
-      }
-      // Check if this is a list marker (asterisk at start of line followed by space)
-      // Look backwards to find the start of the current line
-      let lineStartIndex = index;
-      for (let i = index - 1; i >= 0; i--) {
-        if (text[i] === "\n") {
-          lineStartIndex = i + 1;
-          break;
-        }
-        if (i === 0) {
-          lineStartIndex = 0;
-          break;
-        }
-      }
-      // Check if this asterisk is at the beginning of a line (with optional whitespace)
-      const beforeAsterisk = text.substring(lineStartIndex, index);
-      if (
-        beforeAsterisk.trim() === "" &&
-        (nextChar === " " || nextChar === "\t")
-      ) {
-        // This is likely a list marker, don't count it
-        return acc;
-      }
-      if (prevChar !== "*" && nextChar !== "*") {
-        return acc + 1;
+  let count = 0;
+  const len = text.length;
+
+  for (let index = 0; index < len; index += 1) {
+    if (text[index] !== "*") {
+      continue;
+    }
+
+    const prevChar = index > 0 ? text[index - 1] : "";
+    const nextChar = index < len - 1 ? text[index + 1] : "";
+
+    // Skip if escaped with backslash
+    if (prevChar === "\\") {
+      continue;
+    }
+
+    // Skip if part of ** or ***
+    if (prevChar === "*" || nextChar === "*") {
+      continue;
+    }
+
+    // Skip if asterisk is word-internal (between word characters)
+    if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
+      continue;
+    }
+
+    // Check if this is a list marker (asterisk at start of line followed by space)
+    // Look backwards to find the start of the current line
+    let lineStartIndex = 0;
+    for (let i = index - 1; i >= 0; i -= 1) {
+      if (text[i] === "\n") {
+        lineStartIndex = i + 1;
+        break;
       }
     }
-    return acc;
-  }, 0);
+
+    // Check if this asterisk is at the beginning of a line (with optional whitespace)
+    let isListMarker = true;
+    for (let i = lineStartIndex; i < index; i += 1) {
+      if (text[i] !== " " && text[i] !== "\t") {
+        isListMarker = false;
+        break;
+      }
+    }
+
+    if (isListMarker && (nextChar === " " || nextChar === "\t")) {
+      continue;
+    }
+
+    count += 1;
+  }
+
+  return count;
 };
 
 // Completes incomplete italic formatting with single asterisks (*)
@@ -336,7 +408,7 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   if (singleAsteriskMatch) {
     // Find the first single asterisk position (not part of ** and not word-internal)
     let firstSingleAsteriskIndex = -1;
-    for (let i = 0; i < text.length; i++) {
+    for (let i = 0; i < text.length; i += 1) {
       if (
         text[i] === "*" &&
         text[i - 1] !== "*" &&
@@ -349,8 +421,8 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
         if (
           prevChar &&
           nextChar &&
-          letterNumberUnderscorePattern.test(prevChar) &&
-          letterNumberUnderscorePattern.test(nextChar)
+          isWordChar(prevChar) &&
+          isWordChar(nextChar)
         ) {
           continue;
         }
@@ -387,65 +459,93 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   return text;
 };
 
-// Check if a position is within a math block (between $ or $$)
-const isWithinMathBlock = (text: string, position: number): boolean => {
-  // Count dollar signs before this position
-  let inInlineMath = false;
-  let inBlockMath = false;
+// Cache for math block state to avoid recalculating
+let mathBlockCache: { text: string; states: boolean[] } | null = null;
 
-  for (let i = 0; i < text.length && i < position; i += 1) {
-    // Skip escaped dollar signs
-    if (text[i] === "\\" && text[i + 1] === "$") {
-      i += 1; // Skip the next character
+// Check if a position is within a math block (between $ or $$)
+// OPTIMIZATION: Cache the state array to avoid recalculating for each position
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "State machine logic for tracking math block boundaries"
+const isWithinMathBlock = (text: string, position: number): boolean => {
+  // Use cache if text hasn't changed
+  if (mathBlockCache?.text !== text) {
+    // Build state array for entire text
+    const len = text.length;
+    const states = new Array(len).fill(false);
+    let inInlineMath = false;
+    let inBlockMath = false;
+
+    for (let i = 0; i < len; i += 1) {
+      // Skip escaped dollar signs
+      if (text[i] === "\\" && text[i + 1] === "$") {
+        i += 1; // Skip the next character
+        continue;
+      }
+
+      if (text[i] === "$") {
+        // Check for block math ($$)
+        if (text[i + 1] === "$") {
+          inBlockMath = !inBlockMath;
+          i += 1; // Skip the second $
+          inInlineMath = false; // Block math takes precedence
+        } else if (!inBlockMath) {
+          // Only toggle inline math if not in block math
+          inInlineMath = !inInlineMath;
+        }
+      }
+
+      states[i] = inInlineMath || inBlockMath;
+    }
+
+    mathBlockCache = { text, states };
+  }
+
+  return position < mathBlockCache.states.length
+    ? mathBlockCache.states[position]
+    : false;
+};
+
+// OPTIMIZATION: Counts single underscores without split("").reduce()
+// Counts single underscores that are not part of double underscores, not escaped, and not in math blocks
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
+const countSingleUnderscores = (text: string): number => {
+  // OPTIMIZATION: For large texts, if there are no dollar signs, skip math block checking entirely
+  const hasMathBlocks = text.includes("$");
+
+  let count = 0;
+  const len = text.length;
+
+  for (let index = 0; index < len; index += 1) {
+    if (text[index] !== "_") {
       continue;
     }
 
-    if (text[i] === "$") {
-      // Check for block math ($$)
-      if (text[i + 1] === "$") {
-        inBlockMath = !inBlockMath;
-        i += 1; // Skip the second $
-        inInlineMath = false; // Block math takes precedence
-      } else if (!inBlockMath) {
-        // Only toggle inline math if not in block math
-        inInlineMath = !inInlineMath;
-      }
+    const prevChar = index > 0 ? text[index - 1] : "";
+    const nextChar = index < len - 1 ? text[index + 1] : "";
+
+    // Skip if escaped with backslash
+    if (prevChar === "\\") {
+      continue;
     }
+
+    // Skip if within math block (only check if text has dollar signs)
+    if (hasMathBlocks && isWithinMathBlock(text, index)) {
+      continue;
+    }
+
+    // Skip if part of __
+    if (prevChar === "_" || nextChar === "_") {
+      continue;
+    }
+
+    // Skip if underscore is word-internal (between word characters)
+    if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
+      continue;
+    }
+
+    count += 1;
   }
 
-  return inInlineMath || inBlockMath;
-};
-
-// Counts single underscores that are not part of double underscores, not escaped, and not in math blocks
-const countSingleUnderscores = (text: string): number => {
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
-  return text.split("").reduce((acc, char, index) => {
-    if (char === "_") {
-      const prevChar = text[index - 1];
-      const nextChar = text[index + 1];
-      // Skip if escaped with backslash
-      if (prevChar === "\\") {
-        return acc;
-      }
-      // Skip if within math block
-      if (isWithinMathBlock(text, index)) {
-        return acc;
-      }
-      // Skip if underscore is word-internal (between word characters)
-      if (
-        prevChar &&
-        nextChar &&
-        letterNumberUnderscorePattern.test(prevChar) &&
-        letterNumberUnderscorePattern.test(nextChar)
-      ) {
-        return acc;
-      }
-      if (prevChar !== "_" && nextChar !== "_") {
-        return acc + 1;
-      }
-    }
-    return acc;
-  }, 0);
+  return count;
 };
 
 // Completes incomplete italic formatting with single underscores (_)
@@ -461,7 +561,7 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
   if (singleUnderscoreMatch) {
     // Find the first single underscore position (not part of __ and not word-internal)
     let firstSingleUnderscoreIndex = -1;
-    for (let i = 0; i < text.length; i++) {
+    for (let i = 0; i < text.length; i += 1) {
       if (
         text[i] === "_" &&
         text[i - 1] !== "_" &&
@@ -475,8 +575,8 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
         if (
           prevChar &&
           nextChar &&
-          letterNumberUnderscorePattern.test(prevChar) &&
-          letterNumberUnderscorePattern.test(nextChar)
+          isWordChar(prevChar) &&
+          isWordChar(nextChar)
         ) {
           continue;
         }
@@ -562,7 +662,19 @@ const handleIncompleteInlineCode = (text: string): string => {
   }
 
   // Check if we're inside a multi-line code block (complete or incomplete)
-  const allTripleBackticks = (text.match(/```/g) || []).length;
+  // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
+  let allTripleBackticks: number;
+  if (text.length < 3000) {
+    allTripleBackticks = (text.match(/```/g) || []).length;
+  } else {
+    allTripleBackticks = 0;
+    for (let i = 0; i < text.length - 2; i += 1) {
+      if (text[i] === "`" && text[i + 1] === "`" && text[i + 2] === "`") {
+        allTripleBackticks += 1;
+        i += 2; // Skip next 2 characters
+      }
+    }
+  }
   const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
 
   // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
@@ -609,6 +721,7 @@ const handleIncompleteInlineCode = (text: string): string => {
 };
 
 // Completes incomplete strikethrough formatting (~~)
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex markdown parsing logic with multiple edge cases"
 const handleIncompleteStrikethrough = (text: string): string => {
   const strikethroughMatch = text.match(strikethroughPattern);
 
@@ -624,7 +737,19 @@ const handleIncompleteStrikethrough = (text: string): string => {
       return text;
     }
 
-    const tildePairs = (text.match(/~~/g) || []).length;
+    // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
+    let tildePairs: number;
+    if (text.length < 3000) {
+      tildePairs = (text.match(/~~/g) || []).length;
+    } else {
+      tildePairs = 0;
+      for (let i = 0; i < text.length - 1; i += 1) {
+        if (text[i] === "~" && text[i + 1] === "~") {
+          tildePairs += 1;
+          i += 1; // Skip next character
+        }
+      }
+    }
     if (tildePairs % 2 === 1) {
       return `${text}~~`;
     }
@@ -633,28 +758,21 @@ const handleIncompleteStrikethrough = (text: string): string => {
   return text;
 };
 
-// Counts single dollar signs that are not part of double dollar signs and not escaped
-const _countSingleDollarSigns = (text: string): number => {
-  return text.split("").reduce((acc, char, index) => {
-    if (char === "$") {
-      const prevChar = text[index - 1];
-      const nextChar = text[index + 1];
-      // Skip if escaped with backslash
-      if (prevChar === "\\") {
-        return acc;
-      }
-      if (prevChar !== "$" && nextChar !== "$") {
-        return acc + 1;
-      }
-    }
-    return acc;
-  }, 0);
-};
-
 // Completes incomplete block KaTeX formatting ($$)
 const handleIncompleteBlockKatex = (text: string): string => {
-  // Count all $$ pairs in the text
-  const dollarPairs = (text.match(/\$\$/g) || []).length;
+  // OPTIMIZATION: Hybrid approach - regex for small/medium, loop for large texts
+  let dollarPairs: number;
+  if (text.length < 3000) {
+    dollarPairs = (text.match(/\$\$/g) || []).length;
+  } else {
+    dollarPairs = 0;
+    for (let i = 0; i < text.length - 1; i += 1) {
+      if (text[i] === "$" && text[i + 1] === "$") {
+        dollarPairs += 1;
+        i += 1; // Skip next character
+      }
+    }
+  }
 
   // If we have an even number of $$, the block is complete
   if (dollarPairs % 2 === 0) {
@@ -677,17 +795,27 @@ const handleIncompleteBlockKatex = (text: string): string => {
 };
 
 // Counts triple asterisks that are not part of quadruple or more asterisks
+// OPTIMIZATION: Count *** without regex to avoid allocation
 const countTripleAsterisks = (text: string): number => {
   let count = 0;
-  const matches = text.match(/\*+/g) || [];
+  let consecutiveAsterisks = 0;
 
-  for (const match of matches) {
-    // Count how many complete triple asterisks are in this sequence
-    const asteriskCount = match.length;
-    if (asteriskCount >= 3) {
-      // Each group of exactly 3 asterisks counts as one triple asterisk marker
-      count += Math.floor(asteriskCount / 3);
+  // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
+  for (let i = 0; i < text.length; i += 1) {
+    if (text[i] === "*") {
+      consecutiveAsterisks += 1;
+    } else {
+      // End of asterisk sequence
+      if (consecutiveAsterisks >= 3) {
+        count += Math.floor(consecutiveAsterisks / 3);
+      }
+      consecutiveAsterisks = 0;
     }
+  }
+
+  // Handle trailing asterisks
+  if (consecutiveAsterisks >= 3) {
+    count += Math.floor(consecutiveAsterisks / 3);
   }
 
   return count;
@@ -734,6 +862,12 @@ export const parseIncompleteMarkdown = (text: string): string => {
   if (!text || typeof text !== "string") {
     return text;
   }
+
+  // OPTIMIZATION: Clear caches at the start of each parse to ensure fresh state
+  // This also prevents memory leaks from holding references to old text
+  codeBlockCacheText = "";
+  codeBlockCache = null;
+  mathBlockCache = null;
 
   let result = text;
 

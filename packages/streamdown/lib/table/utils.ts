@@ -33,23 +33,50 @@ export const tableDataToCSV = (data: TableData): string => {
   const { headers, rows } = data;
 
   const escapeCSV = (value: string): string => {
+    // OPTIMIZATION: Fast path for values that don't need escaping
+    // Check characters directly to avoid multiple string scans
+    let needsEscaping = false;
+    let hasQuote = false;
+
+    // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
+    for (let i = 0; i < value.length; i += 1) {
+      const char = value[i];
+      if (char === '"') {
+        needsEscaping = true;
+        hasQuote = true;
+        break;
+      }
+      if (char === "," || char === "\n") {
+        needsEscaping = true;
+      }
+    }
+
+    if (!needsEscaping) {
+      return value;
+    }
+
     // If the value contains comma, quote, or newline, wrap in quotes and escape internal quotes
-    if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+    if (hasQuote) {
       return `"${value.replace(/"/g, '""')}"`;
     }
-    return value;
+    return `"${value}"`;
   };
 
-  const csvRows: string[] = [];
+  // Pre-allocate array with known size
+  const totalRows = headers.length > 0 ? rows.length + 1 : rows.length;
+  const csvRows: string[] = new Array(totalRows);
+  let rowIndex = 0;
 
   // Add headers
   if (headers.length > 0) {
-    csvRows.push(headers.map(escapeCSV).join(","));
+    csvRows[rowIndex] = headers.map(escapeCSV).join(",");
+    rowIndex += 1;
   }
 
   // Add data rows
   for (const row of rows) {
-    csvRows.push(row.map(escapeCSV).join(","));
+    csvRows[rowIndex] = row.map(escapeCSV).join(",");
+    rowIndex += 1;
   }
 
   return csvRows.join("\n");
@@ -58,24 +85,56 @@ export const tableDataToCSV = (data: TableData): string => {
 export const tableDataToTSV = (data: TableData): string => {
   const { headers, rows } = data;
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "TSV escaping requires character-by-character inspection"
   const escapeTSV = (value: string): string => {
-    // Escape tabs, newlines, and carriage returns
-    return value
-      .replace(/\t/g, "\\t")
-      .replace(/\n/g, "\\n")
-      .replace(/\r/g, "\\r");
+    // OPTIMIZATION: Check characters directly instead of multiple includes() calls
+    let needsEscaping = false;
+    // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
+    for (let i = 0; i < value.length; i += 1) {
+      const char = value[i];
+      if (char === "\t" || char === "\n" || char === "\r") {
+        needsEscaping = true;
+        break;
+      }
+    }
+
+    if (!needsEscaping) {
+      return value;
+    }
+
+    // OPTIMIZATION: Use array building instead of string concatenation for better performance
+    const parts: string[] = [];
+    // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
+    for (let i = 0; i < value.length; i += 1) {
+      const char = value[i];
+      if (char === "\t") {
+        parts.push("\\t");
+      } else if (char === "\n") {
+        parts.push("\\n");
+      } else if (char === "\r") {
+        parts.push("\\r");
+      } else {
+        parts.push(char);
+      }
+    }
+    return parts.join("");
   };
 
-  const tsvRows: string[] = [];
+  // Pre-allocate array with known size
+  const totalRows = headers.length > 0 ? rows.length + 1 : rows.length;
+  const tsvRows: string[] = new Array(totalRows);
+  let rowIndex = 0;
 
   // Add headers
   if (headers.length > 0) {
-    tsvRows.push(headers.map(escapeTSV).join("\t"));
+    tsvRows[rowIndex] = headers.map(escapeTSV).join("\t");
+    rowIndex += 1;
   }
 
   // Add data rows
   for (const row of rows) {
-    tsvRows.push(row.map(escapeTSV).join("\t"));
+    tsvRows[rowIndex] = row.map(escapeTSV).join("\t");
+    rowIndex += 1;
   }
 
   return tsvRows.join("\n");
@@ -83,8 +142,37 @@ export const tableDataToTSV = (data: TableData): string => {
 
 // Helper function to properly escape markdown table cells
 // Must escape backslashes first, then pipes to avoid incomplete escaping
-export const escapeMarkdownTableCell = (cell: string): string =>
-  cell.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
+export const escapeMarkdownTableCell = (cell: string): string => {
+  // OPTIMIZATION: Fast path for cells that don't need escaping - check chars directly
+  let needsEscaping = false;
+  // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
+  for (let i = 0; i < cell.length; i += 1) {
+    const char = cell[i];
+    if (char === "\\" || char === "|") {
+      needsEscaping = true;
+      break;
+    }
+  }
+
+  if (!needsEscaping) {
+    return cell;
+  }
+
+  // OPTIMIZATION: Use array building instead of string concatenation for better performance
+  const parts: string[] = [];
+  // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
+  for (let i = 0; i < cell.length; i += 1) {
+    const char = cell[i];
+    if (char === "\\") {
+      parts.push("\\\\");
+    } else if (char === "|") {
+      parts.push("\\|");
+    } else {
+      parts.push(char);
+    }
+  }
+  return parts.join("");
+};
 
 export const tableDataToMarkdown = (data: TableData) => {
   const { headers, rows } = data;
@@ -93,24 +181,40 @@ export const tableDataToMarkdown = (data: TableData) => {
     return "";
   }
 
-  const markdownRows: string[] = [];
+  // Pre-allocate array with known size (headers + separator + rows)
+  const markdownRows: string[] = new Array(rows.length + 2);
+  let rowIndex = 0;
 
   // Add headers
   const escapedHeaders = headers.map((h) => escapeMarkdownTableCell(h));
-  markdownRows.push(`| ${escapedHeaders.join(" | ")} |`);
+  markdownRows[rowIndex] = `| ${escapedHeaders.join(" | ")} |`;
+  rowIndex += 1;
 
   // Add separator row
-  markdownRows.push(`| ${headers.map(() => "---").join(" | ")} |`);
+  // OPTIMIZATION: Build separator more efficiently
+  const separatorParts = new Array(headers.length);
+  for (let i = 0; i < headers.length; i += 1) {
+    separatorParts[i] = "---";
+  }
+  markdownRows[rowIndex] = `| ${separatorParts.join(" | ")} |`;
+  rowIndex += 1;
 
   // Add data rows
   for (const row of rows) {
     // Pad row with empty strings if it's shorter than headers
-    const paddedRow = [...row];
-    while (paddedRow.length < headers.length) {
-      paddedRow.push("");
+    // OPTIMIZATION: Only pad if necessary
+    if (row.length < headers.length) {
+      const paddedRow = new Array(headers.length);
+      for (let i = 0; i < headers.length; i += 1) {
+        paddedRow[i] = i < row.length ? escapeMarkdownTableCell(row[i]) : "";
+      }
+      markdownRows[rowIndex] = `| ${paddedRow.join(" | ")} |`;
+      rowIndex += 1;
+    } else {
+      const escapedRow = row.map((cell) => escapeMarkdownTableCell(cell));
+      markdownRows[rowIndex] = `| ${escapedRow.join(" | ")} |`;
+      rowIndex += 1;
     }
-    const escapedRow = paddedRow.map((cell) => escapeMarkdownTableCell(cell));
-    markdownRows.push(`| ${escapedRow.join(" | ")} |`);
   }
 
   return markdownRows.join("\n");

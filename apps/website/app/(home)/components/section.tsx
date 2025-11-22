@@ -103,7 +103,7 @@ export const Section = ({
             <div className="w-full bg-dashed p-4 text-center font-medium text-muted-foreground text-sm">
               With react-markdown
             </div>
-            <div className="h-[400px] overflow-y-auto bg-background p-4 text-sm">
+            <div className="h-[400px] overflow-y-auto bg-background p-4">
               <ReactMarkdown>{content}</ReactMarkdown>
             </div>
           </div>

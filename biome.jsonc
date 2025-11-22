@@ -10,5 +10,17 @@
       "!**/hooks/use-mobile.ts",
       "!**/__tests__/__fixtures__"
     ]
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/__tests__/**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noChildrenProp": "off"
+          }
+        }
+      }
+    }
+  ]
 }

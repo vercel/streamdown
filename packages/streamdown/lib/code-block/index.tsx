@@ -47,17 +47,13 @@ export const CodeBlock = ({
     [code]
   );
 
-  // Try to get cached result immediately
-  const cachedResult = useMemo(
-    () => getHighlightedTokens(code, language, shikiTheme),
-    [code, language, shikiTheme]
-  );
+  // Use raw as initial state
+  const [result, setResult] = useState<TokensResult>(raw);
 
-  // Use cached result if available, otherwise use raw
-  const [result, setResult] = useState<TokensResult>(cachedResult || raw);
-
-  // Subscribe to highlighting updates only if not cached
+  // Try to get cached result or subscribe to highlighting
   useEffect(() => {
+    const cachedResult = getHighlightedTokens(code, language, shikiTheme);
+
     if (cachedResult) {
       // Already cached, use it immediately
       setResult(cachedResult);
@@ -68,7 +64,7 @@ export const CodeBlock = ({
     getHighlightedTokens(code, language, shikiTheme, (highlightedResult) => {
       setResult(highlightedResult);
     });
-  }, [code, language, shikiTheme, cachedResult]);
+  }, [code, language, shikiTheme]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
