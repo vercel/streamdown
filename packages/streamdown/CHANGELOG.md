@@ -1,5 +1,11 @@
 # streamdown
 
+## 1.6.1
+
+### Patch Changes
+
+- bdca13b: Fix markdown parsing bug
+
 ## 1.6.0
 
 ### Minor Changes
