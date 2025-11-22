@@ -33,11 +33,17 @@ export const tableDataToCSV = (data: TableData): string => {
   const { headers, rows } = data;
 
   const escapeCSV = (value: string): string => {
+    // OPTIMIZATION: Fast path for values that don't need escaping
+    const needsEscaping = value.includes(",") || value.includes('"') || value.includes("\n");
+    if (!needsEscaping) {
+      return value;
+    }
     // If the value contains comma, quote, or newline, wrap in quotes and escape internal quotes
-    if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+    // OPTIMIZATION: Only replace quotes if the value contains them
+    if (value.includes('"')) {
       return `"${value.replace(/"/g, '""')}"`;
     }
-    return value;
+    return `"${value}"`;
   };
 
   const csvRows: string[] = [];
@@ -59,6 +65,10 @@ export const tableDataToTSV = (data: TableData): string => {
   const { headers, rows } = data;
 
   const escapeTSV = (value: string): string => {
+    // OPTIMIZATION: Only escape if necessary to avoid regex cost
+    if (!value.includes("\t") && !value.includes("\n") && !value.includes("\r")) {
+      return value;
+    }
     // Escape tabs, newlines, and carriage returns
     return value
       .replace(/\t/g, "\\t")
@@ -83,8 +93,13 @@ export const tableDataToTSV = (data: TableData): string => {
 
 // Helper function to properly escape markdown table cells
 // Must escape backslashes first, then pipes to avoid incomplete escaping
-export const escapeMarkdownTableCell = (cell: string): string =>
-  cell.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
+export const escapeMarkdownTableCell = (cell: string): string => {
+  // OPTIMIZATION: Fast path for cells that don't need escaping
+  if (!cell.includes("\\") && !cell.includes("|")) {
+    return cell;
+  }
+  return cell.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
+};
 
 export const tableDataToMarkdown = (data: TableData) => {
   const { headers, rows } = data;
@@ -100,17 +115,25 @@ export const tableDataToMarkdown = (data: TableData) => {
   markdownRows.push(`| ${escapedHeaders.join(" | ")} |`);
 
   // Add separator row
-  markdownRows.push(`| ${headers.map(() => "---").join(" | ")} |`);
+  // OPTIMIZATION: Build separator once instead of mapping over headers
+  const separator = `| ${headers.map(() => "---").join(" | ")} |`;
+  markdownRows.push(separator);
 
   // Add data rows
   for (const row of rows) {
     // Pad row with empty strings if it's shorter than headers
-    const paddedRow = [...row];
-    while (paddedRow.length < headers.length) {
-      paddedRow.push("");
+    // OPTIMIZATION: Only pad if necessary
+    if (row.length < headers.length) {
+      const paddedRow = [...row];
+      while (paddedRow.length < headers.length) {
+        paddedRow.push("");
+      }
+      const escapedRow = paddedRow.map((cell) => escapeMarkdownTableCell(cell));
+      markdownRows.push(`| ${escapedRow.join(" | ")} |`);
+    } else {
+      const escapedRow = row.map((cell) => escapeMarkdownTableCell(cell));
+      markdownRows.push(`| ${escapedRow.join(" | ")} |`);
     }
-    const escapedRow = paddedRow.map((cell) => escapeMarkdownTableCell(cell));
-    markdownRows.push(`| ${escapedRow.join(" | ")} |`);
   }
 
   return markdownRows.join("\n");
