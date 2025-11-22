@@ -75,7 +75,14 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
 
       // Check if the previous block starts with $$ but doesn't end with $$
       const prevStartsWith$$ = previousBlock.trimStart().startsWith("$$");
-      const prevDollarCount = (previousBlock.match(/\$\$/g) || []).length;
+      // OPTIMIZATION: Count $$ without regex to avoid allocation
+      let prevDollarCount = 0;
+      for (let i = 0; i < previousBlock.length - 1; i++) {
+        if (previousBlock[i] === "$" && previousBlock[i + 1] === "$") {
+          prevDollarCount++;
+          i++; // Skip next character
+        }
+      }
 
       // If previous block has odd number of $$ and starts with $$, merge them
       if (prevStartsWith$$ && prevDollarCount % 2 === 1) {
@@ -94,8 +101,21 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
       }
 
       const prevStartsWith$$ = previousBlock.trimStart().startsWith("$$");
-      const prevDollarCount = (previousBlock.match(/\$\$/g) || []).length;
-      const currDollarCount = (currentBlock.match(/\$\$/g) || []).length;
+      // OPTIMIZATION: Count $$ without regex to avoid allocation
+      let prevDollarCount = 0;
+      for (let i = 0; i < previousBlock.length - 1; i++) {
+        if (previousBlock[i] === "$" && previousBlock[i + 1] === "$") {
+          prevDollarCount++;
+          i++; // Skip next character
+        }
+      }
+      let currDollarCount = 0;
+      for (let i = 0; i < currentBlock.length - 1; i++) {
+        if (currentBlock[i] === "$" && currentBlock[i + 1] === "$") {
+          currDollarCount++;
+          i++; // Skip next character
+        }
+      }
 
       // If previous block has unclosed math (odd $$) and current block ends with $$
       // AND current block doesn't start with $$, it's likely a continuation
