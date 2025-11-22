@@ -1,9 +1,9 @@
-import { bench, describe } from "vitest";
 import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import { bench, describe } from "vitest";
 import { Markdown } from "../lib/markdown";
 
 // Comprehensive markdown samples for realistic benchmarking
@@ -221,7 +221,7 @@ const suggestions = await assistant.complete(code, cursorPosition);
 
   huge: `# Massive Document
 
-${"## Section %INDEX%\n\nThis is a paragraph with **bold**, *italic*, and \`code\`. Here's a [link](https://example.com).\n\n```javascript\nconst value = %INDEX%;\nconsole.log(value);\n```\n\n".repeat(50).replace(/%INDEX%/g, (match, offset) => String(Math.floor(offset / 200)))}
+${"## Section %INDEX%\n\nThis is a paragraph with **bold**, *italic*, and `code`. Here's a [link](https://example.com).\n\n```javascript\nconst value = %INDEX%;\nconsole.log(value);\n```\n\n".repeat(50).replace(/%INDEX%/g, (match, offset) => String(Math.floor(offset / 200)))}
 
 ## Final Table
 
@@ -384,9 +384,8 @@ describe("Streamdown vs React-Markdown - Processor Caching", () => {
 
 describe("Streamdown vs React-Markdown - Streaming Simulation", () => {
   // Simulate incremental content as in streaming scenarios
-  const streamingSteps = Array.from(
-    { length: 20 },
-    (_, i) => samples.complex.substring(0, (i + 1) * (samples.complex.length / 20))
+  const streamingSteps = Array.from({ length: 20 }, (_, i) =>
+    samples.complex.substring(0, (i + 1) * (samples.complex.length / 20))
   );
 
   const plugins = {

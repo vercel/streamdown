@@ -10,20 +10,26 @@ const openingTagPattern = /<(\w+)[\s>]/;
 const startsWithDoubleDollar = (str: string): boolean => {
   let i = 0;
   // Skip leading whitespace
-  while (i < str.length && (str[i] === ' ' || str[i] === '\t' || str[i] === '\n' || str[i] === '\r')) {
+  while (
+    i < str.length &&
+    (str[i] === " " || str[i] === "\t" || str[i] === "\n" || str[i] === "\r")
+  ) {
     i++;
   }
-  return i + 1 < str.length && str[i] === '$' && str[i + 1] === '$';
+  return i + 1 < str.length && str[i] === "$" && str[i + 1] === "$";
 };
 
 // Helper function to check if string ends with $$
 const endsWithDoubleDollar = (str: string): boolean => {
   let i = str.length - 1;
   // Skip trailing whitespace
-  while (i >= 0 && (str[i] === ' ' || str[i] === '\t' || str[i] === '\n' || str[i] === '\r')) {
+  while (
+    i >= 0 &&
+    (str[i] === " " || str[i] === "\t" || str[i] === "\n" || str[i] === "\r")
+  ) {
     i--;
   }
-  return i >= 1 && str[i] === '$' && str[i - 1] === '$';
+  return i >= 1 && str[i] === "$" && str[i - 1] === "$";
 };
 
 // Helper function to count $$ occurrences

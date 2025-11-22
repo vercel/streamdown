@@ -18,7 +18,10 @@ This is paragraph 2.
 > Blockquote text
 `;
 
-  const manyBlocks = Array.from({ length: 100 }, (_, i) => `## Section ${i}\n\nParagraph ${i}`).join("\n\n");
+  const manyBlocks = Array.from(
+    { length: 100 },
+    (_, i) => `## Section ${i}\n\nParagraph ${i}`
+  ).join("\n\n");
 
   bench("single block", () => {
     parseMarkdownIntoBlocks(singleBlock);
@@ -59,7 +62,8 @@ let z = 3;
 \`\`\`
 `;
 
-  const largeCodeBlock = "```javascript\n" + "const x = 1;\n".repeat(1000) + "```";
+  const largeCodeBlock =
+    "```javascript\n" + "const x = 1;\n".repeat(1000) + "```";
 
   bench("single code block", () => {
     parseMarkdownIntoBlocks(singleCodeBlock);

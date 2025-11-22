@@ -45,7 +45,7 @@ export const tableDataToCSV = (data: TableData): string => {
         hasQuote = true;
         break;
       }
-      if (char === ',' || char === '\n') {
+      if (char === "," || char === "\n") {
         needsEscaping = true;
       }
     }
@@ -87,7 +87,7 @@ export const tableDataToTSV = (data: TableData): string => {
     let needsEscaping = false;
     for (let i = 0; i < value.length; i++) {
       const char = value[i];
-      if (char === '\t' || char === '\n' || char === '\r') {
+      if (char === "\t" || char === "\n" || char === "\r") {
         needsEscaping = true;
         break;
       }
@@ -101,17 +101,17 @@ export const tableDataToTSV = (data: TableData): string => {
     const parts: string[] = [];
     for (let i = 0; i < value.length; i++) {
       const char = value[i];
-      if (char === '\t') {
-        parts.push('\\t');
-      } else if (char === '\n') {
-        parts.push('\\n');
-      } else if (char === '\r') {
-        parts.push('\\r');
+      if (char === "\t") {
+        parts.push("\\t");
+      } else if (char === "\n") {
+        parts.push("\\n");
+      } else if (char === "\r") {
+        parts.push("\\r");
       } else {
         parts.push(char);
       }
     }
-    return parts.join('');
+    return parts.join("");
   };
 
   // Pre-allocate array with known size
@@ -139,7 +139,7 @@ export const escapeMarkdownTableCell = (cell: string): string => {
   let needsEscaping = false;
   for (let i = 0; i < cell.length; i++) {
     const char = cell[i];
-    if (char === '\\' || char === '|') {
+    if (char === "\\" || char === "|") {
       needsEscaping = true;
       break;
     }
@@ -153,15 +153,15 @@ export const escapeMarkdownTableCell = (cell: string): string => {
   const parts: string[] = [];
   for (let i = 0; i < cell.length; i++) {
     const char = cell[i];
-    if (char === '\\') {
-      parts.push('\\\\');
-    } else if (char === '|') {
-      parts.push('\\|');
+    if (char === "\\") {
+      parts.push("\\\\");
+    } else if (char === "|") {
+      parts.push("\\|");
     } else {
       parts.push(char);
     }
   }
-  return parts.join('');
+  return parts.join("");
 };
 
 export const tableDataToMarkdown = (data: TableData) => {

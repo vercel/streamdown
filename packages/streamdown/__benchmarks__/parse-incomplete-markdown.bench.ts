@@ -3,7 +3,8 @@ import { parseIncompleteMarkdown } from "../lib/parse-incomplete-markdown";
 
 describe("parseIncompleteMarkdown - Basic Formatting", () => {
   const shortText = "This is **bold text";
-  const mediumText = "# Heading\n\nThis is **bold** and *italic* text with `code` and ~~strikethrough~~";
+  const mediumText =
+    "# Heading\n\nThis is **bold** and *italic* text with `code` and ~~strikethrough~~";
   const longText = `
 # Complex Document
 
@@ -118,14 +119,7 @@ describe("parseIncompleteMarkdown - Streaming Simulation", () => {
     }
   });
 
-  const codeStreamingSteps = [
-    "`",
-    "`c",
-    "`co",
-    "`cod",
-    "`code",
-    "`code`",
-  ];
+  const codeStreamingSteps = ["`", "`c", "`co", "`cod", "`code", "`code`"];
 
   bench("streaming inline code (6 steps)", () => {
     for (const step of codeStreamingSteps) {
@@ -140,7 +134,9 @@ describe("parseIncompleteMarkdown - Edge Cases", () => {
   });
 
   bench("plain text (no markdown)", () => {
-    parseIncompleteMarkdown("This is plain text without any markdown formatting.");
+    parseIncompleteMarkdown(
+      "This is plain text without any markdown formatting."
+    );
   });
 
   bench("text with many asterisks", () => {

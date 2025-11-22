@@ -1,9 +1,9 @@
 import { bench, describe } from "vitest";
 import {
-  tableDataToCSV,
-  tableDataToTSV,
-  tableDataToMarkdown,
   type TableData,
+  tableDataToCSV,
+  tableDataToMarkdown,
+  tableDataToTSV,
 } from "../lib/table/utils";
 
 const simpleTable: TableData = {
@@ -24,7 +24,7 @@ const largeTable: TableData = {
     `${i} Main St`,
     `City${i}`,
     "ST",
-    String(10000 + i),
+    String(10_000 + i),
   ]),
 };
 

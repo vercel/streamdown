@@ -1,12 +1,13 @@
-import { bench, describe } from "vitest";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
+import { bench, describe } from "vitest";
 import { Markdown } from "../lib/markdown";
 
 describe("Markdown - Basic Parsing", () => {
-  const simpleMarkdown = "# Heading\n\nThis is a paragraph with **bold** and *italic* text.";
+  const simpleMarkdown =
+    "# Heading\n\nThis is a paragraph with **bold** and *italic* text.";
   const complexMarkdown = `
 # Document
 
@@ -41,14 +42,14 @@ describe("Markdown - Plugin Configurations", () => {
     Markdown({
       children: markdown,
       rehypePlugins: [],
-      remarkPlugins: []
+      remarkPlugins: [],
     });
   });
 
   bench("with remark-gfm", () => {
     Markdown({
       children: markdown,
-      remarkPlugins: [remarkGfm]
+      remarkPlugins: [remarkGfm],
     });
   });
 
@@ -56,7 +57,7 @@ describe("Markdown - Plugin Configurations", () => {
     Markdown({
       children: markdown,
       rehypePlugins: [rehypeRaw, rehypeKatex],
-      remarkPlugins: [remarkGfm, remarkMath]
+      remarkPlugins: [remarkGfm, remarkMath],
     });
   });
 });
@@ -82,28 +83,28 @@ describe("Markdown - GFM Features", () => {
   bench("table parsing", () => {
     Markdown({
       children: table,
-      remarkPlugins: [remarkGfm]
+      remarkPlugins: [remarkGfm],
     });
   });
 
   bench("strikethrough parsing", () => {
     Markdown({
       children: strikethrough,
-      remarkPlugins: [remarkGfm]
+      remarkPlugins: [remarkGfm],
     });
   });
 
   bench("task list parsing", () => {
     Markdown({
       children: taskList,
-      remarkPlugins: [remarkGfm]
+      remarkPlugins: [remarkGfm],
     });
   });
 
   bench("autolink parsing", () => {
     Markdown({
       children: autolink,
-      remarkPlugins: [remarkGfm]
+      remarkPlugins: [remarkGfm],
     });
   });
 });
@@ -129,7 +130,7 @@ $$
     Markdown({
       children: inlineMath,
       remarkPlugins: [remarkMath],
-      rehypePlugins: [rehypeKatex]
+      rehypePlugins: [rehypeKatex],
     });
   });
 
@@ -137,7 +138,7 @@ $$
     Markdown({
       children: blockMath,
       remarkPlugins: [remarkMath],
-      rehypePlugins: [rehypeKatex]
+      rehypePlugins: [rehypeKatex],
     });
   });
 
@@ -145,7 +146,7 @@ $$
     Markdown({
       children: complexMath,
       remarkPlugins: [remarkMath],
-      rehypePlugins: [rehypeKatex]
+      rehypePlugins: [rehypeKatex],
     });
   });
 });
@@ -157,7 +158,7 @@ describe("Markdown - Processor Caching", () => {
   bench("first parse (cache miss)", () => {
     Markdown({
       children: markdown,
-      remarkPlugins: plugins
+      remarkPlugins: plugins,
     });
   });
 
@@ -167,14 +168,14 @@ describe("Markdown - Processor Caching", () => {
   bench("subsequent parse (cache hit)", () => {
     Markdown({
       children: markdown,
-      remarkPlugins: plugins
+      remarkPlugins: plugins,
     });
   });
 
   bench("different content, same plugins (cache hit)", () => {
     Markdown({
       children: "Different **content**",
-      remarkPlugins: plugins
+      remarkPlugins: plugins,
     });
   });
 });
@@ -219,14 +220,14 @@ describe("Markdown - HTML Raw Content", () => {
   bench("simple HTML", () => {
     Markdown({
       children: simpleHTML,
-      rehypePlugins: [rehypeRaw]
+      rehypePlugins: [rehypeRaw],
     });
   });
 
   bench("complex HTML", () => {
     Markdown({
       children: complexHTML,
-      rehypePlugins: [rehypeRaw]
+      rehypePlugins: [rehypeRaw],
     });
   });
 });
@@ -246,7 +247,10 @@ describe("Markdown - Lists", () => {
 - Level 1 Item 2
 `;
 
-  const longList = Array.from({ length: 100 }, (_, i) => `- Item ${i + 1}`).join("\n");
+  const longList = Array.from(
+    { length: 100 },
+    (_, i) => `- Item ${i + 1}`
+  ).join("\n");
 
   bench("simple list", () => {
     Markdown({ children: simpleList });

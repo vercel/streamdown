@@ -52,7 +52,7 @@ class ProcessorCache {
     const remarkRehypeOptions = options.remarkRehypeOptions;
 
     // Fast path for no plugins (most common case)
-    if (!rehypePlugins && !remarkPlugins && !remarkRehypeOptions) {
+    if (!(rehypePlugins || remarkPlugins || remarkRehypeOptions)) {
       const key = "default";
       this.keyCache.set(options, key);
       return key;
@@ -101,7 +101,9 @@ class ProcessorCache {
 
     const rehypeKey = serializePlugins(rehypePlugins);
     const remarkKey = serializePlugins(remarkPlugins);
-    const optionsKey = remarkRehypeOptions ? JSON.stringify(remarkRehypeOptions) : "";
+    const optionsKey = remarkRehypeOptions
+      ? JSON.stringify(remarkRehypeOptions)
+      : "";
 
     const key = `${remarkKey}::${rehypeKey}::${optionsKey}`;
 

@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import type { Element } from "hast";
 import type { ComponentType } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { Components, Options } from "../lib/markdown";
 import { Markdown } from "../lib/markdown";
 
@@ -43,7 +43,7 @@ describe("Markdown Component", () => {
     });
 
     it("should render multiple heading levels", () => {
-      const content = `# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6`;
+      const content = "# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6";
       const { container } = render(<Markdown children={content} />);
       expect(container.querySelector("h1")).toBeTruthy();
       expect(container.querySelector("h2")).toBeTruthy();
@@ -64,7 +64,7 @@ describe("Markdown Component", () => {
     });
 
     it("should render lists", () => {
-      const content = `- Item 1\n- Item 2\n- Item 3`;
+      const content = "- Item 1\n- Item 2\n- Item 3";
       const { container } = render(<Markdown children={content} />);
       const ul = container.querySelector("ul");
       const items = container.querySelectorAll("li");
@@ -73,7 +73,7 @@ describe("Markdown Component", () => {
     });
 
     it("should render ordered lists", () => {
-      const content = `1. First\n2. Second\n3. Third`;
+      const content = "1. First\n2. Second\n3. Third";
       const { container } = render(<Markdown children={content} />);
       const ol = container.querySelector("ol");
       const items = container.querySelectorAll("li");
@@ -198,9 +198,7 @@ describe("Markdown Component", () => {
       const CustomH1: ComponentType<{
         children: React.ReactNode;
         node?: Element;
-      }> = ({ children, node }) => (
-        <h1 data-has-node={!!node}>{children}</h1>
-      );
+      }> = ({ children, node }) => <h1 data-has-node={!!node}>{children}</h1>;
 
       const components: Components = {
         h1: CustomH1,
@@ -233,9 +231,7 @@ describe("Markdown Component", () => {
 
   describe("Plugin Support", () => {
     it("should accept remark plugins", () => {
-      const mockRemarkPlugin = () => {
-        return (tree: any) => tree;
-      };
+      const mockRemarkPlugin = () => (tree: any) => tree;
 
       const options: Options = {
         children: "# Test",
@@ -247,9 +243,7 @@ describe("Markdown Component", () => {
     });
 
     it("should accept rehype plugins", () => {
-      const mockRehypePlugin = () => {
-        return (tree: any) => tree;
-      };
+      const mockRehypePlugin = () => (tree: any) => tree;
 
       const options: Options = {
         children: "# Test",
@@ -261,9 +255,7 @@ describe("Markdown Component", () => {
     });
 
     it("should accept plugins with options", () => {
-      const mockPlugin = (options: any) => {
-        return (tree: any) => tree;
-      };
+      const mockPlugin = (options: any) => (tree: any) => tree;
 
       const options: Options = {
         children: "# Test",
@@ -485,9 +477,9 @@ code block
     });
 
     it("should handle very long text", () => {
-      const content = "a".repeat(10000);
+      const content = "a".repeat(10_000);
       const { container } = render(<Markdown children={content} />);
-      expect(container.textContent?.length).toBeGreaterThanOrEqual(10000);
+      expect(container.textContent?.length).toBeGreaterThanOrEqual(10_000);
     });
 
     it("should handle malformed markdown gracefully", () => {
