@@ -221,7 +221,7 @@ const suggestions = await assistant.complete(code, cursorPosition);
 
   huge: `# Massive Document
 
-${"## Section %INDEX%\n\nThis is a paragraph with **bold**, *italic*, and `code`. Here's a [link](https://example.com).\n\n```javascript\nconst value = %INDEX%;\nconsole.log(value);\n```\n\n".repeat(50).replace(/%INDEX%/g, (match, offset) => String(Math.floor(offset / 200)))}
+${"## Section %INDEX%\n\nThis is a paragraph with **bold**, *italic*, and `code`. Here's a [link](https://example.com).\n\n```javascript\nconst value = %INDEX%;\nconsole.log(value);\n```\n\n".repeat(50).replace(/%INDEX%/g, (_match, offset) => String(Math.floor(offset / 200)))}
 
 ## Final Table
 

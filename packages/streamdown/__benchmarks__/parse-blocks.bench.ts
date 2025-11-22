@@ -62,8 +62,7 @@ let z = 3;
 \`\`\`
 `;
 
-  const largeCodeBlock =
-    "```javascript\n" + "const x = 1;\n".repeat(1000) + "```";
+  const largeCodeBlock = `\`\`\`javascript\n${"const x = 1;\n".repeat(1000)}\`\`\``;
 
   bench("single code block", () => {
     parseMarkdownIntoBlocks(singleCodeBlock);

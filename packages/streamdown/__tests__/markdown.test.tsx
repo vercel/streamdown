@@ -255,7 +255,7 @@ describe("Markdown Component", () => {
     });
 
     it("should accept plugins with options", () => {
-      const mockPlugin = (options: any) => (tree: any) => tree;
+      const mockPlugin = (_options: any) => (tree: any) => tree;
 
       const options: Options = {
         children: "# Test",
@@ -354,7 +354,7 @@ describe("Markdown Component", () => {
     });
 
     it("should handle processor cache with different plugin configurations", () => {
-      const plugin = (options: any) => (tree: any) => tree;
+      const plugin = (_options: any) => (tree: any) => tree;
 
       const options1: Options = {
         children: "Test",
@@ -657,8 +657,8 @@ code block
   describe("Processor Cache Limits", () => {
     it("should handle cache growth", () => {
       // Create many different plugin configurations to test cache limits
-      const renders = [];
-      for (let i = 0; i < 150; i++) {
+      const renders: Array<() => void> = [];
+      for (let i = 0; i < 150; i += 1) {
         const plugin = () => (tree: any) => tree;
         Object.defineProperty(plugin, "name", { value: `plugin${i}` });
 
@@ -672,7 +672,9 @@ code block
 
       // Should handle exceeding cache size gracefully
       expect(() => {
-        renders.forEach((r) => r());
+        for (const r of renders) {
+          r();
+        }
       }).not.toThrow();
     });
   });

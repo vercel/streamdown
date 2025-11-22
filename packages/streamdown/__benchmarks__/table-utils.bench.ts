@@ -130,7 +130,7 @@ describe("Table data edge cases", () => {
     ],
   };
 
-  const tableWithExtraSpaces: TableData = {
+  const _tableWithExtraSpaces: TableData = {
     headers: ["Name", "Age", "City"],
     rows: [["John", "30", "NYC"]],
   };

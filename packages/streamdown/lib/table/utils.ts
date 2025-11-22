@@ -38,7 +38,8 @@ export const tableDataToCSV = (data: TableData): string => {
     let needsEscaping = false;
     let hasQuote = false;
 
-    for (let i = 0; i < value.length; i++) {
+    // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
+    for (let i = 0; i < value.length; i += 1) {
       const char = value[i];
       if (char === '"') {
         needsEscaping = true;
@@ -68,12 +69,14 @@ export const tableDataToCSV = (data: TableData): string => {
 
   // Add headers
   if (headers.length > 0) {
-    csvRows[rowIndex++] = headers.map(escapeCSV).join(",");
+    csvRows[rowIndex] = headers.map(escapeCSV).join(",");
+    rowIndex += 1;
   }
 
   // Add data rows
   for (const row of rows) {
-    csvRows[rowIndex++] = row.map(escapeCSV).join(",");
+    csvRows[rowIndex] = row.map(escapeCSV).join(",");
+    rowIndex += 1;
   }
 
   return csvRows.join("\n");
@@ -82,10 +85,12 @@ export const tableDataToCSV = (data: TableData): string => {
 export const tableDataToTSV = (data: TableData): string => {
   const { headers, rows } = data;
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "TSV escaping requires character-by-character inspection"
   const escapeTSV = (value: string): string => {
     // OPTIMIZATION: Check characters directly instead of multiple includes() calls
     let needsEscaping = false;
-    for (let i = 0; i < value.length; i++) {
+    // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
+    for (let i = 0; i < value.length; i += 1) {
       const char = value[i];
       if (char === "\t" || char === "\n" || char === "\r") {
         needsEscaping = true;
@@ -99,7 +104,8 @@ export const tableDataToTSV = (data: TableData): string => {
 
     // OPTIMIZATION: Use array building instead of string concatenation for better performance
     const parts: string[] = [];
-    for (let i = 0; i < value.length; i++) {
+    // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
+    for (let i = 0; i < value.length; i += 1) {
       const char = value[i];
       if (char === "\t") {
         parts.push("\\t");
@@ -121,12 +127,14 @@ export const tableDataToTSV = (data: TableData): string => {
 
   // Add headers
   if (headers.length > 0) {
-    tsvRows[rowIndex++] = headers.map(escapeTSV).join("\t");
+    tsvRows[rowIndex] = headers.map(escapeTSV).join("\t");
+    rowIndex += 1;
   }
 
   // Add data rows
   for (const row of rows) {
-    tsvRows[rowIndex++] = row.map(escapeTSV).join("\t");
+    tsvRows[rowIndex] = row.map(escapeTSV).join("\t");
+    rowIndex += 1;
   }
 
   return tsvRows.join("\n");
@@ -137,7 +145,8 @@ export const tableDataToTSV = (data: TableData): string => {
 export const escapeMarkdownTableCell = (cell: string): string => {
   // OPTIMIZATION: Fast path for cells that don't need escaping - check chars directly
   let needsEscaping = false;
-  for (let i = 0; i < cell.length; i++) {
+  // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
+  for (let i = 0; i < cell.length; i += 1) {
     const char = cell[i];
     if (char === "\\" || char === "|") {
       needsEscaping = true;
@@ -151,7 +160,8 @@ export const escapeMarkdownTableCell = (cell: string): string => {
 
   // OPTIMIZATION: Use array building instead of string concatenation for better performance
   const parts: string[] = [];
-  for (let i = 0; i < cell.length; i++) {
+  // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
+  for (let i = 0; i < cell.length; i += 1) {
     const char = cell[i];
     if (char === "\\") {
       parts.push("\\\\");
@@ -177,15 +187,17 @@ export const tableDataToMarkdown = (data: TableData) => {
 
   // Add headers
   const escapedHeaders = headers.map((h) => escapeMarkdownTableCell(h));
-  markdownRows[rowIndex++] = `| ${escapedHeaders.join(" | ")} |`;
+  markdownRows[rowIndex] = `| ${escapedHeaders.join(" | ")} |`;
+  rowIndex += 1;
 
   // Add separator row
   // OPTIMIZATION: Build separator more efficiently
   const separatorParts = new Array(headers.length);
-  for (let i = 0; i < headers.length; i++) {
+  for (let i = 0; i < headers.length; i += 1) {
     separatorParts[i] = "---";
   }
-  markdownRows[rowIndex++] = `| ${separatorParts.join(" | ")} |`;
+  markdownRows[rowIndex] = `| ${separatorParts.join(" | ")} |`;
+  rowIndex += 1;
 
   // Add data rows
   for (const row of rows) {
@@ -193,13 +205,15 @@ export const tableDataToMarkdown = (data: TableData) => {
     // OPTIMIZATION: Only pad if necessary
     if (row.length < headers.length) {
       const paddedRow = new Array(headers.length);
-      for (let i = 0; i < headers.length; i++) {
+      for (let i = 0; i < headers.length; i += 1) {
         paddedRow[i] = i < row.length ? escapeMarkdownTableCell(row[i]) : "";
       }
-      markdownRows[rowIndex++] = `| ${paddedRow.join(" | ")} |`;
+      markdownRows[rowIndex] = `| ${paddedRow.join(" | ")} |`;
+      rowIndex += 1;
     } else {
       const escapedRow = row.map((cell) => escapeMarkdownTableCell(cell));
-      markdownRows[rowIndex++] = `| ${escapedRow.join(" | ")} |`;
+      markdownRows[rowIndex] = `| ${escapedRow.join(" | ")} |`;
+      rowIndex += 1;
     }
   }
 

@@ -64,7 +64,7 @@ export const CodeBlock = ({
     getHighlightedTokens(code, language, shikiTheme, (highlightedResult) => {
       setResult(highlightedResult);
     });
-  }, [code, language, shikiTheme, raw]);
+  }, [code, language, shikiTheme]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>

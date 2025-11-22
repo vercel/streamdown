@@ -31,6 +31,7 @@ const EMPTY_PLUGINS: PluggableList = [];
 const DEFAULT_REMARK_REHYPE_OPTIONS = { allowDangerousHtml: true };
 
 // Plugin name cache for faster serialization
+// biome-ignore lint/complexity/noBannedTypes: "Need Function type for plugin caching"
 const pluginNameCache = new WeakMap<Function, string>();
 
 // LRU Cache for unified processors
@@ -59,13 +60,18 @@ class ProcessorCache {
     }
 
     // Optimize serialization for plugins
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Plugin serialization requires checking multiple plugin formats"
     const serializePlugins = (plugins: PluggableList | undefined): string => {
-      if (!plugins || plugins.length === 0) return "";
+      if (!plugins || plugins.length === 0) {
+        return "";
+      }
 
       let result = "";
-      for (let i = 0; i < plugins.length; i++) {
+      for (let i = 0; i < plugins.length; i += 1) {
         const plugin = plugins[i];
-        if (i > 0) result += ",";
+        if (i > 0) {
+          result += ",";
+        }
 
         if (Array.isArray(plugin)) {
           // Plugin with options: [plugin, options]
@@ -82,18 +88,16 @@ class ProcessorCache {
           }
           result += ":";
           result += JSON.stringify(pluginOptions);
-        } else {
+        } else if (typeof plugin === "function") {
           // Plugin without options
-          if (typeof plugin === "function") {
-            let name = pluginNameCache.get(plugin);
-            if (!name) {
-              name = plugin.name;
-              pluginNameCache.set(plugin, name);
-            }
-            result += name;
-          } else {
-            result += String(plugin);
+          let name = pluginNameCache.get(plugin);
+          if (!name) {
+            name = plugin.name;
+            pluginNameCache.set(plugin, name);
           }
+          result += name;
+        } else {
+          result += String(plugin);
         }
       }
       return result;
@@ -153,8 +157,8 @@ const processorCache = new ProcessorCache();
 export const Markdown = (options: Readonly<Options>) => {
   const processor = getCachedProcessor(options);
   const content = options.children || "";
-  // biome-ignore lint/suspicious/noExplicitAny: runSync return type varies with processor configuration
   return post(
+    // biome-ignore lint/suspicious/noExplicitAny: runSync return type varies with processor configuration
     processor.runSync(processor.parse(content), content) as any,
     options
   );

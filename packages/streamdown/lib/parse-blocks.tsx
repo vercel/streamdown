@@ -14,7 +14,7 @@ const startsWithDoubleDollar = (str: string): boolean => {
     i < str.length &&
     (str[i] === " " || str[i] === "\t" || str[i] === "\n" || str[i] === "\r")
   ) {
-    i++;
+    i += 1;
   }
   return i + 1 < str.length && str[i] === "$" && str[i + 1] === "$";
 };
@@ -27,7 +27,7 @@ const endsWithDoubleDollar = (str: string): boolean => {
     i >= 0 &&
     (str[i] === " " || str[i] === "\t" || str[i] === "\n" || str[i] === "\r")
   ) {
-    i--;
+    i -= 1;
   }
   return i >= 1 && str[i] === "$" && str[i - 1] === "$";
 };
@@ -35,10 +35,10 @@ const endsWithDoubleDollar = (str: string): boolean => {
 // Helper function to count $$ occurrences
 const countDoubleDollars = (str: string): number => {
   let count = 0;
-  for (let i = 0; i < str.length - 1; i++) {
+  for (let i = 0; i < str.length - 1; i += 1) {
     if (str[i] === "$" && str[i + 1] === "$") {
-      count++;
-      i++; // Skip next character
+      count += 1;
+      i += 1; // Skip next character
     }
   }
   return count;
@@ -80,7 +80,7 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
         if (closingTagMatch) {
           const closingTag = closingTagMatch[1];
           // Check if this closes the most recent opening tag
-          if (htmlStack[htmlStack.length - 1] === closingTag) {
+          if (htmlStack.at(-1) === closingTag) {
             htmlStack.pop();
           }
         }
