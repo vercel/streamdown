@@ -291,7 +291,7 @@ const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
   return text;
 };
 
-// OPTIMIZED: Counts single asterisks without split("").reduce()
+// OPTIMIZATION: Counts single asterisks without split("").reduce()
 // Counts single asterisks that are not part of double asterisks, not escaped, not list markers, and not word-internal
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
 const countSingleAsterisks = (text: string): number => {
@@ -371,7 +371,12 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
         // Check if asterisk is word-internal (between word characters)
         const prevChar = i > 0 ? text[i - 1] : "";
         const nextChar = i < text.length - 1 ? text[i + 1] : "";
-        if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
+        if (
+          prevChar &&
+          nextChar &&
+          isWordChar(prevChar) &&
+          isWordChar(nextChar)
+        ) {
           continue;
         }
 
@@ -407,36 +412,51 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   return text;
 };
 
+// Cache for math block state to avoid recalculating
+let mathBlockCache: { text: string; states: boolean[] } | null = null;
+
 // Check if a position is within a math block (between $ or $$)
+// OPTIMIZATION: Cache the state array to avoid recalculating for each position
 const isWithinMathBlock = (text: string, position: number): boolean => {
-  // Count dollar signs before this position
-  let inInlineMath = false;
-  let inBlockMath = false;
+  // Use cache if text hasn't changed
+  if (mathBlockCache?.text !== text) {
+    // Build state array for entire text
+    const len = text.length;
+    const states = new Array(len).fill(false);
+    let inInlineMath = false;
+    let inBlockMath = false;
 
-  for (let i = 0; i < text.length && i < position; i += 1) {
-    // Skip escaped dollar signs
-    if (text[i] === "\\" && text[i + 1] === "$") {
-      i += 1; // Skip the next character
-      continue;
-    }
-
-    if (text[i] === "$") {
-      // Check for block math ($$)
-      if (text[i + 1] === "$") {
-        inBlockMath = !inBlockMath;
-        i += 1; // Skip the second $
-        inInlineMath = false; // Block math takes precedence
-      } else if (!inBlockMath) {
-        // Only toggle inline math if not in block math
-        inInlineMath = !inInlineMath;
+    for (let i = 0; i < len; i += 1) {
+      // Skip escaped dollar signs
+      if (text[i] === "\\" && text[i + 1] === "$") {
+        i += 1; // Skip the next character
+        continue;
       }
+
+      if (text[i] === "$") {
+        // Check for block math ($$)
+        if (text[i + 1] === "$") {
+          inBlockMath = !inBlockMath;
+          i += 1; // Skip the second $
+          inInlineMath = false; // Block math takes precedence
+        } else if (!inBlockMath) {
+          // Only toggle inline math if not in block math
+          inInlineMath = !inInlineMath;
+        }
+      }
+
+      states[i] = inInlineMath || inBlockMath;
     }
+
+    mathBlockCache = { text, states };
   }
 
-  return inInlineMath || inBlockMath;
+  return position < mathBlockCache.states.length
+    ? mathBlockCache.states[position]
+    : false;
 };
 
-// OPTIMIZED: Counts single underscores without split("").reduce()
+// OPTIMIZATION: Counts single underscores without split("").reduce()
 // Counts single underscores that are not part of double underscores, not escaped, and not in math blocks
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
 const countSingleUnderscores = (text: string): number => {
@@ -499,7 +519,12 @@ const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
         // Check if underscore is word-internal (between word characters)
         const prevChar = i > 0 ? text[i - 1] : "";
         const nextChar = i < text.length - 1 ? text[i + 1] : "";
-        if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
+        if (
+          prevChar &&
+          nextChar &&
+          isWordChar(prevChar) &&
+          isWordChar(nextChar)
+        ) {
           continue;
         }
 
@@ -653,24 +678,6 @@ const handleIncompleteStrikethrough = (text: string): string => {
   }
 
   return text;
-};
-
-// Counts single dollar signs that are not part of double dollar signs and not escaped
-const _countSingleDollarSigns = (text: string): number => {
-  return text.split("").reduce((acc, char, index) => {
-    if (char === "$") {
-      const prevChar = text[index - 1];
-      const nextChar = text[index + 1];
-      // Skip if escaped with backslash
-      if (prevChar === "\\") {
-        return acc;
-      }
-      if (prevChar !== "$" && nextChar !== "$") {
-        return acc + 1;
-      }
-    }
-    return acc;
-  }, 0);
 };
 
 // Completes incomplete block KaTeX formatting ($$)
