@@ -26,6 +26,13 @@ export type Options = {
   remarkRehypeOptions?: Readonly<RemarkRehypeOptions>;
 };
 
+// Stable references for common cases
+const EMPTY_PLUGINS: PluggableList = [];
+const DEFAULT_REMARK_REHYPE_OPTIONS = { allowDangerousHtml: true };
+
+// Plugin name cache for faster serialization
+const pluginNameCache = new WeakMap<Function, string>();
+
 // LRU Cache for unified processors
 class ProcessorCache {
   // biome-ignore lint/suspicious/noExplicitAny: Processor type is complex and varies with plugins
@@ -33,19 +40,28 @@ class ProcessorCache {
   private readonly keyCache = new WeakMap<Readonly<Options>, string>();
   private readonly maxSize = 100;
 
-  private generateCacheKey(options: Readonly<Options>): string {
-    // Check WeakMap cache first for faster lookups
+  generateCacheKey(options: Readonly<Options>): string {
+    // Check WeakMap cache first for faster lookups (before any processing)
     const cachedKey = this.keyCache.get(options);
     if (cachedKey) {
       return cachedKey;
     }
 
-    const rehypePlugins = options.rehypePlugins || [];
-    const remarkPlugins = options.remarkPlugins || [];
-    const remarkRehypeOptions = options.remarkRehypeOptions || {};
+    const rehypePlugins = options.rehypePlugins;
+    const remarkPlugins = options.remarkPlugins;
+    const remarkRehypeOptions = options.remarkRehypeOptions;
 
-    // Create a stable key from plugin configurations using faster string concatenation
-    const serializePlugins = (plugins: PluggableList): string => {
+    // Fast path for no plugins (most common case)
+    if (!rehypePlugins && !remarkPlugins && !remarkRehypeOptions) {
+      const key = "default";
+      this.keyCache.set(options, key);
+      return key;
+    }
+
+    // Optimize serialization for plugins
+    const serializePlugins = (plugins: PluggableList | undefined): string => {
+      if (!plugins || plugins.length === 0) return "";
+
       let result = "";
       for (let i = 0; i < plugins.length; i++) {
         const plugin = plugins[i];
@@ -54,13 +70,30 @@ class ProcessorCache {
         if (Array.isArray(plugin)) {
           // Plugin with options: [plugin, options]
           const [pluginFn, pluginOptions] = plugin;
-          result +=
-            typeof pluginFn === "function" ? pluginFn.name : String(pluginFn);
+          if (typeof pluginFn === "function") {
+            let name = pluginNameCache.get(pluginFn);
+            if (!name) {
+              name = pluginFn.name;
+              pluginNameCache.set(pluginFn, name);
+            }
+            result += name;
+          } else {
+            result += String(pluginFn);
+          }
           result += ":";
           result += JSON.stringify(pluginOptions);
         } else {
           // Plugin without options
-          result += typeof plugin === "function" ? plugin.name : String(plugin);
+          if (typeof plugin === "function") {
+            let name = pluginNameCache.get(plugin);
+            if (!name) {
+              name = plugin.name;
+              pluginNameCache.set(plugin, name);
+            }
+            result += name;
+          } else {
+            result += String(plugin);
+          }
         }
       }
       return result;
@@ -68,7 +101,7 @@ class ProcessorCache {
 
     const rehypeKey = serializePlugins(rehypePlugins);
     const remarkKey = serializePlugins(remarkPlugins);
-    const optionsKey = JSON.stringify(remarkRehypeOptions);
+    const optionsKey = remarkRehypeOptions ? JSON.stringify(remarkRehypeOptions) : "";
 
     const key = `${remarkKey}::${rehypeKey}::${optionsKey}`;
 
@@ -139,12 +172,11 @@ const getCachedProcessor = (options: Readonly<Options>) => {
 };
 
 const createProcessor = (options: Readonly<Options>) => {
-  const rehypePlugins = options.rehypePlugins || [];
-  const remarkPlugins = options.remarkPlugins || [];
-  const remarkRehypeOptions = {
-    allowDangerousHtml: true,
-    ...options.remarkRehypeOptions,
-  };
+  const rehypePlugins = options.rehypePlugins || EMPTY_PLUGINS;
+  const remarkPlugins = options.remarkPlugins || EMPTY_PLUGINS;
+  const remarkRehypeOptions = options.remarkRehypeOptions
+    ? { ...DEFAULT_REMARK_REHYPE_OPTIONS, ...options.remarkRehypeOptions }
+    : DEFAULT_REMARK_REHYPE_OPTIONS;
 
   return unified()
     .use(remarkParse)
