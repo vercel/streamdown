@@ -191,8 +191,8 @@ const createProcessor = (options: Readonly<Options>) => {
     .use(rehypePlugins);
 };
 
-function post(tree: Nodes, options: Readonly<Options>): ReactElement {
-  return toJsxRuntime(tree, {
+const post = (tree: Nodes, options: Readonly<Options>): ReactElement =>
+  toJsxRuntime(tree, {
     Fragment,
     components: options.components,
     ignoreInvalidStyle: true,
@@ -201,4 +201,3 @@ function post(tree: Nodes, options: Readonly<Options>): ReactElement {
     passKeys: true,
     passNode: true,
   });
-}
