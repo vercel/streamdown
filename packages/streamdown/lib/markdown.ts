@@ -30,42 +30,52 @@ export type Options = {
 class ProcessorCache {
   // biome-ignore lint/suspicious/noExplicitAny: Processor type is complex and varies with plugins
   private readonly cache = new Map<string, any>();
+  private readonly keyCache = new WeakMap<Readonly<Options>, string>();
   private readonly maxSize = 100;
 
   private generateCacheKey(options: Readonly<Options>): string {
+    // Check WeakMap cache first for faster lookups
+    const cachedKey = this.keyCache.get(options);
+    if (cachedKey) {
+      return cachedKey;
+    }
+
     const rehypePlugins = options.rehypePlugins || [];
     const remarkPlugins = options.remarkPlugins || [];
     const remarkRehypeOptions = options.remarkRehypeOptions || {};
 
-    // Create a stable key from plugin configurations
+    // Create a stable key from plugin configurations using faster string concatenation
     const serializePlugins = (plugins: PluggableList): string => {
-      return JSON.stringify(
-        plugins.map((plugin) => {
-          if (Array.isArray(plugin)) {
-            // Plugin with options: [plugin, options]
-            const [pluginFn, pluginOptions] = plugin;
-            return {
-              name:
-                typeof pluginFn === "function"
-                  ? pluginFn.name
-                  : String(pluginFn),
-              options: pluginOptions,
-            };
-          }
+      let result = "";
+      for (let i = 0; i < plugins.length; i++) {
+        const plugin = plugins[i];
+        if (i > 0) result += ",";
+
+        if (Array.isArray(plugin)) {
+          // Plugin with options: [plugin, options]
+          const [pluginFn, pluginOptions] = plugin;
+          result +=
+            typeof pluginFn === "function" ? pluginFn.name : String(pluginFn);
+          result += ":";
+          result += JSON.stringify(pluginOptions);
+        } else {
           // Plugin without options
-          return {
-            name: typeof plugin === "function" ? plugin.name : String(plugin),
-            options: null,
-          };
-        })
-      );
+          result += typeof plugin === "function" ? plugin.name : String(plugin);
+        }
+      }
+      return result;
     };
 
     const rehypeKey = serializePlugins(rehypePlugins);
     const remarkKey = serializePlugins(remarkPlugins);
     const optionsKey = JSON.stringify(remarkRehypeOptions);
 
-    return `${remarkKey}::${rehypeKey}::${optionsKey}`;
+    const key = `${remarkKey}::${rehypeKey}::${optionsKey}`;
+
+    // Cache the key in WeakMap for this options object
+    this.keyCache.set(options, key);
+
+    return key;
   }
 
   get(options: Readonly<Options>) {
@@ -98,6 +108,7 @@ class ProcessorCache {
 
   clear(): void {
     this.cache.clear();
+    // Note: WeakMap doesn't need manual clearing
   }
 }
 
