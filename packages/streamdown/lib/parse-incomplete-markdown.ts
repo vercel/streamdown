@@ -56,160 +56,50 @@ const hasCompleteCodeBlock = (text: string): boolean => {
   return tripleBackticks > 0 && tripleBackticks % 2 === 0;
 };
 
-// Cache for code block state to avoid recalculating
-let codeBlockCache: boolean[] | null = null;
-let codeBlockCacheText = "";
-
-// Build code block state map for entire text (called once per text)
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "State machine logic for tracking code block boundaries"
-const buildCodeBlockState = (text: string): boolean[] => {
-  const len = text.length;
-  const state = new Array(len).fill(false);
-  let insideMultilineBlock = false;
-  let insideInlineBlock = false;
-
-  for (let i = 0; i < len; i++) {
-    const char = text[i];
-    const next1 = i + 1 < len ? text[i + 1] : "";
-    const next2 = i + 2 < len ? text[i + 2] : "";
-    const prev1 = i > 0 ? text[i - 1] : "";
-    const prev2 = i > 1 ? text[i - 2] : "";
-
-    // Check for triple backticks
-    if (char === "`" && next1 === "`" && next2 === "`") {
-      insideMultilineBlock = !insideMultilineBlock;
-      state[i] = state[i + 1] = state[i + 2] = insideMultilineBlock;
-      i += 2;
-      continue;
-    }
-
-    // Check for single backticks (not part of triple)
-    if (char === "`") {
-      const isPartOfTriple =
-        (next1 === "`" && next2 === "`") ||
-        (prev1 === "`" && next1 === "`") ||
-        (prev2 === "`" && prev1 === "`");
-
-      if (!(isPartOfTriple || insideMultilineBlock)) {
-        insideInlineBlock = !insideInlineBlock;
-      }
-    }
-
-    state[i] = insideMultilineBlock || insideInlineBlock;
-  }
-
-  return state;
-};
-
-// Helper function to check if a position is inside a code block (either inline or multiline)
-const isInsideCodeBlock = (text: string, position: number): boolean => {
-  // Use cache if text hasn't changed
-  if (codeBlockCacheText !== text) {
-    codeBlockCacheText = text;
-    codeBlockCache = buildCodeBlockState(text);
-  }
-
-  return codeBlockCache && position < codeBlockCache.length
-    ? codeBlockCache[position]
-    : false;
-};
+const linkImagePattern = /(!?\[)([^\]]*?)$/;
+const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\]\(([^)]+)$/;
 
 // Handles incomplete links and images by preserving them with a special marker
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex link/image parsing logic with multiple edge cases"
 const handleIncompleteLinksAndImages = (text: string): string => {
   // First check for incomplete URLs: [text](partial-url or ![text](partial-url without closing )
-  // Use string methods instead of regex to avoid ReDoS vulnerability
+  // Pattern: !?[text](url-without-closing-paren at end of string
+  const incompleteLinkUrlMatch = text.match(incompleteLinkUrlPattern);
 
-  // Look for ]( pattern, which indicates start of a link/image URL
-  const lastUrlStart = text.lastIndexOf("](");
+  if (incompleteLinkUrlMatch) {
+    const isImage = incompleteLinkUrlMatch[1] === "!";
+    const linkText = incompleteLinkUrlMatch[2];
+    const partialUrl = incompleteLinkUrlMatch[3];
 
-  if (lastUrlStart !== -1) {
-    // Check if there's a closing ) after ](
-    const closingParen = text.indexOf(")", lastUrlStart + 2);
+    // Find the start position of this link/image pattern
+    const matchStart = text.lastIndexOf(
+      `${isImage ? "!" : ""}[${linkText}](${partialUrl}`
+    );
+    const beforeLink = text.substring(0, matchStart);
 
-    if (closingParen === -1) {
-      // No closing ), so this might be an incomplete URL
-      // Find the opening [ for this link
-      let openBracket = -1;
-      let bracketDepth = 0;
-
-      for (let i = lastUrlStart - 1; i >= 0; i--) {
-        if (text[i] === "]") {
-          bracketDepth += 1;
-        } else if (text[i] === "[") {
-          if (bracketDepth === 0) {
-            openBracket = i;
-            break;
-          }
-          bracketDepth -= 1;
-        }
-      }
-
-      if (openBracket !== -1) {
-        const isImage = openBracket > 0 && text[openBracket - 1] === "!";
-        const matchStart = isImage ? openBracket - 1 : openBracket;
-        const linkText = text.substring(openBracket + 1, lastUrlStart);
-
-        // Check if this match is inside a code block
-        if (isInsideCodeBlock(text, matchStart)) {
-          return text;
-        }
-
-        const beforeLink = text.substring(0, matchStart);
-
-        if (isImage) {
-          // For images with incomplete URLs, remove them entirely
-          return beforeLink;
-        }
-
-        // For links with incomplete URLs, replace the URL with placeholder and close it
-        return `${beforeLink}[${linkText}](streamdown:incomplete-link)`;
-      }
+    if (isImage) {
+      // For images with incomplete URLs, remove them entirely
+      return beforeLink;
     }
+
+    // For links with incomplete URLs, replace the URL with placeholder and close it
+    return `${beforeLink}[${linkText}](streamdown:incomplete-link)`;
   }
 
   // Then check for incomplete link text: [partial-text without closing ]
-  // Use string methods instead of regex to avoid ReDoS vulnerability
+  const linkMatch = text.match(linkImagePattern);
 
-  // Search backwards to find the last [ or ![
-  let matchStart = -1;
-  let isImage = false;
+  if (linkMatch) {
+    const isImage = linkMatch[1].startsWith("!");
 
-  for (let i = text.length - 1; i >= 0; i--) {
-    if (text[i] === "[") {
-      // Check if this is part of ![
-      if (i > 0 && text[i - 1] === "!") {
-        matchStart = i - 1;
-        isImage = true;
-      } else {
-        matchStart = i;
-        isImage = false;
-      }
-      break;
+    // For images, we still remove them as they can't show skeleton
+    if (isImage) {
+      const startIndex = text.lastIndexOf(linkMatch[1]);
+      return text.substring(0, startIndex);
     }
-  }
 
-  if (matchStart !== -1) {
-    // Check if there's a closing ] after this bracket
-    const searchStart = isImage ? matchStart + 2 : matchStart + 1;
-    const closingBracket = text.indexOf("]", searchStart);
-    const hasClosingBracket = closingBracket !== -1;
-
-    if (!hasClosingBracket) {
-      // Check if this match is inside a code block
-      if (isInsideCodeBlock(text, matchStart)) {
-        return text;
-      }
-
-      // For images, we still remove them as they can't show skeleton
-      if (isImage) {
-        return text.substring(0, matchStart);
-      }
-
-      // For links, preserve the text and close the link with a
-      // special placeholder URL that indicates it's incomplete
-      return `${text}](streamdown:incomplete-link)`;
-    }
+    // For links, preserve the text and close the link with a
+    // special placeholder URL that indicates it's incomplete
+    return `${text}](streamdown:incomplete-link)`;
   }
 
   return text;
@@ -459,49 +349,33 @@ const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   return text;
 };
 
-// Cache for math block state to avoid recalculating
-let mathBlockCache: { text: string; states: boolean[] } | null = null;
-
 // Check if a position is within a math block (between $ or $$)
-// OPTIMIZATION: Cache the state array to avoid recalculating for each position
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "State machine logic for tracking math block boundaries"
 const isWithinMathBlock = (text: string, position: number): boolean => {
-  // Use cache if text hasn't changed
-  if (mathBlockCache?.text !== text) {
-    // Build state array for entire text
-    const len = text.length;
-    const states = new Array(len).fill(false);
-    let inInlineMath = false;
-    let inBlockMath = false;
+  // Count dollar signs before this position
+  let inInlineMath = false;
+  let inBlockMath = false;
 
-    for (let i = 0; i < len; i += 1) {
-      // Skip escaped dollar signs
-      if (text[i] === "\\" && text[i + 1] === "$") {
-        i += 1; // Skip the next character
-        continue;
-      }
-
-      if (text[i] === "$") {
-        // Check for block math ($$)
-        if (text[i + 1] === "$") {
-          inBlockMath = !inBlockMath;
-          i += 1; // Skip the second $
-          inInlineMath = false; // Block math takes precedence
-        } else if (!inBlockMath) {
-          // Only toggle inline math if not in block math
-          inInlineMath = !inInlineMath;
-        }
-      }
-
-      states[i] = inInlineMath || inBlockMath;
+  for (let i = 0; i < text.length && i < position; i += 1) {
+    // Skip escaped dollar signs
+    if (text[i] === "\\" && text[i + 1] === "$") {
+      i += 1; // Skip the next character
+      continue;
     }
 
-    mathBlockCache = { text, states };
+    if (text[i] === "$") {
+      // Check for block math ($$)
+      if (text[i + 1] === "$") {
+        inBlockMath = !inBlockMath;
+        i += 1; // Skip the second $
+        inInlineMath = false; // Block math takes precedence
+      } else if (!inBlockMath) {
+        // Only toggle inline math if not in block math
+        inInlineMath = !inInlineMath;
+      }
+    }
   }
 
-  return position < mathBlockCache.states.length
-    ? mathBlockCache.states[position]
-    : false;
+  return inInlineMath || inBlockMath;
 };
 
 // OPTIMIZATION: Counts single underscores without split("").reduce()
@@ -862,12 +736,6 @@ export const parseIncompleteMarkdown = (text: string): string => {
   if (!text || typeof text !== "string") {
     return text;
   }
-
-  // OPTIMIZATION: Clear caches at the start of each parse to ensure fresh state
-  // This also prevents memory leaks from holding references to old text
-  codeBlockCacheText = "";
-  codeBlockCache = null;
-  mathBlockCache = null;
 
   let result = text;
 
