@@ -9,5 +9,5 @@ export default defineConfig({
   sourcemap: false,
   external: ["react", "react-dom"],
   treeshake: true,
-  splitting: false,
+  splitting: true,
 });

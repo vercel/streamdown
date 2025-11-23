@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { render, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 
@@ -114,16 +114,17 @@ graph TD
       expect(buttons?.length).toBe(0);
     });
 
-    it("should show code controls when code is true", () => {
+    it("should show code controls when code is true", async () => {
       const { container } = render(
         <Streamdown controls={{ code: true }}>{markdownWithCode}</Streamdown>
       );
 
-      const buttons = container.querySelectorAll(
-        "[data-code-block-header] button"
-      );
-
-      expect(buttons?.length).toBeGreaterThan(0);
+      await waitFor(() => {
+        const buttons = container.querySelectorAll(
+          "[data-code-block-header] button"
+        );
+        expect(buttons?.length).toBeGreaterThan(0);
+      });
     });
 
     it("should hide only mermaid controls when mermaid is false", () => {
@@ -141,7 +142,7 @@ graph TD
       expect(buttons?.length).toBe(0);
     });
 
-    it("should allow mixed configuration", () => {
+    it("should allow mixed configuration", async () => {
       const combined = `
 ${markdownWithTable}
 ${markdownWithCode}
@@ -159,13 +160,15 @@ ${markdownWithCode}
       const tableButtons = tableWrapper?.querySelectorAll("button");
       expect(tableButtons?.length).toBe(0);
 
-      const codeButtons = container.querySelectorAll(
-        "[data-code-block-header] button"
-      );
-      expect(codeButtons?.length).toBeGreaterThan(0);
+      await waitFor(() => {
+        const codeButtons = container.querySelectorAll(
+          "[data-code-block-header] button"
+        );
+        expect(codeButtons?.length).toBeGreaterThan(0);
+      });
     });
 
-    it("should default unspecified controls to true", () => {
+    it("should default unspecified controls to true", async () => {
       const combined = `
 ${markdownWithTable}
 ${markdownWithCode}
@@ -182,10 +185,12 @@ ${markdownWithCode}
       expect(tableButtons?.length).toBe(0);
 
       // Code controls should still show since not specified
-      const codeButtons = container.querySelectorAll(
-        "[data-code-block-header] button"
-      );
-      expect(codeButtons?.length).toBeGreaterThan(0);
+      await waitFor(() => {
+        const codeButtons = container.querySelectorAll(
+          "[data-code-block-header] button"
+        );
+        expect(codeButtons?.length).toBeGreaterThan(0);
+      });
     });
   });
 
