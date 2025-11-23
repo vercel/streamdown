@@ -1,5 +1,11 @@
 # streamdown
 
+## 1.6.3
+
+### Patch Changes
+
+- 49b6692: build for browser only (fixes ts-router)
+
 ## 1.6.2
 
 ### Patch Changes
