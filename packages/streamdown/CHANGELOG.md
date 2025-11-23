@@ -1,5 +1,11 @@
 # streamdown
 
+## 1.6.4
+
+### Patch Changes
+
+- dbd198f: Restore original lucide imports
+
 ## 1.6.3
 
 ### Patch Changes
