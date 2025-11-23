@@ -1,5 +1,11 @@
 # streamdown
 
+## 1.6.5
+
+### Patch Changes
+
+- 1e547d4: Fix code blocks in dark mode
+
 ## 1.6.4
 
 ### Patch Changes
