@@ -344,7 +344,7 @@ describe("CodeBlock with multiple languages", () => {
       () => {
         // Check container has data attributes
         const containerElement = container.querySelector(
-          "[data-code-block-container]"
+          '[data-streamdown="code-block"]'
         );
         expect(containerElement).toBeTruthy();
         expect(containerElement?.getAttribute("data-language")).toBe(
@@ -353,14 +353,15 @@ describe("CodeBlock with multiple languages", () => {
 
         // Check header has data attributes
         const headerElement = container.querySelector(
-          "[data-code-block-header]"
+          '[data-streamdown="code-block-header"]'
         );
         expect(headerElement).toBeTruthy();
         expect(headerElement?.getAttribute("data-language")).toBe("javascript");
 
         // Check code block has data attributes
-        const codeBlockElements =
-          container.querySelectorAll("[data-code-block]");
+        const codeBlockElements = container.querySelectorAll(
+          '[data-streamdown="code-block"]'
+        );
         expect(codeBlockElements.length).toBeGreaterThan(0);
         for (const element of codeBlockElements) {
           expect(element.getAttribute("data-language")).toBe("javascript");
@@ -432,7 +433,9 @@ describe("CodeBlock with multiple languages", () => {
     // Wait for the final render to complete
     await waitFor(
       () => {
-        const codeBlock = container.querySelector("[data-code-block]");
+        const codeBlock = container.querySelector(
+          '[data-streamdown="code-block"]'
+        );
         expect(codeBlock).toBeTruthy();
         // Check that content has been rendered
         const innerHTML = codeBlock?.innerHTML || "";
@@ -447,7 +450,9 @@ describe("CodeBlock with multiple languages", () => {
     });
 
     // Verify the code block rendered successfully with content from the fixture
-    const codeBlock = container.querySelector("[data-code-block]");
+    const codeBlock = container.querySelector(
+      '[data-streamdown="code-block"]'
+    );
     expect(codeBlock?.innerHTML).toContain("Napoleon");
 
     // Verify the component is showing HTML language
