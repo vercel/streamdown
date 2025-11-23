@@ -16,7 +16,6 @@ import { getHighlightedTokens } from "./highlight";
 type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
   language: BundledLanguage;
-  preClassName?: string;
 };
 
 export const CodeBlock = ({
@@ -24,7 +23,6 @@ export const CodeBlock = ({
   language,
   className,
   children,
-  preClassName,
   ...rest
 }: CodeBlockProps) => {
   const { shikiTheme } = useContext(StreamdownContext);

@@ -685,10 +685,7 @@ const CodeComponent = ({
       <CodeBlock
         className={cn("overflow-x-auto border-border border-t", className)}
         code={code}
-        data-language={language}
-        data-streamdown="code-block"
         language={language}
-        preClassName="overflow-x-auto font-mono text-xs p-4 bg-muted/40"
       >
         {showCodeControls && (
           <>
