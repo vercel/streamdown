@@ -56,7 +56,7 @@ This prevents Vite from treating Streamdown as an external module during SSR, en
 Add a `@source` directive to your `globals.css` file with the path to Streamdown's distribution files:
 
 ```css title="globals.css"
-@source "../node_modules/streamdown/dist/index.js";
+@source "../node_modules/streamdown/dist/*.js";
 ```
 
 ### Tailwind v3
@@ -66,7 +66,7 @@ Add Streamdown to your `content` array in `tailwind.config.js`:
 ```js title="tailwind.config.js"
 content: [
   // ... your other content paths
-  "./node_modules/streamdown/dist/**/*.js",
+  "./node_modules/streamdown/dist/*.js",
 ]
 ```
 
