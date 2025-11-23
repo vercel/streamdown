@@ -51,16 +51,3 @@ export default function Page() {
 ```
 
 For more info, see the [documentation](https://streamdown.ai/docs).
-
-## Browser Support
-
-Streamdown requires browsers that support [RegExp lookbehind assertions](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Regular_expressions/Lookbehind_assertion). This means:
-
-- **Safari 16.5+** (iOS 16.5+, macOS Ventura 13.4+)
-- Chrome 62+
-- Edge 79+
-- Firefox 78+
-
-The lookbehind assertion requirement comes from dependencies (particularly Shiki for syntax highlighting and mdast-util-gfm-autolink-literal). Older browsers will crash when attempting to parse these regular expressions.
-
-If you need to support older browsers, particularly iOS Safari < 16.5, you may need to implement conditional loading or provide a fallback rendering solution.
