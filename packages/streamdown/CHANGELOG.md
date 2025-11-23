@@ -1,5 +1,12 @@
 # streamdown
 
+## 1.6.2
+
+### Patch Changes
+
+- 476167e: Conditional KaTeX CSS loading based on content detection
+- 476167e: Bundle optimization through lazy loading and code splitting
+
 ## 1.6.1
 
 ### Patch Changes
