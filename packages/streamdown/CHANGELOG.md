@@ -1,5 +1,11 @@
 # streamdown
 
+## 1.6.6
+
+### Patch Changes
+
+- 74cac00: Fix code block data attributes
+
 ## 1.6.5
 
 ### Patch Changes
