@@ -1,4 +1,4 @@
-import Loader2Icon from "lucide-react/dist/esm/icons/loader-2";
+import { Loader2Icon } from "lucide-react";
 
 export const CodeBlockSkeleton = () => (
   <div className="w-full divide-y divide-border overflow-hidden rounded-xl border border-border">
