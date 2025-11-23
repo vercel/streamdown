@@ -10,4 +10,5 @@ export default defineConfig({
   external: ["react", "react-dom"],
   treeshake: true,
   splitting: true,
+  platform: "browser",
 });
