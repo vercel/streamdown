@@ -222,6 +222,9 @@ importers:
       remark-gfm:
         specifier: ^4.0.1
         version: 4.0.1
+      streamdown:
+        specifier: workspace:*
+        version: link:../../packages/streamdown
       tailwindcss:
         specifier: ^4.0.6
         version: 4.1.17
