@@ -35,7 +35,7 @@ export const CodeBlockBody = memo(
 
     return (
       <pre
-        className={cn(className, "p-4 text-sm")}
+        className={cn(className, "p-4 text-sm dark:bg-(--shiki-dark-bg)!")}
         data-code-block
         data-language={language}
         style={preStyle}
@@ -50,6 +50,7 @@ export const CodeBlockBody = memo(
             >
               {row.map((token, tokenIndex) => (
                 <span
+                  className="dark:bg-(--shiki-dark-bg)! dark:text-(--shiki-dark)!"
                   // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
                   key={tokenIndex}
                   style={{
