@@ -1,4 +1,4 @@
-import { DownloadIcon } from "lucide-react";
+import DownloadIcon from "lucide-react/dist/esm/icons/download";
 import { type ComponentProps, useContext } from "react";
 import type { BundledLanguage } from "shiki";
 import { StreamdownContext } from "../../index";

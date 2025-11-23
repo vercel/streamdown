@@ -1,4 +1,5 @@
-import { CheckIcon, CopyIcon } from "lucide-react";
+import CheckIcon from "lucide-react/dist/esm/icons/check";
+import CopyIcon from "lucide-react/dist/esm/icons/copy";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
