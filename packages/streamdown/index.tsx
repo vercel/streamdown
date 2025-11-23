@@ -258,19 +258,48 @@ export const Streamdown = memo(
       [components]
     );
 
+    // Only load KaTeX CSS when math syntax is detected in content
     useEffect(() => {
-      if (
+      // Check if katex plugin is included
+      const hasKatexPlugin =
         Array.isArray(rehypePlugins) &&
         rehypePlugins.some((plugin) =>
           Array.isArray(plugin)
             ? plugin[0] === rehypeKatex
             : plugin === rehypeKatex
-        )
-      ) {
-        // @ts-expect-error
+        );
+
+      if (!hasKatexPlugin) {
+        return;
+      }
+
+      // Check if single dollar math is enabled in remarkMath config
+      let singleDollarEnabled = false;
+      if (Array.isArray(remarkPlugins)) {
+        const mathPlugin = remarkPlugins.find((plugin) =>
+          Array.isArray(plugin) ? plugin[0] === remarkMath : plugin === remarkMath
+        );
+        if (mathPlugin && Array.isArray(mathPlugin) && mathPlugin[1]) {
+          const config = mathPlugin[1] as { singleDollarTextMath?: boolean };
+          singleDollarEnabled = config.singleDollarTextMath === true;
+        }
+      }
+
+      // Only load CSS if content contains math syntax
+      const content = typeof children === "string" ? children : "";
+      const hasDoubleDollar = content.includes("$$");
+      const hasSingleDollar = singleDollarEnabled && (
+        /[^$]\$[^$]/.test(content) ||
+        /^\$[^$]/.test(content) ||
+        /[^$]\$$/.test(content)
+      );
+      const hasMathSyntax = hasDoubleDollar || hasSingleDollar;
+
+      if (hasMathSyntax) {
+        // @ts-expect-error - dynamic import for CSS
         import("katex/dist/katex.min.css");
       }
-    }, [rehypePlugins]);
+    }, [rehypePlugins, remarkPlugins, children]);
 
     // Static mode: simple rendering without streaming features
     if (mode === "static") {

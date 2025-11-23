@@ -1,4 +1,4 @@
-import { DownloadIcon } from "lucide-react";
+import DownloadIcon from "lucide-react/dist/esm/icons/download";
 import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
 import type { ExtraProps } from "./markdown";
 import { cn, save } from "./utils";

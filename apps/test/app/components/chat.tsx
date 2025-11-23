@@ -5,6 +5,13 @@ import { DefaultChatTransport } from "ai";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import { harden } from "rehype-harden";
+import rehypeKatex from "rehype-katex";
+import rehypeRaw from "rehype-raw";
+import remarkCjkFriendly from "remark-cjk-friendly";
+import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
 import { Streamdown } from "streamdown";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +25,7 @@ import {
   ComboboxTrigger,
 } from "@/components/ui/kibo-ui/combobox";
 import { Textarea } from "@/components/ui/textarea";
+import { Column } from "./column";
 
 type ChatProps = {
   models: {
@@ -27,7 +35,7 @@ type ChatProps = {
 };
 
 export const Chat = ({ models }: ChatProps) => {
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
       api: "/api/chat",
     }),
@@ -51,8 +59,8 @@ export const Chat = ({ models }: ChatProps) => {
 
   return (
     <div className="mx-auto flex h-screen flex-col divide-y overflow-hidden border-x">
-      <div className="flex h-full flex-1 divide-x overflow-hidden">
-        <div className="flex-1 space-y-4 overflow-y-auto bg-black p-4 text-white">
+      <div className="grid h-full flex-1 grid-cols-4 divide-x overflow-hidden">
+        <Column title="Raw">
           {messages.map((message) => (
             <div key={message.id}>
               <span className="font-bold">
@@ -95,9 +103,9 @@ export const Chat = ({ models }: ChatProps) => {
               })}
             </div>
           ))}
-        </div>
+        </Column>
 
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        <Column title="React Markdown">
           {messages.map((message) => (
             <div key={message.id}>
               <span className="font-bold">
@@ -136,9 +144,78 @@ export const Chat = ({ models }: ChatProps) => {
               })}
             </div>
           ))}
-        </div>
+        </Column>
 
-        <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        <Column title="React Markdown with Plugins">
+          {messages.map((message) => (
+            <div key={message.id}>
+              <span className="font-bold">
+                {message.role === "user" ? "User: " : "AI: "}
+              </span>
+              {message.parts.map((part, index) => {
+                const key = `${message.id}-${index}`;
+                switch (part.type) {
+                  case "text":
+                    return (
+                      <ReactMarkdown
+                        key={key}
+                        rehypePlugins={[
+                          [
+                            harden,
+                            {
+                              allowedImagePrefixes: ["*"],
+                              allowedLinkPrefixes: ["*"],
+                              defaultOrigin: undefined,
+                              allowDataImages: true,
+                            },
+                          ],
+                          rehypeRaw,
+                          [
+                            rehypeKatex,
+                            { errorColor: "var(--color-muted-foreground)" },
+                          ],
+                        ]}
+                        remarkPlugins={[
+                          [remarkGfm, {}],
+                          [remarkMath, { singleDollarTextMath: false }],
+                          [remarkCjkFriendly, {}],
+                          [remarkCjkFriendlyGfmStrikethrough, {}],
+                        ]}
+                      >
+                        {part.text}
+                      </ReactMarkdown>
+                    );
+                  case "reasoning":
+                    return (
+                      <pre className="italic" key={key}>
+                        {part.text}
+                      </pre>
+                    );
+                  case "file":
+                    return (
+                      <div key={key}>
+                        {part.mediaType.startsWith("image") ? (
+                          <Image
+                            alt={part.filename ?? "An image attachment"}
+                            height={100}
+                            src={part.url}
+                            unoptimized
+                            width={100}
+                          />
+                        ) : (
+                          <div>File: {part.filename}</div>
+                        )}
+                      </div>
+                    );
+                  default:
+                    return null;
+                }
+              })}
+            </div>
+          ))}
+        </Column>
+
+        <Column title="Streamdown">
           {messages.map((message) => (
             <div key={message.id}>
               <span className="font-bold">
@@ -184,7 +261,7 @@ export const Chat = ({ models }: ChatProps) => {
               })}
             </div>
           ))}
-        </div>
+        </Column>
       </div>
       <form
         className="grid shrink-0 items-center gap-2 divide-y p-4"
@@ -227,9 +304,20 @@ export const Chat = ({ models }: ChatProps) => {
               </ComboboxList>
             </ComboboxContent>
           </Combobox>
-          <Button disabled={status !== "ready"} type="submit">
-            Submit
-          </Button>
+
+          <div className="flex items-center justify-between gap-2">
+            <Button
+              onClick={() => {
+                setMessages([]);
+              }}
+              variant="outline"
+            >
+              Clear Chat
+            </Button>
+            <Button disabled={status !== "ready"} type="submit">
+              Submit
+            </Button>
+          </div>
         </div>
       </form>
     </div>

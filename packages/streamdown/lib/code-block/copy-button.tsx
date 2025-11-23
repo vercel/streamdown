@@ -1,4 +1,5 @@
-import { CheckIcon, CopyIcon } from "lucide-react";
+import CheckIcon from "lucide-react/dist/esm/icons/check";
+import CopyIcon from "lucide-react/dist/esm/icons/copy";
 import {
   type ComponentProps,
   useContext,

@@ -4,21 +4,30 @@ import {
   type ImgHTMLAttributes,
   isValidElement,
   type JSX,
+  lazy,
   memo,
+  Suspense,
   useContext,
 } from "react";
 import type { BundledLanguage } from "shiki";
 import { StreamdownContext } from "../index";
-import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
+import { CodeBlockSkeleton } from "./code-block/skeleton";
 import { ImageComponent } from "./image";
 import type { ExtraProps, Options } from "./markdown";
-import { Mermaid } from "./mermaid";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
 import { Table } from "./table";
 import { cn } from "./utils";
+
+// Lazy load heavy components
+const CodeBlock = lazy(() =>
+  import("./code-block").then((mod) => ({ default: mod.CodeBlock }))
+);
+const Mermaid = lazy(() =>
+  import("./mermaid").then((mod) => ({ default: mod.Mermaid }))
+);
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
@@ -662,7 +671,9 @@ const CodeComponent = ({
               )}
             </div>
           )}
-        <Mermaid chart={code} config={mermaidContext?.config} />
+        <Suspense fallback={<CodeBlockSkeleton />}>
+          <Mermaid chart={code} config={mermaidContext?.config} />
+        </Suspense>
       </div>
     );
   }
@@ -670,21 +681,23 @@ const CodeComponent = ({
   const showCodeControls = shouldShowControls(controlsConfig, "code");
 
   return (
-    <CodeBlock
-      className={cn("overflow-x-auto border-border border-t", className)}
-      code={code}
-      data-language={language}
-      data-streamdown="code-block"
-      language={language}
-      preClassName="overflow-x-auto font-mono text-xs p-4 bg-muted/40"
-    >
-      {showCodeControls && (
-        <>
-          <CodeBlockDownloadButton code={code} language={language} />
-          <CodeBlockCopyButton />
-        </>
-      )}
-    </CodeBlock>
+    <Suspense fallback={<CodeBlockSkeleton />}>
+      <CodeBlock
+        className={cn("overflow-x-auto border-border border-t", className)}
+        code={code}
+        data-language={language}
+        data-streamdown="code-block"
+        language={language}
+        preClassName="overflow-x-auto font-mono text-xs p-4 bg-muted/40"
+      >
+        {showCodeControls && (
+          <>
+            <CodeBlockDownloadButton code={code} language={language} />
+            <CodeBlockCopyButton />
+          </>
+        )}
+      </CodeBlock>
+    </Suspense>
   );
 };
 
