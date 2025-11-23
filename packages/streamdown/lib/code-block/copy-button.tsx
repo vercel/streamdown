@@ -67,6 +67,7 @@ export const CodeBlockCopyButton = ({
         "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
+      data-streamdown="code-block-copy-button"
       disabled={isAnimating}
       onClick={copyToClipboard}
       type="button"

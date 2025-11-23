@@ -356,6 +356,7 @@ export const CodeBlockDownloadButton = ({
         "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
+      data-streamdown="code-block-download-button"
       disabled={isAnimating}
       onClick={downloadCode}
       title="Download file"

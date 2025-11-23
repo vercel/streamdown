@@ -36,8 +36,8 @@ export const CodeBlockBody = memo(
     return (
       <pre
         className={cn(className, "p-4 text-sm dark:bg-(--shiki-dark-bg)!")}
-        data-code-block
         data-language={language}
+        data-streamdown="code-block-body"
         style={preStyle}
         {...rest}
       >

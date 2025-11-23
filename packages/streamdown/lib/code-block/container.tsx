@@ -17,8 +17,8 @@ export const CodeBlockContainer = ({
       "my-4 w-full overflow-hidden rounded-xl border border-border",
       className
     )}
-    data-code-block-container
     data-language={language}
+    data-streamdown="code-block"
     style={{
       // Use content-visibility to skip rendering off-screen blocks
       // This can significantly improve performance for large documents
