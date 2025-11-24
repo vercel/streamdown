@@ -331,7 +331,7 @@ describe("Markdown Components", () => {
       // The pre component returns its children directly
       expect(container.textContent).toBe("plain text code");
     });
-    it("should render mermaid block with correct structure", () => {
+    it("should render mermaid block with correct structure", async () => {
       const Code = components.code;
       if (!Code) {
         throw new Error("Code component not found");
@@ -352,11 +352,18 @@ describe("Markdown Components", () => {
         </Code>
       );
 
+      // Wait for Suspense boundary to resolve
+      await waitFor(() => {
+        const mermaidBlock = container.querySelector(
+          '[data-streamdown="mermaid-block"]'
+        );
+        expect(mermaidBlock).toBeTruthy();
+      });
+
       // Verify mermaid block structure is created
       const mermaidBlock = container.querySelector(
         '[data-streamdown="mermaid-block"]'
       );
-      expect(mermaidBlock).toBeTruthy();
       expect(mermaidBlock?.className).toContain("group");
       expect(mermaidBlock?.className).toContain("relative");
       expect(mermaidBlock?.className).toContain("rounded-xl");

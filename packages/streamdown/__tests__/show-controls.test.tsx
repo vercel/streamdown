@@ -127,12 +127,20 @@ graph TD
       });
     });
 
-    it("should hide only mermaid controls when mermaid is false", () => {
+    it("should hide only mermaid controls when mermaid is false", async () => {
       const { container } = render(
         <Streamdown controls={{ mermaid: false }}>
           {markdownWithMermaid}
         </Streamdown>
       );
+
+      // Wait for Suspense boundary to resolve
+      await waitFor(() => {
+        const mermaidBlock = container.querySelector(
+          '[data-streamdown="mermaid-block"]'
+        );
+        expect(mermaidBlock).toBeTruthy();
+      });
 
       const mermaidBlock = container.querySelector(
         '[data-streamdown="mermaid-block"]'
