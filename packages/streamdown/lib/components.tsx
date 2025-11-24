@@ -646,35 +646,35 @@ const CodeComponent = ({
     );
 
     return (
-      <div
-        className={cn(
-          "group relative my-4 h-auto rounded-xl border p-4",
-          className
-        )}
-        data-streamdown="mermaid-block"
-      >
-        {showMermaidControls &&
-          (showDownload || showCopy || showFullscreen) && (
-            <div className="flex items-center justify-end gap-2">
-              {showDownload && (
-                <MermaidDownloadDropdown
-                  chart={code}
-                  config={mermaidContext?.config}
-                />
-              )}
-              {showCopy && <CodeBlockCopyButton code={code} />}
-              {showFullscreen && (
-                <MermaidFullscreenButton
-                  chart={code}
-                  config={mermaidContext?.config}
-                />
-              )}
-            </div>
+      <Suspense fallback={<CodeBlockSkeleton />}>
+        <div
+          className={cn(
+            "group relative my-4 h-auto rounded-xl border p-4",
+            className
           )}
-        <Suspense fallback={<CodeBlockSkeleton />}>
+          data-streamdown="mermaid-block"
+        >
+          {showMermaidControls &&
+            (showDownload || showCopy || showFullscreen) && (
+              <div className="flex items-center justify-end gap-2">
+                {showDownload && (
+                  <MermaidDownloadDropdown
+                    chart={code}
+                    config={mermaidContext?.config}
+                  />
+                )}
+                {showCopy && <CodeBlockCopyButton code={code} />}
+                {showFullscreen && (
+                  <MermaidFullscreenButton
+                    chart={code}
+                    config={mermaidContext?.config}
+                  />
+                )}
+              </div>
+            )}
           <Mermaid chart={code} config={mermaidContext?.config} />
-        </Suspense>
-      </div>
+        </div>
+      </Suspense>
     );
   }
 
