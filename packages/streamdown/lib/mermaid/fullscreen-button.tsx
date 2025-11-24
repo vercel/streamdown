@@ -38,7 +38,20 @@ export const MermaidFullscreenButton = ({
   ...props
 }: MermaidFullscreenButtonProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, controls: controlsConfig } = useContext(StreamdownContext);
+  const showPanZoomControls = (() => {
+    if (typeof controlsConfig === "boolean") {
+      return controlsConfig;
+    }
+    const mermaidCtl = controlsConfig.mermaid;
+    if (mermaidCtl === false) {
+      return false;
+    }
+    if (mermaidCtl === true || mermaidCtl === undefined) {
+      return true;
+    }
+    return (mermaidCtl as any).panZoom !== false;
+  })();
 
   const handleToggle = () => {
     setIsFullscreen(!isFullscreen);
@@ -121,6 +134,7 @@ export const MermaidFullscreenButton = ({
               className="h-full w-full [&>div]:h-full [&>div]:overflow-hidden [&_svg]:h-auto [&_svg]:w-auto"
               config={config}
               fullscreen={true}
+              showControls={showPanZoomControls}
             />
           </div>
         </div>

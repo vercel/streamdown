@@ -102,9 +102,9 @@ const shouldShowMermaidControl = (
         code?: boolean;
         mermaid?:
           | boolean
-          | { download?: boolean; copy?: boolean; fullscreen?: boolean };
+          | { download?: boolean; copy?: boolean; fullscreen?: boolean; panZoom?: boolean };
       },
-  controlType: "download" | "copy" | "fullscreen"
+  controlType: "download" | "copy" | "fullscreen" | "panZoom"
 ): boolean => {
   if (typeof config === "boolean") {
     return config;
@@ -640,10 +640,8 @@ const CodeComponent = ({
     const showMermaidControls = shouldShowControls(controlsConfig, "mermaid");
     const showDownload = shouldShowMermaidControl(controlsConfig, "download");
     const showCopy = shouldShowMermaidControl(controlsConfig, "copy");
-    const showFullscreen = shouldShowMermaidControl(
-      controlsConfig,
-      "fullscreen"
-    );
+    const showFullscreen = shouldShowMermaidControl(controlsConfig, "fullscreen");
+    const showPanZoomControls = shouldShowMermaidControl(controlsConfig, "panZoom");
 
     return (
       <Suspense fallback={<CodeBlockSkeleton />}>
@@ -672,7 +670,11 @@ const CodeComponent = ({
                 )}
               </div>
             )}
-          <Mermaid chart={code} config={mermaidContext?.config} />
+          <Mermaid
+            chart={code}
+            config={mermaidContext?.config}
+            showControls={showPanZoomControls}
+          />
         </div>
       </Suspense>
     );

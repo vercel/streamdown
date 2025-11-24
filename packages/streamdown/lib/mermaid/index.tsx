@@ -10,6 +10,7 @@ type MermaidProps = {
   className?: string;
   config?: MermaidConfig;
   fullscreen?: boolean;
+  showControls?: boolean;
 };
 
 export const Mermaid = ({
@@ -17,6 +18,7 @@ export const Mermaid = ({
   className,
   config,
   fullscreen = false,
+  showControls = true,
 }: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -122,7 +124,7 @@ export const Mermaid = ({
       fullscreen={fullscreen}
       maxZoom={3}
       minZoom={0.5}
-      showControls={true}
+      showControls={showControls}
       zoomStep={0.1}
     >
       <div

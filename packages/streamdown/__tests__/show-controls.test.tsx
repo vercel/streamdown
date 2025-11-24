@@ -192,6 +192,50 @@ ${markdownWithCode}
         expect(codeButtons?.length).toBeGreaterThan(0);
       });
     });
+
+    it("should hide mermaid pan-zoom controls when panZoom is false", async () => {
+      const markdownWithMermaid = `
+\`\`\`mermaid
+graph TD
+    A-->B
+\`\`\`
+`;
+
+      const { container } = render(
+        <Streamdown controls={{ mermaid: { panZoom: false } }}>
+          {markdownWithMermaid}
+        </Streamdown>
+      );
+
+      await waitFor(() => {
+        const zoomInButton = container.querySelector('button[title="Zoom in"]');
+        expect(zoomInButton).toBeFalsy();
+      });
+    });
+
+    it("should show mermaid pan-zoom controls by default", async () => {
+      const utils = await import("../lib/mermaid/utils");
+      vi.spyOn(utils, "initializeMermaid").mockResolvedValue({
+        render: vi.fn().mockResolvedValue({ svg: "<svg></svg>" }),
+      } as any);
+      const markdownWithMermaid = `
+\`\`\`mermaid
+graph TD
+    A-->B
+\`\`\`
+`;
+
+      const { container } = render(
+        <Streamdown controls={{ mermaid: {} }}>
+          {markdownWithMermaid}
+        </Streamdown>
+      );
+
+      await waitFor(() => {
+        const zoomInButton = container.querySelector('button[title="Zoom in"]');
+        expect(zoomInButton).toBeTruthy();
+      });
+    });
   });
 
   describe("with custom components", () => {

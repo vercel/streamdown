@@ -41,6 +41,7 @@ export type ControlsConfig =
             download?: boolean;
             copy?: boolean;
             fullscreen?: boolean;
+            panZoom?: boolean;
           };
     };
 
