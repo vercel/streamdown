@@ -143,7 +143,7 @@ type LiProps = WithNode<JSX.IntrinsicElements["li"]>;
 const MemoLi = memo<LiProps>(
   ({ children, className, node, ...props }: LiProps) => (
     <li
-      className={cn("py-1", className)}
+      className={cn("py-1 [&>p]:inline", className)}
       data-streamdown="list-item"
       {...props}
     >
