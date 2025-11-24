@@ -1,5 +1,21 @@
 # streamdown
 
+## 1.6.7
+
+### Patch Changes
+
+- cfc8c37: Fix p tags inside list items
+- e4e5bb5: Fix unit tests
+- 00ca9a9: Add PanZoom controls configurability for Mermaid diagrams.
+
+  - Support `controls.mermaid.panZoom` (boolean) to toggle zoom controls globally
+  - Support `mermaid.config.panZoom` (boolean or `{ showControls?: boolean }`) per-instance
+  - Keep defaults enabled; `false` explicitly hides the zoom controls
+
+  This is a non-breaking enhancement that aligns with existing control predicates.
+
+- a489949: fix: add missing tooltip support to action buttons
+
 ## 1.6.6
 
 ### Patch Changes
