@@ -70,6 +70,7 @@ export const CodeBlockCopyButton = ({
       data-streamdown="code-block-copy-button"
       disabled={isAnimating}
       onClick={copyToClipboard}
+      title="Copy Code"
       type="button"
       {...props}
     >

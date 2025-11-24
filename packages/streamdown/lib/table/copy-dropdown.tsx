@@ -110,6 +110,7 @@ export const TableCopyDropdown = ({
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => copyTableData("csv")}
             type="button"
+            title="Copy table as CSV"
           >
             CSV
           </button>
@@ -117,6 +118,7 @@ export const TableCopyDropdown = ({
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => copyTableData("tsv")}
             type="button"
+            title="Copy table as TSV"
           >
             TSV
           </button>
