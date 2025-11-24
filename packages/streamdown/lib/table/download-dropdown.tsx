@@ -179,6 +179,7 @@ export const TableDownloadDropdown = ({
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => downloadTableData("csv")}
             type="button"
+            title="Download table as CSV"
           >
             CSV
           </button>
@@ -186,6 +187,7 @@ export const TableDownloadDropdown = ({
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => downloadTableData("markdown")}
             type="button"
+            title="Download table as Markdown"
           >
             Markdown
           </button>

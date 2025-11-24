@@ -69,6 +69,7 @@ export const CodeBlockCopyButton = ({
       )}
       disabled={isAnimating}
       onClick={copyToClipboard}
+      title="Copy Code"
       type="button"
       {...props}
     >
