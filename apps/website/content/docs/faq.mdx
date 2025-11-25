@@ -71,3 +71,26 @@ content: [
 ```
 
 Adjust the paths based on your project structure. This ensures Tailwind scans Streamdown's files for any utility classes used in the component.
+
+## Why do I get `Module not found: Can't resolve 'vscode-jsonrpc'` errors with Next.js?
+
+If you run into bundling errors related to `vscode-jsonrpc`, `langium`, or other Node.js-only packages when using Streamdown with Next.js/Turbopack, this is due to Mermaid's dependency tree including server-side packages. To fix this, configure Next.js to exclude these packages from client-side bundling:
+
+```js title="next.config.js"
+export default {
+  serverComponentsExternalPackages: ['langium', '@mermaid-js/parser'],
+
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'vscode-jsonrpc': false,
+        'langium': false,
+      };
+    }
+    return config;
+  },
+};
+```
+
+This tells Next.js not to bundle these Node.js-only dependencies for the browser. This is an upstream issue being tracked in the [Mermaid repository](https://github.com/mermaid-js/mermaid/issues/7094).
