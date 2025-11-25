@@ -278,7 +278,9 @@ export const Streamdown = memo(
       let singleDollarEnabled = false;
       if (Array.isArray(remarkPlugins)) {
         const mathPlugin = remarkPlugins.find((plugin) =>
-          Array.isArray(plugin) ? plugin[0] === remarkMath : plugin === remarkMath
+          Array.isArray(plugin)
+            ? plugin[0] === remarkMath
+            : plugin === remarkMath
         );
         if (mathPlugin && Array.isArray(mathPlugin) && mathPlugin[1]) {
           const config = mathPlugin[1] as { singleDollarTextMath?: boolean };
@@ -289,11 +291,11 @@ export const Streamdown = memo(
       // Only load CSS if content contains math syntax
       const content = typeof children === "string" ? children : "";
       const hasDoubleDollar = content.includes("$$");
-      const hasSingleDollar = singleDollarEnabled && (
-        /[^$]\$[^$]/.test(content) ||
-        /^\$[^$]/.test(content) ||
-        /[^$]\$$/.test(content)
-      );
+      const hasSingleDollar =
+        singleDollarEnabled &&
+        (/[^$]\$[^$]/.test(content) ||
+          /^\$[^$]/.test(content) ||
+          /[^$]\$$/.test(content));
       const hasMathSyntax = hasDoubleDollar || hasSingleDollar;
 
       if (hasMathSyntax) {
@@ -306,7 +308,7 @@ export const Streamdown = memo(
     if (mode === "static") {
       return (
         <StreamdownContext.Provider value={contextValue}>
-          <div className={cn("space-y-4", className)}>
+          <div className={cn("space-y-4 whitespace-normal", className)}>
             <Markdown
               components={mergedComponents}
               rehypePlugins={rehypePlugins}
@@ -323,7 +325,7 @@ export const Streamdown = memo(
     // Streaming mode: parse into blocks with memoization and incomplete markdown handling
     return (
       <StreamdownContext.Provider value={contextValue}>
-        <div className={cn("space-y-4", className)}>
+        <div className={cn("space-y-4 whitespace-normal", className)}>
           {blocksToRender.map((block, index) => (
             <BlockComponent
               components={mergedComponents}
