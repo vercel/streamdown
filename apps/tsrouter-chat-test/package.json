@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3000"
+    "dev": "vite dev --port 3002"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.1",
