@@ -1,5 +1,12 @@
 # streamdown
 
+## 1.6.8
+
+### Patch Changes
+
+- 6fc3fa0: fix excessive spacing above tables
+- b2e832f: fix: validate languages in code blocks
+
 ## 1.6.7
 
 ### Patch Changes
