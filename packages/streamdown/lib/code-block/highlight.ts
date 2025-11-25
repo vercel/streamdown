@@ -5,6 +5,7 @@ import {
   bundledLanguages,
   type Highlighter,
   type TokensResult,
+  SpecialLanguage,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
@@ -21,14 +22,14 @@ const subscribers = new Map<string, Set<(result: TokensResult) => void>>();
 
 // Helper to generate cache key for highlighter
 const getHighlighterCacheKey = (
-  language: BundledLanguage,
+  language: BundledLanguage | SpecialLanguage,
   themes: [BundledTheme, BundledTheme]
 ) => `${language}-${themes[0]}-${themes[1]}`;
 
 // Helper to generate cache key for tokens
 const getTokensCacheKey = (
   code: string,
-  language: BundledLanguage,
+  language: BundledLanguage | SpecialLanguage,
   themes: [BundledTheme, BundledTheme]
 ) => {
   // Use a hash of the first and last 100 chars + length for better cache key
@@ -44,10 +45,10 @@ const isLanguageSupported = (
   Object.hasOwn(bundledLanguages, language);
 
 export const createShiki = (
-  language: BundledLanguage,
+  language: BundledLanguage | SpecialLanguage,
   shikiTheme: [BundledTheme, BundledTheme]
 ) => {
-  const validLanguage = isLanguageSupported(language) ? language : "text";
+  const validLanguage: BundledLanguage | SpecialLanguage = isLanguageSupported(language) ? language : "text";
   
   const cacheKey = getHighlighterCacheKey(validLanguage, shikiTheme);
 
@@ -75,7 +76,7 @@ export const getHighlightedTokens = (
   shikiTheme: [BundledTheme, BundledTheme],
   callback?: (result: TokensResult) => void
 ): TokensResult | null => {
-  const validLanguage = isLanguageSupported(language) ? language : "text";
+  const validLanguage: BundledLanguage | SpecialLanguage = isLanguageSupported(language) ? language : "text";
   
   const tokensCacheKey = getTokensCacheKey(code, validLanguage, shikiTheme);
 
