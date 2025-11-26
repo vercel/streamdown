@@ -192,7 +192,7 @@ export const PanZoom = ({
       <div
         className={cn(
           "origin-center transition-transform duration-150 ease-out",
-          fullscreen && "flex h-full w-full items-center justify-center"
+          fullscreen && "flex w-full items-center justify-center"
         )}
         onPointerDown={handlePointerDown}
         ref={contentRef}
