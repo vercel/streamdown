@@ -47,6 +47,34 @@ export type {
   PluginConfig,
 } from "./lib/plugin-types";
 
+// Patterns for HTML indentation normalization
+// Matches if content starts with an HTML tag (possibly with leading whitespace)
+const HTML_BLOCK_START_PATTERN = /^[ \t]*<[\w!/?-]/;
+// Matches 4+ spaces/tabs before HTML tags at line starts
+const HTML_LINE_INDENT_PATTERN = /(^|\n)[ \t]{4,}(?=<[\w!/?-])/g;
+
+/**
+ * Normalizes indentation in HTML blocks to prevent Markdown parsers from
+ * treating indented HTML tags as code blocks (4+ spaces = code in Markdown).
+ *
+ * Useful when rendering AI-generated HTML content with nested tags that
+ * are indented for readability.
+ *
+ * @param content - The raw HTML/Markdown string to normalize
+ * @returns The normalized string with reduced indentation before HTML tags
+ */
+export const normalizeHtmlIndentation = (content: string): string => {
+  if (typeof content !== "string" || content.length === 0) {
+    return content;
+  }
+  // Only process if content starts with an HTML-like tag (possibly indented)
+  if (!HTML_BLOCK_START_PATTERN.test(content)) {
+    return content;
+  }
+  // Remove 4+ spaces/tabs before HTML tags at line starts
+  return content.replace(HTML_LINE_INDENT_PATTERN, "$1");
+};
+
 export type ControlsConfig =
   | boolean
   | {
@@ -93,6 +121,8 @@ export type StreamdownProps = Options & {
   BlockComponent?: React.ComponentType<BlockProps>;
   parseMarkdownIntoBlocksFn?: (markdown: string) => string[];
   parseIncompleteMarkdown?: boolean;
+  /** Normalize HTML block indentation to prevent 4+ spaces being treated as code blocks. @default false */
+  normalizeHtmlIndentation?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
   mermaid?: MermaidOptions;
@@ -169,6 +199,7 @@ export const StreamdownContext = createContext<StreamdownContextType>(
 type BlockProps = Options & {
   content: string;
   shouldParseIncompleteMarkdown: boolean;
+  shouldNormalizeHtmlIndentation: boolean;
   index: number;
 };
 
@@ -177,19 +208,30 @@ export const Block = memo(
   ({
     content,
     shouldParseIncompleteMarkdown: _,
+    shouldNormalizeHtmlIndentation,
     index: __,
     ...props
   }: BlockProps) => {
     // Note: remend is already applied to the entire markdown before parsing into blocks
     // in the Streamdown component, so we don't need to apply it again here
-    return <Markdown {...props}>{content}</Markdown>;
+    const normalizedContent =
+      typeof content === "string" && shouldNormalizeHtmlIndentation
+        ? normalizeHtmlIndentation(content)
+        : content;
+
+    return <Markdown {...props}>{normalizedContent}</Markdown>;
   },
   (prevProps, nextProps) => {
     // Deep comparison for better memoization
     if (prevProps.content !== nextProps.content) {
       return false;
     }
-
+    if (
+      prevProps.shouldNormalizeHtmlIndentation !==
+      nextProps.shouldNormalizeHtmlIndentation
+    ) {
+      return false;
+    }
     if (prevProps.index !== nextProps.index) {
       return false;
     }
@@ -238,6 +280,7 @@ export const Streamdown = memo(
     children,
     mode = "streaming",
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
+    normalizeHtmlIndentation: shouldNormalizeHtmlIndentation = false,
     components,
     rehypePlugins = defaultRehypePluginsArray,
     remarkPlugins = defaultRemarkPluginsArray,
@@ -463,6 +506,7 @@ export const Streamdown = memo(
                 key={blockKeys[index]}
                 rehypePlugins={mergedRehypePlugins}
                 remarkPlugins={mergedRemarkPlugins}
+                shouldNormalizeHtmlIndentation={shouldNormalizeHtmlIndentation}
                 shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
                 {...props}
               />
@@ -480,6 +524,7 @@ export const Streamdown = memo(
     prevProps.mode === nextProps.mode &&
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&
-    prevProps.linkSafety === nextProps.linkSafety
+    prevProps.linkSafety === nextProps.linkSafety &&
+    prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation
 );
 Streamdown.displayName = "Streamdown";
