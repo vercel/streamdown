@@ -30,6 +30,34 @@ export type { MermaidConfig } from "mermaid";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export { parseIncompleteMarkdown } from "./lib/parse-incomplete-markdown";
 
+// Patterns for HTML indentation normalization
+// Matches if content starts with an HTML tag (possibly with leading whitespace)
+const HTML_BLOCK_START_PATTERN = /^[ \t]*<[\w!/?-]/;
+// Matches 4+ spaces/tabs before HTML tags at line starts
+const HTML_LINE_INDENT_PATTERN = /(^|\n)[ \t]{4,}(?=<[\w!/?-])/g;
+
+/**
+ * Normalizes indentation in HTML blocks to prevent Markdown parsers from
+ * treating indented HTML tags as code blocks (4+ spaces = code in Markdown).
+ *
+ * Useful when rendering AI-generated HTML content with nested tags that
+ * are indented for readability.
+ *
+ * @param content - The raw HTML/Markdown string to normalize
+ * @returns The normalized string with reduced indentation before HTML tags
+ */
+export const normalizeHtmlIndentation = (content: string): string => {
+  if (typeof content !== "string" || content.length === 0) {
+    return content;
+  }
+  // Only process if content starts with an HTML-like tag (possibly indented)
+  if (!HTML_BLOCK_START_PATTERN.test(content)) {
+    return content;
+  }
+  // Remove 4+ spaces/tabs before HTML tags at line starts
+  return content.replace(HTML_LINE_INDENT_PATTERN, "$1");
+};
+
 export type ControlsConfig =
   | boolean
   | {
@@ -61,6 +89,8 @@ export type StreamdownProps = Options & {
   BlockComponent?: React.ComponentType<BlockProps>;
   parseMarkdownIntoBlocksFn?: (markdown: string) => string[];
   parseIncompleteMarkdown?: boolean;
+  /** Normalize HTML block indentation to prevent 4+ spaces being treated as code blocks. @default false */
+  normalizeHtmlIndentation?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
   mermaid?: MermaidOptions;
@@ -117,17 +147,28 @@ export const StreamdownContext = createContext<StreamdownContextType>(
 type BlockProps = Options & {
   content: string;
   shouldParseIncompleteMarkdown: boolean;
+  shouldNormalizeHtmlIndentation: boolean;
   index: number;
 };
 
 export const Block = memo(
-  ({ content, shouldParseIncompleteMarkdown, ...props }: BlockProps) => {
+  ({
+    content,
+    shouldParseIncompleteMarkdown,
+    shouldNormalizeHtmlIndentation,
+    ...props
+  }: BlockProps) => {
+    const normalizedContent =
+      typeof content === "string" && shouldNormalizeHtmlIndentation
+        ? normalizeHtmlIndentation(content)
+        : content;
+
     const parsedContent = useMemo(
       () =>
-        typeof content === "string" && shouldParseIncompleteMarkdown
-          ? parseIncompleteMarkdown(content.trim())
-          : content,
-      [content, shouldParseIncompleteMarkdown]
+        typeof normalizedContent === "string" && shouldParseIncompleteMarkdown
+          ? parseIncompleteMarkdown(normalizedContent.trim())
+          : normalizedContent,
+      [normalizedContent, shouldParseIncompleteMarkdown]
     );
 
     return <Markdown {...props}>{parsedContent}</Markdown>;
@@ -140,6 +181,12 @@ export const Block = memo(
     if (
       prevProps.shouldParseIncompleteMarkdown !==
       nextProps.shouldParseIncompleteMarkdown
+    ) {
+      return false;
+    }
+    if (
+      prevProps.shouldNormalizeHtmlIndentation !==
+      nextProps.shouldNormalizeHtmlIndentation
     ) {
       return false;
     }
@@ -192,6 +239,7 @@ export const Streamdown = memo(
     children,
     mode = "streaming",
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
+    normalizeHtmlIndentation: shouldNormalizeHtmlIndentation = false,
     components,
     rehypePlugins = defaultRehypePluginsArray,
     remarkPlugins = defaultRemarkPluginsArray,
@@ -334,6 +382,7 @@ export const Streamdown = memo(
               key={blockKeys[index]}
               rehypePlugins={rehypePlugins}
               remarkPlugins={remarkPlugins}
+              shouldNormalizeHtmlIndentation={shouldNormalizeHtmlIndentation}
               shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
               {...props}
             />
@@ -346,6 +395,7 @@ export const Streamdown = memo(
     prevProps.children === nextProps.children &&
     prevProps.shikiTheme === nextProps.shikiTheme &&
     prevProps.isAnimating === nextProps.isAnimating &&
-    prevProps.mode === nextProps.mode
+    prevProps.mode === nextProps.mode &&
+    prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation
 );
 Streamdown.displayName = "Streamdown";
