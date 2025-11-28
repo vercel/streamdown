@@ -1,6 +1,21 @@
+"use client";
+
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import { Section } from "./section";
 
 export const MermaidDemo = () => {
+  const [mounted, setMounted] = useState(false);
+  const { resolvedTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
   const mermaidExample = `Interactive diagram rendering with manual control. Use the fullscreen, download, and copy buttons to interact with any Mermaid diagram.
 
 ## Simple Flowchart
@@ -46,7 +61,7 @@ sequenceDiagram
       description={
         <>
           Streamdown supports Mermaid diagrams with customizable themes and
-          fullscreen viewing. Current theme is "base".
+          fullscreen viewing. Theme automatically adapts to light/dark mode.
         </>
       }
       markdown={mermaidExample}
@@ -54,7 +69,7 @@ sequenceDiagram
       streamdownProps={{
         mermaid: {
           config: {
-            theme: "base",
+            theme: resolvedTheme === "dark" ? "dark" : "default",
           },
         },
         controls: true,
