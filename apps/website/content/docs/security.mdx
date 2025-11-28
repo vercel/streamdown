@@ -25,6 +25,7 @@ By default, Streamdown is configured with **permissive security** to allow maxim
 {
   allowedImagePrefixes: ["*"],  // All images allowed
   allowedLinkPrefixes: ["*"],   // All links allowed
+  allowedProtocols: ["*"],      // All protocols allowed
   defaultOrigin: undefined,     // No origin restriction
   allowDataImages: true,        // Base64 images allowed
 }
@@ -142,6 +143,7 @@ export default function ChatMessage({ content, isAIGenerated }) {
     // More permissive for user content
     allowedLinkPrefixes: ['*'],
     allowedImagePrefixes: ['*'],
+    allowedProtocols: ['*'],
   };
 
   return (
