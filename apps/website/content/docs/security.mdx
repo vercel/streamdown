@@ -25,12 +25,63 @@ By default, Streamdown is configured with **permissive security** to allow maxim
 {
   allowedImagePrefixes: ["*"],  // All images allowed
   allowedLinkPrefixes: ["*"],   // All links allowed
+  allowedProtocols: ["*"],      // All protocols allowed
   defaultOrigin: undefined,     // No origin restriction
   allowDataImages: true,        // Base64 images allowed
 }
 ```
 
 This works well for trusted content but should be tightened for untrusted sources.
+
+## Restricting Protocols
+
+By default, all protocols are allowed. You can restrict which URL protocols are permitted:
+
+```tsx
+import { Streamdown, defaultRehypePlugins } from 'streamdown';
+import { harden } from 'rehype-harden';
+
+export default function Page() {
+  return (
+    <Streamdown
+      rehypePlugins={[
+        defaultRehypePlugins.raw,
+        defaultRehypePlugins.katex,
+        [
+          harden,
+          {
+            allowedProtocols: [
+              'http',
+              'https',
+              'mailto',
+            ],
+          },
+        ],
+      ]}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+This is useful for security-sensitive applications where you want to prevent custom protocol schemes like `javascript:`, `data:`, or desktop app protocols.
+
+### Custom Protocol Schemes
+
+To enable custom protocol schemes like `postman://`, `vscode://`, or `slack://`, include them in the `allowedProtocols` array:
+
+```tsx
+{
+  allowedProtocols: [
+    'http',
+    'https',
+    'postman',
+    'vscode',
+    'slack',
+  ],
+}
+```
 
 ## Restricting Links
 
@@ -137,11 +188,17 @@ export default function ChatMessage({ content, isAIGenerated }) {
     allowedImagePrefixes: [
       'https://your-cdn.com',
     ],
+    allowedProtocols: [
+      'http',
+      'https',
+      'mailto',
+    ],
     allowDataImages: false,
   } : {
     // More permissive for user content
     allowedLinkPrefixes: ['*'],
     allowedImagePrefixes: ['*'],
+    allowedProtocols: ['*'],
   };
 
   return (

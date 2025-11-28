@@ -76,6 +76,7 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
     {
       allowedImagePrefixes: ["*"],
       allowedLinkPrefixes: ["*"],
+      allowedProtocols: ["*"],
       defaultOrigin: undefined,
       allowDataImages: true,
     },

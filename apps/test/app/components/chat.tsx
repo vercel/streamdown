@@ -165,6 +165,7 @@ export const Chat = ({ models }: ChatProps) => {
                             {
                               allowedImagePrefixes: ["*"],
                               allowedLinkPrefixes: ["*"],
+                              allowedProtocols: ["*"],
                               defaultOrigin: undefined,
                               allowDataImages: true,
                             },
