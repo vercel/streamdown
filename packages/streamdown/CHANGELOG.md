@@ -1,5 +1,13 @@
 # streamdown
 
+## 1.6.9
+
+### Patch Changes
+
+- 57dec2a: Restores pan-zoom component to normal size when mermaid component is maximized
+- a954419: Bump rehype-harden
+- 99797c2: chore: move unified from devDependencies to dependencies
+
 ## 1.6.8
 
 ### Patch Changes
