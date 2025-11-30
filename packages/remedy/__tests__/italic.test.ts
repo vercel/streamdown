@@ -70,9 +70,7 @@ describe("italic formatting with asterisks (*)", () => {
   });
 
   it("should still complete italic formatting with asterisks when not word-internal", () => {
-    expect(parseIncompleteMarkdown("This is *italic")).toBe(
-      "This is *italic*"
-    );
+    expect(parseIncompleteMarkdown("This is *italic")).toBe("This is *italic*");
     expect(parseIncompleteMarkdown("*word* and more text")).toBe(
       "*word* and more text"
     );
@@ -103,9 +101,7 @@ describe("italic formatting with single underscores (_)", () => {
     expect(parseIncompleteMarkdown(text)).toBe(text);
 
     const text2 = "some\\_text_with_underscores";
-    expect(parseIncompleteMarkdown(text2)).toBe(
-      "some\\_text_with_underscores"
-    );
+    expect(parseIncompleteMarkdown(text2)).toBe("some\\_text_with_underscores");
   });
 
   it("should handle mixed escaped and unescaped underscores correctly", () => {

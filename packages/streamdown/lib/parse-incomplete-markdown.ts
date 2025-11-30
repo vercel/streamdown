@@ -44,7 +44,10 @@ const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\]\(([^)]+)$/;
 
 // Helper function to find the matching opening bracket for a closing bracket
 // Handles nested brackets correctly by searching backwards
-const findMatchingOpeningBracket = (text: string, closeIndex: number): number => {
+const findMatchingOpeningBracket = (
+  text: string,
+  closeIndex: number
+): number => {
   let depth = 1;
   for (let i = closeIndex - 1; i >= 0; i -= 1) {
     if (text[i] === "]") {
@@ -61,7 +64,10 @@ const findMatchingOpeningBracket = (text: string, closeIndex: number): number =>
 
 // Helper function to find the matching closing bracket for an opening bracket
 // Handles nested brackets correctly
-const findMatchingClosingBracket = (text: string, openIndex: number): number => {
+const findMatchingClosingBracket = (
+  text: string,
+  openIndex: number
+): number => {
   let depth = 1;
   for (let i = openIndex + 1; i < text.length; i += 1) {
     if (text[i] === "[") {
@@ -114,9 +120,13 @@ const handleIncompleteLinksAndImages = (text: string): string => {
       // Now find the matching opening bracket for the ] before (
       const openBracketIndex = findMatchingOpeningBracket(text, lastParenIndex);
 
-      if (openBracketIndex !== -1 && !isInsideCodeBlock(text, openBracketIndex)) {
+      if (
+        openBracketIndex !== -1 &&
+        !isInsideCodeBlock(text, openBracketIndex)
+      ) {
         // Check if there's a ! before the [
-        const isImage = openBracketIndex > 0 && text[openBracketIndex - 1] === "!";
+        const isImage =
+          openBracketIndex > 0 && text[openBracketIndex - 1] === "!";
         const startIndex = isImage ? openBracketIndex - 1 : openBracketIndex;
 
         // Extract everything before this link/image

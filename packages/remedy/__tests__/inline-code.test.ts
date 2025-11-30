@@ -3,9 +3,7 @@ import { parseIncompleteMarkdown } from "../src";
 
 describe("inline code formatting (`)", () => {
   it("should complete incomplete inline code", () => {
-    expect(parseIncompleteMarkdown("Text with `code")).toBe(
-      "Text with `code`"
-    );
+    expect(parseIncompleteMarkdown("Text with `code")).toBe("Text with `code`");
     expect(parseIncompleteMarkdown("`incomplete")).toBe("`incomplete`");
   });
 

@@ -83,8 +83,6 @@ describe("bold-italic formatting (***)", () => {
     expect(parseIncompleteMarkdown("***incomplete")).toBe("***incomplete***");
 
     // Test lines 137-138: text that ends with >= 3 asterisks (but not 4+ consecutive)
-    expect(parseIncompleteMarkdown("***word text***")).toBe(
-      "***word text***"
-    );
+    expect(parseIncompleteMarkdown("***word text***")).toBe("***word text***");
   });
 });

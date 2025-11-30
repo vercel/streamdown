@@ -112,24 +112,24 @@ export const MermaidDownloadDropdown = ({
           <button
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => downloadMermaid("svg")}
-            type="button"
             title="Download diagram as SVG"
+            type="button"
           >
             SVG
           </button>
           <button
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => downloadMermaid("png")}
-            type="button"
             title="Download diagram as PNG"
+            type="button"
           >
             PNG
           </button>
           <button
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => downloadMermaid("mmd")}
-            type="button"
             title="Download diagram as MMD"
+            type="button"
           >
             MMD
           </button>

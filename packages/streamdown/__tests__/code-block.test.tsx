@@ -450,9 +450,7 @@ describe("CodeBlock with multiple languages", () => {
     });
 
     // Verify the code block rendered successfully with content from the fixture
-    const codeBlock = container.querySelector(
-      '[data-streamdown="code-block"]'
-    );
+    const codeBlock = container.querySelector('[data-streamdown="code-block"]');
     expect(codeBlock?.innerHTML).toContain("Napoleon");
 
     // Verify the component is showing HTML language
