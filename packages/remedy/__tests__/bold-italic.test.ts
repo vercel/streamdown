@@ -60,4 +60,31 @@ describe("bold-italic formatting (***)", () => {
     expect(parseIncompleteMarkdown(chunks[3])).toBe(chunks[3]);
     expect(parseIncompleteMarkdown(chunks[4])).toBe(chunks[4]);
   });
+
+  it("should handle text ending with multiple consecutive asterisks", () => {
+    // Test the case where text ends with trailing asterisks (>= 3)
+    expect(parseIncompleteMarkdown("text ***")).toBe("text ***");
+    expect(parseIncompleteMarkdown("text ****")).toBe("text ****");
+    expect(parseIncompleteMarkdown("text *****")).toBe("text *****");
+    expect(parseIncompleteMarkdown("text ******")).toBe("text ******");
+
+    // Test text that ends without any space (lines 136-138 in emphasis-handlers.ts)
+    expect(parseIncompleteMarkdown("text***")).toBe("text***");
+    expect(parseIncompleteMarkdown("word****")).toBe("word****");
+    expect(parseIncompleteMarkdown("end******")).toBe("end******");
+
+    // Test cases where countTripleAsterisks is called with trailing asterisks
+    expect(parseIncompleteMarkdown("***start***end***")).toBe(
+      "***start***end***"
+    );
+    // 6 asterisks at end = 2 sets of ***, total 3 sets (odd), but this might not close
+    // Let me test with different patterns
+    expect(parseIncompleteMarkdown("***text***")).toBe("***text***");
+    expect(parseIncompleteMarkdown("***incomplete")).toBe("***incomplete***");
+
+    // Test lines 137-138: text that ends with >= 3 asterisks (but not 4+ consecutive)
+    expect(parseIncompleteMarkdown("***word text***")).toBe(
+      "***word text***"
+    );
+  });
 });

@@ -89,4 +89,14 @@ describe("list handling", () => {
     expect(parseIncompleteMarkdown("- ~~")).toBe("- ~~");
     expect(parseIncompleteMarkdown("- `")).toBe("- `");
   });
+
+  it("should not complete list items with emphasis markers spanning multiple lines", () => {
+    // When a list item starts with ** followed by content with newline, don't complete
+    expect(parseIncompleteMarkdown("- **text\nmore text")).toBe(
+      "- **text\nmore text"
+    );
+    expect(parseIncompleteMarkdown("* **content\n* Another item")).toBe(
+      "* **content\n* Another item"
+    );
+  });
 });

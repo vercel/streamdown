@@ -40,4 +40,24 @@ describe("inline code formatting (`)", () => {
       '```python print("Hello, Sunnyvale!")```'
     );
   });
+
+  it("should not modify text with complete triple backticks at the end", () => {
+    const text = "```code```";
+    expect(parseIncompleteMarkdown(text)).toBe(text);
+
+    const text2 = "```code```\n";
+    expect(parseIncompleteMarkdown(text2)).toBe(text2);
+
+    // Even number of triple backticks with newlines are complete
+    const text3 = "```\ncode\n```";
+    expect(parseIncompleteMarkdown(text3)).toBe(text3);
+
+    // Test the special case (lines 41-47) where text ends with ``` and has even count
+    // This case is for inline triple backticks without newlines
+    const text4 = "``````";
+    expect(parseIncompleteMarkdown(text4)).toBe(text4);
+
+    const text5 = "text``````";
+    expect(parseIncompleteMarkdown(text5)).toBe(text5);
+  });
 });

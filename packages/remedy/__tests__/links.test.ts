@@ -50,4 +50,23 @@ describe("link handling", () => {
       "Visit [our site](streamdown:incomplete-link)"
     );
   });
+
+  it("should handle nested brackets without matching closing bracket", () => {
+    // Case where there's an opening bracket with nested structure but no proper closing
+    expect(parseIncompleteMarkdown("Text [outer [inner")).toBe(
+      "Text [outer [inner](streamdown:incomplete-link)"
+    );
+    expect(parseIncompleteMarkdown("[foo [bar [baz")).toBe(
+      "[foo [bar [baz](streamdown:incomplete-link)"
+    );
+
+    // Test lines 82-83: link (not image) where findMatchingClosingBracket returns -1
+    // This happens when there's a [ with ] in text but improper nesting
+    expect(parseIncompleteMarkdown("Text [outer [inner]")).toBe(
+      "Text [outer [inner]](streamdown:incomplete-link)"
+    );
+    expect(parseIncompleteMarkdown("[link [nested] text")).toBe(
+      "[link [nested] text](streamdown:incomplete-link)"
+    );
+  });
 });

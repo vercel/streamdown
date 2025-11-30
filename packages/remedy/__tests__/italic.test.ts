@@ -44,6 +44,24 @@ describe("italic formatting with asterisks (*)", () => {
     expect(parseIncompleteMarkdown("234234*123")).toBe("234234*123");
     expect(parseIncompleteMarkdown("hello*world")).toBe("hello*world");
     expect(parseIncompleteMarkdown("test*123*test")).toBe("test*123*test");
+
+    // Test with mix of word-internal and formatting asterisks (lines 39-41)
+    expect(parseIncompleteMarkdown("*italic with some*var*name inside")).toBe(
+      "*italic with some*var*name inside*"
+    );
+    expect(parseIncompleteMarkdown("test*var and *incomplete italic")).toBe(
+      "test*var and *incomplete italic*"
+    );
+  });
+
+  it("should handle escaped asterisks correctly in countSingleAsterisks", () => {
+    // Test lines 29-31: escaped asterisks should be skipped
+    expect(parseIncompleteMarkdown("\\*escaped asterisk and *italic")).toBe(
+      "\\*escaped asterisk and *italic*"
+    );
+    expect(parseIncompleteMarkdown("*start \\* middle \\* end")).toBe(
+      "*start \\* middle \\* end*"
+    );
   });
 
   it("should handle asterisks between letters and numbers", () => {
@@ -111,5 +129,32 @@ describe("italic formatting with single underscores (_)", () => {
   it("should handle underscores with unicode word characters", () => {
     expect(parseIncompleteMarkdown("café_price")).toBe("café_price");
     expect(parseIncompleteMarkdown("naïve_approach")).toBe("naïve_approach");
+  });
+
+  it("should not count word-internal single underscores in countSingleUnderscores", () => {
+    // This tests the path where underscore is between word characters (lines 106-108)
+    expect(parseIncompleteMarkdown("some_variable_name")).toBe(
+      "some_variable_name"
+    );
+    expect(parseIncompleteMarkdown("test_123_value")).toBe("test_123_value");
+    expect(parseIncompleteMarkdown("_start with underscore")).toBe(
+      "_start with underscore_"
+    );
+
+    // Test with mix of word-internal and formatting underscores
+    expect(parseIncompleteMarkdown("_italic with some_var_name inside")).toBe(
+      "_italic with some_var_name inside_"
+    );
+    expect(parseIncompleteMarkdown("test_var and _incomplete italic")).toBe(
+      "test_var and _incomplete italic_"
+    );
+  });
+
+  it("should handle incomplete single underscore with trailing newlines", () => {
+    expect(parseIncompleteMarkdown("Text with _italic\n")).toBe(
+      "Text with _italic_\n"
+    );
+    expect(parseIncompleteMarkdown("_incomplete\n\n")).toBe("_incomplete_\n\n");
+    expect(parseIncompleteMarkdown("Start _text\n")).toBe("Start _text_\n");
   });
 });
