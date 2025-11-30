@@ -5,26 +5,24 @@ import {
   whitespaceOrMarkersPattern,
 } from "./patterns";
 
-// Completes incomplete inline code formatting (`)
-// Avoids completing if inside an incomplete code block
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex inline code handling logic with multiple edge cases for markdown parsing"
-export const handleIncompleteInlineCode = (text: string): string => {
-  // Check if we have inline triple backticks (starts with ``` and should end with ```)
-  // This pattern should ONLY match truly inline code (no newlines)
-  // Examples: ```code``` or ```python code```
+// Helper function to check for incomplete inline triple backticks
+const handleInlineTripleBackticks = (text: string): string | null => {
   const inlineTripleBacktickMatch = text.match(inlineTripleBacktickPattern);
-  if (inlineTripleBacktickMatch && !text.includes("\n")) {
-    // Check if it ends with exactly 2 backticks (incomplete)
-    if (text.endsWith("``") && !text.endsWith("```")) {
-      return `${text}\``;
-    }
-    // Already complete inline triple backticks
-    return text;
+  if (!inlineTripleBacktickMatch || text.includes("\n")) {
+    return null;
   }
 
-  // Check if we're inside a multi-line code block (complete or incomplete)
+  // Check if it ends with exactly 2 backticks (incomplete)
+  if (text.endsWith("``") && !text.endsWith("```")) {
+    return `${text}\``;
+  }
+  // Already complete inline triple backticks
+  return text;
+};
+
+// Helper function to check if we should skip processing due to multiline code blocks
+const shouldSkipMultilineCodeBlocks = (text: string): boolean => {
   const allTripleBackticks = (text.match(/```/g) || []).length;
-  const insideIncompleteCodeBlock = allTripleBackticks % 2 === 1;
 
   // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
   if (
@@ -32,8 +30,7 @@ export const handleIncompleteInlineCode = (text: string): string => {
     allTripleBackticks % 2 === 0 &&
     text.includes("\n")
   ) {
-    // We have complete multi-line code blocks, don't add any backticks
-    return text;
+    return true;
   }
 
   // Special case: if text ends with ```\n (triple backticks followed by newline)
@@ -42,13 +39,37 @@ export const handleIncompleteInlineCode = (text: string): string => {
     (text.endsWith("```\n") || text.endsWith("```")) &&
     allTripleBackticks % 2 === 0
   ) {
-    // Count all triple backticks - if even, it's complete
+    return true;
+  }
+
+  return false;
+};
+
+// Helper function to check if we're inside an incomplete code block
+const isInsideIncompleteCodeBlock = (text: string): boolean => {
+  const allTripleBackticks = (text.match(/```/g) || []).length;
+  return allTripleBackticks % 2 === 1;
+};
+
+// Completes incomplete inline code formatting (`)
+// Avoids completing if inside an incomplete code block
+export const handleIncompleteInlineCode = (text: string): string => {
+  // Check if we have inline triple backticks (starts with ``` and should end with ```)
+  // This pattern should ONLY match truly inline code (no newlines)
+  // Examples: ```code``` or ```python code```
+  const inlineResult = handleInlineTripleBackticks(text);
+  if (inlineResult !== null) {
+    return inlineResult;
+  }
+
+  // Don't modify text if we have complete multi-line code blocks
+  if (shouldSkipMultilineCodeBlocks(text)) {
     return text;
   }
 
   const inlineCodeMatch = text.match(inlineCodePattern);
 
-  if (inlineCodeMatch && !insideIncompleteCodeBlock) {
+  if (inlineCodeMatch && !isInsideIncompleteCodeBlock(text)) {
     // Don't close if there's no meaningful content after the opening marker
     // inlineCodeMatch[2] contains the content after `
     // Check if content is only whitespace or other emphasis markers

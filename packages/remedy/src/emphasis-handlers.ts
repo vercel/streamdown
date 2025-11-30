@@ -10,9 +10,67 @@ import {
 } from "./patterns";
 import { hasCompleteCodeBlock, isWithinMathBlock, isWordChar } from "./utils";
 
+// Helper function to check if an asterisk at the given index is a list marker
+const isAsteriskListMarker = (
+  text: string,
+  index: number,
+  nextChar: string
+): boolean => {
+  if (nextChar !== " " && nextChar !== "\t") {
+    return false;
+  }
+
+  // Look backwards to find the start of the current line
+  let lineStartIndex = 0;
+  for (let i = index - 1; i >= 0; i -= 1) {
+    if (text[i] === "\n") {
+      lineStartIndex = i + 1;
+      break;
+    }
+  }
+
+  // Check if this asterisk is at the beginning of a line (with optional whitespace)
+  for (let i = lineStartIndex; i < index; i += 1) {
+    if (text[i] !== " " && text[i] !== "\t") {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+// Helper function to check if an asterisk should be skipped
+const shouldSkipAsterisk = (
+  text: string,
+  index: number,
+  prevChar: string,
+  nextChar: string
+): boolean => {
+  // Skip if escaped with backslash
+  if (prevChar === "\\") {
+    return true;
+  }
+
+  // Skip if part of ** or ***
+  if (prevChar === "*" || nextChar === "*") {
+    return true;
+  }
+
+  // Skip if asterisk is word-internal (between word characters)
+  if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
+    return true;
+  }
+
+  // Skip if this is a list marker
+  if (isAsteriskListMarker(text, index, nextChar)) {
+    return true;
+  }
+
+  return false;
+};
+
 // OPTIMIZATION: Counts single asterisks without split("").reduce()
 // Counts single asterisks that are not part of double asterisks, not escaped, not list markers, and not word-internal
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
 export const countSingleAsterisks = (text: string): number => {
   let count = 0;
   const len = text.length;
@@ -25,57 +83,48 @@ export const countSingleAsterisks = (text: string): number => {
     const prevChar = index > 0 ? text[index - 1] : "";
     const nextChar = index < len - 1 ? text[index + 1] : "";
 
-    // Skip if escaped with backslash
-    if (prevChar === "\\") {
-      continue;
+    if (!shouldSkipAsterisk(text, index, prevChar, nextChar)) {
+      count += 1;
     }
-
-    // Skip if part of ** or ***
-    if (prevChar === "*" || nextChar === "*") {
-      continue;
-    }
-
-    // Skip if asterisk is word-internal (between word characters)
-    if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
-      continue;
-    }
-
-    // Check if this is a list marker (asterisk at start of line followed by space)
-    // Look backwards to find the start of the current line
-    let lineStartIndex = 0;
-    for (let i = index - 1; i >= 0; i -= 1) {
-      if (text[i] === "\n") {
-        lineStartIndex = i + 1;
-        break;
-      }
-    }
-
-    // Check if this asterisk is at the beginning of a line (with optional whitespace)
-    let isListMarker = true;
-    for (let i = lineStartIndex; i < index; i += 1) {
-      if (text[i] !== " " && text[i] !== "\t") {
-        isListMarker = false;
-        break;
-      }
-    }
-
-    if (isListMarker && (nextChar === " " || nextChar === "\t")) {
-      continue;
-    }
-
-    count += 1;
   }
 
   return count;
 };
 
+// Helper function to check if an underscore should be skipped
+const shouldSkipUnderscore = (
+  text: string,
+  index: number,
+  prevChar: string,
+  nextChar: string
+): boolean => {
+  // Skip if escaped with backslash
+  if (prevChar === "\\") {
+    return true;
+  }
+
+  // Skip if within math block (only check if text has dollar signs)
+  const hasMathBlocks = text.includes("$");
+  if (hasMathBlocks && isWithinMathBlock(text, index)) {
+    return true;
+  }
+
+  // Skip if part of __
+  if (prevChar === "_" || nextChar === "_") {
+    return true;
+  }
+
+  // Skip if underscore is word-internal (between word characters)
+  if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
+    return true;
+  }
+
+  return false;
+};
+
 // OPTIMIZATION: Counts single underscores without split("").reduce()
 // Counts single underscores that are not part of double underscores, not escaped, and not in math blocks
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex character counting logic with multiple edge cases"
 export const countSingleUnderscores = (text: string): number => {
-  // OPTIMIZATION: For large texts, if there are no dollar signs, skip math block checking entirely
-  const hasMathBlocks = text.includes("$");
-
   let count = 0;
   const len = text.length;
 
@@ -87,27 +136,9 @@ export const countSingleUnderscores = (text: string): number => {
     const prevChar = index > 0 ? text[index - 1] : "";
     const nextChar = index < len - 1 ? text[index + 1] : "";
 
-    // Skip if escaped with backslash
-    if (prevChar === "\\") {
-      continue;
+    if (!shouldSkipUnderscore(text, index, prevChar, nextChar)) {
+      count += 1;
     }
-
-    // Skip if within math block (only check if text has dollar signs)
-    if (hasMathBlocks && isWithinMathBlock(text, index)) {
-      continue;
-    }
-
-    // Skip if part of __
-    if (prevChar === "_" || nextChar === "_") {
-      continue;
-    }
-
-    // Skip if underscore is word-internal (between word characters)
-    if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
-      continue;
-    }
-
-    count += 1;
   }
 
   return count;
@@ -237,8 +268,34 @@ export const handleIncompleteDoubleUnderscoreItalic = (
   return text;
 };
 
+// Helper function to find the first single asterisk index
+const findFirstSingleAsteriskIndex = (text: string): number => {
+  for (let i = 0; i < text.length; i += 1) {
+    if (
+      text[i] === "*" &&
+      text[i - 1] !== "*" &&
+      text[i + 1] !== "*" &&
+      text[i - 1] !== "\\"
+    ) {
+      // Check if asterisk is word-internal (between word characters)
+      const prevChar = i > 0 ? text[i - 1] : "";
+      const nextChar = i < text.length - 1 ? text[i + 1] : "";
+      if (
+        prevChar &&
+        nextChar &&
+        isWordChar(prevChar) &&
+        isWordChar(nextChar)
+      ) {
+        continue;
+      }
+
+      return i;
+    }
+  }
+  return -1;
+};
+
 // Completes incomplete italic formatting with single asterisks (*)
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex italic handling logic with multiple edge cases for markdown parsing"
 export const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
@@ -247,64 +304,85 @@ export const handleIncompleteSingleAsteriskItalic = (text: string): string => {
 
   const singleAsteriskMatch = text.match(singleAsteriskPattern);
 
-  if (singleAsteriskMatch) {
-    // Find the first single asterisk position (not part of ** and not word-internal)
-    let firstSingleAsteriskIndex = -1;
-    for (let i = 0; i < text.length; i += 1) {
-      if (
-        text[i] === "*" &&
-        text[i - 1] !== "*" &&
-        text[i + 1] !== "*" &&
-        text[i - 1] !== "\\"
-      ) {
-        // Check if asterisk is word-internal (between word characters)
-        const prevChar = i > 0 ? text[i - 1] : "";
-        const nextChar = i < text.length - 1 ? text[i + 1] : "";
-        if (
-          prevChar &&
-          nextChar &&
-          isWordChar(prevChar) &&
-          isWordChar(nextChar)
-        ) {
-          continue;
-        }
+  if (!singleAsteriskMatch) {
+    return text;
+  }
 
-        firstSingleAsteriskIndex = i;
-        break;
-      }
-    }
+  const firstSingleAsteriskIndex = findFirstSingleAsteriskIndex(text);
 
-    if (firstSingleAsteriskIndex === -1) {
-      return text;
-    }
+  if (firstSingleAsteriskIndex === -1) {
+    return text;
+  }
 
-    // Get content after the first single asterisk
-    const contentAfterFirstAsterisk = text.substring(
-      firstSingleAsteriskIndex + 1
-    );
+  // Get content after the first single asterisk
+  const contentAfterFirstAsterisk = text.substring(
+    firstSingleAsteriskIndex + 1
+  );
 
-    // Check if there's meaningful content after the asterisk
-    // Don't close if content is only whitespace or emphasis markers
-    if (
-      !contentAfterFirstAsterisk ||
-      whitespaceOrMarkersPattern.test(contentAfterFirstAsterisk)
-    ) {
-      return text;
-    }
+  // Check if there's meaningful content after the asterisk
+  // Don't close if content is only whitespace or emphasis markers
+  if (
+    !contentAfterFirstAsterisk ||
+    whitespaceOrMarkersPattern.test(contentAfterFirstAsterisk)
+  ) {
+    return text;
+  }
 
-    const singleAsterisks = countSingleAsterisks(text);
-    if (singleAsterisks % 2 === 1) {
-      return `${text}*`;
-    }
+  const singleAsterisks = countSingleAsterisks(text);
+  if (singleAsterisks % 2 === 1) {
+    return `${text}*`;
   }
 
   return text;
 };
 
+// Helper function to find the first single underscore index
+const findFirstSingleUnderscoreIndex = (text: string): number => {
+  for (let i = 0; i < text.length; i += 1) {
+    if (
+      text[i] === "_" &&
+      text[i - 1] !== "_" &&
+      text[i + 1] !== "_" &&
+      text[i - 1] !== "\\" &&
+      !isWithinMathBlock(text, i)
+    ) {
+      // Check if underscore is word-internal (between word characters)
+      const prevChar = i > 0 ? text[i - 1] : "";
+      const nextChar = i < text.length - 1 ? text[i + 1] : "";
+      if (
+        prevChar &&
+        nextChar &&
+        isWordChar(prevChar) &&
+        isWordChar(nextChar)
+      ) {
+        continue;
+      }
+
+      return i;
+    }
+  }
+  return -1;
+};
+
+// Helper function to insert closing underscore, handling trailing newlines
+const insertClosingUnderscore = (text: string): string => {
+  // If text ends with newline(s), insert underscore before them
+  // Use string methods instead of regex to avoid ReDoS vulnerability
+  let endIndex = text.length;
+  while (endIndex > 0 && text[endIndex - 1] === "\n") {
+    endIndex -= 1;
+  }
+  if (endIndex < text.length) {
+    const textBeforeNewlines = text.slice(0, endIndex);
+    const trailingNewlines = text.slice(endIndex);
+    return `${textBeforeNewlines}_${trailingNewlines}`;
+  }
+  return `${text}_`;
+};
+
 // Completes incomplete italic formatting with single underscores (_)
 export const handleIncompleteSingleUnderscoreItalic = (
   text: string
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex italic handling logic with multiple edge cases for markdown parsing"
 ): string => {
   // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
@@ -313,67 +391,33 @@ export const handleIncompleteSingleUnderscoreItalic = (
 
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
 
-  if (singleUnderscoreMatch) {
-    // Find the first single underscore position (not part of __ and not word-internal)
-    let firstSingleUnderscoreIndex = -1;
-    for (let i = 0; i < text.length; i += 1) {
-      if (
-        text[i] === "_" &&
-        text[i - 1] !== "_" &&
-        text[i + 1] !== "_" &&
-        text[i - 1] !== "\\" &&
-        !isWithinMathBlock(text, i)
-      ) {
-        // Check if underscore is word-internal (between word characters)
-        const prevChar = i > 0 ? text[i - 1] : "";
-        const nextChar = i < text.length - 1 ? text[i + 1] : "";
-        if (
-          prevChar &&
-          nextChar &&
-          isWordChar(prevChar) &&
-          isWordChar(nextChar)
-        ) {
-          continue;
-        }
+  if (!singleUnderscoreMatch) {
+    return text;
+  }
 
-        firstSingleUnderscoreIndex = i;
-        break;
-      }
-    }
+  const firstSingleUnderscoreIndex = findFirstSingleUnderscoreIndex(text);
 
-    if (firstSingleUnderscoreIndex === -1) {
-      return text;
-    }
+  if (firstSingleUnderscoreIndex === -1) {
+    return text;
+  }
 
-    // Get content after the first single underscore
-    const contentAfterFirstUnderscore = text.substring(
-      firstSingleUnderscoreIndex + 1
-    );
+  // Get content after the first single underscore
+  const contentAfterFirstUnderscore = text.substring(
+    firstSingleUnderscoreIndex + 1
+  );
 
-    // Check if there's meaningful content after the underscore
-    // Don't close if content is only whitespace or emphasis markers
-    if (
-      !contentAfterFirstUnderscore ||
-      whitespaceOrMarkersPattern.test(contentAfterFirstUnderscore)
-    ) {
-      return text;
-    }
+  // Check if there's meaningful content after the underscore
+  // Don't close if content is only whitespace or emphasis markers
+  if (
+    !contentAfterFirstUnderscore ||
+    whitespaceOrMarkersPattern.test(contentAfterFirstUnderscore)
+  ) {
+    return text;
+  }
 
-    const singleUnderscores = countSingleUnderscores(text);
-    if (singleUnderscores % 2 === 1) {
-      // If text ends with newline(s), insert underscore before them
-      // Use string methods instead of regex to avoid ReDoS vulnerability
-      let endIndex = text.length;
-      while (endIndex > 0 && text[endIndex - 1] === "\n") {
-        endIndex -= 1;
-      }
-      if (endIndex < text.length) {
-        const textBeforeNewlines = text.slice(0, endIndex);
-        const trailingNewlines = text.slice(endIndex);
-        return `${textBeforeNewlines}_${trailingNewlines}`;
-      }
-      return `${text}_`;
-    }
+  const singleUnderscores = countSingleUnderscores(text);
+  if (singleUnderscores % 2 === 1) {
+    return insertClosingUnderscore(text);
   }
 
   return text;
