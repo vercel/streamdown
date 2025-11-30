@@ -24,6 +24,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "postbuild": "node scripts/postbuild.js",
     "test": "vitest run",
     "test:ui": "vitest --ui run",
     "test:coverage": "vitest --coverage run",
