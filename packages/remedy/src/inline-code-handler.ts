@@ -1,12 +1,9 @@
-import {
-  countSingleBackticks,
-  isPartOfTripleBacktick,
-} from "./code-block-utils.js";
+import { countSingleBackticks } from "./code-block-utils";
 import {
   inlineCodePattern,
   inlineTripleBacktickPattern,
   whitespaceOrMarkersPattern,
-} from "./patterns.js";
+} from "./patterns";
 
 // Completes incomplete inline code formatting (`)
 // Avoids completing if inside an incomplete code block

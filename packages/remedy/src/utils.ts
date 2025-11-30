@@ -1,4 +1,4 @@
-import { letterNumberUnderscorePattern } from "./patterns.js";
+import { letterNumberUnderscorePattern } from "./patterns";
 
 // OPTIMIZATION: Precompute which characters are word characters
 // Using ASCII fast path before falling back to Unicode regex

@@ -1,10 +1,6 @@
-import {
-  strikethroughPattern,
-  whitespaceOrMarkersPattern,
-} from "./patterns.js";
+import { strikethroughPattern, whitespaceOrMarkersPattern } from "./patterns";
 
 // Completes incomplete strikethrough formatting (~~)
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex markdown parsing logic with multiple edge cases"
 export const handleIncompleteStrikethrough = (text: string): string => {
   const strikethroughMatch = text.match(strikethroughPattern);
 

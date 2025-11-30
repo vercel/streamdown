@@ -4,11 +4,11 @@ import {
   handleIncompleteDoubleUnderscoreItalic,
   handleIncompleteSingleAsteriskItalic,
   handleIncompleteSingleUnderscoreItalic,
-} from "./emphasis-handlers.js";
-import { handleIncompleteInlineCode } from "./inline-code-handler.js";
-import { handleIncompleteBlockKatex } from "./katex-handler.js";
-import { handleIncompleteLinksAndImages } from "./link-image-handler.js";
-import { handleIncompleteStrikethrough } from "./strikethrough-handler.js";
+} from "./emphasis-handlers";
+import { handleIncompleteInlineCode } from "./inline-code-handler";
+import { handleIncompleteBlockKatex } from "./katex-handler";
+import { handleIncompleteLinksAndImages } from "./link-image-handler";
+import { handleIncompleteStrikethrough } from "./strikethrough-handler";
 
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
 export const parseIncompleteMarkdown = (text: string): string => {

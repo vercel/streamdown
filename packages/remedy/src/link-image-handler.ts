@@ -1,10 +1,11 @@
-import { isInsideCodeBlock } from "./code-block-utils.js";
+import { isInsideCodeBlock } from "./code-block-utils";
 import {
   findMatchingClosingBracket,
   findMatchingOpeningBracket,
-} from "./utils.js";
+} from "./utils";
 
 // Handles incomplete links and images by preserving them with a special marker
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex link and image handling logic with multiple edge cases for markdown parsing"
 export const handleIncompleteLinksAndImages = (text: string): string => {
   // Look for patterns like [text]( or ![text]( at the end of text
   // We need to handle nested brackets in the link text

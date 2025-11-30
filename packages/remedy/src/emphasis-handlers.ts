@@ -7,8 +7,8 @@ import {
   singleAsteriskPattern,
   singleUnderscorePattern,
   whitespaceOrMarkersPattern,
-} from "./patterns.js";
-import { hasCompleteCodeBlock, isWithinMathBlock, isWordChar } from "./utils.js";
+} from "./patterns";
+import { hasCompleteCodeBlock, isWithinMathBlock, isWordChar } from "./utils";
 
 // OPTIMIZATION: Counts single asterisks without split("").reduce()
 // Counts single asterisks that are not part of double asterisks, not escaped, not list markers, and not word-internal
@@ -141,7 +141,6 @@ export const countTripleAsterisks = (text: string): number => {
 };
 
 // Completes incomplete bold formatting (**)
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex markdown parsing logic with multiple edge cases"
 export const handleIncompleteBold = (text: string): string => {
   // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
@@ -192,8 +191,9 @@ export const handleIncompleteBold = (text: string): string => {
 };
 
 // Completes incomplete italic formatting with double underscores (__)
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex markdown parsing logic with multiple edge cases"
-export const handleIncompleteDoubleUnderscoreItalic = (text: string): string => {
+export const handleIncompleteDoubleUnderscoreItalic = (
+  text: string
+): string => {
   const italicMatch = text.match(italicPattern);
 
   if (italicMatch) {
@@ -302,8 +302,10 @@ export const handleIncompleteSingleAsteriskItalic = (text: string): string => {
 };
 
 // Completes incomplete italic formatting with single underscores (_)
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex italic handling logic with multiple edge cases for markdown parsing"
-export const handleIncompleteSingleUnderscoreItalic = (text: string): string => {
+export const handleIncompleteSingleUnderscoreItalic = (
+  text: string
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex italic handling logic with multiple edge cases for markdown parsing"
+): string => {
   // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
     return text;
