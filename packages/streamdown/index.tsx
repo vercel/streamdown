@@ -17,7 +17,7 @@ import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import { parseIncompleteMarkdown } from "remedy";
+import remedy from "remedy";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
@@ -125,7 +125,7 @@ export const Block = memo(
     const parsedContent = useMemo(
       () =>
         typeof content === "string" && shouldParseIncompleteMarkdown
-          ? parseIncompleteMarkdown(content.trim())
+          ? remedy(content.trim())
           : content,
       [content, shouldParseIncompleteMarkdown]
     );

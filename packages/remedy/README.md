@@ -41,16 +41,16 @@ npm i remedy
 ## Usage
 
 ```typescript
-import { parseIncompleteMarkdown } from "remedy";
+import remedy from "remedy";
 
 // During streaming
 const partialMarkdown = "This is **bold text";
-const completed = parseIncompleteMarkdown(partialMarkdown);
+const completed = remedy(partialMarkdown);
 // Result: "This is **bold text**"
 
 // With incomplete link
 const partialLink = "Check out [this link](https://exampl";
-const completed = parseIncompleteMarkdown(partialLink);
+const completed = remedy(partialLink);
 // Result: "Check out [this link](streamdown:incomplete-link)"
 ```
 
@@ -59,7 +59,7 @@ const completed = parseIncompleteMarkdown(partialLink);
 Remedy is a preprocessor that must be run on the raw Markdown string **before** passing it into the unified/remark processing pipeline:
 
 ```typescript
-import { parseIncompleteMarkdown } from "remedy";
+import remedy from "remedy";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
@@ -68,7 +68,7 @@ import rehypeStringify from "rehype-stringify";
 const streamedMarkdown = "This is **incomplete bold";
 
 // Run Remedy first to complete incomplete syntax
-const completedMarkdown = parseIncompleteMarkdown(streamedMarkdown);
+const completedMarkdown = remedy(streamedMarkdown);
 
 // Then process with unified
 const file = await unified()
