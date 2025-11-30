@@ -1,8 +1,8 @@
 import { render } from "@testing-library/react";
+import { parseIncompleteMarkdown } from "remedy";
 import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 import { parseMarkdownIntoBlocks } from "../lib/parse-blocks";
-import { parseIncompleteMarkdown } from "../lib/parse-incomplete-markdown";
 
 describe("LaTeX \\begin block (#54)", () => {
   it("should correctly process blocks when split by marked lexer", () => {

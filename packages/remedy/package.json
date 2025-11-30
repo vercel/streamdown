@@ -1,0 +1,42 @@
+{
+  "name": "remedy",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "homepage": "https://streamdown.ai/docs/termination",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vercel/streamdown.git",
+    "directory": "packages/remedy"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:ui": "vitest --ui run",
+    "test:coverage": "vitest --coverage run",
+    "bench": "vitest bench --run > results.txt",
+    "bench:ui": "vitest bench --ui --run"
+  },
+  "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
+  "license": "Apache-2.0",
+  "description": "Self-healing markdown. Intelligently parses and styles incomplete Markdown blocks.",
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "vitest": "^3.2.4"
+  },
+  "peerDependencies": {},
+  "dependencies": {}
+}

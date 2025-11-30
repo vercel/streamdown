@@ -1,5 +1,5 @@
+import { parseIncompleteMarkdown } from "remedy";
 import { bench, describe } from "vitest";
-import { parseIncompleteMarkdown } from "../lib/parse-incomplete-markdown";
 
 describe("parseIncompleteMarkdown - Basic Formatting", () => {
   const shortText = "This is **bold text";

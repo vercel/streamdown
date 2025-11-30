@@ -1,5 +1,5 @@
+import { parseIncompleteMarkdown } from "remedy";
 import { describe, expect, it } from "vitest";
-import { parseIncompleteMarkdown } from "../lib/parse-incomplete-markdown";
 
 const HELLO_WORLD_UNDERSCORE_REGEX = /hello_world_/;
 const TRAILING_UNDERSCORE_REGEX = /_$/;

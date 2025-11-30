@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseIncompleteMarkdown } from "../lib/parse-incomplete-markdown";
+import { parseIncompleteMarkdown } from "../src";
 
 describe("parseIncompleteMarkdown", () => {
   describe("basic input handling", () => {
