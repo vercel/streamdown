@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { parseIncompleteMarkdown } from "remend";
+import remend from "remend";
 import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 import { parseMarkdownIntoBlocks } from "../lib/parse-blocks";
@@ -29,7 +29,7 @@ $$`;
     // Check how the content is split into blocks
     const blocks = parseMarkdownIntoBlocks(content);
     for (const block of blocks) {
-      parseIncompleteMarkdown(block);
+      remend(block);
     }
 
     const { container } = render(

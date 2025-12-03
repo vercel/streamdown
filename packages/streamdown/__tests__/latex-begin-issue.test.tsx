@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { parseIncompleteMarkdown } from "remend";
+import remend from "remend";
 import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 import { parseMarkdownIntoBlocks } from "../lib/parse-blocks";
@@ -19,7 +19,7 @@ $$`;
 
     // Test parseIncompleteMarkdown on each block
     for (const block of blocks) {
-      parseIncompleteMarkdown(block);
+      remend(block);
     }
   });
 
