@@ -1,4 +1,4 @@
-import remend from "remend";
+import remend from "../src";
 import { describe, expect, it } from "vitest";
 
 const HELLO_WORLD_UNDERSCORE_REGEX = /hello_world_/;
