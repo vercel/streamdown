@@ -1,5 +1,13 @@
 # streamdown
 
+## 1.6.10
+
+### Patch Changes
+
+- d3ed120: Split out Remend
+- Updated dependencies [d3ed120]
+  - remend@1.0.1
+
 ## 1.6.9
 
 ### Patch Changes
