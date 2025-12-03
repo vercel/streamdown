@@ -14,12 +14,12 @@ Streamdown powers the [AI Elements Message](https://ai-sdk.dev/elements/componen
 
 - 🚀 **Drop-in replacement** for `react-markdown`
 - 🔄 **Streaming-optimized** - Handles incomplete Markdown gracefully
-- 🎨 **Unterminated block parsing** - Styles incomplete bold, italic, code, links, and headings
+- 🎨 **Unterminated block parsing** - Build with `remend` for better streaming quality
 - 📊 **GitHub Flavored Markdown** - Tables, task lists, and strikethrough support
 - 🔢 **Math rendering** - LaTeX equations via KaTeX
 - 📈 **Mermaid diagrams** - Render Mermaid diagrams as code blocks with a button to render them
 - 🎯 **Code syntax highlighting** - Beautiful code blocks with Shiki
-- 🛡️ **Security-first** - Built with rehype-harden for safe rendering
+- 🛡️ **Security-first** - Built with `rehype-harden` for safe rendering
 - ⚡ **Performance optimized** - Memoized rendering for efficient updates
 
 ## Installation
