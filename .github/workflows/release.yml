@@ -50,7 +50,7 @@ jobs:
         run: pnpm i
 
       - name: Build Packages
-        run: pnpm build --filter streamdown
+        run: pnpm build --filter streamdown --filter remend
 
       - name: Run Tests
         run: pnpm test
