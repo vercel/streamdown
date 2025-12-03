@@ -1,97 +1,95 @@
 import { describe, expect, it } from "vitest";
-import { parseIncompleteMarkdown } from "../src";
+import remend from "../src";
 
 describe("code block handling", () => {
   it("should handle incomplete multiline code blocks", () => {
-    expect(parseIncompleteMarkdown("```javascript\nconst x = 5;")).toBe(
+    expect(remend("```javascript\nconst x = 5;")).toBe(
       "```javascript\nconst x = 5;"
     );
-    expect(parseIncompleteMarkdown("```\ncode here")).toBe("```\ncode here");
+    expect(remend("```\ncode here")).toBe("```\ncode here");
   });
 
   it("should handle complete multiline code blocks", () => {
     const text = "```javascript\nconst x = 5;\n```";
-    expect(parseIncompleteMarkdown(text)).toBe(text);
+    expect(remend(text)).toBe(text);
   });
 
   it("should handle code blocks with language and incomplete content", () => {
-    expect(parseIncompleteMarkdown("```python\ndef hello():")).toBe(
-      "```python\ndef hello():"
-    );
+    expect(remend("```python\ndef hello():")).toBe("```python\ndef hello():");
   });
 
   it("should handle nested backticks inside code blocks", () => {
     const text = "```\nconst str = `template`;\n```";
-    expect(parseIncompleteMarkdown(text)).toBe(text);
+    expect(remend(text)).toBe(text);
   });
 
   it("should handle incomplete code blocks at end of chunked response", () => {
-    expect(parseIncompleteMarkdown("Some text\n```js\nconsole.log")).toBe(
+    expect(remend("Some text\n```js\nconsole.log")).toBe(
       "Some text\n```js\nconsole.log"
     );
   });
 
   it("should handle code blocks with trailing content", () => {
     const text = "```\ncode\n```\nMore text";
-    expect(parseIncompleteMarkdown(text)).toBe(text);
+    expect(remend(text)).toBe(text);
   });
 
   it("should handle complete code blocks ending with triple backticks on newline", () => {
     const text =
       '```python\ndef greet(name):\n    return f"Hello, {name}!"\n```';
-    expect(parseIncompleteMarkdown(text)).toBe(text);
+    expect(remend(text)).toBe(text);
   });
 
   it("should handle complete code blocks with trailing newline after closing backticks", () => {
     const text =
       '```python\ndef greet(name):\n    return f"Hello, {name}!"\n```\n';
-    expect(parseIncompleteMarkdown(text)).toBe(text);
+    expect(remend(text)).toBe(text);
   });
 
   it("should not add extra characters to complete simple code block", () => {
     // Bug report: This was being rendered with extra characters at the end
     const text =
       "```\nSimple code block\nwith multiple lines\nand some special characters: !@#$%^&*()\n```";
-    expect(parseIncompleteMarkdown(text)).toBe(text);
+    expect(remend(text)).toBe(text);
   });
 
   it("should not add extra characters to complete Python code block with underscores and asterisks", () => {
     // Bug report: This was being rendered with **_ appended
     const text =
       '```python\ndef hello_world():\n    """A simple function"""\n    name = "World"\n    print(f"Hello, {name}!")\n    \n    # List comprehension\n    numbers = [x**2 for x in range(10) if x % 2 == 0]\n    return numbers\n\nclass TestClass:\n    def __init__(self, value):\n        self.value = value\n```';
-    expect(parseIncompleteMarkdown(text)).toBe(text);
+    expect(remend(text)).toBe(text);
   });
 
   it("should not add backticks when code block ends properly", () => {
     // This is the exact case from Grok
     const grokOutput =
       '```python def greet(name): return f"Hello, {name}!"\n```';
-    expect(parseIncompleteMarkdown(grokOutput)).toBe(grokOutput);
+    expect(remend(grokOutput)).toBe(grokOutput);
   });
 
   it("should handle multiple complete code blocks with newlines", () => {
     const text = "```js\ncode1\n```\n\n```python\ncode2\n```";
-    expect(parseIncompleteMarkdown(text)).toBe(text);
+    expect(remend(text)).toBe(text);
   });
 
   it("should correctly handle code on same line as opening backticks with closing on newline", () => {
     // This was causing issues - being treated as inline when it should be multiline
     const text = '```python def greet(name): return f"Hello, {name}!"\n```';
-    expect(parseIncompleteMarkdown(text)).toBe(text);
+    expect(remend(text)).toBe(text);
 
     // Should NOT be treated as inline triple backticks
-    const result = parseIncompleteMarkdown(text);
+    const result = remend(text);
     expect(result).not.toContain("````"); // Should not add extra backticks
   });
 
   it("should only treat truly inline triple backticks as inline", () => {
     // This SHOULD be treated as inline (no newlines)
     const inline = "```python code```";
-    expect(parseIncompleteMarkdown(inline)).toBe(inline);
+    expect(remend(inline)).toBe(inline);
 
     // This should NOT be treated as inline (has newline)
     const multiline = "```python code\n```";
-    expect(parseIncompleteMarkdown(multiline)).toBe(multiline);
+    expect(remend(multiline)).toBe(multiline);
   });
 
   it("should not treat brackets inside complete code blocks as incomplete links", () => {
@@ -102,7 +100,7 @@ console.log(arr[0]);
 \`\`\`
 Done with code block.`;
 
-    const result = parseIncompleteMarkdown(text);
+    const result = remend(text);
     expect(result).not.toContain("streamdown:incomplete-link");
     expect(result).toBe(text);
   });
@@ -114,7 +112,7 @@ echo "test"
 \`\`\`
 And here's an [incomplete link`;
 
-    const result = parseIncompleteMarkdown(text);
+    const result = remend(text);
     expect(result).toContain("streamdown:incomplete-link");
     expect(result).toBe(`Here's a code block:
 \`\`\`bash
@@ -157,7 +155,7 @@ in their \`~/.tmux.conf\`, which disables use of the alternate buffer entirely.
 
 Would you like me to show how to conditionally toggle that behavior per app or session?`;
 
-    const result = parseIncompleteMarkdown(text_content);
+    const result = remend(text_content);
 
     // Should NOT contain incomplete-link marker
     expect(result).not.toContain("streamdown:incomplete-link");
