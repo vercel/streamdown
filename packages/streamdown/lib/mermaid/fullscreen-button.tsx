@@ -38,7 +38,8 @@ export const MermaidFullscreenButton = ({
   ...props
 }: MermaidFullscreenButtonProps) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { isAnimating, controls: controlsConfig } = useContext(StreamdownContext);
+  const { isAnimating, controls: controlsConfig } =
+    useContext(StreamdownContext);
   const showPanZoomControls = (() => {
     if (typeof controlsConfig === "boolean") {
       return controlsConfig;

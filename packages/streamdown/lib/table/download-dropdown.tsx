@@ -178,16 +178,16 @@ export const TableDownloadDropdown = ({
           <button
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => downloadTableData("csv")}
-            type="button"
             title="Download table as CSV"
+            type="button"
           >
             CSV
           </button>
           <button
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => downloadTableData("markdown")}
-            type="button"
             title="Download table as Markdown"
+            type="button"
           >
             Markdown
           </button>

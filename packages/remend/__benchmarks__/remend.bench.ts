@@ -1,7 +1,7 @@
 import { bench, describe } from "vitest";
-import { parseIncompleteMarkdown } from "../lib/parse-incomplete-markdown";
+import remend from "../src";
 
-describe("parseIncompleteMarkdown - Basic Formatting", () => {
+describe("Basic Formatting", () => {
   const shortText = "This is **bold text";
   const mediumText =
     "# Heading\n\nThis is **bold** and *italic* text with `code` and ~~strikethrough~~";
@@ -24,7 +24,7 @@ $$
   bench(
     "short text with incomplete bold",
     () => {
-      parseIncompleteMarkdown(shortText);
+      remend(shortText);
     },
     { iterations: 1000 }
   );
@@ -32,7 +32,7 @@ $$
   bench(
     "medium text with mixed formatting",
     () => {
-      parseIncompleteMarkdown(mediumText);
+      remend(mediumText);
     },
     { iterations: 1000 }
   );
@@ -40,17 +40,17 @@ $$
   bench(
     "long text with complex formatting",
     () => {
-      parseIncompleteMarkdown(longText);
+      remend(longText);
     },
     { iterations: 1000 }
   );
 });
 
-describe("parseIncompleteMarkdown - Incomplete Patterns", () => {
+describe("Incomplete Patterns", () => {
   bench(
     "incomplete bold (**)",
     () => {
-      parseIncompleteMarkdown("Some text with **incomplete bold");
+      remend("Some text with **incomplete bold");
     },
     { iterations: 1000 }
   );
@@ -58,7 +58,7 @@ describe("parseIncompleteMarkdown - Incomplete Patterns", () => {
   bench(
     "incomplete italic (*)",
     () => {
-      parseIncompleteMarkdown("Some text with *incomplete italic");
+      remend("Some text with *incomplete italic");
     },
     { iterations: 1000 }
   );
@@ -66,7 +66,7 @@ describe("parseIncompleteMarkdown - Incomplete Patterns", () => {
   bench(
     "incomplete italic (__)",
     () => {
-      parseIncompleteMarkdown("Some text with __incomplete italic");
+      remend("Some text with __incomplete italic");
     },
     { iterations: 1000 }
   );
@@ -74,7 +74,7 @@ describe("parseIncompleteMarkdown - Incomplete Patterns", () => {
   bench(
     "incomplete inline code (`)",
     () => {
-      parseIncompleteMarkdown("Some text with `incomplete code");
+      remend("Some text with `incomplete code");
     },
     { iterations: 1000 }
   );
@@ -82,7 +82,7 @@ describe("parseIncompleteMarkdown - Incomplete Patterns", () => {
   bench(
     "incomplete strikethrough (~~)",
     () => {
-      parseIncompleteMarkdown("Some text with ~~incomplete strikethrough");
+      remend("Some text with ~~incomplete strikethrough");
     },
     { iterations: 1000 }
   );
@@ -90,7 +90,7 @@ describe("parseIncompleteMarkdown - Incomplete Patterns", () => {
   bench(
     "incomplete bold-italic (***)",
     () => {
-      parseIncompleteMarkdown("Some text with ***incomplete bold-italic");
+      remend("Some text with ***incomplete bold-italic");
     },
     { iterations: 1000 }
   );
@@ -98,7 +98,7 @@ describe("parseIncompleteMarkdown - Incomplete Patterns", () => {
   bench(
     "incomplete link",
     () => {
-      parseIncompleteMarkdown("Some text with [incomplete link](");
+      remend("Some text with [incomplete link](");
     },
     { iterations: 1000 }
   );
@@ -106,7 +106,7 @@ describe("parseIncompleteMarkdown - Incomplete Patterns", () => {
   bench(
     "incomplete link text",
     () => {
-      parseIncompleteMarkdown("Some text with [incomplete");
+      remend("Some text with [incomplete");
     },
     { iterations: 1000 }
   );
@@ -114,13 +114,13 @@ describe("parseIncompleteMarkdown - Incomplete Patterns", () => {
   bench(
     "incomplete block math ($$)",
     () => {
-      parseIncompleteMarkdown("$$\nE = mc^2\n");
+      remend("$$\nE = mc^2\n");
     },
     { iterations: 1000 }
   );
 });
 
-describe("parseIncompleteMarkdown - Code Blocks", () => {
+describe("Code Blocks", () => {
   const incompleteCodeBlock = "```javascript\nconst x = 1;\n";
   const completeCodeBlock = "```javascript\nconst x = 1;\n```";
   const multipleCodeBlocks = `
@@ -137,7 +137,7 @@ y = 2
   bench(
     "incomplete code block",
     () => {
-      parseIncompleteMarkdown(incompleteCodeBlock);
+      remend(incompleteCodeBlock);
     },
     { iterations: 1000 }
   );
@@ -145,7 +145,7 @@ y = 2
   bench(
     "complete code block",
     () => {
-      parseIncompleteMarkdown(completeCodeBlock);
+      remend(completeCodeBlock);
     },
     { iterations: 1000 }
   );
@@ -153,13 +153,13 @@ y = 2
   bench(
     "multiple code blocks (one incomplete)",
     () => {
-      parseIncompleteMarkdown(multipleCodeBlocks);
+      remend(multipleCodeBlocks);
     },
     { iterations: 1000 }
   );
 });
 
-describe("parseIncompleteMarkdown - Streaming Simulation", () => {
+describe("Streaming Simulation", () => {
   const streamingSteps = [
     "**",
     "**B",
@@ -177,7 +177,7 @@ describe("parseIncompleteMarkdown - Streaming Simulation", () => {
     "streaming bold text (10 steps)",
     () => {
       for (const step of streamingSteps) {
-        parseIncompleteMarkdown(step);
+        remend(step);
       }
     },
     { iterations: 1000 }
@@ -189,18 +189,18 @@ describe("parseIncompleteMarkdown - Streaming Simulation", () => {
     "streaming inline code (6 steps)",
     () => {
       for (const step of codeStreamingSteps) {
-        parseIncompleteMarkdown(step);
+        remend(step);
       }
     },
     { iterations: 1000 }
   );
 });
 
-describe("parseIncompleteMarkdown - Edge Cases", () => {
+describe("Edge Cases", () => {
   bench(
     "empty string",
     () => {
-      parseIncompleteMarkdown("");
+      remend("");
     },
     { iterations: 1000 }
   );
@@ -208,9 +208,7 @@ describe("parseIncompleteMarkdown - Edge Cases", () => {
   bench(
     "plain text (no markdown)",
     () => {
-      parseIncompleteMarkdown(
-        "This is plain text without any markdown formatting."
-      );
+      remend("This is plain text without any markdown formatting.");
     },
     { iterations: 1000 }
   );
@@ -218,7 +216,7 @@ describe("parseIncompleteMarkdown - Edge Cases", () => {
   bench(
     "text with many asterisks",
     () => {
-      parseIncompleteMarkdown("****************************");
+      remend("****************************");
     },
     { iterations: 1000 }
   );
@@ -226,7 +224,7 @@ describe("parseIncompleteMarkdown - Edge Cases", () => {
   bench(
     "text with mixed emphasis markers",
     () => {
-      parseIncompleteMarkdown("**_*~`**_*~`**_*~`");
+      remend("**_*~`**_*~`**_*~`");
     },
     { iterations: 1000 }
   );
@@ -234,7 +232,7 @@ describe("parseIncompleteMarkdown - Edge Cases", () => {
   bench(
     "list with emphasis",
     () => {
-      parseIncompleteMarkdown("- **bold\n- *italic\n- `code");
+      remend("- **bold\n- *italic\n- `code");
     },
     { iterations: 1000 }
   );
@@ -242,13 +240,13 @@ describe("parseIncompleteMarkdown - Edge Cases", () => {
   bench(
     "text with underscores in math",
     () => {
-      parseIncompleteMarkdown("$x_1 + x_2 = x_");
+      remend("$x_1 + x_2 = x_");
     },
     { iterations: 1000 }
   );
 });
 
-describe("parseIncompleteMarkdown - Large Documents", () => {
+describe("Large Documents", () => {
   const largeDoc = `
 # Large Document Benchmark
 
@@ -268,7 +266,7 @@ ${"Regular paragraph text with some [links](https://example.com) and more conten
   bench(
     "large document (realistic size)",
     () => {
-      parseIncompleteMarkdown(largeDoc);
+      remend(largeDoc);
     },
     { iterations: 1000 }
   );
@@ -276,7 +274,7 @@ ${"Regular paragraph text with some [links](https://example.com) and more conten
   bench(
     "very large document (2x realistic)",
     () => {
-      parseIncompleteMarkdown(largeDoc + largeDoc);
+      remend(largeDoc + largeDoc);
     },
     { iterations: 1000 }
   );

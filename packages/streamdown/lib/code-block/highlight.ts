@@ -1,11 +1,11 @@
 import {
   type BundledLanguage,
   type BundledTheme,
-  createHighlighter,
   bundledLanguages,
+  createHighlighter,
   type Highlighter,
+  type SpecialLanguage,
   type TokensResult,
-  SpecialLanguage,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
@@ -39,17 +39,19 @@ const getTokensCacheKey = (
 };
 
 // Helper to verify if a language is supported
-const isLanguageSupported = (
-  language: string
-): language is BundledLanguage =>
+const isLanguageSupported = (language: string): language is BundledLanguage =>
   Object.hasOwn(bundledLanguages, language);
 
 export const createShiki = (
   language: BundledLanguage | SpecialLanguage,
   shikiTheme: [BundledTheme, BundledTheme]
 ) => {
-  const validLanguage: BundledLanguage | SpecialLanguage = isLanguageSupported(language) ? language : "text";
-  
+  const validLanguage: BundledLanguage | SpecialLanguage = isLanguageSupported(
+    language
+  )
+    ? language
+    : "text";
+
   const cacheKey = getHighlighterCacheKey(validLanguage, shikiTheme);
 
   // Return cached highlighter if it exists
@@ -76,8 +78,12 @@ export const getHighlightedTokens = (
   shikiTheme: [BundledTheme, BundledTheme],
   callback?: (result: TokensResult) => void
 ): TokensResult | null => {
-  const validLanguage: BundledLanguage | SpecialLanguage = isLanguageSupported(language) ? language : "text";
-  
+  const validLanguage: BundledLanguage | SpecialLanguage = isLanguageSupported(
+    language
+  )
+    ? language
+    : "text";
+
   const tokensCacheKey = getTokensCacheKey(code, validLanguage, shikiTheme);
 
   // Return cached result if available

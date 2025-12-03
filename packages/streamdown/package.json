@@ -24,6 +24,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "postbuild": "node scripts/postbuild.js",
     "test": "vitest run",
     "test:ui": "vitest --ui run",
     "test:coverage": "vitest --coverage run",
@@ -69,6 +70,7 @@
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
+    "remend": "workspace:*",
     "shiki": "^3.12.2",
     "tailwind-merge": "^3.3.1",
     "unified": "^11.0.5",

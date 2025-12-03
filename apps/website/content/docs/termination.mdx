@@ -1,9 +1,13 @@
 ---
 title: Unterminated Block Parsing
-description: Learn how Streamdown handles incomplete Markdown syntax during AI streaming.
+description: Learn how Streamdown handles incomplete Markdown syntax during AI streaming with remend.
 ---
 
-One of Streamdown's most powerful features is its ability to intelligently parse and style incomplete Markdown blocks. This feature, called **unterminated block parsing**, ensures that your streaming content looks polished even before the AI finishes its response.
+One of Streamdown's most powerful features is its ability to intelligently parse and style incomplete Markdown blocks using the [remend](https://www.npmjs.com/package/remend) package. This feature, called **unterminated block parsing**, ensures that your streaming content looks polished even before the AI finishes its response.
+
+## About Remend
+
+Remend is a lightweight, standalone preprocessor that completes incomplete Markdown syntax. Streamdown integrates remend by default, but you can also use it independently in your own projects. See the [remend documentation](https://www.npmjs.com/package/remend) for standalone usage.
 
 ## The Challenge
 
@@ -22,7 +26,9 @@ Streamdown solves this by detecting incomplete patterns and intelligently comple
 
 ## How It Works
 
-Streamdown's parser analyzes the incoming Markdown and identifies common patterns that might be incomplete. When detected, it automatically adds the closing syntax so the content renders correctly, then seamlessly updates when the actual closing syntax arrives.
+Remend (Streamdown's preprocessing layer) analyzes the incoming Markdown and identifies common patterns that might be incomplete. When detected, it automatically adds the closing syntax so the content renders correctly, then seamlessly updates when the actual closing syntax arrives.
+
+The preprocessing happens before the markdown is passed into the unified/remark pipeline, operating on the raw string level for maximum performance.
 
 ### Supported Incomplete Patterns
 
@@ -108,7 +114,9 @@ The parser adds the closing `$$` to ensure proper math rendering.
 
 ## Configuration
 
-Unterminated block parsing is enabled by default. You can disable it if needed:
+### Within Streamdown
+
+Unterminated block parsing is enabled by default in Streamdown. You can disable the remend preprocessor if needed:
 
 ```tsx
 import { Streamdown } from 'streamdown';
@@ -124,9 +132,23 @@ export default function Page() {
 
 However, disabling this feature will result in incomplete Markdown syntax being displayed literally, which is generally not desirable for user-facing applications.
 
+### Using Remend Standalone
+
+You can use remend independently in your own markdown rendering pipeline:
+
+```typescript
+import remend from 'remend';
+
+const partialMarkdown = "This is **incomplete bold";
+const completed = remend(partialMarkdown);
+// Result: "This is **incomplete bold**"
+```
+
+See the [remend package](https://www.npmjs.com/package/remend) for more details on standalone usage.
+
 ## Smart Behavior
 
-Streamdown's parser includes intelligent rules to avoid false positives:
+Remend includes intelligent rules to avoid false positives:
 
 ### List Item Detection
 
@@ -176,12 +198,13 @@ This ensures that text like product codes or mathematical expressions with aster
 
 ## Performance Considerations
 
-Streamdown's parser is highly optimized:
+Remend is highly optimized for streaming scenarios:
 
-- **Memoization** - Parsing results are cached to avoid redundant work
-- **Early Exits** - The parser stops checking patterns once matches are found
-- **Minimal Regex** - Uses efficient pattern matching techniques
-- **Block-Level Processing** - Content is split into blocks for parallel processing
+- **Direct string iteration** - Avoids regex splits and allocations
+- **ASCII fast-path** - Optimized character checking for common cases
+- **Early returns** - Stops processing when conditions aren't met
+- **Zero dependencies** - Pure TypeScript implementation
+- **Block-Level Processing** - Streamdown splits content into blocks for parallel processing
 
 ## Examples
 

@@ -1,0 +1,14 @@
+export const boldPattern = /(\*\*)([^*]*?)$/;
+export const italicPattern = /(__)([^_]*?)$/;
+export const boldItalicPattern = /(\*\*\*)([^*]*?)$/;
+export const singleAsteriskPattern = /(\*)([^*]*?)$/;
+export const singleUnderscorePattern = /(_)([^_]*?)$/;
+export const inlineCodePattern = /(`)([^`]*?)$/;
+export const strikethroughPattern = /(~~)([^~]*?)$/;
+export const whitespaceOrMarkersPattern = /^[\s_~*`]*$/;
+export const listItemPattern = /^[\s]*[-*+][\s]+$/;
+export const letterNumberUnderscorePattern = /[\p{L}\p{N}_]/u;
+export const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
+export const fourOrMoreAsterisksPattern = /^\*{4,}$/;
+export const linkImagePattern = /(!?\[)([^\]]*?)$/;
+export const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\](\([^)]+)$/;
