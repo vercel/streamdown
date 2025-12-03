@@ -1,13 +1,13 @@
 ---
 title: Unterminated Block Parsing
-description: Learn how Streamdown handles incomplete Markdown syntax during AI streaming with remedy.
+description: Learn how Streamdown handles incomplete Markdown syntax during AI streaming with remend.
 ---
 
-One of Streamdown's most powerful features is its ability to intelligently parse and style incomplete Markdown blocks using the [remedy](https://www.npmjs.com/package/remedy) package. This feature, called **unterminated block parsing**, ensures that your streaming content looks polished even before the AI finishes its response.
+One of Streamdown's most powerful features is its ability to intelligently parse and style incomplete Markdown blocks using the [remend](https://www.npmjs.com/package/remend) package. This feature, called **unterminated block parsing**, ensures that your streaming content looks polished even before the AI finishes its response.
 
-## About Remedy
+## About Remend
 
-Remedy is a lightweight, standalone preprocessor that completes incomplete Markdown syntax. Streamdown integrates remedy by default, but you can also use it independently in your own projects. See the [remedy documentation](https://www.npmjs.com/package/remedy) for standalone usage.
+Remend is a lightweight, standalone preprocessor that completes incomplete Markdown syntax. Streamdown integrates remend by default, but you can also use it independently in your own projects. See the [remend documentation](https://www.npmjs.com/package/remend) for standalone usage.
 
 ## The Challenge
 
@@ -26,7 +26,7 @@ Streamdown solves this by detecting incomplete patterns and intelligently comple
 
 ## How It Works
 
-Remedy (Streamdown's preprocessing layer) analyzes the incoming Markdown and identifies common patterns that might be incomplete. When detected, it automatically adds the closing syntax so the content renders correctly, then seamlessly updates when the actual closing syntax arrives.
+Remend (Streamdown's preprocessing layer) analyzes the incoming Markdown and identifies common patterns that might be incomplete. When detected, it automatically adds the closing syntax so the content renders correctly, then seamlessly updates when the actual closing syntax arrives.
 
 The preprocessing happens before the markdown is passed into the unified/remark pipeline, operating on the raw string level for maximum performance.
 
@@ -116,7 +116,7 @@ The parser adds the closing `$$` to ensure proper math rendering.
 
 ### Within Streamdown
 
-Unterminated block parsing is enabled by default in Streamdown. You can disable the remedy preprocessor if needed:
+Unterminated block parsing is enabled by default in Streamdown. You can disable the remend preprocessor if needed:
 
 ```tsx
 import { Streamdown } from 'streamdown';
@@ -132,23 +132,23 @@ export default function Page() {
 
 However, disabling this feature will result in incomplete Markdown syntax being displayed literally, which is generally not desirable for user-facing applications.
 
-### Using Remedy Standalone
+### Using Remend Standalone
 
-You can use remedy independently in your own markdown rendering pipeline:
+You can use remend independently in your own markdown rendering pipeline:
 
 ```typescript
-import remedy from 'remedy';
+import remend from 'remend';
 
 const partialMarkdown = "This is **incomplete bold";
-const completed = remedy(partialMarkdown);
+const completed = remend(partialMarkdown);
 // Result: "This is **incomplete bold**"
 ```
 
-See the [remedy package](https://www.npmjs.com/package/remedy) for more details on standalone usage.
+See the [remend package](https://www.npmjs.com/package/remend) for more details on standalone usage.
 
 ## Smart Behavior
 
-Remedy includes intelligent rules to avoid false positives:
+Remend includes intelligent rules to avoid false positives:
 
 ### List Item Detection
 
@@ -198,7 +198,7 @@ This ensures that text like product codes or mathematical expressions with aster
 
 ## Performance Considerations
 
-Remedy is highly optimized for streaming scenarios:
+Remend is highly optimized for streaming scenarios:
 
 - **Direct string iteration** - Avoids regex splits and allocations
 - **ASCII fast-path** - Optimized character checking for common cases

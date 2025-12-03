@@ -11,7 +11,7 @@ import { handleIncompleteLinksAndImages } from "./link-image-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
 
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
-const remedy = (text: string): string => {
+const remend = (text: string): string => {
   if (!text || typeof text !== "string") {
     return text;
   }
@@ -46,4 +46,4 @@ const remedy = (text: string): string => {
   return result;
 };
 
-export default remedy;
+export default remend;

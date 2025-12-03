@@ -1,14 +1,14 @@
-# Remedy
+# Remend
 
 Self-healing markdown. Intelligently parses and styles incomplete Markdown blocks.
 
-[![npm version](https://img.shields.io/npm/v/remedy)](https://www.npmjs.com/package/remedy)
+[![npm version](https://img.shields.io/npm/v/remend)](https://www.npmjs.com/package/remend)
 
 ## Overview
 
-Remedy is a lightweight utility that handles incomplete Markdown syntax during streaming. When AI models stream Markdown token-by-token, you often get partial formatting markers like unclosed `**bold**` or incomplete `[links](`. Remedy automatically completes these unterminated blocks so they render correctly in real-time.
+Remend is a lightweight utility that handles incomplete Markdown syntax during streaming. When AI models stream Markdown token-by-token, you often get partial formatting markers like unclosed `**bold**` or incomplete `[links](`. Remend automatically completes these unterminated blocks so they render correctly in real-time.
 
-Remedy powers the markdown termination logic in [Streamdown](https://streamdown.ai) and can be used standalone in any streaming Markdown application.
+Remend powers the markdown termination logic in [Streamdown](https://streamdown.ai) and can be used standalone in any streaming Markdown application.
 
 ## Features
 
@@ -21,7 +21,7 @@ Remedy powers the markdown termination logic in [Streamdown](https://streamdown.
 
 ## Supported Syntax
 
-Remedy intelligently completes the following incomplete Markdown patterns:
+Remend intelligently completes the following incomplete Markdown patterns:
 
 - **Bold**: `**text` → `**text**`
 - **Italic**: `*text` or `_text` → `*text*` or `_text_`
@@ -35,31 +35,31 @@ Remedy intelligently completes the following incomplete Markdown patterns:
 ## Installation
 
 ```bash
-npm i remedy
+npm i remend
 ```
 
 ## Usage
 
 ```typescript
-import remedy from "remedy";
+import remend from "remend";
 
 // During streaming
 const partialMarkdown = "This is **bold text";
-const completed = remedy(partialMarkdown);
+const completed = remend(partialMarkdown);
 // Result: "This is **bold text**"
 
 // With incomplete link
 const partialLink = "Check out [this link](https://exampl";
-const completed = remedy(partialLink);
+const completed = remend(partialLink);
 // Result: "Check out [this link](streamdown:incomplete-link)"
 ```
 
 ### Usage with Remark
 
-Remedy is a preprocessor that must be run on the raw Markdown string **before** passing it into the unified/remark processing pipeline:
+Remend is a preprocessor that must be run on the raw Markdown string **before** passing it into the unified/remark processing pipeline:
 
 ```typescript
-import remedy from "remedy";
+import remend from "remend";
 import { unified } from "unified";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
@@ -67,8 +67,8 @@ import rehypeStringify from "rehype-stringify";
 
 const streamedMarkdown = "This is **incomplete bold";
 
-// Run Remedy first to complete incomplete syntax
-const completedMarkdown = remedy(streamedMarkdown);
+// Run Remend first to complete incomplete syntax
+const completedMarkdown = remend(streamedMarkdown);
 
 // Then process with unified
 const file = await unified()
@@ -80,11 +80,11 @@ const file = await unified()
 console.log(String(file));
 ```
 
-This is important because Remedy operates on the raw string level, while remark/unified work with abstract syntax trees (ASTs). Running Remedy after parsing would be ineffective.
+This is important because Remend operates on the raw string level, while remark/unified work with abstract syntax trees (ASTs). Running Remend after parsing would be ineffective.
 
 ## How It Works
 
-Remedy analyzes the input text and:
+Remend analyzes the input text and:
 
 1. Detects incomplete formatting markers at the end of the text
 2. Counts opening vs closing markers (considering escaped characters)
@@ -96,7 +96,7 @@ The parser is designed to be defensive and only completes formatting when it's u
 
 ## Performance
 
-Remedy is built for high-performance streaming scenarios:
+Remend is built for high-performance streaming scenarios:
 
 - Direct string iteration instead of regex splits
 - ASCII fast-path for common characters

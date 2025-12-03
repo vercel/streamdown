@@ -1,4 +1,4 @@
-import { parseIncompleteMarkdown } from "remedy";
+import { parseIncompleteMarkdown } from "remend";
 import { bench, describe } from "vitest";
 
 describe("parseIncompleteMarkdown - Basic Formatting", () => {

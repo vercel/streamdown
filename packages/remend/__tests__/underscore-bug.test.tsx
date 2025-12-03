@@ -1,4 +1,4 @@
-import { parseIncompleteMarkdown } from "remedy";
+import { parseIncompleteMarkdown } from "remend";
 import { describe, expect, it } from "vitest";
 
 const HELLO_WORLD_UNDERSCORE_REGEX = /hello_world_/;

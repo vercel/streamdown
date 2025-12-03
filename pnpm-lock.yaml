@@ -441,7 +441,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
-  packages/remedy:
+  packages/remend:
     devDependencies:
       '@vitest/coverage-v8':
         specifier: ^3.2.4
@@ -506,9 +506,9 @@ importers:
       remark-rehype:
         specifier: ^11.1.2
         version: 11.1.2
-      remedy:
+      remend:
         specifier: workspace:*
-        version: link:../remedy
+        version: link:../remend
       shiki:
         specifier: ^3.12.2
         version: 3.12.2

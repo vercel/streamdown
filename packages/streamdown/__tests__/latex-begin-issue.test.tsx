@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { parseIncompleteMarkdown } from "remedy";
+import { parseIncompleteMarkdown } from "remend";
 import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 import { parseMarkdownIntoBlocks } from "../lib/parse-blocks";
