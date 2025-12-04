@@ -1,0 +1,250 @@
+---
+title: Plugins
+description: Learn about Streamdown's built-in Remark and Rehype plugins.
+---
+
+Streamdown includes a powerful set of plugins that process your Markdown content. These plugins are divided into two categories: **Remark plugins** (which process Markdown syntax) and **Rehype plugins** (which process the resulting HTML).
+
+## Default Plugin Configuration
+
+All plugins are included and configured by default. You can customize or replace them by passing your own plugin arrays to the `remarkPlugins` and `rehypePlugins` props.
+
+```tsx title="app/page.tsx"
+import { Streamdown, defaultRemarkPlugins, defaultRehypePlugins } from 'streamdown';
+
+// Use all defaults
+<Streamdown>{markdown}</Streamdown>
+
+// Customize plugins
+<Streamdown
+  remarkPlugins={[...defaultRemarkPlugins, myCustomPlugin]}
+  rehypePlugins={[...defaultRehypePlugins, anotherPlugin]}
+>
+  {markdown}
+</Streamdown>
+```
+
+## Remark Plugins
+
+Remark plugins process Markdown syntax before it's converted to HTML. Streamdown includes the following Remark plugins by default:
+
+### remark-gfm
+
+Adds support for GitHub Flavored Markdown (GFM) features:
+
+- Tables
+- Task lists
+- Strikethrough text
+- Autolinks
+- Footnotes
+
+**Configuration:**
+
+```tsx
+remarkGfm
+```
+
+**Example:**
+
+```markdown
+| Feature | Supported |
+|---------|-----------|
+| Tables  | ✓         |
+| Tasks   | ✓         |
+
+- [x] Completed task
+- [ ] Pending task
+
+~~Strikethrough text~~
+```
+
+### remark-math
+
+Enables mathematical notation using LaTeX syntax. Supports both inline and block math expressions.
+
+**Configuration:**
+
+```tsx
+[remarkMath, { singleDollarTextMath: false }]
+```
+
+**Options:**
+- `singleDollarTextMath`: When `false` (default), requires `$$` for math expressions. When `true`, allows single `$` for inline math.
+
+**Example:**
+
+```markdown
+Inline math: $$E = mc^2$$
+
+Block math:
+$$
+\int_{0}^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
+$$
+```
+
+### remark-cjk-friendly
+
+Improves handling of CJK (Chinese, Japanese, Korean) text by properly managing spacing and line breaks around CJK characters.
+
+**Configuration:**
+
+```tsx
+remarkCjkFriendly
+```
+
+**Benefits:**
+- Proper spacing between CJK and Latin characters
+- Correct line breaking behavior for CJK text
+- Better typography for mixed-script content
+
+### remark-cjk-friendly-gfm-strikethrough
+
+Extends GFM strikethrough support with proper CJK text handling, ensuring strikethrough syntax works correctly with CJK characters.
+
+**Configuration:**
+
+```tsx
+remarkCjkFriendlyGfmStrikethrough
+```
+
+## Rehype Plugins
+
+Rehype plugins process HTML after Markdown has been converted. Streamdown includes the following Rehype plugins by default:
+
+### rehype-raw
+
+Allows raw HTML elements in Markdown to be preserved and rendered. This enables you to use HTML tags directly in your Markdown content.
+
+**Configuration:**
+
+```tsx
+rehypeRaw
+```
+
+**Example:**
+
+```markdown
+This is **Markdown** with <span style="color: red">raw HTML</span>.
+
+<details>
+  <summary>Click to expand</summary>
+  Hidden content here
+</details>
+```
+
+### rehype-katex
+
+Renders mathematical expressions using KaTeX. Works in conjunction with `remark-math` to display beautiful, fast math notation.
+
+**Configuration:**
+
+```tsx
+[rehypeKatex, { errorColor: 'var(--color-muted-foreground)' }]
+```
+
+**Options:**
+- `errorColor`: Color used for rendering LaTeX errors
+
+**Features:**
+- Automatic KaTeX CSS loading when math syntax is detected
+- Support for inline and block math expressions
+- Fast client-side rendering
+- No server-side dependencies
+
+### rehype-sanitize
+
+Sanitizes HTML to prevent XSS attacks and ensure safe rendering of user-generated content. This plugin is configured with permissive defaults but can be customized for stricter security.
+
+**Configuration:**
+
+```tsx
+[rehypeSanitize, {}]
+```
+
+**Security:**
+- Removes potentially dangerous HTML elements and attributes
+- Configurable allow/deny lists
+- Safe by default
+
+### rehype-harden
+
+Additional security hardening for links and images, with control over allowed protocols and URL prefixes.
+
+**Configuration:**
+
+```tsx
+[
+  harden,
+  {
+    allowedImagePrefixes: ['*'],
+    allowedLinkPrefixes: ['*'],
+    allowedProtocols: ['*'],
+    defaultOrigin: undefined,
+    allowDataImages: true,
+  }
+]
+```
+
+**Options:**
+- `allowedImagePrefixes`: Array of allowed URL prefixes for images (default: all)
+- `allowedLinkPrefixes`: Array of allowed URL prefixes for links (default: all)
+- `allowedProtocols`: Array of allowed URL protocols (default: all)
+- `defaultOrigin`: Origin to use for relative URLs
+- `allowDataImages`: Whether to allow data URLs for images (default: `true`)
+
+## Accessing Default Plugins
+
+Streamdown exports the default plugin configurations for easy reference and extension:
+
+```tsx
+import {
+  defaultRemarkPlugins,
+  defaultRehypePlugins,
+} from 'streamdown';
+
+// Access individual plugins by key
+import { defaultRemarkPlugins, defaultRehypePlugins } from 'streamdown';
+
+// defaultRemarkPlugins object contains:
+// - gfm: [remarkGfm, {}]
+// - math: [remarkMath, { singleDollarTextMath: false }]
+// - cjkFriendly: [remarkCjkFriendly, {}]
+// - cjkFriendlyGfmStrikethrough: [remarkCjkFriendlyGfmStrikethrough, {}]
+
+// defaultRehypePlugins object contains:
+// - raw: rehypeRaw
+// - katex: [rehypeKatex, { errorColor: 'var(--color-muted-foreground)' }]
+// - sanitize: [rehypeSanitize, {}]
+// - harden: [harden, { /* config */ }]
+```
+
+## Customizing Plugins
+
+You can customize the plugin configuration by providing your own arrays:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+
+<Streamdown
+  remarkPlugins={[
+    [remarkGfm, {}],
+    [remarkMath, { singleDollarTextMath: true }] // Enable single dollar math
+  ]}
+  rehypePlugins={[
+    [rehypeKatex, { errorColor: '#ff0000' }] // Custom error color
+  ]}
+>
+  {markdown}
+</Streamdown>
+```
+
+## Plugin Performance
+
+The default plugins are optimized for performance:
+
+- Plugin arrays are created once at module level for better caching
+- KaTeX CSS is only loaded when math syntax is detected in content
+- All plugins are configured with sensible defaults that balance features and performance
