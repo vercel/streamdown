@@ -132,7 +132,7 @@ export const MermaidFullscreenButton = ({
           >
             <Mermaid
               chart={chart}
-              className="h-full w-full [&>div]:h-full [&>div]:overflow-hidden [&_svg]:h-auto [&_svg]:w-auto"
+              className="h-full w-full [&_svg]:h-auto [&_svg]:w-auto"
               config={config}
               fullscreen={true}
               showControls={showPanZoomControls}
