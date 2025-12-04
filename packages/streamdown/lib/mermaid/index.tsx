@@ -1,5 +1,6 @@
 import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useState } from "react";
+import { useDeferredRender } from "../../hooks/use-deferred-render";
 import { StreamdownContext } from "../../index";
 import { cn } from "../utils";
 import { PanZoom } from "./pan-zoom";
@@ -21,15 +22,25 @@ export const Mermaid = ({
   showControls = true,
 }: MermaidProps) => {
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [svgContent, setSvgContent] = useState<string>("");
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const { mermaid: mermaidContext } = useContext(StreamdownContext);
   const ErrorComponent = mermaidContext?.errorComponent;
 
+  // Use deferred render hook for optimal performance
+  const { shouldRender, containerRef } = useDeferredRender({
+    immediate: fullscreen,
+  });
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"
   useEffect(() => {
+    // Only render when shouldRender is true
+    if (!shouldRender) {
+      return;
+    }
+
     const renderChart = async () => {
       try {
         setError(null);
@@ -68,12 +79,21 @@ export const Mermaid = ({
     };
 
     renderChart();
-  }, [chart, config, retryCount]);
+  }, [chart, config, retryCount, shouldRender]);
 
-  // Show loading only on initial load when we have no content
+  // Show placeholder when not scheduled to render
+  if (!(shouldRender || svgContent || lastValidSvg)) {
+    return (
+      <div className={cn("my-4 min-h-[200px]", className)} ref={containerRef} />
+    );
+  }
+
   if (isLoading && !svgContent && !lastValidSvg) {
     return (
-      <div className={cn("my-4 flex justify-center p-4", className)}>
+      <div
+        className={cn("my-4 flex justify-center p-4", className)}
+        ref={containerRef}
+      >
         <div className="flex items-center space-x-2 text-muted-foreground">
           <div className="h-4 w-4 animate-spin rounded-full border-current border-b-2" />
           <span className="text-sm">Loading diagram...</span>
@@ -88,7 +108,11 @@ export const Mermaid = ({
 
     // Use custom error component if provided
     if (ErrorComponent) {
-      return <ErrorComponent chart={chart} error={error} retry={retry} />;
+      return (
+        <div ref={containerRef}>
+          <ErrorComponent chart={chart} error={error} retry={retry} />
+        </div>
+      );
     }
 
     // Default error display
@@ -98,6 +122,7 @@ export const Mermaid = ({
           "rounded-lg border border-red-200 bg-red-50 p-4",
           className
         )}
+        ref={containerRef}
       >
         <p className="font-mono text-red-700 text-sm">Mermaid Error: {error}</p>
         <details className="mt-2">
@@ -116,27 +141,29 @@ export const Mermaid = ({
   const displaySvg = svgContent || lastValidSvg;
 
   return (
-    <PanZoom
-      className={cn(
-        fullscreen ? "h-full w-full overflow-hidden" : "my-4 overflow-hidden",
-        className
-      )}
-      fullscreen={fullscreen}
-      maxZoom={3}
-      minZoom={0.5}
-      showControls={showControls}
-      zoomStep={0.1}
-    >
-      <div
-        aria-label="Mermaid chart"
+    <div ref={containerRef}>
+      <PanZoom
         className={cn(
-          "flex justify-center",
-          fullscreen && "h-full w-full items-center"
+          fullscreen ? "h-full w-full overflow-hidden" : "my-4 overflow-hidden",
+          className
         )}
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
-        dangerouslySetInnerHTML={{ __html: displaySvg }}
-        role="img"
-      />
-    </PanZoom>
+        fullscreen={fullscreen}
+        maxZoom={3}
+        minZoom={0.5}
+        showControls={showControls}
+        zoomStep={0.1}
+      >
+        <div
+          aria-label="Mermaid chart"
+          className={cn(
+            "flex justify-center",
+            fullscreen && "h-full w-full items-center"
+          )}
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
+          dangerouslySetInnerHTML={{ __html: displaySvg }}
+          role="img"
+        />
+      </PanZoom>
+    </div>
   );
 };
