@@ -13,6 +13,7 @@ import {
 import { harden } from "rehype-harden";
 import rehypeKatex from "rehype-katex";
 import rehypeRaw from "rehype-raw";
+import rehypeSanitize from "rehype-sanitize";
 import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
 import remarkGfm from "remark-gfm";
@@ -70,6 +71,7 @@ export type StreamdownProps = Options & {
 export const defaultRehypePlugins: Record<string, Pluggable> = {
   raw: rehypeRaw,
   katex: [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }],
+  sanitize: [rehypeSanitize, {}],
   harden: [
     harden,
     {
