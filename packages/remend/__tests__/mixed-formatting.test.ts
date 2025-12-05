@@ -58,4 +58,10 @@ describe("mixed formatting", () => {
     const text = "**bold *italic* text** and `code`";
     expect(remend(text)).toBe(text);
   });
+
+  it("should handle mixed bold-italic formatting (#265)", () => {
+    expect(remend("**bold and *bold-italic***")).toBe(
+      "**bold and *bold-italic***"
+    );
+  });
 });

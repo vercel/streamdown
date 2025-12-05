@@ -56,8 +56,22 @@ const shouldSkipAsterisk = (
     return true;
   }
 
-  // Skip if part of ** or ***
-  if (prevChar === "*" || nextChar === "*") {
+  // Special handling for *** sequences
+  // If this is the first * in ***, don't skip it - it can close a single * italic
+  // Example: **bold and *italic*** should count the first * of *** as closing the italic
+  if (prevChar !== "*" && nextChar === "*") {
+    const nextNextChar = index < text.length - 2 ? text[index + 2] : "";
+    if (nextNextChar === "*") {
+      // This is the first * in a *** sequence
+      // Count it as a single asterisk for matching purposes
+      return false;
+    }
+    // This is the first * in ** (not ***)
+    return true;
+  }
+
+  // Skip if this is the second or third * in a sequence
+  if (prevChar === "*") {
     return true;
   }
 
