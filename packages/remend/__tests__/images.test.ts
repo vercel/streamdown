@@ -25,4 +25,20 @@ describe("image handling", () => {
     expect(remend("![nested [brackets] text")).toBe("");
     expect(remend("Start ![foo [bar] baz")).toBe("Start ");
   });
+
+  it("should not add trailing underscore for images with underscores in URL (#284)", () => {
+    const markdown =
+      "textContent ![image](https://img.alicdn.com/imgextra/i4/6000000003603/O1CN01ApW8bQ1cUE8LduPra_!!6000000003603-2-skyky.png)";
+    expect(remend(markdown)).toBe(markdown);
+
+    // Should also work with links containing underscores
+    const linkMarkdown =
+      "textContent [link](https://example.com/path_name!!test)";
+    expect(remend(linkMarkdown)).toBe(linkMarkdown);
+
+    // Multiple images should also work
+    const multipleImages =
+      "textContent ![image1](https://example.com/path_1!!test.png) ![image2](https://example.com/path_2!!test.png)";
+    expect(remend(multipleImages)).toBe(multipleImages);
+  });
 });

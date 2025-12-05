@@ -96,3 +96,47 @@ export const isWithinMathBlock = (text: string, position: number): boolean => {
 
   return inInlineMath || inBlockMath;
 };
+
+// Check if a position is within a link or image URL
+// Links and images have the format [text](url) or ![alt](url)
+export const isWithinLinkOrImageUrl = (
+  text: string,
+  position: number
+): boolean => {
+  // Search backwards from position to find if we're inside a (url) part
+  // Look for the most recent ]( before this position
+  let lastCloseParen = -1;
+  let lastOpenParen = -1;
+
+  for (let i = position - 1; i >= 0; i -= 1) {
+    if (text[i] === ")") {
+      lastCloseParen = i;
+      break;
+    }
+    if (text[i] === "(") {
+      lastOpenParen = i;
+      // Check if there's a ] immediately before the (
+      if (i > 0 && text[i - 1] === "]") {
+        // We're potentially inside a link/image URL
+        // Now search forward to see if we're before the closing )
+        for (let j = position; j < text.length; j += 1) {
+          if (text[j] === ")") {
+            // Yes, we're inside the URL
+            return true;
+          }
+          if (text[j] === "\n") {
+            // URLs don't span newlines in markdown
+            break;
+          }
+        }
+      }
+      break;
+    }
+    if (text[i] === "\n") {
+      // Don't search beyond newlines
+      break;
+    }
+  }
+
+  return false;
+};

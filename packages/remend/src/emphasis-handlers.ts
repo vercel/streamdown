@@ -8,7 +8,12 @@ import {
   singleUnderscorePattern,
   whitespaceOrMarkersPattern,
 } from "./patterns";
-import { hasCompleteCodeBlock, isWithinMathBlock, isWordChar } from "./utils";
+import {
+  hasCompleteCodeBlock,
+  isWithinLinkOrImageUrl,
+  isWithinMathBlock,
+  isWordChar,
+} from "./utils";
 
 // Helper function to check if an asterisk at the given index is a list marker
 const isAsteriskListMarker = (
@@ -106,6 +111,11 @@ const shouldSkipUnderscore = (
   // Skip if within math block (only check if text has dollar signs)
   const hasMathBlocks = text.includes("$");
   if (hasMathBlocks && isWithinMathBlock(text, index)) {
+    return true;
+  }
+
+  // Skip if within a link or image URL
+  if (isWithinLinkOrImageUrl(text, index)) {
     return true;
   }
 
@@ -344,7 +354,8 @@ const findFirstSingleUnderscoreIndex = (text: string): number => {
       text[i - 1] !== "_" &&
       text[i + 1] !== "_" &&
       text[i - 1] !== "\\" &&
-      !isWithinMathBlock(text, i)
+      !isWithinMathBlock(text, i) &&
+      !isWithinLinkOrImageUrl(text, i)
     ) {
       // Check if underscore is word-internal (between word characters)
       const prevChar = i > 0 ? text[i - 1] : "";
