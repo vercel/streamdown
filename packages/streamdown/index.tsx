@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, memo, useId, useMemo } from 'react';
+import { createContext, memo, useEffect, useId, useMemo } from 'react';
 import ReactMarkdown, { type Options } from 'react-markdown';
 import rehypeKatex from 'rehype-katex';
 import remarkGfm from 'remark-gfm';
@@ -12,6 +12,44 @@ import { components as defaultComponents } from './lib/components';
 import { parseMarkdownIntoBlocks } from './lib/parse-blocks';
 import { parseIncompleteMarkdown } from './lib/parse-incomplete-markdown';
 import { cn } from './lib/utils';
+
+// Animation CSS - injected only when animate=true
+const animationCSS = `
+@keyframes streamdownFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.streamdown-animate > * {
+  animation: streamdownFadeIn var(--streamdown-duration, 300ms) ease-out both;
+  opacity: 0;
+}
+.streamdown-animate > *:nth-child(1) { animation-delay: 0ms; }
+.streamdown-animate > *:nth-child(2) { animation-delay: 60ms; }
+.streamdown-animate > *:nth-child(3) { animation-delay: 120ms; }
+.streamdown-animate > *:nth-child(4) { animation-delay: 180ms; }
+.streamdown-animate > *:nth-child(n+5) { animation-delay: 240ms; }
+@media (prefers-reduced-motion: reduce) {
+  .streamdown-animate > * {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+`;
+
+let animationStylesInjected = false;
+function injectAnimationStyles() {
+  if (animationStylesInjected || typeof document === 'undefined') return;
+  const styleId = 'streamdown-animation';
+  if (document.getElementById(styleId)) {
+    animationStylesInjected = true;
+    return;
+  }
+  const el = document.createElement('style');
+  el.id = styleId;
+  el.textContent = animationCSS;
+  document.head.appendChild(el);
+  animationStylesInjected = true;
+}
 
 type HardenReactMarkdownProps = Options & {
   defaultOrigin?: string;
@@ -32,6 +70,10 @@ export type StreamdownProps = HardenReactMarkdownProps & {
   parseIncompleteMarkdown?: boolean;
   className?: string;
   shikiTheme?: [BundledTheme, BundledTheme];
+  /** Enable simple fade-in on blocks */
+  animate?: boolean;
+  /** Fade-in duration in ms */
+  animationDuration?: number;
 };
 
 export const ShikiThemeContext = createContext<[BundledTheme, BundledTheme]>([
@@ -73,6 +115,8 @@ export const Streamdown = memo(
     remarkPlugins,
     className,
     shikiTheme = ['github-light', 'github-dark'],
+    animate = false,
+    animationDuration = 300,
     ...props
   }: StreamdownProps) => {
     // Parse the children to remove incomplete markdown tokens if enabled
@@ -87,9 +131,22 @@ export const Streamdown = memo(
       []
     );
 
+    // Inject animation CSS when animate is enabled
+    useEffect(() => {
+      if (animate) injectAnimationStyles();
+    }, [animate]);
+
     return (
       <ShikiThemeContext.Provider value={shikiTheme}>
-        <div className={cn('space-y-4', className)} {...props}>
+        <div
+          className={cn('space-y-4', animate && 'streamdown-animate', className)}
+          style={
+            animate
+              ? ({ '--streamdown-duration': `${animationDuration}ms` } as React.CSSProperties)
+              : undefined
+          }
+          {...props}
+        >
           {blocks.map((block, index) => (
             <Block
               allowedImagePrefixes={allowedImagePrefixes ?? ['*']}
@@ -113,6 +170,8 @@ export const Streamdown = memo(
   },
   (prevProps, nextProps) =>
     prevProps.children === nextProps.children &&
-    prevProps.shikiTheme === nextProps.shikiTheme
+    prevProps.shikiTheme === nextProps.shikiTheme &&
+    prevProps.animate === nextProps.animate &&
+    prevProps.animationDuration === nextProps.animationDuration
 );
 Streamdown.displayName = 'Streamdown';
