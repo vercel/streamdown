@@ -1,0 +1,104 @@
+---
+title: Carets
+description: Visual cursor indicators for streaming content to show active generation.
+---
+
+Streamdown includes built-in caret (cursor) indicators that display at the end of streaming content. Carets provide a visual cue to users that content is actively being generated, similar to a blinking cursor in a text editor.
+
+## Overview
+
+The `caret` prop adds a visual indicator at the end of your streaming markdown content. This feature enhances the user experience by making it clear when content is actively being generated versus when generation is complete.
+
+Key features:
+
+- **Two built-in styles** - Choose between block (`▋`) and circle (`●`) carets
+- **Automatic positioning** - Carets automatically appear at the end of the last rendered element
+- **Streaming-aware** - Only displays when `isAnimating={true}` and `mode="streaming"` (default)
+- **CSS-based** - Uses CSS custom properties and pseudo-elements for efficient rendering
+
+## Usage
+
+To enable carets, pass the `caret` prop with either `"block"` or `"circle"`:
+
+```tsx title="chat.tsx"
+import { Streamdown } from 'streamdown';
+
+function StreamingChat() {
+  const [isStreaming, setIsStreaming] = useState(true);
+  const [content, setContent] = useState('');
+
+  return (
+    <Streamdown
+      caret="block"
+      isAnimating={isStreaming}
+    >
+      {content}
+    </Streamdown>
+  );
+}
+```
+
+## Caret Styles
+
+Streamdown provides two built-in caret styles:
+
+### Block Caret
+
+The block caret displays a vertical bar (`▋`) similar to a terminal cursor:
+
+```tsx title="chat.tsx"
+<Streamdown caret="block" isAnimating={true}>
+  Streaming content...
+</Streamdown>
+```
+
+### Circle Caret
+
+The circle caret displays a filled circle (`●`) for a subtler indicator:
+
+```tsx title="chat.tsx"
+<Streamdown caret="circle" isAnimating={true}>
+  Streaming content...
+</Streamdown>
+```
+
+## Behavior
+
+The caret visibility is controlled by two conditions:
+
+1. **`caret` prop is set** - You must specify either `"block"` or `"circle"`
+2. **`isAnimating={true}`** - The caret only appears during active streaming
+
+When streaming stops (when `isAnimating` becomes `false`), the caret automatically disappears, leaving only the completed content.
+
+## Conditional Display
+
+Streamdown doesn't know about roles or message ordering, so you should conditionally show carets for specific messages, such as only displaying them for the last message in a chat and only displaying them from assistant messages:
+
+```tsx title="chat.tsx"
+{messages.map((message, index) => (
+  <Streamdown
+    key={message.id}
+    caret={
+      message.role === 'assistant' &&
+      index === messages.length - 1
+        ? 'block'
+        : undefined
+    }
+    isAnimating={isStreaming}
+  >
+    {message.content}
+  </Streamdown>
+))}
+```
+
+## Technical Details
+
+Carets are implemented using CSS custom properties and pseudo-elements:
+
+- The caret value is passed as a CSS custom property (`--streamdown-caret`)
+- A `::after` pseudo-element is added to the last child element
+- The pseudo-element displays the caret character inline
+- When `isAnimating` becomes `false` or `caret` is `undefined`, the styles are removed
+
+This approach ensures efficient rendering without additional DOM elements.

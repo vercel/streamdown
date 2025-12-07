@@ -217,7 +217,7 @@ export const Chat = ({ models }: ChatProps) => {
         </Column>
 
         <Column title="Streamdown">
-          {messages.map((message) => (
+          {messages.map((message, messageIndex) => (
             <div key={message.id}>
               <span className="font-bold">
                 {message.role === "user" ? "User: " : "AI: "}
@@ -228,6 +228,12 @@ export const Chat = ({ models }: ChatProps) => {
                   case "text":
                     return (
                       <Streamdown
+                        caret={
+                          message.role === "assistant" &&
+                          messageIndex === messages.length - 1
+                            ? "block"
+                            : undefined
+                        }
                         isAnimating={status === "streaming"}
                         key={key}
                       >
