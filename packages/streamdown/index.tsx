@@ -72,8 +72,8 @@ export type StreamdownProps = Options & {
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
   raw: rehypeRaw,
-  katex: [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }],
   sanitize: [rehypeSanitize, {}],
+  katex: [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }],
   harden: [
     harden,
     {
