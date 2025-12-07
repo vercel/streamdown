@@ -1,6 +1,6 @@
 {
-  "name": "streamdown",
-  "version": "1.6.10",
+  "name": "@coderpr0grammer/streamdown",
+  "version": "1.6.11-animate.3",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -70,7 +70,6 @@
     "remark-math": "^6.0.0",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
-    "remend": "workspace:*",
     "shiki": "^3.19.0",
     "tailwind-merge": "^3.4.0",
     "unified": "^11.0.5",

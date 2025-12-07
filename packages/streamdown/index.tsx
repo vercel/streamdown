@@ -27,6 +27,49 @@ import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { cn } from "./lib/utils";
 
+// Animation CSS - injected only when animate=true
+const animationCSS = `
+@keyframes streamdownFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.streamdown-animate > * {
+  animation: streamdownFadeIn var(--streamdown-duration, 300ms) ease-out both;
+  opacity: 0;
+}
+.streamdown-animate > *:nth-child(1) { animation-delay: 0ms; }
+.streamdown-animate > *:nth-child(2) { animation-delay: 60ms; }
+.streamdown-animate > *:nth-child(3) { animation-delay: 120ms; }
+.streamdown-animate > *:nth-child(4) { animation-delay: 180ms; }
+.streamdown-animate > *:nth-child(n+5) { animation-delay: 240ms; }
+@media (prefers-reduced-motion: reduce) {
+  .streamdown-animate > * {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+`;
+
+let animationStylesInjected = false;
+function injectAnimationStyles() {
+  if (animationStylesInjected || typeof document === "undefined") return;
+  const styleId = "streamdown-animation";
+  if (document.getElementById(styleId)) {
+    animationStylesInjected = true;
+    return;
+  }
+  const el = document.createElement("style");
+  el.id = styleId;
+  el.textContent = animationCSS;
+  document.head.appendChild(el);
+  animationStylesInjected = true;
+}
+
+const carets = {
+  block: " ▋",
+  circle: " ●",
+};
+
 export type { MermaidConfig } from "mermaid";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
@@ -68,6 +111,10 @@ export type StreamdownProps = Options & {
   controls?: ControlsConfig;
   isAnimating?: boolean;
   caret?: keyof typeof carets;
+  /** Enable simple fade-in animation on blocks */
+  animate?: boolean;
+  /** Fade-in animation duration in ms (default: 300) */
+  animationDuration?: number;
 };
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
@@ -96,11 +143,6 @@ export const defaultRemarkPlugins: Record<string, Pluggable> = {
 // Stable plugin arrays for cache efficiency - created once at module level
 const defaultRehypePluginsArray = Object.values(defaultRehypePlugins);
 const defaultRemarkPluginsArray = Object.values(defaultRemarkPlugins);
-
-const carets = {
-  block: " ▋",
-  circle: " ●",
-};
 
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export type StreamdownContextType = {
@@ -198,6 +240,8 @@ export const Streamdown = memo(
     mermaid,
     controls = true,
     isAnimating = false,
+    animate = false,
+    animationDuration = 300,
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     caret,
@@ -329,6 +373,13 @@ export const Streamdown = memo(
       [caret, isAnimating]
     );
 
+    // Inject animation CSS when animate is enabled
+    useEffect(() => {
+      if (animate) {
+        injectAnimationStyles();
+      }
+    }, [animate]);
+
     // Static mode: simple rendering without streaming features
     if (mode === "static") {
       return (
@@ -336,8 +387,14 @@ export const Streamdown = memo(
           <div
             className={cn(
               "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+              animate && "streamdown-animate",
               className
             )}
+            style={
+              animate
+                ? ({ "--streamdown-duration": `${animationDuration}ms` } as React.CSSProperties)
+                : undefined
+            }
           >
             <Markdown
               components={mergedComponents}
@@ -361,9 +418,14 @@ export const Streamdown = memo(
             caret
               ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-(--streamdown-caret)"
               : undefined,
+            animate && "streamdown-animate",
             className
           )}
-          style={style}
+          style={
+            animate
+              ? ({ ...style, "--streamdown-duration": `${animationDuration}ms` } as React.CSSProperties)
+              : style
+          }
         >
           {blocksToRender.map((block, index) => (
             <BlockComponent
@@ -385,6 +447,8 @@ export const Streamdown = memo(
     prevProps.children === nextProps.children &&
     prevProps.shikiTheme === nextProps.shikiTheme &&
     prevProps.isAnimating === nextProps.isAnimating &&
-    prevProps.mode === nextProps.mode
+    prevProps.mode === nextProps.mode &&
+    prevProps.animate === nextProps.animate &&
+    prevProps.animationDuration === nextProps.animationDuration
 );
 Streamdown.displayName = "Streamdown";
