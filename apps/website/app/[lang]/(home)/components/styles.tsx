@@ -8,6 +8,9 @@ Modern AI models have revolutionized how we interact with technology. From **lan
 
 ### Benefits
 - Natural language understanding
+  - Generating text
+  - Summarizing documents
+    - Generating summaries
 - Multi-modal processing
 - Real-time inference
 

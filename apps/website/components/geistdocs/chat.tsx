@@ -6,7 +6,9 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { ChevronRightIcon, MessagesSquareIcon, Trash } from "lucide-react";
 import { Portal } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { harden } from "rehype-harden";
 import { toast } from "sonner";
+import { defaultRehypePlugins } from "streamdown";
 import type { MyUIMessage } from "@/app/api/chat/types";
 import {
   Conversation,
@@ -32,6 +34,7 @@ import {
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { suggestions } from "@/geistdocs";
 import { useChatContext } from "@/hooks/geistdocs/use-chat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { db } from "@/lib/geistdocs/db";
@@ -110,7 +113,7 @@ export const useChatPersistence = () => {
   };
 };
 
-const ChatInner = ({ suggestions }: ChatProps) => {
+const ChatInner = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [localPrompt, setLocalPrompt] = useState("");
   const [providerKey, setProviderKey] = useState(0);
@@ -245,7 +248,21 @@ const ChatInner = ({ suggestions }: ChatProps) => {
                 .filter((part) => part.type === "text")
                 .map((part, index) => (
                   <MessageContent key={`${message.id}-${part.type}-${index}`}>
-                    <MessageResponse className="text-wrap">
+                    <MessageResponse
+                      className="text-wrap"
+                      rehypePlugins={[
+                        defaultRehypePlugins.raw,
+                        defaultRehypePlugins.katex,
+                        [
+                          harden,
+                          {
+                            defaultOrigin:
+                              process.env
+                                .NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL,
+                          },
+                        ],
+                      ]}
+                    >
                       {part.text}
                     </MessageResponse>
                   </MessageContent>
@@ -311,11 +328,7 @@ const ChatInner = ({ suggestions }: ChatProps) => {
   );
 };
 
-type ChatProps = {
-  suggestions: string[];
-};
-
-export const Chat = ({ suggestions }: ChatProps) => {
+export const Chat = () => {
   const { isOpen, setIsOpen } = useChatContext();
   const isMobile = useIsMobile();
 
@@ -362,7 +375,7 @@ export const Chat = ({ suggestions }: ChatProps) => {
           )}
           data-state={isOpen ? "open" : "closed"}
         >
-          <ChatInner suggestions={suggestions} />
+          <ChatInner />
         </div>
       </Portal.Root>
       <div className="md:hidden">
@@ -372,11 +385,12 @@ export const Chat = ({ suggestions }: ChatProps) => {
         >
           <DrawerTrigger asChild>
             <Button className="shadow-none" size="sm" variant="outline">
+              <MessagesSquareIcon className="size-3.5 text-muted-foreground" />
               Ask AI
             </Button>
           </DrawerTrigger>
           <DrawerContent className="h-[80dvh]">
-            <ChatInner suggestions={suggestions} />
+            <ChatInner />
           </DrawerContent>
         </Drawer>
       </div>

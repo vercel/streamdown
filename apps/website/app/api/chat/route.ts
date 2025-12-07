@@ -83,7 +83,7 @@ User question: ${userQuestion}`,
       originalMessages: messages,
       execute: ({ writer }) => {
         const result = streamText({
-          model: "openai/gpt-5",
+          model: "openai/gpt-4.1-mini",
           providerOptions: {
             openai: {
               reasoningEffort: "minimal",
@@ -96,6 +96,7 @@ User question: ${userQuestion}`,
           stopWhen: stepCountIs(10),
           tools: createTools(writer),
           system: createSystemPrompt(currentRoute),
+          toolChoice: { type: "tool", toolName: "search_docs" },
         });
 
         writer.merge(result.toUIMessageStream());

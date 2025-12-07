@@ -1,3 +1,5 @@
+import { prompt } from "@/geistdocs";
+
 export const createSystemPrompt = (currentRoute: string) => {
   // Given we are using gpt-5, this prompt has been optimised to work well using openai's prompt optimiser
   const newPrompt = `# Role and Objective
@@ -51,5 +53,5 @@ const someCode = 'a string';
 # Stop Conditions
 - Return to user when a question is addressed per these rules or is outside scope.`;
 
-  return newPrompt;
+  return [newPrompt, prompt].join("\n\n");
 };

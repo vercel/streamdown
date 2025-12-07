@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { CJKLanguageSupport } from "./components/cjk";
 import { CodeBlocks } from "./components/code-blocks";
 import { CallToAction } from "./components/cta";
-import { Footer } from "./components/footer";
 import { GitHubFlavoredMarkdown } from "./components/gfm";
 import { HardenedMarkdown } from "./components/hardened";
 import { Hero } from "./components/hero";
@@ -19,7 +18,7 @@ export const metadata: Metadata = {
 
 const Home = () => (
   <div className="sm:px-4">
-    <div className="container mx-auto max-w-6xl divide-y px-0 sm:border-x">
+    <div className="container mx-auto max-w-6xl divide-y border-b px-0 sm:border-x">
       <Hero />
       <Styles />
       <GitHubFlavoredMarkdown />
@@ -30,7 +29,6 @@ const Home = () => (
       <TerminatorParser />
       <HardenedMarkdown />
       <CallToAction />
-      <Footer />
     </div>
   </div>
 );
