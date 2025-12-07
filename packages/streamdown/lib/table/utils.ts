@@ -38,9 +38,7 @@ export const tableDataToCSV = (data: TableData): string => {
     let needsEscaping = false;
     let hasQuote = false;
 
-    // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
-    for (let i = 0; i < value.length; i += 1) {
-      const char = value[i];
+    for (const char of value) {
       if (char === '"') {
         needsEscaping = true;
         hasQuote = true;
@@ -89,9 +87,7 @@ export const tableDataToTSV = (data: TableData): string => {
   const escapeTSV = (value: string): string => {
     // OPTIMIZATION: Check characters directly instead of multiple includes() calls
     let needsEscaping = false;
-    // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
-    for (let i = 0; i < value.length; i += 1) {
-      const char = value[i];
+    for (const char of value) {
       if (char === "\t" || char === "\n" || char === "\r") {
         needsEscaping = true;
         break;
@@ -104,9 +100,7 @@ export const tableDataToTSV = (data: TableData): string => {
 
     // OPTIMIZATION: Use array building instead of string concatenation for better performance
     const parts: string[] = [];
-    // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
-    for (let i = 0; i < value.length; i += 1) {
-      const char = value[i];
+    for (const char of value) {
       if (char === "\t") {
         parts.push("\\t");
       } else if (char === "\n") {
@@ -145,9 +139,7 @@ export const tableDataToTSV = (data: TableData): string => {
 export const escapeMarkdownTableCell = (cell: string): string => {
   // OPTIMIZATION: Fast path for cells that don't need escaping - check chars directly
   let needsEscaping = false;
-  // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
-  for (let i = 0; i < cell.length; i += 1) {
-    const char = cell[i];
+  for (const char of cell) {
     if (char === "\\" || char === "|") {
       needsEscaping = true;
       break;
@@ -160,9 +152,7 @@ export const escapeMarkdownTableCell = (cell: string): string => {
 
   // OPTIMIZATION: Use array building instead of string concatenation for better performance
   const parts: string[] = [];
-  // biome-ignore lint/style/useForOf: "Need index access to check character codes for performance"
-  for (let i = 0; i < cell.length; i += 1) {
-    const char = cell[i];
+  for (const char of cell) {
     if (char === "\\") {
       parts.push("\\\\");
     } else if (char === "|") {
@@ -193,8 +183,8 @@ export const tableDataToMarkdown = (data: TableData) => {
   // Add separator row
   // OPTIMIZATION: Build separator more efficiently
   const separatorParts = new Array(headers.length);
-  for (let i = 0; i < headers.length; i += 1) {
-    separatorParts[i] = "---";
+  for (const _ of headers) {
+    separatorParts.push("---");
   }
   markdownRows[rowIndex] = `| ${separatorParts.join(" | ")} |`;
   rowIndex += 1;
