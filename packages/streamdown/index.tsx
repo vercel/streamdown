@@ -130,28 +130,17 @@ type BlockProps = Options & {
 };
 
 export const Block = memo(
-  ({ content, shouldParseIncompleteMarkdown, ...props }: BlockProps) => {
-    const parsedContent = useMemo(
-      () =>
-        typeof content === "string" && shouldParseIncompleteMarkdown
-          ? remend(content.trim())
-          : content,
-      [content, shouldParseIncompleteMarkdown]
-    );
-
-    return <Markdown {...props}>{parsedContent}</Markdown>;
+  ({ content, ...props }: BlockProps) => {
+    // Note: remend is already applied to the entire markdown before parsing into blocks
+    // in the Streamdown component, so we don't need to apply it again here
+    return <Markdown {...props}>{content}</Markdown>;
   },
   (prevProps, nextProps) => {
     // Deep comparison for better memoization
     if (prevProps.content !== nextProps.content) {
       return false;
     }
-    if (
-      prevProps.shouldParseIncompleteMarkdown !==
-      nextProps.shouldParseIncompleteMarkdown
-    ) {
-      return false;
-    }
+
     if (prevProps.index !== nextProps.index) {
       return false;
     }
@@ -219,10 +208,20 @@ export const Streamdown = memo(
     const [_isPending, startTransition] = useTransition();
     const [displayBlocks, setDisplayBlocks] = useState<string[]>([]);
 
+    // Apply remend to fix incomplete markdown BEFORE parsing into blocks
+    // This prevents partial list items from being interpreted as setext headings
+    const processedChildren = useMemo(() => {
+      if (typeof children !== "string") {
+        return "";
+      }
+      return mode === "streaming" && shouldParseIncompleteMarkdown
+        ? remend(children)
+        : children;
+    }, [children, mode, shouldParseIncompleteMarkdown]);
+
     const blocks = useMemo(
-      () =>
-        parseMarkdownIntoBlocksFn(typeof children === "string" ? children : ""),
-      [children, parseMarkdownIntoBlocksFn]
+      () => parseMarkdownIntoBlocksFn(processedChildren),
+      [processedChildren, parseMarkdownIntoBlocksFn]
     );
 
     // Use transition for block updates in streaming mode to avoid blocking UI

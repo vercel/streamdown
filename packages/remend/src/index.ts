@@ -8,6 +8,7 @@ import {
 import { handleIncompleteInlineCode } from "./inline-code-handler";
 import { handleIncompleteBlockKatex } from "./katex-handler";
 import { handleIncompleteLinksAndImages } from "./link-image-handler";
+import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
 
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
@@ -18,7 +19,11 @@ const remend = (text: string): string => {
 
   let result = text;
 
-  // Handle incomplete links and images first
+  // Handle incomplete setext headings first (before other processing)
+  // This prevents partial list items (like "-") from being interpreted as heading underlines
+  result = handleIncompleteSetextHeading(result);
+
+  // Handle incomplete links and images
   const processedResult = handleIncompleteLinksAndImages(result);
 
   // If we added an incomplete link marker, don't process other formatting
