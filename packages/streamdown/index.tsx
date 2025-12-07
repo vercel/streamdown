@@ -2,6 +2,7 @@
 
 import type { MermaidConfig } from "mermaid";
 import {
+  type CSSProperties,
   createContext,
   memo,
   useEffect,
@@ -66,6 +67,7 @@ export type StreamdownProps = Options & {
   mermaid?: MermaidOptions;
   controls?: ControlsConfig;
   isAnimating?: boolean;
+  caret?: keyof typeof carets;
 };
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
@@ -94,6 +96,11 @@ export const defaultRemarkPlugins: Record<string, Pluggable> = {
 // Stable plugin arrays for cache efficiency - created once at module level
 const defaultRehypePluginsArray = Object.values(defaultRehypePlugins);
 const defaultRemarkPluginsArray = Object.values(defaultRemarkPlugins);
+
+const carets = {
+  block: " ▋",
+  circle: " ●",
+};
 
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export type StreamdownContextType = {
@@ -204,6 +211,7 @@ export const Streamdown = memo(
     isAnimating = false,
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
+    caret,
     ...props
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
@@ -306,6 +314,16 @@ export const Streamdown = memo(
       }
     }, [rehypePlugins, remarkPlugins, children]);
 
+    const style = useMemo(
+      () =>
+        caret && isAnimating
+          ? ({
+              "--streamdown-caret": `"${carets[caret]}"`,
+            } as CSSProperties)
+          : undefined,
+      [caret, isAnimating]
+    );
+
     // Static mode: simple rendering without streaming features
     if (mode === "static") {
       return (
@@ -327,7 +345,16 @@ export const Streamdown = memo(
     // Streaming mode: parse into blocks with memoization and incomplete markdown handling
     return (
       <StreamdownContext.Provider value={contextValue}>
-        <div className={cn("space-y-4 whitespace-normal", className)}>
+        <div
+          className={cn(
+            "space-y-4 whitespace-normal",
+            caret
+              ? "[&>*]:last:after:inline [&>*]:last:after:align-baseline [&>*]:last:after:content-(--streamdown-caret)"
+              : undefined,
+            className
+          )}
+          style={style}
+        >
           {blocksToRender.map((block, index) => (
             <BlockComponent
               components={mergedComponents}
