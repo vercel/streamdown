@@ -36,3 +36,6 @@ jobs:
 
       - name: Run Tests
         run: pnpm test
+
+      - name: Check Linting and Formatting
+        run: pnpm check

@@ -55,6 +55,9 @@ jobs:
       - name: Run Tests
         run: pnpm test
 
+      - name: Check Linting and Formatting
+        run: pnpm check
+
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
