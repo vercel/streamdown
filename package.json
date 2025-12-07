@@ -22,7 +22,7 @@
     "@changesets/cli": "^2.29.8",
     "turbo": "^2.6.3",
     "typescript": "5.9.3",
-    "ultracite": "6.3.9"
+    "ultracite": "6.3.10"
   },
   "packageManager": "pnpm@10.24.0",
   "engines": {

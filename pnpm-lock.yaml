@@ -21,8 +21,8 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
       ultracite:
-        specifier: 6.3.9
-        version: 6.3.9(typescript@5.9.3)
+        specifier: 6.3.10
+        version: 6.3.10(typescript@5.9.3)
 
   apps/test:
     dependencies:
@@ -6171,8 +6171,8 @@ packages:
   ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
 
-  ultracite@6.3.9:
-    resolution: {integrity: sha512-bqj8Eh3VWYcjHXMR3+a9xqZXbgFY3PxwB+m9LTC+W1HHs5qtOtxH4QX51MiH513jfThpdM+cnWAk5KNltVh+Kg==}
+  ultracite@6.3.10:
+    resolution: {integrity: sha512-I41KoWl09PklvXTdN4JWgs+6Z6n5PERDJGj1hOQXYEMbmKXZLrulG2QAZNEMJ9pdGwtcGk/MevpllWYXM5Wq3A==}
     hasBin: true
 
   undici-types@6.21.0:
@@ -13715,7 +13715,7 @@ snapshots:
 
   ufo@1.6.1: {}
 
-  ultracite@6.3.9(typescript@5.9.3):
+  ultracite@6.3.10(typescript@5.9.3):
     dependencies:
       '@clack/prompts': 0.11.0
       '@trpc/server': 11.7.2(typescript@5.9.3)

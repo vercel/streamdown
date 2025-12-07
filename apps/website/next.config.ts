@@ -8,7 +8,6 @@ const config: NextConfig = {
     turbopackFileSystemCacheForDev: true,
   },
 
-  // biome-ignore lint/suspicious/useAwait: "required"
   async rewrites() {
     return [
       {
