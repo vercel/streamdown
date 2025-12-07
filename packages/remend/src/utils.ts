@@ -140,3 +140,54 @@ export const isWithinLinkOrImageUrl = (
 
   return false;
 };
+
+// Check if a marker sequence appears to be a horizontal rule
+// Horizontal rules must be on their own line with optional leading/trailing whitespace
+// Valid patterns: ---, ***, ___, or longer sequences with optional spaces between markers
+export const isHorizontalRule = (
+  text: string,
+  markerIndex: number,
+  marker: string
+): boolean => {
+  // Find the start of the line containing this marker
+  let lineStart = 0;
+  for (let i = markerIndex - 1; i >= 0; i -= 1) {
+    if (text[i] === "\n") {
+      lineStart = i + 1;
+      break;
+    }
+  }
+
+  // Find the end of the line containing this marker
+  let lineEnd = text.length;
+  for (let i = markerIndex; i < text.length; i += 1) {
+    if (text[i] === "\n") {
+      lineEnd = i;
+      break;
+    }
+  }
+
+  const line = text.substring(lineStart, lineEnd);
+
+  // Check if the line matches horizontal rule pattern
+  // Must be: optional spaces + at least 3 markers + optional spaces
+  // Can have spaces between markers (e.g., "* * *")
+  let markerCount = 0;
+  let hasNonWhitespaceNonMarker = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    if (char === marker) {
+      markerCount += 1;
+    } else if (char !== " " && char !== "\t") {
+      // Found a character that's not a space, tab, or the marker
+      hasNonWhitespaceNonMarker = true;
+      break;
+    }
+  }
+
+  // A horizontal rule needs:
+  // 1. At least 3 markers
+  // 2. No other non-whitespace characters on the line
+  return markerCount >= 3 && !hasNonWhitespaceNonMarker;
+};

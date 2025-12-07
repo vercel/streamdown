@@ -10,6 +10,7 @@ import {
 } from "./patterns";
 import {
   hasCompleteCodeBlock,
+  isHorizontalRule,
   isWithinLinkOrImageUrl,
   isWithinMathBlock,
   isWordChar,
@@ -236,6 +237,12 @@ export const handleIncompleteBold = (text: string): string => {
       }
     }
 
+    // Check if the ** might be part of a horizontal rule (e.g., ****)
+    // Look ahead to see if there are more asterisks that would make this a horizontal rule
+    if (isHorizontalRule(text, markerIndex, "*")) {
+      return text;
+    }
+
     const asteriskPairs = (text.match(/\*\*/g) || []).length;
     if (asteriskPairs % 2 === 1) {
       return `${text}**`;
@@ -281,6 +288,11 @@ export const handleIncompleteDoubleUnderscoreItalic = (
         // Don't complete if the content spans to another line
         return text;
       }
+    }
+
+    // Check if the __ or ___ is a horizontal rule
+    if (isHorizontalRule(text, markerIndex, "_")) {
+      return text;
     }
 
     const underscorePairs = (text.match(/__/g) || []).length;
@@ -472,6 +484,12 @@ export const handleIncompleteBoldItalic = (text: string): string => {
       !contentAfterMarker ||
       whitespaceOrMarkersPattern.test(contentAfterMarker)
     ) {
+      return text;
+    }
+
+    // Check if the *** is a horizontal rule
+    const markerIndex = text.lastIndexOf(boldItalicMatch[1]);
+    if (isHorizontalRule(text, markerIndex, "*")) {
       return text;
     }
 
