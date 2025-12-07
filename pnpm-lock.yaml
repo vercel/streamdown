@@ -467,9 +467,6 @@ importers:
       html-url-attributes:
         specifier: ^3.0.1
         version: 3.0.1
-      katex:
-        specifier: ^0.16.22
-        version: 0.16.25
       lucide-react:
         specifier: ^0.542.0
         version: 0.542.0(react@19.2.1)

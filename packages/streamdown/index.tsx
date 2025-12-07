@@ -308,8 +308,14 @@ export const Streamdown = memo(
       const hasMathSyntax = hasDoubleDollar || hasSingleDollar;
 
       if (hasMathSyntax) {
-        // @ts-expect-error - dynamic import for CSS
-        import("katex/dist/katex.min.css");
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href =
+          "https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css";
+        link.integrity =
+          "sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP";
+        link.crossOrigin = "anonymous";
+        document.head.appendChild(link);
       }
     }, [rehypePlugins, remarkPlugins, children]);
 

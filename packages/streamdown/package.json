@@ -57,7 +57,6 @@
     "hast": "^1.0.0",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "html-url-attributes": "^3.0.1",
-    "katex": "^0.16.22",
     "lucide-react": "^0.542.0",
     "marked": "^16.2.1",
     "mermaid": "^11.11.0",
