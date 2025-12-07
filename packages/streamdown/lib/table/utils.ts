@@ -183,8 +183,8 @@ export const tableDataToMarkdown = (data: TableData) => {
   // Add separator row
   // OPTIMIZATION: Build separator more efficiently
   const separatorParts = new Array(headers.length);
-  for (const _ of headers) {
-    separatorParts.push("---");
+  for (let i = 0; i < headers.length; i += 1) {
+    separatorParts[i] = "---";
   }
   markdownRows[rowIndex] = `| ${separatorParts.join(" | ")} |`;
   rowIndex += 1;
