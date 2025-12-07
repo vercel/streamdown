@@ -19,7 +19,7 @@ import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
-import remend from "../remend/src/index";
+import remend from "remend";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
@@ -143,11 +143,6 @@ export const defaultRemarkPlugins: Record<string, Pluggable> = {
 // Stable plugin arrays for cache efficiency - created once at module level
 const defaultRehypePluginsArray = Object.values(defaultRehypePlugins);
 const defaultRemarkPluginsArray = Object.values(defaultRemarkPlugins);
-
-const carets = {
-  block: " ▋",
-  circle: " ●",
-};
 
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export type StreamdownContextType = {

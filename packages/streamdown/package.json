@@ -1,6 +1,6 @@
 {
-  "name": "@coderpr0grammer/streamdown",
-  "version": "1.6.10-animate.1",
+  "name": "streamdown",
+  "version": "1.6.10",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
