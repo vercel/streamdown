@@ -141,10 +141,10 @@ export const Mermaid = ({
   const displaySvg = svgContent || lastValidSvg;
 
   return (
-    <div ref={containerRef}>
+    <div className="size-full" ref={containerRef}>
       <PanZoom
         className={cn(
-          fullscreen ? "h-full w-full overflow-hidden" : "my-4 overflow-hidden",
+          fullscreen ? "size-full overflow-hidden" : "my-4 overflow-hidden",
           className
         )}
         fullscreen={fullscreen}
@@ -157,7 +157,7 @@ export const Mermaid = ({
           aria-label="Mermaid chart"
           className={cn(
             "flex justify-center",
-            fullscreen && "h-full w-full items-center"
+            fullscreen ? "size-full items-center" : null
           )}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
           dangerouslySetInnerHTML={{ __html: displaySvg }}

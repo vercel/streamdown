@@ -102,7 +102,7 @@ export const MermaidFullscreenButton = ({
         <Maximize2Icon size={14} />
       </button>
 
-      {isFullscreen && (
+      {isFullscreen ? (
         // biome-ignore lint/a11y/useSemanticElements: "div is used as a backdrop overlay, not a button"
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
@@ -125,21 +125,21 @@ export const MermaidFullscreenButton = ({
           </button>
           {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
           <div
-            className="flex h-full w-full items-center justify-center p-4"
+            className="flex size-full items-center justify-center p-4"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
             role="presentation"
           >
             <Mermaid
               chart={chart}
-              className="h-full w-full [&_svg]:h-auto [&_svg]:w-auto"
+              className="size-full [&_svg]:h-auto [&_svg]:w-auto"
               config={config}
               fullscreen={true}
               showControls={showPanZoomControls}
             />
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 };
