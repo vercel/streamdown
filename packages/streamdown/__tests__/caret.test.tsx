@@ -56,9 +56,9 @@ describe("Caret Feature", () => {
 
       // Check that the wrapper has the caret-related classes
       const className = wrapper?.className || "";
-      expect(className).toContain("[&>*]:last:after:inline");
-      expect(className).toContain("[&>*]:last:after:align-baseline");
-      expect(className).toContain("[&>*]:last:after:content-(--streamdown-caret)");
+      expect(className).toContain("*:last:after:inline");
+      expect(className).toContain("*:last:after:align-baseline");
+      expect(className).toContain("*:last:after:content-(--streamdown-caret)");
 
       // Check that the CSS custom property is set
       const style = (wrapper as HTMLElement)?.style;
@@ -77,9 +77,9 @@ describe("Caret Feature", () => {
 
       // Check that the wrapper has the caret-related classes
       const className = wrapper?.className || "";
-      expect(className).toContain("[&>*]:last:after:inline");
-      expect(className).toContain("[&>*]:last:after:align-baseline");
-      expect(className).toContain("[&>*]:last:after:content-(--streamdown-caret)");
+      expect(className).toContain("*:last:after:inline");
+      expect(className).toContain("*:last:after:align-baseline");
+      expect(className).toContain("*:last:after:content-(--streamdown-caret)");
 
       // Check that the CSS custom property is set
       const style = (wrapper as HTMLElement)?.style;
@@ -96,9 +96,9 @@ describe("Caret Feature", () => {
 
       // Check that the wrapper does NOT have the caret-related classes
       const className = wrapper?.className || "";
-      expect(className).not.toContain("[&>*]:last:after:inline");
-      expect(className).not.toContain("[&>*]:last:after:align-baseline");
-      expect(className).not.toContain("[&>*]:last:after:content-(--streamdown-caret)");
+      expect(className).not.toContain("*:last:after:inline");
+      expect(className).not.toContain("*:last:after:align-baseline");
+      expect(className).not.toContain("*:last:after:content-(--streamdown-caret)");
 
       // Check that the style is not set
       const style = (wrapper as HTMLElement)?.style;
@@ -252,7 +252,7 @@ describe("Caret Feature", () => {
       // In static mode, the caret classes and styles are not applied
       // because static mode uses a different rendering path
       const className = wrapper?.className || "";
-      expect(className).not.toContain("[&>*]:last:after:inline");
+      expect(className).not.toContain("*:last:after:inline");
     });
   });
 
@@ -404,9 +404,9 @@ const x = 1;
       const className = wrapper?.className || "";
 
       // Verify all three caret-related classes are present
-      expect(className).toContain("[&>*]:last:after:inline");
-      expect(className).toContain("[&>*]:last:after:align-baseline");
-      expect(className).toContain("[&>*]:last:after:content-(--streamdown-caret)");
+      expect(className).toContain("*:last:after:inline");
+      expect(className).toContain("*:last:after:align-baseline");
+      expect(className).toContain("*:last:after:content-(--streamdown-caret)");
     });
 
     it("should not apply caret CSS classes when caret is disabled", () => {
@@ -420,9 +420,9 @@ const x = 1;
       const className = wrapper?.className || "";
 
       // Verify caret-related classes are NOT present
-      expect(className).not.toContain("[&>*]:last:after:inline");
-      expect(className).not.toContain("[&>*]:last:after:align-baseline");
-      expect(className).not.toContain("[&>*]:last:after:content-(--streamdown-caret)");
+      expect(className).not.toContain("*:last:after:inline");
+      expect(className).not.toContain("*:last:after:align-baseline");
+      expect(className).not.toContain("*:last:after:content-(--streamdown-caret)");
     });
 
     it("should preserve other classNames when caret is enabled", () => {
@@ -444,7 +444,7 @@ const x = 1;
       expect(className).toContain("another-class");
 
       // And caret classes are added
-      expect(className).toContain("[&>*]:last:after:inline");
+      expect(className).toContain("*:last:after:inline");
     });
   });
 
