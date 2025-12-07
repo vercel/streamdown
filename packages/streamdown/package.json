@@ -35,19 +35,19 @@
   "license": "Apache-2.0",
   "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/hast": "^3.0.4",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.0.2",
-    "@vitest/coverage-v8": "^3.2.4",
-    "jsdom": "^26.1.0",
+    "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/coverage-v8": "^4.0.15",
+    "jsdom": "^27.2.0",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-markdown": "^10.1.0",
-    "tsup": "^8.5.0",
-    "vitest": "^3.2.4"
+    "tsup": "^8.5.1",
+    "vitest": "^4.0.15"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
@@ -57,9 +57,9 @@
     "hast": "^1.0.0",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "html-url-attributes": "^3.0.1",
-    "lucide-react": "^0.542.0",
-    "marked": "^16.2.1",
-    "mermaid": "^11.11.0",
+    "lucide-react": "^0.556.0",
+    "marked": "^17.0.1",
+    "mermaid": "^11.12.2",
     "rehype-harden": "^1.1.6",
     "rehype-katex": "^7.0.1",
     "rehype-raw": "^7.0.0",
@@ -71,8 +71,8 @@
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
     "remend": "workspace:*",
-    "shiki": "^3.12.2",
-    "tailwind-merge": "^3.3.1",
+    "shiki": "^3.19.0",
+    "tailwind-merge": "^3.4.0",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0"
   }

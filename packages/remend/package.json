@@ -34,9 +34,9 @@
   "license": "Apache-2.0",
   "description": "Self-healing markdown. Intelligently parses and styles incomplete Markdown blocks.",
   "devDependencies": {
-    "@vitest/coverage-v8": "^3.2.4",
-    "tsup": "^8.5.0",
-    "vitest": "^3.2.4"
+    "@vitest/coverage-v8": "^4.0.15",
+    "tsup": "^8.5.1",
+    "vitest": "^4.0.15"
   },
   "peerDependencies": {},
   "dependencies": {}
