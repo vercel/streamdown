@@ -98,7 +98,9 @@ describe("Caret Feature", () => {
       const className = wrapper?.className || "";
       expect(className).not.toContain("*:last:after:inline");
       expect(className).not.toContain("*:last:after:align-baseline");
-      expect(className).not.toContain("*:last:after:content-(--streamdown-caret)");
+      expect(className).not.toContain(
+        "*:last:after:content-(--streamdown-caret)"
+      );
 
       // Check that the style is not set
       const style = (wrapper as HTMLElement)?.style;
@@ -216,11 +218,7 @@ describe("Caret Feature", () => {
       expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ▋"');
 
       // Remove caret (also change content to trigger re-render due to memoization)
-      rerender(
-        <Streamdown isAnimating={true}>
-          Content updated
-        </Streamdown>
-      );
+      rerender(<Streamdown isAnimating={true}>Content updated</Streamdown>);
 
       wrapper = container.firstElementChild;
       style = (wrapper as HTMLElement)?.style;
@@ -379,8 +377,8 @@ const x = 1;
       const { container } = render(
         <Streamdown
           caret="block"
-          isAnimating={true}
           components={customComponents}
+          isAnimating={true}
         >
           # Custom Heading
         </Streamdown>
@@ -411,9 +409,7 @@ const x = 1;
 
     it("should not apply caret CSS classes when caret is disabled", () => {
       const { container } = render(
-        <Streamdown isAnimating={true}>
-          Content
-        </Streamdown>
+        <Streamdown isAnimating={true}>Content</Streamdown>
       );
 
       const wrapper = container.firstElementChild;
@@ -422,15 +418,17 @@ const x = 1;
       // Verify caret-related classes are NOT present
       expect(className).not.toContain("*:last:after:inline");
       expect(className).not.toContain("*:last:after:align-baseline");
-      expect(className).not.toContain("*:last:after:content-(--streamdown-caret)");
+      expect(className).not.toContain(
+        "*:last:after:content-(--streamdown-caret)"
+      );
     });
 
     it("should preserve other classNames when caret is enabled", () => {
       const { container } = render(
         <Streamdown
           caret="block"
-          isAnimating={true}
           className="custom-class another-class"
+          isAnimating={true}
         >
           Content
         </Streamdown>
@@ -471,11 +469,7 @@ const x = 1;
 
     it("should accept undefined as valid caret value", () => {
       expect(() => {
-        render(
-          <Streamdown isAnimating={true}>
-            Content
-          </Streamdown>
-        );
+        render(<Streamdown isAnimating={true}>Content</Streamdown>);
       }).not.toThrow();
     });
   });
@@ -521,7 +515,9 @@ const x = 1;
 
       const { container } = render(
         <Streamdown
-          caret={messageRole === "assistant" && isLastMessage ? "block" : undefined}
+          caret={
+            messageRole === "assistant" && isLastMessage ? "block" : undefined
+          }
           isAnimating={true}
         >
           Assistant response
@@ -539,7 +535,9 @@ const x = 1;
 
       const { container } = render(
         <Streamdown
-          caret={messageRole === "assistant" && isLastMessage ? "block" : undefined}
+          caret={
+            messageRole === "assistant" && isLastMessage ? "block" : undefined
+          }
           isAnimating={true}
         >
           User message
@@ -557,7 +555,9 @@ const x = 1;
 
       const { container } = render(
         <Streamdown
-          caret={messageRole === "assistant" && isLastMessage ? "circle" : undefined}
+          caret={
+            messageRole === "assistant" && isLastMessage ? "circle" : undefined
+          }
           isAnimating={true}
         >
           Previous assistant message

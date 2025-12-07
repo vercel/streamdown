@@ -148,7 +148,7 @@ export const PanZoom = ({
     <div
       className={cn(
         "relative flex flex-col",
-        fullscreen ? "h-full w-full" : "w-full min-h-28",
+        fullscreen ? "h-full w-full" : "min-h-28 w-full",
         className
       )}
       ref={containerRef}
@@ -191,8 +191,10 @@ export const PanZoom = ({
       )}
       <div
         className={cn(
-          "origin-center transition-transform duration-150 ease-out flex-1",
-          fullscreen ? "flex h-full w-full items-center justify-center" : "flex w-full items-center justify-center"
+          "flex-1 origin-center transition-transform duration-150 ease-out",
+          fullscreen
+            ? "flex h-full w-full items-center justify-center"
+            : "flex w-full items-center justify-center"
         )}
         onPointerDown={handlePointerDown}
         ref={contentRef}

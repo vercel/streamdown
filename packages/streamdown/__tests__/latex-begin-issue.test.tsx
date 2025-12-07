@@ -67,7 +67,9 @@ $$`;
 
     // Check that the LaTeX is processed
     const text = container.textContent || "";
-    const hasMathContent = (text.includes("x") && text.includes("y")) || (text.includes("a") && text.includes("b"));
+    const hasMathContent =
+      (text.includes("x") && text.includes("y")) ||
+      (text.includes("a") && text.includes("b"));
     expect(hasMathContent).toBe(true);
   });
 

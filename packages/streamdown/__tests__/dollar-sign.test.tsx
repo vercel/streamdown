@@ -86,6 +86,8 @@ describe("Dollar sign handling", () => {
     // Currency should be preserved
     expect(text).toContain("$99.99");
     // Math formula content should be present
-    expect(text.includes("x2") || text.includes("x^2") || text.includes("x²")).toBe(true);
+    expect(
+      text.includes("x2") || text.includes("x^2") || text.includes("x²")
+    ).toBe(true);
   });
 });

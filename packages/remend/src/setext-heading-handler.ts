@@ -31,7 +31,10 @@ export const handleIncompleteSetextHeading = (text: string): string => {
 
   // Check if it's ONLY dashes (1 or 2) - but if there's trailing space, don't modify
   // If the last line ends with space after the dashes, it's already broken the setext heading pattern
-  if (/^-{1,2}$/.test(trimmedLastLine) && !lastLine.match(/^[\s]*-{1,2}[\s]+$/)) {
+  if (
+    /^-{1,2}$/.test(trimmedLastLine) &&
+    !lastLine.match(/^[\s]*-{1,2}[\s]+$/)
+  ) {
     // Check if there's content on the previous line (required for setext heading)
     const lines = previousContent.split("\n");
     const previousLine = lines[lines.length - 1];
@@ -47,7 +50,10 @@ export const handleIncompleteSetextHeading = (text: string): string => {
   }
 
   // Check if it's ONLY equals (1 or 2)
-  if (/^={1,2}$/.test(trimmedLastLine) && !lastLine.match(/^[\s]*={1,2}[\s]+$/)) {
+  if (
+    /^={1,2}$/.test(trimmedLastLine) &&
+    !lastLine.match(/^[\s]*={1,2}[\s]+$/)
+  ) {
     // Check if there's content on the previous line
     const lines = previousContent.split("\n");
     const previousLine = lines[lines.length - 1];

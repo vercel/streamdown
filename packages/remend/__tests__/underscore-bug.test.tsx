@@ -1,5 +1,5 @@
-import remend from "../src";
 import { describe, expect, it } from "vitest";
+import remend from "../src";
 
 const HELLO_WORLD_UNDERSCORE_REGEX = /hello_world_/;
 const TRAILING_UNDERSCORE_REGEX = /_$/;

@@ -60,7 +60,10 @@ describe("setext heading handling", () => {
     const scenarios = [
       { input: "here is a list\n-", expected: "here is a list\n-\u200B" },
       { input: "here is a list\n- ", expected: "here is a list\n- " },
-      { input: "here is a list\n- list item 1", expected: "here is a list\n- list item 1" },
+      {
+        input: "here is a list\n- list item 1",
+        expected: "here is a list\n- list item 1",
+      },
     ];
 
     for (const { input, expected } of scenarios) {
