@@ -1,5 +1,5 @@
 ---
-"streamdown": patch
+"streamdown": minor
 ---
 
 Add support for carets
