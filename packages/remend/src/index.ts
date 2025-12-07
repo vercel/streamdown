@@ -17,7 +17,9 @@ const remend = (text: string): string => {
     return text;
   }
 
-  let result = text;
+  // Remove trailing whitespace if it's not a double space
+  let result =
+    text.endsWith(" ") && !text.endsWith("  ") ? text.slice(0, -1) : text;
 
   // Handle incomplete setext headings first (before other processing)
   // This prevents partial list items (like "-") from being interpreted as heading underlines

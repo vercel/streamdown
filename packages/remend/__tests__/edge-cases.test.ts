@@ -28,9 +28,9 @@ describe("edge cases", () => {
     expect(remend("* _ ~~ `")).toBe("* _ ~~ `");
 
     // Standalone markers with only whitespace
-    expect(remend("** ")).toBe("** ");
+    expect(remend("** ")).toBe("**"); // Trailing single space removed
     expect(remend(" **")).toBe(" **");
-    expect(remend("  **  ")).toBe("  **  ");
+    expect(remend("  **  ")).toBe("  **  "); // Trailing double space preserved as line break
 
     // But markers with actual content should still be closed
     expect(remend("**text")).toBe("**text**");

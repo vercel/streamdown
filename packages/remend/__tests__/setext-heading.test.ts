@@ -59,7 +59,7 @@ describe("setext heading handling", () => {
     // Simulate streaming where list items come in one by one
     const scenarios = [
       { input: "here is a list\n-", expected: "here is a list\n-\u200B" },
-      { input: "here is a list\n- ", expected: "here is a list\n- " },
+      { input: "here is a list\n- ", expected: "here is a list\n-\u200B" }, // Trailing space removed, then zero-width joiner added
       {
         input: "here is a list\n- list item 1",
         expected: "here is a list\n- list item 1",
@@ -107,8 +107,8 @@ describe("setext heading handling", () => {
   it("should handle mixed whitespace and dashes", () => {
     const text = "Some text\n- ";
     const result = remend(text);
-    // Already has a space, should not be modified
-    expect(result).toBe(text);
+    // Trailing single space is removed, then zero-width joiner is added to prevent setext heading interpretation
+    expect(result).toBe("Some text\n-\u200B");
   });
 
   it("should handle the original issue example precisely", () => {
