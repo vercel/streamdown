@@ -14,12 +14,12 @@ export const Table = ({
   ...props
 }: TableProps) => (
   <div className="my-4 flex flex-col space-y-2" data-streamdown="table-wrapper">
-    {showControls && (
+    {showControls ? (
       <div className="flex items-center justify-end gap-1">
         <TableCopyDropdown />
         <TableDownloadDropdown />
       </div>
-    )}
+    ) : null}
     <div className="overflow-x-auto">
       <table
         className={cn("w-full border-collapse border border-border", className)}

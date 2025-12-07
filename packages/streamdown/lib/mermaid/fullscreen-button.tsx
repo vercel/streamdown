@@ -51,7 +51,7 @@ export const MermaidFullscreenButton = ({
     if (mermaidCtl === true || mermaidCtl === undefined) {
       return true;
     }
-    return (mermaidCtl as any).panZoom !== false;
+    return mermaidCtl.panZoom !== false;
   })();
 
   const handleToggle = () => {

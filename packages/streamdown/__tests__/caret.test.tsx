@@ -515,9 +515,7 @@ const x = 1;
 
       const { container } = render(
         <Streamdown
-          caret={
-            messageRole === "assistant" && isLastMessage ? "block" : undefined
-          }
+          caret={messageRole === "assistant" && isLastMessage ? "block" : null}
           isAnimating={true}
         >
           Assistant response
@@ -535,9 +533,7 @@ const x = 1;
 
       const { container } = render(
         <Streamdown
-          caret={
-            messageRole === "assistant" && isLastMessage ? "block" : undefined
-          }
+          caret={messageRole === "assistant" && isLastMessage ? "block" : null}
           isAnimating={true}
         >
           User message
@@ -555,9 +551,7 @@ const x = 1;
 
       const { container } = render(
         <Streamdown
-          caret={
-            messageRole === "assistant" && isLastMessage ? "circle" : undefined
-          }
+          caret={messageRole === "assistant" && isLastMessage ? "circle" : null}
           isAnimating={true}
         >
           Previous assistant message

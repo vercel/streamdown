@@ -196,60 +196,90 @@ export const countTripleAsterisks = (text: string): number => {
   return count;
 };
 
+// Helper to check if bold marker should not be completed
+const shouldSkipBoldCompletion = (
+  text: string,
+  contentAfterMarker: string,
+  markerIndex: number
+): boolean => {
+  if (
+    !contentAfterMarker ||
+    whitespaceOrMarkersPattern.test(contentAfterMarker)
+  ) {
+    return true;
+  }
+
+  // Check if this is in a list item with multiline content
+  const beforeMarker = text.substring(0, markerIndex);
+  const lastNewlineBeforeMarker = beforeMarker.lastIndexOf("\n");
+  const lineStart =
+    lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
+  const lineBeforeMarker = text.substring(lineStart, markerIndex);
+
+  if (listItemPattern.test(lineBeforeMarker)) {
+    const hasNewlineInContent = contentAfterMarker.includes("\n");
+    if (hasNewlineInContent) {
+      return true;
+    }
+  }
+
+  return isHorizontalRule(text, markerIndex, "*");
+};
+
 // Completes incomplete bold formatting (**)
 export const handleIncompleteBold = (text: string): string => {
-  // Don't process if inside a complete code block
   if (hasCompleteCodeBlock(text)) {
     return text;
   }
 
   const boldMatch = text.match(boldPattern);
+  if (!boldMatch) {
+    return text;
+  }
 
-  if (boldMatch) {
-    // Don't close if there's no meaningful content after the opening markers
-    // boldMatch[2] contains the content after **
-    // Check if content is only whitespace or other emphasis markers
-    const contentAfterMarker = boldMatch[2];
-    if (
-      !contentAfterMarker ||
-      whitespaceOrMarkersPattern.test(contentAfterMarker)
-    ) {
-      return text;
-    }
+  const contentAfterMarker = boldMatch[2];
+  const markerIndex = text.lastIndexOf(boldMatch[1]);
 
-    // Check if the bold marker is in a list item context
-    // Find the position of the matched bold marker
-    const markerIndex = text.lastIndexOf(boldMatch[1]);
-    const beforeMarker = text.substring(0, markerIndex);
-    const lastNewlineBeforeMarker = beforeMarker.lastIndexOf("\n");
-    const lineStart =
-      lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
-    const lineBeforeMarker = text.substring(lineStart, markerIndex);
+  if (shouldSkipBoldCompletion(text, contentAfterMarker, markerIndex)) {
+    return text;
+  }
 
-    // Check if this line is a list item with just the bold marker
-    if (listItemPattern.test(lineBeforeMarker)) {
-      // This is a list item with just emphasis markers
-      // Check if content after marker spans multiple lines
-      const hasNewlineInContent = contentAfterMarker.includes("\n");
-      if (hasNewlineInContent) {
-        // Don't complete if the content spans to another line
-        return text;
-      }
-    }
-
-    // Check if the ** might be part of a horizontal rule (e.g., ****)
-    // Look ahead to see if there are more asterisks that would make this a horizontal rule
-    if (isHorizontalRule(text, markerIndex, "*")) {
-      return text;
-    }
-
-    const asteriskPairs = (text.match(/\*\*/g) || []).length;
-    if (asteriskPairs % 2 === 1) {
-      return `${text}**`;
-    }
+  const asteriskPairs = (text.match(/\*\*/g) || []).length;
+  if (asteriskPairs % 2 === 1) {
+    return `${text}**`;
   }
 
   return text;
+};
+
+// Helper to check if italic marker should not be completed
+const shouldSkipItalicCompletion = (
+  text: string,
+  contentAfterMarker: string,
+  markerIndex: number
+): boolean => {
+  if (
+    !contentAfterMarker ||
+    whitespaceOrMarkersPattern.test(contentAfterMarker)
+  ) {
+    return true;
+  }
+
+  // Check if this is in a list item with multiline content
+  const beforeMarker = text.substring(0, markerIndex);
+  const lastNewlineBeforeMarker = beforeMarker.lastIndexOf("\n");
+  const lineStart =
+    lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
+  const lineBeforeMarker = text.substring(lineStart, markerIndex);
+
+  if (listItemPattern.test(lineBeforeMarker)) {
+    const hasNewlineInContent = contentAfterMarker.includes("\n");
+    if (hasNewlineInContent) {
+      return true;
+    }
+  }
+
+  return isHorizontalRule(text, markerIndex, "_");
 };
 
 // Completes incomplete italic formatting with double underscores (__)
@@ -257,48 +287,20 @@ export const handleIncompleteDoubleUnderscoreItalic = (
   text: string
 ): string => {
   const italicMatch = text.match(italicPattern);
+  if (!italicMatch) {
+    return text;
+  }
 
-  if (italicMatch) {
-    // Don't close if there's no meaningful content after the opening markers
-    // italicMatch[2] contains the content after __
-    // Check if content is only whitespace or other emphasis markers
-    const contentAfterMarker = italicMatch[2];
-    if (
-      !contentAfterMarker ||
-      whitespaceOrMarkersPattern.test(contentAfterMarker)
-    ) {
-      return text;
-    }
+  const contentAfterMarker = italicMatch[2];
+  const markerIndex = text.lastIndexOf(italicMatch[1]);
 
-    // Check if the underscore marker is in a list item context
-    // Find the position of the matched underscore marker
-    const markerIndex = text.lastIndexOf(italicMatch[1]);
-    const beforeMarker = text.substring(0, markerIndex);
-    const lastNewlineBeforeMarker = beforeMarker.lastIndexOf("\n");
-    const lineStart =
-      lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
-    const lineBeforeMarker = text.substring(lineStart, markerIndex);
+  if (shouldSkipItalicCompletion(text, contentAfterMarker, markerIndex)) {
+    return text;
+  }
 
-    // Check if this line is a list item with just the underscore marker
-    if (listItemPattern.test(lineBeforeMarker)) {
-      // This is a list item with just emphasis markers
-      // Check if content after marker spans multiple lines
-      const hasNewlineInContent = contentAfterMarker.includes("\n");
-      if (hasNewlineInContent) {
-        // Don't complete if the content spans to another line
-        return text;
-      }
-    }
-
-    // Check if the __ or ___ is a horizontal rule
-    if (isHorizontalRule(text, markerIndex, "_")) {
-      return text;
-    }
-
-    const underscorePairs = (text.match(/__/g) || []).length;
-    if (underscorePairs % 2 === 1) {
-      return `${text}__`;
-    }
+  const underscorePairs = (text.match(/__/g) || []).length;
+  if (underscorePairs % 2 === 1) {
+    return `${text}__`;
   }
 
   return text;

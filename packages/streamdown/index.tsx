@@ -27,6 +27,11 @@ import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { cn } from "./lib/utils";
 
+// Regex patterns defined at top level for performance
+const MIDDLE_DOLLAR_PATTERN = /[^$]\$[^$]/;
+const START_DOLLAR_PATTERN = /^\$[^$]/;
+const END_DOLLAR_PATTERN = /[^$]\$$/;
+
 export type { MermaidConfig } from "mermaid";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
@@ -185,6 +190,57 @@ const defaultShikiTheme: [BundledTheme, BundledTheme] = [
   "github-dark",
 ];
 
+// Helper functions to reduce complexity
+const checkKatexPlugin = (
+  rehypePlugins: Pluggable[] | null | undefined
+): boolean =>
+  Array.isArray(rehypePlugins) &&
+  rehypePlugins.some((plugin) =>
+    Array.isArray(plugin) ? plugin[0] === rehypeKatex : plugin === rehypeKatex
+  );
+
+const checkSingleDollarEnabled = (
+  remarkPlugins: Pluggable[] | null | undefined
+): boolean => {
+  if (!Array.isArray(remarkPlugins)) {
+    return false;
+  }
+
+  const mathPlugin = remarkPlugins.find((plugin) =>
+    Array.isArray(plugin) ? plugin[0] === remarkMath : plugin === remarkMath
+  );
+
+  if (mathPlugin && Array.isArray(mathPlugin) && mathPlugin[1]) {
+    const config = mathPlugin[1] as { singleDollarTextMath?: boolean };
+    return config.singleDollarTextMath === true;
+  }
+
+  return false;
+};
+
+const checkMathSyntax = (
+  content: string,
+  singleDollarEnabled: boolean
+): boolean => {
+  const hasDoubleDollar = content.includes("$$");
+  const hasSingleDollar =
+    singleDollarEnabled &&
+    (MIDDLE_DOLLAR_PATTERN.test(content) ||
+      START_DOLLAR_PATTERN.test(content) ||
+      END_DOLLAR_PATTERN.test(content));
+  return hasDoubleDollar || hasSingleDollar;
+};
+
+const loadKatexCSS = (): void => {
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css";
+  link.integrity =
+    "sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP";
+  link.crossOrigin = "anonymous";
+  document.head.appendChild(link);
+};
+
 export const Streamdown = memo(
   ({
     children,
@@ -270,52 +326,17 @@ export const Streamdown = memo(
 
     // Only load KaTeX CSS when math syntax is detected in content
     useEffect(() => {
-      // Check if katex plugin is included
-      const hasKatexPlugin =
-        Array.isArray(rehypePlugins) &&
-        rehypePlugins.some((plugin) =>
-          Array.isArray(plugin)
-            ? plugin[0] === rehypeKatex
-            : plugin === rehypeKatex
-        );
-
+      const hasKatexPlugin = checkKatexPlugin(rehypePlugins);
       if (!hasKatexPlugin) {
         return;
       }
 
-      // Check if single dollar math is enabled in remarkMath config
-      let singleDollarEnabled = false;
-      if (Array.isArray(remarkPlugins)) {
-        const mathPlugin = remarkPlugins.find((plugin) =>
-          Array.isArray(plugin)
-            ? plugin[0] === remarkMath
-            : plugin === remarkMath
-        );
-        if (mathPlugin && Array.isArray(mathPlugin) && mathPlugin[1]) {
-          const config = mathPlugin[1] as { singleDollarTextMath?: boolean };
-          singleDollarEnabled = config.singleDollarTextMath === true;
-        }
-      }
-
-      // Only load CSS if content contains math syntax
+      const singleDollarEnabled = checkSingleDollarEnabled(remarkPlugins);
       const content = typeof children === "string" ? children : "";
-      const hasDoubleDollar = content.includes("$$");
-      const hasSingleDollar =
-        singleDollarEnabled &&
-        (/[^$]\$[^$]/.test(content) ||
-          /^\$[^$]/.test(content) ||
-          /[^$]\$$/.test(content));
-      const hasMathSyntax = hasDoubleDollar || hasSingleDollar;
+      const hasMathSyntax = checkMathSyntax(content, singleDollarEnabled);
 
       if (hasMathSyntax) {
-        const link = document.createElement("link");
-        link.rel = "stylesheet";
-        link.href =
-          "https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css";
-        link.integrity =
-          "sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP";
-        link.crossOrigin = "anonymous";
-        document.head.appendChild(link);
+        loadKatexCSS();
       }
     }, [rehypePlugins, remarkPlugins, children]);
 
@@ -360,7 +381,7 @@ export const Streamdown = memo(
             "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
             caret
               ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-(--streamdown-caret)"
-              : undefined,
+              : null,
             className
           )}
           style={style}

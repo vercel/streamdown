@@ -1,5 +1,5 @@
 import { render, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 
 describe("controls prop", () => {
@@ -202,7 +202,7 @@ ${markdownWithCode}
     });
 
     it("should hide mermaid pan-zoom controls when panZoom is false", async () => {
-      const markdownWithMermaid = `
+      const mermaidWithControls = `
 \`\`\`mermaid
 graph TD
     A-->B
@@ -211,7 +211,7 @@ graph TD
 
       const { container } = render(
         <Streamdown controls={{ mermaid: { panZoom: false } }}>
-          {markdownWithMermaid}
+          {mermaidWithControls}
         </Streamdown>
       );
 
@@ -226,7 +226,7 @@ graph TD
       vi.spyOn(utils, "initializeMermaid").mockResolvedValue({
         render: vi.fn().mockResolvedValue({ svg: "<svg></svg>" }),
       } as any);
-      const markdownWithMermaid = `
+      const mermaidContent = `
 \`\`\`mermaid
 graph TD
     A-->B
@@ -234,9 +234,7 @@ graph TD
 `;
 
       const { container } = render(
-        <Streamdown controls={{ mermaid: {} }}>
-          {markdownWithMermaid}
-        </Streamdown>
+        <Streamdown controls={{ mermaid: {} }}>{mermaidContent}</Streamdown>
       );
 
       await waitFor(() => {

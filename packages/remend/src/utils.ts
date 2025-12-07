@@ -97,6 +97,19 @@ export const isWithinMathBlock = (text: string, position: number): boolean => {
   return inInlineMath || inBlockMath;
 };
 
+// Helper to check if position is before closing paren on same line
+const isBeforeClosingParen = (text: string, position: number): boolean => {
+  for (let j = position; j < text.length; j += 1) {
+    if (text[j] === ")") {
+      return true;
+    }
+    if (text[j] === "\n") {
+      return false;
+    }
+  }
+  return false;
+};
+
 // Check if a position is within a link or image URL
 // Links and images have the format [text](url) or ![alt](url)
 export const isWithinLinkOrImageUrl = (
@@ -104,37 +117,21 @@ export const isWithinLinkOrImageUrl = (
   position: number
 ): boolean => {
   // Search backwards from position to find if we're inside a (url) part
-  // Look for the most recent ]( before this position
-  let lastCloseParen = -1;
-  let lastOpenParen = -1;
-
   for (let i = position - 1; i >= 0; i -= 1) {
     if (text[i] === ")") {
-      lastCloseParen = i;
-      break;
+      return false;
     }
     if (text[i] === "(") {
-      lastOpenParen = i;
       // Check if there's a ] immediately before the (
       if (i > 0 && text[i - 1] === "]") {
         // We're potentially inside a link/image URL
-        // Now search forward to see if we're before the closing )
-        for (let j = position; j < text.length; j += 1) {
-          if (text[j] === ")") {
-            // Yes, we're inside the URL
-            return true;
-          }
-          if (text[j] === "\n") {
-            // URLs don't span newlines in markdown
-            break;
-          }
-        }
+        // Check if we're before the closing )
+        return isBeforeClosingParen(text, position);
       }
-      break;
+      return false;
     }
     if (text[i] === "\n") {
-      // Don't search beyond newlines
-      break;
+      return false;
     }
   }
 
@@ -175,8 +172,7 @@ export const isHorizontalRule = (
   let markerCount = 0;
   let hasNonWhitespaceNonMarker = false;
 
-  for (let i = 0; i < line.length; i += 1) {
-    const char = line[i];
+  for (const char of line) {
     if (char === marker) {
       markerCount += 1;
     } else if (char !== " " && char !== "\t") {

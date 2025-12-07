@@ -15,7 +15,9 @@ beforeEach(() => {
       this.callback = callback;
     }
 
-    disconnect() {}
+    disconnect() {
+      // Mock implementation
+    }
 
     observe(target: Element) {
       // Immediately trigger the callback with isIntersecting = true
@@ -42,7 +44,9 @@ beforeEach(() => {
       return [];
     }
 
-    unobserve() {}
+    unobserve() {
+      // Mock implementation
+    }
   } as unknown as typeof IntersectionObserver;
 });
 

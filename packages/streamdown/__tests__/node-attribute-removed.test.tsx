@@ -290,7 +290,7 @@ describe("Node Attribute Fix", () => {
         const Component = component;
         const { container } = render(
           <Component node={mockHastNode as any} {...props}>
-            {element !== "img" && element !== "hr" ? "Test content" : undefined}
+            {element !== "img" && element !== "hr" ? "Test content" : null}
           </Component>
         );
 

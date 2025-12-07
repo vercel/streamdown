@@ -2,6 +2,12 @@
 // Setext headings use --- or === on the line below text to create headings
 // During streaming, partial list items (like "-") can be misinterpreted as setext heading underlines
 
+// Regex patterns defined at top level for performance
+const DASH_ONLY_PATTERN = /^-{1,2}$/;
+const DASH_WITH_SPACE_PATTERN = /^[\s]*-{1,2}[\s]+$/;
+const EQUALS_ONLY_PATTERN = /^={1,2}$/;
+const EQUALS_WITH_SPACE_PATTERN = /^[\s]*={1,2}[\s]+$/;
+
 /**
  * Detects if the text ends with a potential incomplete setext heading underline
  * and adds a space to break the setext heading pattern
@@ -32,12 +38,12 @@ export const handleIncompleteSetextHeading = (text: string): string => {
   // Check if it's ONLY dashes (1 or 2) - but if there's trailing space, don't modify
   // If the last line ends with space after the dashes, it's already broken the setext heading pattern
   if (
-    /^-{1,2}$/.test(trimmedLastLine) &&
-    !lastLine.match(/^[\s]*-{1,2}[\s]+$/)
+    DASH_ONLY_PATTERN.test(trimmedLastLine) &&
+    !lastLine.match(DASH_WITH_SPACE_PATTERN)
   ) {
     // Check if there's content on the previous line (required for setext heading)
     const lines = previousContent.split("\n");
-    const previousLine = lines[lines.length - 1];
+    const previousLine = lines.at(-1);
 
     // If the previous line has content, this could be interpreted as a setext heading
     if (previousLine && previousLine.trim().length > 0) {
@@ -51,12 +57,12 @@ export const handleIncompleteSetextHeading = (text: string): string => {
 
   // Check if it's ONLY equals (1 or 2)
   if (
-    /^={1,2}$/.test(trimmedLastLine) &&
-    !lastLine.match(/^[\s]*={1,2}[\s]+$/)
+    EQUALS_ONLY_PATTERN.test(trimmedLastLine) &&
+    !lastLine.match(EQUALS_WITH_SPACE_PATTERN)
   ) {
     // Check if there's content on the previous line
     const lines = previousContent.split("\n");
-    const previousLine = lines[lines.length - 1];
+    const previousLine = lines.at(-1);
 
     if (previousLine && previousLine.trim().length > 0) {
       // Add text to break the setext heading pattern

@@ -395,7 +395,7 @@ describe("Syntax Highlighting - Different Themes", () => {
   return value.toUpperCase();
 }`;
 
-  const themeConfigs: Array<[BundledTheme, BundledTheme]> = [
+  const themeConfigs: [BundledTheme, BundledTheme][] = [
     ["github-light", "github-dark"],
     ["min-light", "min-dark"],
     ["one-light", "one-dark-pro"],

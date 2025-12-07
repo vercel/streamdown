@@ -154,7 +154,7 @@ export const PanZoom = ({
       ref={containerRef}
       style={{ cursor: isPanning ? "grabbing" : "grab" }}
     >
-      {showControls && (
+      {showControls ? (
         <div
           className={cn(
             "absolute z-10 flex flex-col gap-1 rounded-md border border-border bg-background/90 p-1 shadow-sm backdrop-blur-sm",
@@ -188,7 +188,7 @@ export const PanZoom = ({
             <RotateCcwIcon size={16} />
           </button>
         </div>
-      )}
+      ) : null}
       <div
         className={cn(
           "flex-1 origin-center transition-transform duration-150 ease-out",

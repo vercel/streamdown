@@ -229,7 +229,7 @@ export const Chat = ({ models }: ChatProps) => {
                           message.role === "assistant" &&
                           messageIndex === messages.length - 1
                             ? "block"
-                            : undefined
+                            : null
                         }
                         isAnimating={status === "streaming"}
                         key={key}

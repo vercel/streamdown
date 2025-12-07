@@ -610,6 +610,7 @@ const CodeComponent = ({
   children,
   ...props
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex code block logic"
   ExtraProps) => {
   const inline = node?.position?.start.line === node?.position?.end.line;
   const { mermaid: mermaidContext, controls: controlsConfig } =
@@ -660,6 +661,9 @@ const CodeComponent = ({
       "panZoom"
     );
 
+    const shouldShowMermaidControls =
+      showMermaidControls && (showDownload || showCopy || showFullscreen);
+
     return (
       <Suspense fallback={<CodeBlockSkeleton />}>
         <div
@@ -669,24 +673,23 @@ const CodeComponent = ({
           )}
           data-streamdown="mermaid-block"
         >
-          {showMermaidControls &&
-            (showDownload || showCopy || showFullscreen) && (
-              <div className="flex items-center justify-end gap-2">
-                {showDownload && (
-                  <MermaidDownloadDropdown
-                    chart={code}
-                    config={mermaidContext?.config}
-                  />
-                )}
-                {showCopy && <CodeBlockCopyButton code={code} />}
-                {showFullscreen && (
-                  <MermaidFullscreenButton
-                    chart={code}
-                    config={mermaidContext?.config}
-                  />
-                )}
-              </div>
-            )}
+          {shouldShowMermaidControls ? (
+            <div className="flex items-center justify-end gap-2">
+              {showDownload ? (
+                <MermaidDownloadDropdown
+                  chart={code}
+                  config={mermaidContext?.config}
+                />
+              ) : null}
+              {showCopy ? <CodeBlockCopyButton code={code} /> : null}
+              {showFullscreen ? (
+                <MermaidFullscreenButton
+                  chart={code}
+                  config={mermaidContext?.config}
+                />
+              ) : null}
+            </div>
+          ) : null}
           <Mermaid
             chart={code}
             config={mermaidContext?.config}
@@ -706,12 +709,12 @@ const CodeComponent = ({
         code={code}
         language={language}
       >
-        {showCodeControls && (
+        {showCodeControls ? (
           <>
             <CodeBlockDownloadButton code={code} language={language} />
             <CodeBlockCopyButton />
           </>
-        )}
+        ) : null}
       </CodeBlock>
     </Suspense>
   );

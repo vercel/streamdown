@@ -8,7 +8,7 @@ describe("KaTeX CSS Lazy Loading", () => {
     // Component should render without attempting to load KaTeX CSS
   });
 
-  it("should load KaTeX CSS when block math syntax is present", async () => {
+  it("should load KaTeX CSS when block math syntax is present", () => {
     const markdownWithBlockMath = `
 Some text before
 
