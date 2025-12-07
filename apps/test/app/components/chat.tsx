@@ -41,20 +41,17 @@ export const Chat = ({ models }: ChatProps) => {
     }),
   });
   const [input, setInput] = useState("");
-  const [model, setModel] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("chat-model");
-      return saved && models.some((m) => m.value === saved)
-        ? saved
-        : models[0].value;
-    }
-    return models[0].value;
-  });
+  const [model, setModel] = useState(models[0].value);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("chat-model", model);
+    const saved = localStorage.getItem("chat-model");
+    if (saved && models.some((m) => m.value === saved)) {
+      setModel(saved);
     }
+  }, [models]);
+
+  useEffect(() => {
+    localStorage.setItem("chat-model", model);
   }, [model]);
 
   return (
