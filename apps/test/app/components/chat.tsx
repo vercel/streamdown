@@ -239,9 +239,9 @@ export const Chat = ({ models }: ChatProps) => {
                     );
                   case "reasoning":
                     return (
-                      <p className="italic" key={key}>
+                      <Streamdown className="italic" key={key}>
                         {part.text}
-                      </p>
+                      </Streamdown>
                     );
                   case "file":
                     return (
