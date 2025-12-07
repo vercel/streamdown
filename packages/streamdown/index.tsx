@@ -328,7 +328,12 @@ export const Streamdown = memo(
     if (mode === "static") {
       return (
         <StreamdownContext.Provider value={contextValue}>
-          <div className={cn("space-y-4 whitespace-normal", className)}>
+          <div
+            className={cn(
+              "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+              className
+            )}
+          >
             <Markdown
               components={mergedComponents}
               rehypePlugins={rehypePlugins}
@@ -347,9 +352,9 @@ export const Streamdown = memo(
       <StreamdownContext.Provider value={contextValue}>
         <div
           className={cn(
-            "space-y-4 whitespace-normal",
+            "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
             caret
-              ? "[&>*]:last:after:inline [&>*]:last:after:align-baseline [&>*]:last:after:content-(--streamdown-caret)"
+              ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-(--streamdown-caret)"
               : undefined,
             className
           )}
