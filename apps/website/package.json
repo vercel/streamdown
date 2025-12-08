@@ -46,7 +46,7 @@
     "react-player": "^3.4.0",
     "react-resizable-panels": "^3.0.6",
     "recharts": "2.15.4",
-    "rehype-harden": "^1.1.6",
+    "rehype-harden": "^1.1.7",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "shiki": "^3.19.0",
