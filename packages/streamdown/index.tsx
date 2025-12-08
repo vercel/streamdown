@@ -26,6 +26,7 @@ import { components as defaultComponents } from "./lib/components";
 import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { cn } from "./lib/utils";
+import packageJson from "./package.json";
 
 // Regex patterns defined at top level for performance
 const MIDDLE_DOLLAR_PATTERN = /[^$]\$[^$]/;
@@ -33,7 +34,13 @@ const START_DOLLAR_PATTERN = /^\$[^$]/;
 const END_DOLLAR_PATTERN = /[^$]\$$/;
 
 export type { MermaidConfig } from "mermaid";
+export type { BundledLanguageName } from "./lib/code-block/bundled-languages";
+
 // biome-ignore lint/performance/noBarrelFile: "required"
+export {
+  bundledLanguages,
+  isBundledLanguage,
+} from "./lib/code-block/bundled-languages";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 
 export type ControlsConfig =
@@ -231,13 +238,25 @@ const checkMathSyntax = (
   return hasDoubleDollar || hasSingleDollar;
 };
 
+const versionRegex = /^\^/;
+
 const loadKatexCSS = (): void => {
+  // Extract KaTeX version from package.json dependencies
+  const katexVersion = packageJson.dependencies["rehype-katex"]
+    .replace(versionRegex, "")
+    .split(".")[0]; // Get major version (e.g., "7" from "^7.0.1")
+
+  // Map rehype-katex major version to KaTeX version
+  // rehype-katex v7 uses KaTeX v0.16
+  const katexVersionMap: Record<string, string> = {
+    "7": "0.16.22",
+  };
+
+  const katexCssVersion = katexVersionMap[katexVersion] || "0.16.22";
+
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = "https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css";
-  link.integrity =
-    "sha384-5TcZemv2l/9On385z///+d7MSYlvIEw9FuZTIdZ14vJLqWphw7e7ZPuOiCHJcFCP";
-  link.crossOrigin = "anonymous";
+  link.href = `/cdn/katex/${katexCssVersion}/katex.min.css`;
   document.head.appendChild(link);
 };
 

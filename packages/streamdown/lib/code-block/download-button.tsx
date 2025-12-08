@@ -1,6 +1,5 @@
 import { DownloadIcon } from "lucide-react";
 import { type ComponentProps, useContext } from "react";
-import type { BundledLanguage } from "shiki";
 import { StreamdownContext } from "../../index";
 import { cn, save } from "../utils";
 import { useCodeBlockContext } from "./context";
@@ -10,7 +9,7 @@ export type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
   onError?: (error: Error) => void;
 };
 
-const languageExtensionMap: Record<BundledLanguage, string> = {
+const languageExtensionMap: Record<string, string> = {
   "1c": "1c",
   "1c-query": "1cq",
   abap: "abap",
@@ -329,7 +328,7 @@ export const CodeBlockDownloadButton = ({
   ...props
 }: CodeBlockDownloadButtonProps & {
   code?: string;
-  language?: BundledLanguage;
+  language?: string;
 }) => {
   const { code: contextCode } = useCodeBlockContext();
   const { isAnimating } = useContext(StreamdownContext);

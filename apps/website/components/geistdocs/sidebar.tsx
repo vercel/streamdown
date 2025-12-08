@@ -73,12 +73,11 @@ export const Folder: SidebarPageTreeComponents["Folder"] = ({
   item,
 }) => {
   const path = useTreePath();
+  const defaultOpen = item.defaultOpen ?? path.includes(item);
 
   return (
     <SidebarFolder
-      defaultOpen={(value) =>
-        (item.defaultOpen ?? value) || path.includes(item)
-      }
+      defaultOpen={defaultOpen}
     >
       {item.index ? (
         <SidebarFolderLink

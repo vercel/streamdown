@@ -1,10 +1,10 @@
 import { type ComponentProps, memo, useMemo } from "react";
-import type { BundledLanguage, TokensResult } from "shiki";
+import type { TokensResult } from "shiki";
 import { cn } from "../utils";
 
 type CodeBlockBodyProps = ComponentProps<"pre"> & {
   result: TokensResult;
-  language: BundledLanguage;
+  language: string;
 };
 
 // Memoize line numbers class string since it's constant

@@ -1,9 +1,8 @@
 import type { ComponentProps } from "react";
-import type { BundledLanguage } from "shiki";
 import { cn } from "../utils";
 
 type CodeBlockContainerProps = ComponentProps<"div"> & {
-  language: BundledLanguage;
+  language: string;
 };
 
 export const CodeBlockContainer = ({

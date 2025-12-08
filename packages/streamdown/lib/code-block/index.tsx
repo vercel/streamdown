@@ -5,7 +5,7 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { BundledLanguage, TokensResult } from "shiki";
+import type { TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContainer } from "./container";
@@ -15,7 +15,7 @@ import { getHighlightedTokens } from "./highlight";
 
 type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
-  language: BundledLanguage;
+  language: string;
 };
 
 export const CodeBlock = ({
