@@ -18,6 +18,14 @@ const config: NextConfig = {
         source: "/docs/:path*.md",
         destination: "/llms.mdx/:path*",
       },
+      {
+        source: "/cdn/shiki/:version/langs/:path*",
+        destination: "https://cdn.jsdelivr.net/npm/shiki@:version/dist/langs/:path*",
+      },
+      {
+        source: "/cdn/katex/:version/:path*",
+        destination: "https://cdn.jsdelivr.net/npm/katex@:version/dist/:path*",
+      },
     ];
   },
 };

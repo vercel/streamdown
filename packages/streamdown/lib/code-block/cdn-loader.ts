@@ -4,9 +4,13 @@
  */
 
 import type { LanguageRegistration } from "shiki";
+import packageJson from "../../package.json";
 
 // Default CDN configuration
-const DEFAULT_CDN_BASE = "https://cdn.jsdelivr.net/npm/shiki@1.22.0/dist/langs";
+// Uses a relative URL that can be proxied by the host application
+// For example, Next.js can rewrite /cdn/shiki/:version/langs/* to jsDelivr
+const SHIKI_VERSION = packageJson.dependencies.shiki.replace(/^\^/, "");
+const DEFAULT_CDN_BASE = `/cdn/shiki/${SHIKI_VERSION}/langs`;
 const DEFAULT_TIMEOUT = 5000;
 
 // In-memory cache for loaded language grammars
