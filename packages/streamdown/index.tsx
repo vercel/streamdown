@@ -35,11 +35,12 @@ const END_DOLLAR_PATTERN = /[^$]\$$/;
 
 export type { MermaidConfig } from "mermaid";
 export type { BundledLanguageName } from "./lib/code-block/bundled-languages";
+
+// biome-ignore lint/performance/noBarrelFile: "required"
 export {
   bundledLanguages,
   isBundledLanguage,
 } from "./lib/code-block/bundled-languages";
-// biome-ignore lint/performance/noBarrelFile: "required"
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 
 export type ControlsConfig =
@@ -237,10 +238,12 @@ const checkMathSyntax = (
   return hasDoubleDollar || hasSingleDollar;
 };
 
+const versionRegex = /^\^/;
+
 const loadKatexCSS = (): void => {
   // Extract KaTeX version from package.json dependencies
   const katexVersion = packageJson.dependencies["rehype-katex"]
-    .replace(/^\^/, "")
+    .replace(versionRegex, "")
     .split(".")[0]; // Get major version (e.g., "7" from "^7.0.1")
 
   // Map rehype-katex major version to KaTeX version

@@ -19,6 +19,8 @@ const cdnLanguageCache = new Map<string, LanguageRegistration>();
 // Track failed language loads to avoid repeated requests
 const failedLanguages = new Set<string>();
 
+const jsonParseRegex = /JSON\.parse\(("(?:[^"\\]|\\.)*")\)/;
+
 /**
  * Load a language grammar from CDN
  * @param language - Language identifier (e.g., 'rust', 'ruby', 'elixir')
@@ -66,9 +68,7 @@ export async function loadLanguageFromCDN(
     try {
       // Extract the JSON string from the JSON.parse() call
       // Need to handle nested quotes and escapes properly
-      const jsonParseMatch = moduleText.match(
-        /JSON\.parse\(("(?:[^"\\]|\\.)*")\)/
-      );
+      const jsonParseMatch = moduleText.match(jsonParseRegex);
       if (!jsonParseMatch) {
         throw new Error("Could not find JSON.parse() in CDN response");
       }

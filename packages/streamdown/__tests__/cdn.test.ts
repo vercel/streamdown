@@ -5,6 +5,12 @@ import {
 } from "../lib/code-block/bundled-languages";
 import { loadLanguageFromCDN } from "../lib/code-block/cdn-loader";
 
+// Regex patterns for CDN URL validation
+const CDN_URL_PATTERN_UNIQUELANG1 =
+  /^\/cdn\/shiki\/[\d.]+\/langs\/uniquelang1\.mjs$/;
+const CDN_URL_PATTERN_UNIQUELANG8 =
+  /^\/cdn\/shiki\/\d+\.\d+\.\d+\/langs\/uniquelang8\.mjs$/;
+
 describe("Bundled Languages", () => {
   it("should have exactly 15 common languages bundled", () => {
     const languageKeys = Object.keys(bundledLanguages);
@@ -81,14 +87,14 @@ describe("CDN Language Loader", () => {
       text: async () => "",
     } as Response);
 
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+      // Suppress console warnings during test
+    });
 
     await loadLanguageFromCDN("uniquelang1");
 
     expect(fetchSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/^\/cdn\/shiki\/[\d.]+\/langs\/uniquelang1\.mjs$/),
+      expect.stringMatching(CDN_URL_PATTERN_UNIQUELANG1),
       expect.any(Object)
     );
 
@@ -157,9 +163,9 @@ export default [lang];`;
     const fetchSpy = vi.spyOn(global, "fetch");
     fetchSpy.mockRejectedValue(new Error("Network error"));
 
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+      // Suppress console warnings during test
+    });
 
     const result = await loadLanguageFromCDN("uniquelang4");
 
@@ -182,9 +188,9 @@ export default [lang];`;
       text: async () => "",
     } as Response);
 
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+      // Suppress console warnings during test
+    });
 
     const result = await loadLanguageFromCDN("uniquelang5");
 
@@ -205,9 +211,9 @@ export default [lang];`;
       text: async () => "invalid javascript code",
     } as Response);
 
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+      // Suppress console warnings during test
+    });
 
     const result = await loadLanguageFromCDN("uniquelang6");
 
@@ -230,9 +236,9 @@ export default [lang];`;
       text: async () => "",
     } as Response);
 
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+      // Suppress console warnings during test
+    });
 
     // First attempt
     const result1 = await loadLanguageFromCDN("uniquelang7");
@@ -267,9 +273,9 @@ describe("Hybrid Language Loading Integration", () => {
       text: async () => "",
     } as Response);
 
-    const consoleWarnSpy = vi
-      .spyOn(console, "warn")
-      .mockImplementation(() => {});
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+      // Suppress console warnings during test
+    });
 
     await loadLanguageFromCDN("uniquelang8");
 
@@ -277,9 +283,7 @@ describe("Hybrid Language Loading Integration", () => {
     const callUrl = fetchSpy.mock.calls[0][0] as string;
 
     // Should have format: /cdn/shiki/{version}/langs/uniquelang8.mjs
-    expect(callUrl).toMatch(
-      /^\/cdn\/shiki\/\d+\.\d+\.\d+\/langs\/uniquelang8\.mjs$/
-    );
+    expect(callUrl).toMatch(CDN_URL_PATTERN_UNIQUELANG8);
 
     fetchSpy.mockRestore();
     consoleWarnSpy.mockRestore();

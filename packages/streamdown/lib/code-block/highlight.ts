@@ -71,7 +71,7 @@ async function loadLanguageGrammar(
  * Create a Shiki highlighter for a specific language and themes
  * Uses hybrid loading: bundled languages load instantly, others load from CDN
  */
-export const createShiki = async (
+export const createShiki = (
   language: string,
   shikiTheme: [BundledTheme, BundledTheme]
 ): Promise<Highlighter> => {
