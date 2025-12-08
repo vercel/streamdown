@@ -56,30 +56,35 @@ export async function loadLanguageFromCDN(
     }
 
     // Get the module text
+    // Shiki language files have structure: const lang = Object.freeze(JSON.parse("{...}")); export default [lang];
     const moduleText = await response.text();
 
-    // Create a blob URL to import the module
-    const blob = new Blob([moduleText], { type: "application/javascript" });
-    const blobUrl = URL.createObjectURL(blob);
-
     try {
-      // Dynamic import from blob URL
-      const module = await import(
-        /* @vite-ignore */ /* webpackIgnore: true */ blobUrl
-      );
-      const grammar = module.default || module;
+      // Extract the JSON string from the JSON.parse() call
+      // Need to handle nested quotes and escapes properly
+      const jsonParseMatch = moduleText.match(/JSON\.parse\(("(?:[^"\\]|\\.)*")\)/);
+      if (!jsonParseMatch) {
+        throw new Error("Could not find JSON.parse() in CDN response");
+      }
 
-      // Clean up blob URL
-      URL.revokeObjectURL(blobUrl);
+      // The matched string is already a valid JSON string literal
+      // We can parse it directly to get the unescaped version
+      const jsonString = JSON.parse(jsonParseMatch[1]);
+
+      // Now parse the actual grammar JSON
+      const langObject = JSON.parse(jsonString);
+
+      // Shiki expects an array, so wrap it
+      const grammar = [langObject];
 
       // Cache the grammar
       cdnLanguageCache.set(cacheKey, grammar);
 
       return grammar;
-    } catch (importError) {
-      // Clean up blob URL on error
-      URL.revokeObjectURL(blobUrl);
-      throw importError;
+    } catch (parseError) {
+      throw new Error(
+        `Failed to parse language grammar: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
+      );
     }
   } catch (error) {
     // Mark as failed to avoid repeated attempts
