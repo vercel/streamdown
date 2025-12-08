@@ -156,4 +156,25 @@ describe("math blocks with underscores", () => {
     const text = "_italic start $x_1$ italic end_";
     expect(remend(text)).toBe(text);
   });
+
+  it("should not complete dollar signs in inline code blocks (#296)", () => {
+    const str =
+      "Streamdown uses double dollar signs (`$$`) to delimit mathematical expressions.";
+    expect(remend(str)).toBe(str);
+  });
+
+  it("should handle multiple inline code blocks with $$ correctly (#296)", () => {
+    const str = "Use `$$` for math blocks and `$$formula$$` for inline.";
+    expect(remend(str)).toBe(str);
+  });
+
+  it("should complete $$ outside inline code but not inside (#296)", () => {
+    const str = "Math: $$x+y and code: `$$`";
+    expect(remend(str)).toBe("Math: $$x+y and code: `$$`$$");
+  });
+
+  it("should handle mixed $$ inside and outside code blocks (#296)", () => {
+    const str = "$$formula$$ and code `$$` and $$incomplete";
+    expect(remend(str)).toBe("$$formula$$ and code `$$` and $$incomplete$$");
+  });
 });

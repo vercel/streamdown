@@ -1,7 +1,28 @@
 // Completes incomplete block KaTeX formatting ($$)
 export const handleIncompleteBlockKatex = (text: string): string => {
-  // Count all $$ pairs in the text
-  const dollarPairs = (text.match(/\$\$/g) || []).length;
+  // Count all $$ pairs in the text, but skip those inside inline code blocks (backticks)
+  let dollarPairs = 0;
+  let inInlineCode = false;
+
+  for (let i = 0; i < text.length - 1; i += 1) {
+    // Toggle inline code state on single backticks (not triple backticks)
+    if (text[i] === "`") {
+      // Check if it's not part of a triple backtick
+      const isTriple = (i >= 2 && text.substring(i - 2, i + 1) === "```") ||
+                       (i >= 1 && text.substring(i - 1, i + 2) === "```") ||
+                       (i <= text.length - 3 && text.substring(i, i + 3) === "```");
+
+      if (!isTriple) {
+        inInlineCode = !inInlineCode;
+      }
+    }
+
+    // Count $$ only if not inside inline code
+    if (!inInlineCode && text[i] === "$" && text[i + 1] === "$") {
+      dollarPairs += 1;
+      i += 1; // Skip the next character since we've counted the pair
+    }
+  }
 
   // If we have an even number of $$, the block is complete
   if (dollarPairs % 2 === 0) {
