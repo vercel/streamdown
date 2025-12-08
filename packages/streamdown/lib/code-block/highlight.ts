@@ -1,13 +1,18 @@
 import {
-  type BundledLanguage,
   type BundledTheme,
-  bundledLanguages,
   createHighlighter,
   type Highlighter,
+  type LanguageRegistration,
   type SpecialLanguage,
   type TokensResult,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
+import {
+  type BundledLanguageName,
+  bundledLanguages,
+  isBundledLanguage,
+} from "./bundled-languages";
+import { loadLanguageFromCDN } from "./cdn-loader";
 
 const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
 
@@ -22,14 +27,14 @@ const subscribers = new Map<string, Set<(result: TokensResult) => void>>();
 
 // Helper to generate cache key for highlighter
 const getHighlighterCacheKey = (
-  language: BundledLanguage | SpecialLanguage,
+  language: string,
   themes: [BundledTheme, BundledTheme]
 ) => `${language}-${themes[0]}-${themes[1]}`;
 
 // Helper to generate cache key for tokens
 const getTokensCacheKey = (
   code: string,
-  language: BundledLanguage | SpecialLanguage,
+  language: string,
   themes: [BundledTheme, BundledTheme]
 ) => {
   // Use a hash of the first and last 100 chars + length for better cache key
@@ -38,21 +43,39 @@ const getTokensCacheKey = (
   return `${language}:${themes[0]}:${themes[1]}:${code.length}:${start}:${end}`;
 };
 
-// Helper to verify if a language is supported
-const isLanguageSupported = (language: string): language is BundledLanguage =>
-  Object.hasOwn(bundledLanguages, language);
+/**
+ * Load a language grammar - either from bundled languages or CDN
+ */
+async function loadLanguageGrammar(
+  language: string
+): Promise<LanguageRegistration | LanguageRegistration[] | null> {
+  // Check if it's a bundled language (instant load)
+  if (isBundledLanguage(language)) {
+    const bundled = bundledLanguages[language as BundledLanguageName];
+    return bundled;
+  }
 
-export const createShiki = (
-  language: BundledLanguage | SpecialLanguage,
+  // Otherwise, load from CDN
+  const grammar = await loadLanguageFromCDN(language);
+
+  if (!grammar) {
+    console.warn(
+      `[Streamdown] Language "${language}" not found in bundled languages or CDN. Falling back to plain text.`
+    );
+  }
+
+  return grammar;
+}
+
+/**
+ * Create a Shiki highlighter for a specific language and themes
+ * Uses hybrid loading: bundled languages load instantly, others load from CDN
+ */
+export const createShiki = async (
+  language: string,
   shikiTheme: [BundledTheme, BundledTheme]
-) => {
-  const validLanguage: BundledLanguage | SpecialLanguage = isLanguageSupported(
-    language
-  )
-    ? language
-    : "text";
-
-  const cacheKey = getHighlighterCacheKey(validLanguage, shikiTheme);
+): Promise<Highlighter> => {
+  const cacheKey = getHighlighterCacheKey(language, shikiTheme);
 
   // Return cached highlighter if it exists
   if (highlighterCache.has(cacheKey)) {
@@ -60,31 +83,43 @@ export const createShiki = (
   }
 
   // Create new highlighter and cache it
-  const highlighterPromise = createHighlighter({
-    themes: shikiTheme,
-    langs: [validLanguage],
-    engine: jsEngine,
-  });
+  const highlighterPromise = (async () => {
+    // Load the language grammar (bundled or from CDN)
+    const languageGrammar = await loadLanguageGrammar(language);
+
+    // Fall back to 'text' if language couldn't be loaded
+    // Note: languageGrammar can be a single LanguageRegistration or an array of them
+    const langs: (
+      | LanguageRegistration
+      | LanguageRegistration[]
+      | SpecialLanguage
+    )[] = languageGrammar ? [languageGrammar] : ["text"];
+
+    const highlighter = await createHighlighter({
+      themes: shikiTheme,
+      langs,
+      engine: jsEngine,
+    });
+
+    return highlighter;
+  })();
 
   highlighterCache.set(cacheKey, highlighterPromise);
 
   return highlighterPromise;
 };
 
-// Get cached tokens or trigger highlighting
+/**
+ * Get cached tokens or trigger highlighting
+ * Returns cached result immediately if available, otherwise returns null and calls callback when ready
+ */
 export const getHighlightedTokens = (
   code: string,
-  language: BundledLanguage,
+  language: string,
   shikiTheme: [BundledTheme, BundledTheme],
   callback?: (result: TokensResult) => void
 ): TokensResult | null => {
-  const validLanguage: BundledLanguage | SpecialLanguage = isLanguageSupported(
-    language
-  )
-    ? language
-    : "text";
-
-  const tokensCacheKey = getTokensCacheKey(code, validLanguage, shikiTheme);
+  const tokensCacheKey = getTokensCacheKey(code, language, shikiTheme);
 
   // Return cached result if available
   if (tokensCache.has(tokensCacheKey)) {
@@ -105,10 +140,17 @@ export const getHighlightedTokens = (
   }
 
   // Start highlighting in background
-  createShiki(validLanguage, shikiTheme)
+  createShiki(language, shikiTheme)
     .then((highlighter) => {
+      // Determine which language to use for highlighting
+      // If the requested language wasn't loaded, the highlighter will only have 'text'
+      const availableLangs = highlighter.getLoadedLanguages();
+      const langToUse = (
+        availableLangs.includes(language) ? language : "text"
+      ) as SpecialLanguage;
+
       const result = highlighter.codeToTokens(code, {
-        lang: validLanguage,
+        lang: langToUse,
         themes: {
           light: shikiTheme[0],
           dark: shikiTheme[1],

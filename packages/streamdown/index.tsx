@@ -33,6 +33,11 @@ const START_DOLLAR_PATTERN = /^\$[^$]/;
 const END_DOLLAR_PATTERN = /[^$]\$$/;
 
 export type { MermaidConfig } from "mermaid";
+export type { BundledLanguageName } from "./lib/code-block/bundled-languages";
+export {
+  bundledLanguages,
+  isBundledLanguage,
+} from "./lib/code-block/bundled-languages";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 

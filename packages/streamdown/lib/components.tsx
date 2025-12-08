@@ -9,7 +9,7 @@ import {
   Suspense,
   useContext,
 } from "react";
-import type { BundledLanguage } from "shiki";
+// BundledLanguage type removed - we now support any language string
 import { StreamdownContext } from "../index";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
@@ -632,7 +632,7 @@ const CodeComponent = ({
   }
 
   const match = className?.match(LANGUAGE_REGEX);
-  const language = (match?.at(1) ?? "") as BundledLanguage;
+  const language = match?.at(1) ?? "";
 
   // Extract code content from children safely
   let code = "";
