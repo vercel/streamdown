@@ -13,7 +13,7 @@ const LINE_NUMBER_CLASSES = cn(
   "before:content-[counter(line)]",
   "before:inline-block",
   "before:[counter-increment:line]",
-  "before:w-4",
+  "before:w-6",
   "before:mr-4",
   "before:text-[13px]",
   "before:text-right",
