@@ -22,11 +22,11 @@ import remarkMath from "remark-math";
 import remend from "remend";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
-import packageJson from "./package.json";
 import { components as defaultComponents } from "./lib/components";
 import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { cn } from "./lib/utils";
+import packageJson from "./package.json";
 
 // Regex patterns defined at top level for performance
 const MIDDLE_DOLLAR_PATTERN = /[^$]\$[^$]/;
