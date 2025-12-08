@@ -80,6 +80,7 @@ export type StreamdownProps = Options & {
   controls?: ControlsConfig;
   isAnimating?: boolean;
   caret?: keyof typeof carets;
+  cdnUrl?: string | null;
 };
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
@@ -121,6 +122,7 @@ export type StreamdownContextType = {
   isAnimating: boolean;
   mode: "static" | "streaming";
   mermaid?: MermaidOptions;
+  cdnUrl?: string | null;
 };
 
 const defaultStreamdownContext: StreamdownContextType = {
@@ -129,6 +131,7 @@ const defaultStreamdownContext: StreamdownContextType = {
   isAnimating: false,
   mode: "streaming",
   mermaid: undefined,
+  cdnUrl: undefined,
 };
 
 export const StreamdownContext = createContext<StreamdownContextType>(
@@ -276,6 +279,7 @@ export const Streamdown = memo(
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     caret,
+    cdnUrl,
     ...props
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
@@ -330,8 +334,9 @@ export const Streamdown = memo(
         isAnimating,
         mode,
         mermaid,
+        cdnUrl,
       }),
-      [shikiTheme, controls, isAnimating, mode, mermaid]
+      [shikiTheme, controls, isAnimating, mode, mermaid, cdnUrl]
     );
 
     // Memoize merged components to avoid recreating on every render

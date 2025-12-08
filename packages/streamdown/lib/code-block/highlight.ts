@@ -47,7 +47,8 @@ const getTokensCacheKey = (
  * Load a language grammar - either from bundled languages or CDN
  */
 async function loadLanguageGrammar(
-  language: string
+  language: string,
+  cdnUrl?: string | null
 ): Promise<LanguageRegistration | LanguageRegistration[] | null> {
   // Check if it's a bundled language (instant load)
   if (isBundledLanguage(language)) {
@@ -56,7 +57,7 @@ async function loadLanguageGrammar(
   }
 
   // Otherwise, load from CDN
-  const grammar = await loadLanguageFromCDN(language);
+  const grammar = await loadLanguageFromCDN(language, cdnUrl);
 
   if (!grammar) {
     console.warn(
@@ -73,7 +74,8 @@ async function loadLanguageGrammar(
  */
 export const createShiki = (
   language: string,
-  shikiTheme: [BundledTheme, BundledTheme]
+  shikiTheme: [BundledTheme, BundledTheme],
+  cdnUrl?: string | null
 ): Promise<Highlighter> => {
   const cacheKey = getHighlighterCacheKey(language, shikiTheme);
 
@@ -85,7 +87,7 @@ export const createShiki = (
   // Create new highlighter and cache it
   const highlighterPromise = (async () => {
     // Load the language grammar (bundled or from CDN)
-    const languageGrammar = await loadLanguageGrammar(language);
+    const languageGrammar = await loadLanguageGrammar(language, cdnUrl);
 
     // Fall back to 'text' if language couldn't be loaded
     // Note: languageGrammar can be a single LanguageRegistration or an array of them
@@ -109,16 +111,25 @@ export const createShiki = (
   return highlighterPromise;
 };
 
+export type GetHighlightedTokensOptions = {
+  code: string;
+  language: string;
+  shikiTheme: [BundledTheme, BundledTheme];
+  cdnUrl?: string | null;
+  callback?: (result: TokensResult) => void;
+};
+
 /**
  * Get cached tokens or trigger highlighting
  * Returns cached result immediately if available, otherwise returns null and calls callback when ready
  */
-export const getHighlightedTokens = (
-  code: string,
-  language: string,
-  shikiTheme: [BundledTheme, BundledTheme],
-  callback?: (result: TokensResult) => void
-): TokensResult | null => {
+export const getHighlightedTokens = ({
+  code,
+  language,
+  shikiTheme,
+  cdnUrl,
+  callback,
+}: GetHighlightedTokensOptions): TokensResult | null => {
   const tokensCacheKey = getTokensCacheKey(code, language, shikiTheme);
 
   // Return cached result if available
@@ -140,7 +151,7 @@ export const getHighlightedTokens = (
   }
 
   // Start highlighting in background
-  createShiki(language, shikiTheme)
+  createShiki(language, shikiTheme, cdnUrl)
     .then((highlighter) => {
       // Determine which language to use for highlighting
       // If the requested language wasn't loaded, the highlighter will only have 'text'

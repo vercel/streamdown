@@ -14,7 +14,7 @@ const DEFAULT_CDN_BASE = `/cdn/shiki/${SHIKI_VERSION}/langs`;
 const DEFAULT_TIMEOUT = 5000;
 
 // In-memory cache for loaded language grammars
-const cdnLanguageCache = new Map<string, LanguageRegistration>();
+const cdnLanguageCache = new Map<string, LanguageRegistration[]>();
 
 // Track failed language loads to avoid repeated requests
 const failedLanguages = new Set<string>();
@@ -24,19 +24,27 @@ const jsonParseRegex = /JSON\.parse\(("(?:[^"\\]|\\.)*")\)/;
 /**
  * Load a language grammar from CDN
  * @param language - Language identifier (e.g., 'rust', 'ruby', 'elixir')
- * @returns Language grammar or null if loading fails
+ * @param cdnBaseUrl - Base URL for CDN (optional, defaults to /cdn/shiki/{version}/langs), or null to disable
+ * @param timeout - Request timeout in milliseconds (default: 5000)
+ * @returns Language grammar array or null if loading fails
  */
 export async function loadLanguageFromCDN(
-  language: string
-): Promise<LanguageRegistration | null> {
-  const cdnUrl = DEFAULT_CDN_BASE;
-  const timeout = DEFAULT_TIMEOUT;
+  language: string,
+  cdnBaseUrl?: string | null,
+  timeout: number = DEFAULT_TIMEOUT
+): Promise<LanguageRegistration[] | null> {
+  // If CDN is explicitly disabled (null), return null immediately
+  if (cdnBaseUrl === null) {
+    return null;
+  }
+
+  const cdnUrl = cdnBaseUrl ?? DEFAULT_CDN_BASE;
 
   const cacheKey = `${cdnUrl}/${language}`;
 
   // Return cached language if available
   if (cdnLanguageCache.has(cacheKey)) {
-    return cdnLanguageCache.get(cacheKey) as LanguageRegistration;
+    return cdnLanguageCache.get(cacheKey) as LanguageRegistration[];
   }
 
   // Skip if previously failed
@@ -78,10 +86,10 @@ export async function loadLanguageFromCDN(
       const jsonString = JSON.parse(jsonParseMatch[1]);
 
       // Now parse the actual grammar JSON
-      const langObject = JSON.parse(jsonString);
+      const langObject = JSON.parse(jsonString) as LanguageRegistration;
 
       // Shiki expects an array, so wrap it
-      const grammar = [langObject];
+      const grammar: LanguageRegistration[] = [langObject];
 
       // Cache the grammar
       cdnLanguageCache.set(cacheKey, grammar);

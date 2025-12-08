@@ -1,0 +1,323 @@
+---
+title: Offline Mode
+description: Configure Streamdown for offline, on-premise, or air-gapped environments.
+---
+
+Streamdown uses a hybrid approach for syntax highlighting: common languages are bundled locally, while additional languages load on-demand from a CDN. This guide shows you how to configure Streamdown for environments without internet access.
+
+## How Language Loading Works
+
+Streamdown includes 15 common languages bundled with the library for instant syntax highlighting:
+
+- **Web**: JavaScript, TypeScript, JSX, TSX, HTML, CSS
+- **Data**: JSON, YAML, TOML
+- **Shell**: Bash, Shell Script
+- **Backend**: Python, Go
+- **Markup**: Markdown, SQL
+
+For other languages (like Rust, Java, Ruby, Elixir), Streamdown loads syntax grammars on-demand from jsDelivr through a CDN proxy. In offline environments, this loading fails and code blocks fall back to plain text.
+
+## Configure Self-Hosted Assets
+
+To run Streamdown offline, you need to:
+
+1. Host Shiki language files locally
+2. Configure your application to serve them
+3. Tell Streamdown where to find them
+
+### Step 1: Download Shiki Language Files
+
+Install Shiki as a dependency (if not already installed):
+
+```package-install
+npm install shiki
+```
+
+The language grammar files are located in `node_modules/shiki/dist/langs/`. You need to serve these files from your application.
+
+### Step 2: Serve Language Files
+
+Configure your framework to serve the Shiki language files as static assets.
+
+#### Next.js (App Router or Pages Router)
+
+Add a rewrite to your `next.config.ts` to serve files from `node_modules`:
+
+```tsx title="next.config.ts"
+import type { NextConfig } from 'next';
+
+const config: NextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: '/cdn/shiki/:version/langs/:path*',
+        destination: '/node_modules/shiki/dist/langs/:path*',
+      },
+    ];
+  },
+};
+
+export default config;
+```
+
+Alternatively, copy the files to your `public` directory during build:
+
+```tsx title="next.config.ts"
+import { copyFileSync, mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+const config: NextConfig = {
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Copy Shiki languages to public directory
+      const shikiLangsSource = join(process.cwd(), 'node_modules/shiki/dist/langs');
+      const shikiLangsDest = join(process.cwd(), 'public/shiki/langs');
+
+      mkdirSync(shikiLangsDest, { recursive: true });
+
+      // Copy all .mjs files
+      const { readdirSync } = require('node:fs');
+      const files = readdirSync(shikiLangsSource).filter(f => f.endsWith('.mjs'));
+
+      for (const file of files) {
+        copyFileSync(
+          join(shikiLangsSource, file),
+          join(shikiLangsDest, file)
+        );
+      }
+    }
+    return config;
+  },
+};
+
+export default config;
+```
+
+Then use the `cdnUrl` prop to point to the local files:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+
+export default function Page() {
+  return (
+    <Streamdown cdnUrl="/shiki/langs">
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+#### Vite / Remix
+
+Copy the Shiki language files to your `public` directory and use the `cdnUrl` prop:
+
+```tsx title="app/routes/_index.tsx"
+import { Streamdown } from 'streamdown';
+
+export default function Index() {
+  return (
+    <Streamdown cdnUrl="/shiki/langs">
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+#### Express / Node.js Server
+
+Serve the Shiki language files as static assets:
+
+```javascript title="server.js"
+const express = require('express');
+const path = require('path');
+
+const app = express();
+
+// Serve Shiki language files from node_modules
+app.use(
+  '/cdn/shiki/:version/langs',
+  express.static(path.join(__dirname, 'node_modules/shiki/dist/langs'))
+);
+
+app.listen(3000);
+```
+
+### Step 3: Configure Streamdown CDN Path
+
+Pass the `cdnUrl` prop to the Streamdown component to specify where language files should be loaded from:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+
+const markdown = `
+\`\`\`rust
+fn main() {
+    println!("Hello, world!");
+}
+\`\`\`
+`;
+
+export default function Page() {
+  return (
+    <Streamdown cdnUrl="/shiki/langs">
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+The CDN path should point to the directory containing the `.mjs` language files. Streamdown will append the language name and `.mjs` extension automatically.
+
+## KaTeX CSS for Math Rendering
+
+If you use math rendering with KaTeX, you also need to self-host the KaTeX CSS file. By default, Streamdown loads it from:
+
+```
+/cdn/katex/{version}/katex.min.css
+```
+
+### Self-Host KaTeX CSS
+
+Configure your framework to serve KaTeX CSS:
+
+#### Next.js
+
+```tsx title="next.config.ts"
+const config: NextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: '/cdn/shiki/:version/langs/:path*',
+        destination: '/node_modules/shiki/dist/langs/:path*',
+      },
+      {
+        source: '/cdn/katex/:version/:path*',
+        destination: '/node_modules/katex/dist/:path*',
+      },
+    ];
+  },
+};
+```
+
+#### Copy to Public Directory
+
+Alternatively, copy the KaTeX CSS to your `public` directory:
+
+```bash
+cp node_modules/katex/dist/katex.min.css public/katex/katex.min.css
+```
+
+And update the CDN path in the Streamdown source or create a custom fork.
+
+## Disable CDN Loading
+
+To completely disable CDN loading and only use bundled languages, pass `cdnUrl={null}`:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+
+export default function Page() {
+  return (
+    <Streamdown cdnUrl={null}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+With this configuration, only the 15 bundled languages will work. All other languages will fall back to plain text rendering.
+
+## Verify Configuration
+
+To verify your offline configuration works:
+
+1. Disconnect from the internet
+2. Render a code block with a non-bundled language (like Rust or Ruby)
+3. Check the browser console for any CDN loading errors
+4. Verify the syntax highlighting appears correctly
+
+Example test code:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+
+const markdown = `
+\`\`\`rust
+fn main() {
+    println!("Hello, world!");
+}
+\`\`\`
+`;
+
+export default function Page() {
+  return <Streamdown>{markdown}</Streamdown>;
+}
+```
+
+If configured correctly, the Rust code should have syntax highlighting even without internet access.
+
+## Best Practices
+
+### Bundle Additional Languages
+
+If you consistently use specific non-bundled languages, consider creating a custom build that includes them. This provides instant loading without CDN requests.
+
+You can fork Streamdown and modify `packages/streamdown/lib/code-block/bundled-languages.ts` to include additional languages.
+
+### Use a Local CDN Mirror
+
+For large deployments, consider setting up a local CDN mirror that serves Shiki language files from an internal server:
+
+```tsx title="app/page.tsx"
+<Streamdown cdnUrl="https://internal-cdn.company.com/shiki/langs">
+  {markdown}
+</Streamdown>
+```
+
+### Monitor Failed Loads
+
+Check browser console for warnings about failed language loads:
+
+```
+[Streamdown] Failed to load language "rust" from CDN: Network error
+```
+
+These warnings indicate which languages need to be self-hosted for your use case.
+
+## Troubleshooting
+
+### Language Files Not Loading
+
+- Verify the CDN path points to the correct directory
+- Check that `.mjs` files are being served with the correct MIME type
+- Ensure the file permissions allow reading
+- Check browser network tab for 404 errors
+
+### MIME Type Errors
+
+Some servers don't recognize `.mjs` files. Configure your server to serve them as JavaScript:
+
+**Express:**
+```javascript
+express.static.mime.define({'application/javascript': ['mjs']});
+```
+
+**Nginx:**
+```nginx
+types {
+    application/javascript mjs;
+}
+```
+
+### Cached Failed Requests
+
+If you previously tried loading a language before configuring offline mode, clear the cache:
+
+```tsx
+// Reload the page after configuring CDN
+if (typeof window !== 'undefined') {
+  window.location.reload();
+}
+```
+
+Or clear browser cache manually.

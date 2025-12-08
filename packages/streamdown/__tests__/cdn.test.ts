@@ -10,6 +10,8 @@ const CDN_URL_PATTERN_UNIQUELANG1 =
   /^\/cdn\/shiki\/[\d.]+\/langs\/uniquelang1\.mjs$/;
 const CDN_URL_PATTERN_UNIQUELANG8 =
   /^\/cdn\/shiki\/\d+\.\d+\.\d+\/langs\/uniquelang8\.mjs$/;
+const CDN_URL_PATTERN_CUSTOMLANG4 =
+  /^\/cdn\/shiki\/[\d.]+\/langs\/customlang4\.mjs$/;
 
 describe("Bundled Languages", () => {
   it("should have exactly 15 common languages bundled", () => {
@@ -284,6 +286,115 @@ describe("Hybrid Language Loading Integration", () => {
 
     // Should have format: /cdn/shiki/{version}/langs/uniquelang8.mjs
     expect(callUrl).toMatch(CDN_URL_PATTERN_UNIQUELANG8);
+
+    fetchSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+  });
+});
+
+describe("CDN Configuration", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.restoreAllMocks();
+  });
+
+  it("should use custom CDN base URL when provided", async () => {
+    const customCdnBase = "https://my-cdn.example.com/shiki/langs";
+
+    const fetchSpy = vi.spyOn(global, "fetch");
+    fetchSpy.mockResolvedValue({
+      ok: false,
+      status: 404,
+      statusText: "Not Found",
+      text: async () => "",
+    } as Response);
+
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+      // Suppress console warnings during test
+    });
+
+    await loadLanguageFromCDN("customlang1", customCdnBase);
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      `${customCdnBase}/customlang1.mjs`,
+      expect.any(Object)
+    );
+
+    fetchSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+  });
+
+  it("should use custom timeout when provided", async () => {
+    const customTimeout = 10_000;
+
+    const fetchSpy = vi.spyOn(global, "fetch");
+
+    fetchSpy.mockImplementation((_url, _options?: { signal?: AbortSignal }) => {
+      // Return immediately with success to test that timeout is configured
+      return Promise.resolve({
+        ok: true,
+        text: async () =>
+          'const lang = Object.freeze(JSON.parse("{\\"name\\":\\"test\\"}"));',
+      } as Response);
+    });
+
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+      // Suppress console warnings during test
+    });
+
+    const result = await loadLanguageFromCDN(
+      "customlang2",
+      undefined,
+      customTimeout
+    );
+
+    // Should succeed with custom timeout configured
+    expect(result).toBeTruthy();
+    expect(fetchSpy).toHaveBeenCalled();
+
+    fetchSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+  });
+
+  it("should disable CDN loading when cdnUrl is null", async () => {
+    const fetchSpy = vi.spyOn(global, "fetch");
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      text: async () => 'const lang = Object.freeze(JSON.parse("{}"));',
+    } as Response);
+
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+      // Suppress console warnings during test
+    });
+
+    const result = await loadLanguageFromCDN("customlang3", null);
+
+    // When CDN URL is null, should return null immediately without fetching
+    expect(result).toBeNull();
+    expect(fetchSpy).not.toHaveBeenCalled();
+
+    fetchSpy.mockRestore();
+    consoleWarnSpy.mockRestore();
+  });
+
+  it("should use default CDN when cdnUrl is undefined", async () => {
+    const fetchSpy = vi.spyOn(global, "fetch");
+    fetchSpy.mockResolvedValue({
+      ok: false,
+      status: 404,
+      text: async () => "",
+    } as Response);
+
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
+      // Suppress console warnings during test
+    });
+
+    await loadLanguageFromCDN("customlang4", undefined);
+
+    // Should use default CDN path
+    expect(fetchSpy).toHaveBeenCalled();
+    const callUrl = fetchSpy.mock.calls[0][0] as string;
+    expect(callUrl).toMatch(CDN_URL_PATTERN_CUSTOMLANG4);
 
     fetchSpy.mockRestore();
     consoleWarnSpy.mockRestore();

@@ -25,7 +25,7 @@ export const CodeBlock = ({
   children,
   ...rest
 }: CodeBlockProps) => {
-  const { shikiTheme } = useContext(StreamdownContext);
+  const { shikiTheme, cdnUrl } = useContext(StreamdownContext);
 
   // Memoize the raw fallback tokens to avoid recomputing on every render
   const raw: TokensResult = useMemo(
@@ -50,7 +50,12 @@ export const CodeBlock = ({
 
   // Try to get cached result or subscribe to highlighting
   useEffect(() => {
-    const cachedResult = getHighlightedTokens(code, language, shikiTheme);
+    const cachedResult = getHighlightedTokens({
+      code,
+      language,
+      shikiTheme,
+      cdnUrl,
+    });
 
     if (cachedResult) {
       // Already cached, use it immediately
@@ -59,10 +64,16 @@ export const CodeBlock = ({
     }
 
     // Not cached, subscribe to updates
-    getHighlightedTokens(code, language, shikiTheme, (highlightedResult) => {
-      setResult(highlightedResult);
+    getHighlightedTokens({
+      code,
+      language,
+      shikiTheme,
+      cdnUrl,
+      callback: (highlightedResult) => {
+        setResult(highlightedResult);
+      },
     });
-  }, [code, language, shikiTheme]);
+  }, [code, language, shikiTheme, cdnUrl]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
