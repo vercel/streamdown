@@ -1,6 +1,7 @@
 import { type InferPageType, loader } from "fumadocs-core/source";
 import { lucideIconsPlugin } from "fumadocs-core/source/lucide-icons";
 import { docs } from "@/.source/server";
+import { basePath } from "@/geistdocs";
 import { i18n } from "./i18n";
 
 // See https://fumadocs.dev/docs/headless/source-api for more info
@@ -16,7 +17,9 @@ export const getPageImage = (page: InferPageType<typeof source>) => {
 
   return {
     segments,
-    url: `/og/${segments.join("/")}`,
+    url: basePath
+      ? `${basePath}/og/${segments.join("/")}`
+      : `/og/${segments.join("/")}`,
   };
 };
 

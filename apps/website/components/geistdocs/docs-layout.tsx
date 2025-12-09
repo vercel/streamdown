@@ -15,12 +15,12 @@ type DocsLayoutProps = {
 
 export const DocsLayout = ({ tree, children }: DocsLayoutProps) => (
   <FumadocsDocsLayout
-    i18n={i18n}
     containerProps={{
       style: {
-        '--fd-docs-row-1': '4rem',
-      } as CSSProperties
+        "--fd-docs-row-1": "4rem",
+      } as CSSProperties,
     }}
+    i18n={i18n}
     nav={{
       enabled: false,
     }}

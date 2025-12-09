@@ -2,6 +2,7 @@
 
 import type { UIMessage } from "@ai-sdk/react";
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { useLiveQuery } from "dexie-react-hooks";
 import { ChevronRightIcon, MessagesSquareIcon, Trash } from "lucide-react";
 import { Portal } from "radix-ui";
@@ -34,7 +35,6 @@ import {
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
-import { suggestions } from "@/geistdocs";
 import { useChatContext } from "@/hooks/geistdocs/use-chat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { db } from "@/lib/geistdocs/db";
@@ -113,7 +113,12 @@ export const useChatPersistence = () => {
   };
 };
 
-const ChatInner = () => {
+type ChatProps = {
+  basePath: string | undefined;
+  suggestions: string[];
+};
+
+const ChatInner = ({ basePath, suggestions }: ChatProps) => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [localPrompt, setLocalPrompt] = useState("");
   const [providerKey, setProviderKey] = useState(0);
@@ -122,6 +127,9 @@ const ChatInner = () => {
     useChatPersistence();
 
   const { messages, sendMessage, status, setMessages } = useChat({
+    transport: new DefaultChatTransport({
+      api: basePath ? `${basePath}/api/chat` : "/api/chat",
+    }),
     onError: (error) => {
       toast.error(error.message, {
         description: error.message,
@@ -328,7 +336,7 @@ const ChatInner = () => {
   );
 };
 
-export const Chat = () => {
+export const Chat = ({ basePath, suggestions }: ChatProps) => {
   const { isOpen, setIsOpen } = useChatContext();
   const isMobile = useIsMobile();
 
@@ -375,7 +383,7 @@ export const Chat = () => {
           )}
           data-state={isOpen ? "open" : "closed"}
         >
-          <ChatInner />
+          <ChatInner basePath={basePath} suggestions={suggestions} />
         </div>
       </Portal.Root>
       <div className="md:hidden">
@@ -390,7 +398,7 @@ export const Chat = () => {
             </Button>
           </DrawerTrigger>
           <DrawerContent className="h-[80dvh]">
-            <ChatInner />
+            <ChatInner basePath={basePath} suggestions={suggestions} />
           </DrawerContent>
         </Drawer>
       </div>

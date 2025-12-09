@@ -46,3 +46,5 @@ export const translations = {
     displayName: "English",
   },
 };
+
+export const basePath: string | undefined = undefined;
