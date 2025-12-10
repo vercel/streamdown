@@ -11,7 +11,7 @@ class ChatDatabase extends Dexie {
   messages!: EntityTable<StoredMessage, "id">;
 
   constructor() {
-    super(title.replace(" ", "").toLocaleLowerCase());
+    super(title.replaceAll(" ", "").toLocaleLowerCase());
     this.version(1).stores({
       messages: "id, timestamp, sequence",
     });
