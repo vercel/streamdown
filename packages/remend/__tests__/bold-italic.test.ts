@@ -81,4 +81,21 @@ describe("bold-italic formatting (***)", () => {
     // Test lines 137-138: text that ends with >= 3 asterisks (but not 4+ consecutive)
     expect(remend("***word text***")).toBe("***word text***");
   });
+
+  it("should not add closing markers to overlapping bold and italic (#302)", () => {
+    // When we have **bold and *italic***, the *** is closing both ** and *
+    // It's not a bold-italic marker, so we shouldn't add closing ***
+    expect(remend("Combined **bold and *italic*** text")).toBe(
+      "Combined **bold and *italic*** text"
+    );
+    expect(remend("**bold and *italic*** more text")).toBe(
+      "**bold and *italic*** more text"
+    );
+    expect(remend("test **bold and *italic*** end")).toBe(
+      "test **bold and *italic*** end"
+    );
+    expect(remend("- Combined **bold and *italic*** text")).toBe(
+      "- Combined **bold and *italic*** text"
+    );
+  });
 });

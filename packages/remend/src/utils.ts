@@ -20,12 +20,19 @@ export const isWordChar = (char: string): boolean => {
   return letterNumberUnderscorePattern.test(char);
 };
 
-// Helper function to check if we have a complete code block
-export const hasCompleteCodeBlock = (text: string): boolean => {
-  const tripleBackticks = (text.match(/```/g) || []).length;
-  return (
-    tripleBackticks > 0 && tripleBackticks % 2 === 0 && text.includes("\n")
-  );
+// Check if a position is within a code block (between ``` markers)
+export const isWithinCodeBlock = (text: string, position: number): boolean => {
+  let inCodeBlock = false;
+
+  for (let i = 0; i < position; i += 1) {
+    // Check for triple backticks
+    if (text[i] === "`" && text[i + 1] === "`" && text[i + 2] === "`") {
+      inCodeBlock = !inCodeBlock;
+      i += 2; // Skip the next two backticks
+    }
+  }
+
+  return inCodeBlock;
 };
 
 // Helper function to find the matching opening bracket for a closing bracket

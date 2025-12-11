@@ -4,8 +4,8 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "check": "npx ultracite@latest check",
-    "fix": "npx ultracite@latest fix",
+    "check": "ultracite check",
+    "fix": "ultracite fix",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
     "test:ui": "turbo run test:ui",

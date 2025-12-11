@@ -20,31 +20,6 @@ const handleInlineTripleBackticks = (text: string): string | null => {
   return text;
 };
 
-// Helper function to check if we should skip processing due to multiline code blocks
-const shouldSkipMultilineCodeBlocks = (text: string): boolean => {
-  const allTripleBackticks = (text.match(/```/g) || []).length;
-
-  // Don't modify text if we have complete multi-line code blocks (even pairs of ```)
-  if (
-    allTripleBackticks > 0 &&
-    allTripleBackticks % 2 === 0 &&
-    text.includes("\n")
-  ) {
-    return true;
-  }
-
-  // Special case: if text ends with ```\n (triple backticks followed by newline)
-  // This is actually a complete code block, not incomplete
-  if (
-    (text.endsWith("```\n") || text.endsWith("```")) &&
-    allTripleBackticks % 2 === 0
-  ) {
-    return true;
-  }
-
-  return false;
-};
-
 // Helper function to check if we're inside an incomplete code block
 const isInsideIncompleteCodeBlock = (text: string): boolean => {
   const allTripleBackticks = (text.match(/```/g) || []).length;
@@ -60,11 +35,6 @@ export const handleIncompleteInlineCode = (text: string): string => {
   const inlineResult = handleInlineTripleBackticks(text);
   if (inlineResult !== null) {
     return inlineResult;
-  }
-
-  // Don't modify text if we have complete multi-line code blocks
-  if (shouldSkipMultilineCodeBlocks(text)) {
-    return text;
   }
 
   const inlineCodeMatch = text.match(inlineCodePattern);

@@ -64,4 +64,14 @@ describe("mixed formatting", () => {
       "**bold and *bold-italic***"
     );
   });
+
+  it("should close nested underscore italic before bold (#302)", () => {
+    // When _ opens after **, the _ should close before ** (proper nesting)
+    expect(remend("combined **_bold and italic")).toBe(
+      "combined **_bold and italic_**"
+    );
+    expect(remend("**_text")).toBe("**_text_**");
+    // When _ opens before **, the ** should close first (it's nested inside)
+    expect(remend("_italic and **bold")).toBe("_italic and **bold**_");
+  });
 });
