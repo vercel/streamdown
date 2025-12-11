@@ -57,6 +57,12 @@ const shouldSkipAsterisk = (
     return true;
   }
 
+  // Skip if within math block (only check if text has dollar signs)
+  const hasMathBlocks = text.includes("$");
+  if (hasMathBlocks && isWithinMathBlock(text, index)) {
+    return true;
+  }
+
   // Special handling for *** sequences
   // If this is the first * in ***, don't skip it - it can close a single * italic
   // Example: **bold and *italic*** should count the first * of *** as closing the italic
@@ -313,7 +319,8 @@ const findFirstSingleAsteriskIndex = (text: string): number => {
       text[i] === "*" &&
       text[i - 1] !== "*" &&
       text[i + 1] !== "*" &&
-      text[i - 1] !== "\\"
+      text[i - 1] !== "\\" &&
+      !isWithinMathBlock(text, i)
     ) {
       // Check if asterisk is word-internal (between word characters)
       const prevChar = i > 0 ? text[i - 1] : "";
