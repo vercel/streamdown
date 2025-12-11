@@ -292,6 +292,10 @@ const shouldSkipItalicCompletion = (
 export const handleIncompleteDoubleUnderscoreItalic = (
   text: string
 ): string => {
+  if (hasCompleteCodeBlock(text)) {
+    return text;
+  }
+
   const italicMatch = text.match(italicPattern);
   if (!italicMatch) {
     return text;

@@ -162,4 +162,50 @@ Would you like me to show how to conditionally toggle that behavior per app or s
     // Should preserve original content
     expect(result).toBe(text_content);
   });
+
+  it("should not add extra __ after code block with underscores followed by bullet list (#300)", () => {
+    const input = `\`\`\`css
+/* Commentary */
+
+[class*="WidgetTitle__Header"] {
+  font-size: 18px !important;
+}
+\`\`\`
+
+Notes and tips:
+* Use !important only where necessary in CSS.`;
+
+    const result = remend(input);
+    expect(result).toBe(input);
+    expect(result).not.toMatch(/__$/); // Should not end with __
+  });
+
+  it("should handle complete code blocks with underscores followed by asterisk list (#300)", () => {
+    const input = `\`\`\`python
+def __init__(self):
+    pass
+\`\`\`
+
+* List item`;
+
+    const result = remend(input);
+    expect(result).toBe(input);
+    expect(result).not.toMatch(/__$/);
+  });
+
+  it("should handle code blocks with underscores and following text with asterisks (#300)", () => {
+    const input = `Here's some code:
+\`\`\`javascript
+const my__variable = "test";
+const another_var = 5;
+\`\`\`
+
+Some notes:
+* First note
+* Second note`;
+
+    const result = remend(input);
+    expect(result).toBe(input);
+    expect(result).not.toMatch(/__$/);
+  });
 });
