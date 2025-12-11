@@ -56,4 +56,10 @@ describe("inline code formatting (`)", () => {
     const text5 = "text``````";
     expect(remend(text5)).toBe(text5);
   });
+
+  it("should handle code block with incomplete inline code after (#302)", () => {
+    expect(remend("```\nblock\n```\n`inline")).toBe(
+      "```\nblock\n```\n`inline`"
+    );
+  });
 });
