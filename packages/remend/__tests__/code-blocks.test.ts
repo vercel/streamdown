@@ -208,4 +208,19 @@ Some notes:
     expect(result).toBe(input);
     expect(result).not.toMatch(/__$/);
   });
+
+  it("should handle incomplete markdown after code block (#302)", () => {
+    const text = `\`\`\`css
+code here
+\`\`\`
+
+**incomplete bold`;
+    expect(remend(text)).toBe(
+      `\`\`\`css
+code here
+\`\`\`
+
+**incomplete bold**`
+    );
+  });
 });

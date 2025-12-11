@@ -11,6 +11,7 @@ import {
 import {
   hasCompleteCodeBlock,
   isHorizontalRule,
+  isWithinCodeBlock,
   isWithinLinkOrImageUrl,
   isWithinMathBlock,
   isWordChar,
@@ -234,10 +235,6 @@ const shouldSkipBoldCompletion = (
 
 // Completes incomplete bold formatting (**)
 export const handleIncompleteBold = (text: string): string => {
-  if (hasCompleteCodeBlock(text)) {
-    return text;
-  }
-
   const boldMatch = text.match(boldPattern);
   if (!boldMatch) {
     return text;
@@ -245,6 +242,11 @@ export const handleIncompleteBold = (text: string): string => {
 
   const contentAfterMarker = boldMatch[2];
   const markerIndex = text.lastIndexOf(boldMatch[1]);
+
+  // Check if the bold marker is within a code block
+  if (isWithinCodeBlock(text, markerIndex)) {
+    return text;
+  }
 
   if (shouldSkipBoldCompletion(text, contentAfterMarker, markerIndex)) {
     return text;
@@ -292,10 +294,6 @@ const shouldSkipItalicCompletion = (
 export const handleIncompleteDoubleUnderscoreItalic = (
   text: string
 ): string => {
-  if (hasCompleteCodeBlock(text)) {
-    return text;
-  }
-
   const italicMatch = text.match(italicPattern);
   if (!italicMatch) {
     return text;
@@ -303,6 +301,11 @@ export const handleIncompleteDoubleUnderscoreItalic = (
 
   const contentAfterMarker = italicMatch[2];
   const markerIndex = text.lastIndexOf(italicMatch[1]);
+
+  // Check if the italic marker is within a code block
+  if (isWithinCodeBlock(text, markerIndex)) {
+    return text;
+  }
 
   if (shouldSkipItalicCompletion(text, contentAfterMarker, markerIndex)) {
     return text;
@@ -346,11 +349,6 @@ const findFirstSingleAsteriskIndex = (text: string): number => {
 
 // Completes incomplete italic formatting with single asterisks (*)
 export const handleIncompleteSingleAsteriskItalic = (text: string): string => {
-  // Don't process if inside a complete code block
-  if (hasCompleteCodeBlock(text)) {
-    return text;
-  }
-
   const singleAsteriskMatch = text.match(singleAsteriskPattern);
 
   if (!singleAsteriskMatch) {
@@ -360,6 +358,11 @@ export const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   const firstSingleAsteriskIndex = findFirstSingleAsteriskIndex(text);
 
   if (firstSingleAsteriskIndex === -1) {
+    return text;
+  }
+
+  // Check if the asterisk is within a code block
+  if (isWithinCodeBlock(text, firstSingleAsteriskIndex)) {
     return text;
   }
 
@@ -434,11 +437,6 @@ const insertClosingUnderscore = (text: string): string => {
 export const handleIncompleteSingleUnderscoreItalic = (
   text: string
 ): string => {
-  // Don't process if inside a complete code block
-  if (hasCompleteCodeBlock(text)) {
-    return text;
-  }
-
   const singleUnderscoreMatch = text.match(singleUnderscorePattern);
 
   if (!singleUnderscoreMatch) {
@@ -448,6 +446,11 @@ export const handleIncompleteSingleUnderscoreItalic = (
   const firstSingleUnderscoreIndex = findFirstSingleUnderscoreIndex(text);
 
   if (firstSingleUnderscoreIndex === -1) {
+    return text;
+  }
+
+  // Check if the underscore is within a code block
+  if (isWithinCodeBlock(text, firstSingleUnderscoreIndex)) {
     return text;
   }
 
@@ -475,11 +478,6 @@ export const handleIncompleteSingleUnderscoreItalic = (
 
 // Completes incomplete bold-italic formatting (***)
 export const handleIncompleteBoldItalic = (text: string): string => {
-  // Don't process if inside a complete code block
-  if (hasCompleteCodeBlock(text)) {
-    return text;
-  }
-
   // Don't process if text is only asterisks and has 4 or more consecutive asterisks
   // This prevents cases like **** from being treated as incomplete ***
   if (fourOrMoreAsterisksPattern.test(text)) {
@@ -502,6 +500,12 @@ export const handleIncompleteBoldItalic = (text: string): string => {
 
     // Check if the *** is a horizontal rule
     const markerIndex = text.lastIndexOf(boldItalicMatch[1]);
+
+    // Check if the marker is within a code block
+    if (isWithinCodeBlock(text, markerIndex)) {
+      return text;
+    }
+
     if (isHorizontalRule(text, markerIndex, "*")) {
       return text;
     }
