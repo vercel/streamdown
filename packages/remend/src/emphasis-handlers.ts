@@ -512,6 +512,17 @@ export const handleIncompleteBoldItalic = (text: string): string => {
 
     const tripleAsteriskCount = countTripleAsterisks(text);
     if (tripleAsteriskCount % 2 === 1) {
+      // Before adding ***, check if ** and * markers are already balanced
+      // If they are, the *** is likely overlapping markers (e.g., **bold and *italic***)
+      // not a true bold-italic marker
+      const asteriskPairs = (text.match(/\*\*/g) || []).length;
+      const singleAsterisks = countSingleAsterisks(text);
+
+      // If both ** and * are balanced, don't add closing ***
+      if (asteriskPairs % 2 === 0 && singleAsterisks % 2 === 0) {
+        return text;
+      }
+
       return `${text}***`;
     }
   }
