@@ -9,7 +9,6 @@ import {
   whitespaceOrMarkersPattern,
 } from "./patterns";
 import {
-  hasCompleteCodeBlock,
   isHorizontalRule,
   isWithinCodeBlock,
   isWithinLinkOrImageUrl,
@@ -433,6 +432,39 @@ const insertClosingUnderscore = (text: string): string => {
   return `${text}_`;
 };
 
+// Helper to handle trailing ** for proper nesting of _ and ** markers
+const handleTrailingAsterisksForUnderscore = (text: string): string | null => {
+  if (!text.endsWith("**")) {
+    return null;
+  }
+
+  const textWithoutTrailingAsterisks = text.slice(0, -2);
+  const asteriskPairsAfterRemoval = (
+    textWithoutTrailingAsterisks.match(/\*\*/g) || []
+  ).length;
+
+  // If removing trailing ** makes the count odd, it was added to close an unclosed **
+  if (asteriskPairsAfterRemoval % 2 !== 1) {
+    return null;
+  }
+
+  const firstDoubleAsteriskIndex = textWithoutTrailingAsterisks.indexOf("**");
+  const underscoreIndex = findFirstSingleUnderscoreIndex(
+    textWithoutTrailingAsterisks
+  );
+
+  // If ** opened before _, then _ should close before **
+  if (
+    firstDoubleAsteriskIndex !== -1 &&
+    underscoreIndex !== -1 &&
+    firstDoubleAsteriskIndex < underscoreIndex
+  ) {
+    return `${textWithoutTrailingAsterisks}_**`;
+  }
+
+  return null;
+};
+
 // Completes incomplete italic formatting with single underscores (_)
 export const handleIncompleteSingleUnderscoreItalic = (
   text: string
@@ -471,28 +503,9 @@ export const handleIncompleteSingleUnderscoreItalic = (
   const singleUnderscores = countSingleUnderscores(text);
   if (singleUnderscores % 2 === 1) {
     // Check if we need to insert _ before trailing ** for proper nesting
-    // This handles cases like **_text where _ should close before **
-    if (text.endsWith("**")) {
-      const textWithoutTrailingAsterisks = text.slice(0, -2);
-      const asteriskPairsAfterRemoval = (
-        textWithoutTrailingAsterisks.match(/\*\*/g) || []
-      ).length;
-      // If removing trailing ** makes the count odd, it was added to close an unclosed **
-      if (asteriskPairsAfterRemoval % 2 === 1) {
-        const firstDoubleAsteriskIndex =
-          textWithoutTrailingAsterisks.indexOf("**");
-        const underscoreIndex = findFirstSingleUnderscoreIndex(
-          textWithoutTrailingAsterisks
-        );
-        // If ** opened before _, then _ should close before **
-        if (
-          firstDoubleAsteriskIndex !== -1 &&
-          underscoreIndex !== -1 &&
-          firstDoubleAsteriskIndex < underscoreIndex
-        ) {
-          return `${textWithoutTrailingAsterisks}_**`;
-        }
-      }
+    const trailingResult = handleTrailingAsterisksForUnderscore(text);
+    if (trailingResult !== null) {
+      return trailingResult;
     }
     return insertClosingUnderscore(text);
   }
@@ -500,55 +513,61 @@ export const handleIncompleteSingleUnderscoreItalic = (
   return text;
 };
 
+// Helper to check if bold-italic markers are already balanced
+const areBoldItalicMarkersBalanced = (text: string): boolean => {
+  const asteriskPairs = (text.match(/\*\*/g) || []).length;
+  const singleAsterisks = countSingleAsterisks(text);
+  return asteriskPairs % 2 === 0 && singleAsterisks % 2 === 0;
+};
+
+// Helper to check if bold-italic should be skipped
+const shouldSkipBoldItalicCompletion = (
+  text: string,
+  contentAfterMarker: string,
+  markerIndex: number
+): boolean => {
+  if (
+    !contentAfterMarker ||
+    whitespaceOrMarkersPattern.test(contentAfterMarker)
+  ) {
+    return true;
+  }
+
+  if (isWithinCodeBlock(text, markerIndex)) {
+    return true;
+  }
+
+  return isHorizontalRule(text, markerIndex, "*");
+};
+
 // Completes incomplete bold-italic formatting (***)
 export const handleIncompleteBoldItalic = (text: string): string => {
   // Don't process if text is only asterisks and has 4 or more consecutive asterisks
-  // This prevents cases like **** from being treated as incomplete ***
   if (fourOrMoreAsterisksPattern.test(text)) {
     return text;
   }
 
   const boldItalicMatch = text.match(boldItalicPattern);
 
-  if (boldItalicMatch) {
-    // Don't close if there's no meaningful content after the opening markers
-    // boldItalicMatch[2] contains the content after ***
-    // Check if content is only whitespace or other emphasis markers
-    const contentAfterMarker = boldItalicMatch[2];
-    if (
-      !contentAfterMarker ||
-      whitespaceOrMarkersPattern.test(contentAfterMarker)
-    ) {
+  if (!boldItalicMatch) {
+    return text;
+  }
+
+  const contentAfterMarker = boldItalicMatch[2];
+  const markerIndex = text.lastIndexOf(boldItalicMatch[1]);
+
+  if (shouldSkipBoldItalicCompletion(text, contentAfterMarker, markerIndex)) {
+    return text;
+  }
+
+  const tripleAsteriskCount = countTripleAsterisks(text);
+  if (tripleAsteriskCount % 2 === 1) {
+    // If both ** and * are balanced, don't add closing ***
+    // The *** is likely overlapping markers (e.g., **bold and *italic***)
+    if (areBoldItalicMarkersBalanced(text)) {
       return text;
     }
-
-    // Check if the *** is a horizontal rule
-    const markerIndex = text.lastIndexOf(boldItalicMatch[1]);
-
-    // Check if the marker is within a code block
-    if (isWithinCodeBlock(text, markerIndex)) {
-      return text;
-    }
-
-    if (isHorizontalRule(text, markerIndex, "*")) {
-      return text;
-    }
-
-    const tripleAsteriskCount = countTripleAsterisks(text);
-    if (tripleAsteriskCount % 2 === 1) {
-      // Before adding ***, check if ** and * markers are already balanced
-      // If they are, the *** is likely overlapping markers (e.g., **bold and *italic***)
-      // not a true bold-italic marker
-      const asteriskPairs = (text.match(/\*\*/g) || []).length;
-      const singleAsterisks = countSingleAsterisks(text);
-
-      // If both ** and * are balanced, don't add closing ***
-      if (asteriskPairs % 2 === 0 && singleAsterisks % 2 === 0) {
-        return text;
-      }
-
-      return `${text}***`;
-    }
+    return `${text}***`;
   }
 
   return text;

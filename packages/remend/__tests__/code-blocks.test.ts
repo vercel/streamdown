@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import remend from "../src";
 
+// Top-level regex for performance (used in multiple tests)
+const trailingDoubleUnderscorePattern = /__$/;
+
 describe("code block handling", () => {
   it("should handle incomplete multiline code blocks", () => {
     expect(remend("```javascript\nconst x = 5;")).toBe(
@@ -177,7 +180,7 @@ Notes and tips:
 
     const result = remend(input);
     expect(result).toBe(input);
-    expect(result).not.toMatch(/__$/); // Should not end with __
+    expect(result).not.toMatch(trailingDoubleUnderscorePattern); // Should not end with __
   });
 
   it("should handle complete code blocks with underscores followed by asterisk list (#300)", () => {
@@ -190,7 +193,7 @@ def __init__(self):
 
     const result = remend(input);
     expect(result).toBe(input);
-    expect(result).not.toMatch(/__$/);
+    expect(result).not.toMatch(trailingDoubleUnderscorePattern);
   });
 
   it("should handle code blocks with underscores and following text with asterisks (#300)", () => {
@@ -206,7 +209,7 @@ Some notes:
 
     const result = remend(input);
     expect(result).toBe(input);
-    expect(result).not.toMatch(/__$/);
+    expect(result).not.toMatch(trailingDoubleUnderscorePattern);
   });
 
   it("should handle incomplete markdown after code block (#302)", () => {
