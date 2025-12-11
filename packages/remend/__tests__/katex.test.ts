@@ -178,3 +178,26 @@ describe("math blocks with underscores", () => {
     expect(remend(str)).toBe("$$formula$$ and code `$$` and $$incomplete$$");
   });
 });
+
+describe("math blocks with asterisks", () => {
+  it("should not complete asterisks within block math", () => {
+    const text = "$$\\mathbf{w}^{*}$$";
+    expect(remend(text)).toBe(text);
+  });
+
+  it("should not complete asterisks in complex math expressions", () => {
+    const text =
+      "$$\n\\mathbf{w}^{*} = \\underset{\\|\\mathbf{w}\\|=1}{\\arg\\max} \\;\\; \\mathbf{w}^T S \\mathbf{w}\n$$";
+    expect(remend(text)).toBe(text);
+  });
+
+  it("should handle asterisks outside math blocks normally", () => {
+    const text = "Text with *italic* and math $$x^{*}$$";
+    expect(remend(text)).toBe(text);
+  });
+
+  it("should complete italic asterisk outside math but not inside", () => {
+    const text = "Start *italic with $$x^{*}$$";
+    expect(remend(text)).toBe("Start *italic with $$x^{*}$$*");
+  });
+});
