@@ -11,8 +11,37 @@ import { handleIncompleteLinksAndImages } from "./link-image-handler";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
 
+/**
+ * Configuration options for the remend function.
+ * All options default to `true` when not specified.
+ * Set an option to `false` to disable that specific completion.
+ */
+export type RemendOptions = {
+  /** Complete links and images (e.g., `[text](url` → `[text](streamdown:incomplete-link)`) */
+  links?: boolean;
+  /** Complete images (e.g., `![alt](url` → removed) */
+  images?: boolean;
+  /** Complete bold formatting (e.g., `**text` → `**text**`) */
+  bold?: boolean;
+  /** Complete italic formatting (e.g., `*text` → `*text*` or `_text` → `_text_`) */
+  italic?: boolean;
+  /** Complete bold-italic formatting (e.g., `***text` → `***text***`) */
+  boldItalic?: boolean;
+  /** Complete inline code formatting (e.g., `` `code `` → `` `code` ``) */
+  inlineCode?: boolean;
+  /** Complete strikethrough formatting (e.g., `~~text` → `~~text~~`) */
+  strikethrough?: boolean;
+  /** Complete block KaTeX math (e.g., `$$equation` → `$$equation$$`) */
+  katex?: boolean;
+  /** Handle incomplete setext headings to prevent misinterpretation */
+  setextHeadings?: boolean;
+};
+
+// Helper to check if an option is enabled (defaults to true)
+const isEnabled = (option: boolean | undefined): boolean => option !== false;
+
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
-const remend = (text: string): string => {
+const remend = (text: string, options?: RemendOptions): string => {
   if (!text || typeof text !== "string") {
     return text;
   }
@@ -23,31 +52,48 @@ const remend = (text: string): string => {
 
   // Handle incomplete setext headings first (before other processing)
   // This prevents partial list items (like "-") from being interpreted as heading underlines
-  result = handleIncompleteSetextHeading(result);
-
-  // Handle incomplete links and images
-  const processedResult = handleIncompleteLinksAndImages(result);
-
-  // If we added an incomplete link marker, don't process other formatting
-  // as the content inside the link should be preserved as-is
-  if (processedResult.endsWith("](streamdown:incomplete-link)")) {
-    return processedResult;
+  if (isEnabled(options?.setextHeadings)) {
+    result = handleIncompleteSetextHeading(result);
   }
 
-  result = processedResult;
+  // Handle incomplete links and images
+  // Note: links and images share the same handler
+  if (isEnabled(options?.links) || isEnabled(options?.images)) {
+    const processedResult = handleIncompleteLinksAndImages(result);
+
+    // If we added an incomplete link marker, don't process other formatting
+    // as the content inside the link should be preserved as-is
+    if (processedResult.endsWith("](streamdown:incomplete-link)")) {
+      return processedResult;
+    }
+
+    result = processedResult;
+  }
 
   // Handle various formatting completions
   // Handle triple asterisks first (most specific)
-  result = handleIncompleteBoldItalic(result);
-  result = handleIncompleteBold(result);
-  result = handleIncompleteDoubleUnderscoreItalic(result);
-  result = handleIncompleteSingleAsteriskItalic(result);
-  result = handleIncompleteSingleUnderscoreItalic(result);
-  result = handleIncompleteInlineCode(result);
-  result = handleIncompleteStrikethrough(result);
+  if (isEnabled(options?.boldItalic)) {
+    result = handleIncompleteBoldItalic(result);
+  }
+  if (isEnabled(options?.bold)) {
+    result = handleIncompleteBold(result);
+  }
+  if (isEnabled(options?.italic)) {
+    result = handleIncompleteDoubleUnderscoreItalic(result);
+    result = handleIncompleteSingleAsteriskItalic(result);
+    result = handleIncompleteSingleUnderscoreItalic(result);
+  }
+  if (isEnabled(options?.inlineCode)) {
+    result = handleIncompleteInlineCode(result);
+  }
+  if (isEnabled(options?.strikethrough)) {
+    result = handleIncompleteStrikethrough(result);
+  }
 
   // Handle KaTeX formatting (only block math with $$)
-  result = handleIncompleteBlockKatex(result);
+  if (isEnabled(options?.katex)) {
+    result = handleIncompleteBlockKatex(result);
+  }
   // Note: We don't handle inline KaTeX with single $ as they're likely currency symbols
 
   return result;

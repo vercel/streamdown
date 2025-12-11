@@ -54,6 +54,34 @@ const completed = remend(partialLink);
 // Result: "Check out [this link](streamdown:incomplete-link)"
 ```
 
+### Configuration
+
+You can selectively disable specific completions by passing an options object. All options default to `true`:
+
+```typescript
+import remend from "remend";
+
+// Disable link and KaTeX completion
+const completed = remend(partialMarkdown, {
+  links: false,
+  katex: false,
+});
+```
+
+Available options:
+
+| Option | Description |
+|--------|-------------|
+| `links` | Complete incomplete links |
+| `images` | Complete incomplete images |
+| `bold` | Complete bold formatting (`**`) |
+| `italic` | Complete italic formatting (`*` and `_`) |
+| `boldItalic` | Complete bold-italic formatting (`***`) |
+| `inlineCode` | Complete inline code formatting (`` ` ``) |
+| `strikethrough` | Complete strikethrough formatting (`~~`) |
+| `katex` | Complete block KaTeX math (`$$`) |
+| `setextHeadings` | Handle incomplete setext headings |
+
 ### Usage with Remark
 
 Remend is a preprocessor that must be run on the raw Markdown string **before** passing it into the unified/remark processing pipeline:

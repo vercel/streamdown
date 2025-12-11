@@ -18,6 +18,10 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
       type: 'boolean',
       default: 'true',
     },
+    remend: {
+      description: 'Configure which Markdown completions remend should perform',
+      type: 'RemendOptions',
+    },
     isAnimating: {
       description: 'Indicates if content is currently streaming (disables copy buttons)',
       type: 'boolean',
@@ -146,6 +150,71 @@ The `controls` prop can be configured granularly:
       fullscreen: true, // Show mermaid fullscreen button
       panZoom: true     // Show mermaid pan/zoom controls
     }
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+### Remend Options
+
+The `remend` prop configures which Markdown completions are performed during streaming. All options default to `true` when not specified. Set an option to `false` to disable that completion:
+
+<TypeTable
+  type={{
+    links: {
+      description: 'Complete incomplete links',
+      type: 'boolean',
+      default: 'true',
+    },
+    images: {
+      description: 'Complete incomplete images',
+      type: 'boolean',
+      default: 'true',
+    },
+    bold: {
+      description: 'Complete bold formatting (**)',
+      type: 'boolean',
+      default: 'true',
+    },
+    italic: {
+      description: 'Complete italic formatting (* and _)',
+      type: 'boolean',
+      default: 'true',
+    },
+    boldItalic: {
+      description: 'Complete bold-italic formatting (***)',
+      type: 'boolean',
+      default: 'true',
+    },
+    inlineCode: {
+      description: 'Complete inline code formatting (`)',
+      type: 'boolean',
+      default: 'true',
+    },
+    strikethrough: {
+      description: 'Complete strikethrough formatting (~~)',
+      type: 'boolean',
+      default: 'true',
+    },
+    katex: {
+      description: 'Complete block KaTeX math ($$)',
+      type: 'boolean',
+      default: 'true',
+    },
+    setextHeadings: {
+      description: 'Handle incomplete setext headings',
+      type: 'boolean',
+      default: 'true',
+    },
+  }}
+/>
+
+```tsx title="app/page.tsx"
+<Streamdown
+  remend={{
+    links: false,    // Disable link completion
+    katex: false,    // Disable KaTeX completion
   }}
 >
   {markdown}
