@@ -470,6 +470,30 @@ export const handleIncompleteSingleUnderscoreItalic = (
 
   const singleUnderscores = countSingleUnderscores(text);
   if (singleUnderscores % 2 === 1) {
+    // Check if we need to insert _ before trailing ** for proper nesting
+    // This handles cases like **_text where _ should close before **
+    if (text.endsWith("**")) {
+      const textWithoutTrailingAsterisks = text.slice(0, -2);
+      const asteriskPairsAfterRemoval = (
+        textWithoutTrailingAsterisks.match(/\*\*/g) || []
+      ).length;
+      // If removing trailing ** makes the count odd, it was added to close an unclosed **
+      if (asteriskPairsAfterRemoval % 2 === 1) {
+        const firstDoubleAsteriskIndex =
+          textWithoutTrailingAsterisks.indexOf("**");
+        const underscoreIndex = findFirstSingleUnderscoreIndex(
+          textWithoutTrailingAsterisks
+        );
+        // If ** opened before _, then _ should close before **
+        if (
+          firstDoubleAsteriskIndex !== -1 &&
+          underscoreIndex !== -1 &&
+          firstDoubleAsteriskIndex < underscoreIndex
+        ) {
+          return `${textWithoutTrailingAsterisks}_**`;
+        }
+      }
+    }
     return insertClosingUnderscore(text);
   }
 

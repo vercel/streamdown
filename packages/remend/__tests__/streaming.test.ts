@@ -6,8 +6,8 @@ describe("chunked streaming scenarios", () => {
     expect(remend("This is **bold with *ital")).toBe(
       "This is **bold with *ital*"
     );
-    // When bold is unclosed, it gets closed first, then underscore
-    expect(remend("**bold _und")).toBe("**bold _und**_");
+    // When underscore opens after bold, underscore should close before bold (proper nesting)
+    expect(remend("**bold _und")).toBe("**bold _und_**");
   });
 
   it("should handle headings with incomplete formatting", () => {
