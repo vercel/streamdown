@@ -1,5 +1,48 @@
 # streamdown
 
+## 2.0.0
+
+### Major Changes
+
+- 75faa2e: Reduce bundle size by 98%, create Streamdown CDN
+
+### Minor Changes
+
+- 13b91d8: Add support for carets
+
+### Patch Changes
+
+- 104798e: Make remend configurable
+- 133c6c8: Load KaTeX CSS from CDN
+- 0c830f5: Fix Mermaid pan/zoom controls layout issues in fullscreen and non-fullscreen modes
+- 68109f2: Fix setext heading issues
+- ee12ec8: Add support for CDN offline mode
+- 6a7dc7c: Optimize Mermaid rendering performance with viewport-based lazy loading
+
+  - Add useDeferredRender hook for lazy loading components when entering viewport
+  - Use Intersection Observer + debounce + requestIdleCallback for optimal performance
+  - Only render Mermaid charts when they are visible or about to enter viewport
+  - Prevents page freezing when loading chat history with many Mermaid diagrams
+  - Fixes white screen issue when scrolling through chat messages with multiple diagrams
+
+- 8d8d67f: Add rehype sanitize
+- 271265c: Fix list indentation
+- 8157e80: Fix fullscreen mermaid
+- 16df4a4: Fix KaTeX parsing
+- 6bd211d: Update rehype-harden to fix relative URLs
+- d1635f0: Fix bug: Code block line numbers over 100 wrap and start new line
+- Updated dependencies [104798e]
+- Updated dependencies [6769e7a]
+- Updated dependencies [217b128]
+- Updated dependencies [68109f2]
+- Updated dependencies [e0ee74e]
+- Updated dependencies [45f0f4d]
+- Updated dependencies [b8c8c79]
+- Updated dependencies [68f29c0]
+- Updated dependencies [e7eca51]
+- Updated dependencies [d708864]
+  - remend@1.0.2
+
 ## 1.6.10
 
 ### Patch Changes

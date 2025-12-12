@@ -1,6 +1,6 @@
 {
   "name": "streamdown",
-  "version": "1.6.10",
+  "version": "2.0.0",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
