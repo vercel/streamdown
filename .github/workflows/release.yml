@@ -67,8 +67,6 @@ jobs:
         with:
           version: pnpm changeset version
           publish: pnpm changeset publish
-          createGithubReleases: true
-          setupGitUser: false
         env:
           GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
           NPM_TOKEN: "" # Workaround for https://github.com/changesets/action/pull/545
