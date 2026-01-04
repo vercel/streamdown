@@ -3,7 +3,7 @@ import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import type { Parent } from "unist";
 
-const CJK_PUNCTUATION = new Set<string>([
+const CJK_AUTOLINK_BOUNDARY_CHARS = new Set<string>([
   "。",
   "．",
   "，",
@@ -40,7 +40,7 @@ const isAutolinkLiteral = (node: Link): node is Link & { children: [Text] } => {
 const findCjkBoundaryIndex = (url: string): number | null => {
   let index = 0;
   for (const char of url) {
-    if (CJK_PUNCTUATION.has(char)) {
+    if (CJK_AUTOLINK_BOUNDARY_CHARS.has(char)) {
       return index;
     }
     index += char.length;
@@ -64,6 +64,8 @@ const buildTrailingText = (value: string): Text => ({
   value,
 });
 
+// Split literal autolinks at CJK punctuation boundaries so trailing text
+// is not swallowed by the URL.
 export const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
   visit(tree, "link", (node: Link, index: number | null, parent?: Parent) => {
     if (!parent || typeof index !== "number") {
@@ -85,10 +87,6 @@ export const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
 
     const trimmedUrl = node.url.slice(0, boundaryIndex);
     const trailing = node.url.slice(boundaryIndex);
-
-    if (!trimmedUrl || !trailing) {
-      return;
-    }
 
     const trimmedLink = buildAutolink(trimmedUrl, node);
     const trailingText = buildTrailingText(trailing);
