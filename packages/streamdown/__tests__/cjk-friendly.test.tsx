@@ -1,4 +1,5 @@
 import { render } from "@testing-library/react";
+import remarkGfm from "remark-gfm";
 import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 
@@ -233,6 +234,27 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 
       const link = container.querySelector('[data-streamdown="link"]');
       expect(link?.textContent).toContain("日本語のリンク");
+    });
+
+    it("splits autolinks at CJK punctuation", () => {
+      const autolinkContent = "请访问 https://example.com。谢谢";
+      const { container } = render(<Streamdown>{autolinkContent}</Streamdown>);
+
+      const link = container.querySelector('[data-streamdown="link"]');
+      expect(link?.textContent).toBe("https://example.com");
+      expect(link?.getAttribute("href")).toBe("https://example.com/");
+      expect(container.textContent).toBe(autolinkContent);
+    });
+
+    it("keeps default autolink behavior without the CJK boundary plugin", () => {
+      const autolinkContent = "请访问 https://example.com。谢谢";
+      const { container } = render(
+        <Streamdown remarkPlugins={[remarkGfm]}>{autolinkContent}</Streamdown>
+      );
+
+      const link = container.querySelector('[data-streamdown="link"]');
+      expect(link?.textContent).toBe("https://example.com。谢谢");
+      expect(container.textContent).toBe(autolinkContent);
     });
 
     it("renders inline code near CJK emphasis", () => {

@@ -25,6 +25,7 @@ import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
 import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
+import { remarkCjkAutolinkBoundary } from "./lib/remark/cjk-autolink";
 import { cn } from "./lib/utils";
 import packageJson from "./package.json";
 
@@ -103,6 +104,7 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
 
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
   gfm: [remarkGfm, {}],
+  cjkAutolinkBoundary: [remarkCjkAutolinkBoundary, {}],
   math: [remarkMath, { singleDollarTextMath: false }],
   cjkFriendly: [remarkCjkFriendly, {}],
   cjkFriendlyGfmStrikethrough: [remarkCjkFriendlyGfmStrikethrough, {}],
