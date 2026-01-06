@@ -1,10 +1,12 @@
 import {
-  type BundledTheme,
-  createHighlighter,
-  type Highlighter,
-  type LanguageRegistration,
-  type SpecialLanguage,
-  type TokensResult,
+  createHighlighterCore,
+  type HighlighterCore,
+} from "shiki/core";
+import type {
+  BundledTheme,
+  LanguageRegistration,
+  SpecialLanguage,
+  TokensResult,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import {
@@ -17,7 +19,7 @@ import { loadLanguageFromCDN } from "./cdn-loader";
 const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
 
 // Singleton cache for highlighters
-const highlighterCache = new Map<string, Promise<Highlighter>>();
+const highlighterCache = new Map<string, Promise<HighlighterCore>>();
 
 // Cache for highlighted results (tokens)
 const tokensCache = new Map<string, TokensResult>();
@@ -76,12 +78,12 @@ export const createShiki = (
   language: string,
   shikiTheme: [BundledTheme, BundledTheme],
   cdnUrl?: string | null
-): Promise<Highlighter> => {
+): Promise<HighlighterCore> => {
   const cacheKey = getHighlighterCacheKey(language, shikiTheme);
 
   // Return cached highlighter if it exists
   if (highlighterCache.has(cacheKey)) {
-    return highlighterCache.get(cacheKey) as Promise<Highlighter>;
+    return highlighterCache.get(cacheKey) as Promise<HighlighterCore>;
   }
 
   // Create new highlighter and cache it
@@ -97,7 +99,7 @@ export const createShiki = (
       | SpecialLanguage
     )[] = languageGrammar ? [languageGrammar] : ["text"];
 
-    const highlighter = await createHighlighter({
+    const highlighter = await createHighlighterCore({
       themes: shikiTheme,
       langs,
       engine: jsEngine,
