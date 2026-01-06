@@ -28,31 +28,36 @@ Streamdown includes 2 themes bundled with the library:
 
 For other themes (like `dracula`, `nord`, `one-dark-pro`), Streamdown loads theme definitions on-demand from a CDN proxy.
 
-In offline environments, CDN loading fails and code blocks fall back to plain text (for languages) or the default GitHub themes (for themes).
+### Mermaid Diagrams
+
+Mermaid is loaded entirely from a CDN when a diagram is rendered. If no mermaid diagrams are used, no mermaid code is downloaded.
+
+In offline environments, CDN loading fails and code blocks fall back to plain text (for languages) or the default GitHub themes (for themes). Mermaid diagrams will show an error if the library cannot be loaded.
 
 ## Configure Self-Hosted Assets
 
 To run Streamdown offline, you need to:
 
-1. Host Shiki language and theme files locally
+1. Host Shiki and Mermaid files locally
 2. Configure your application to serve them
 3. Tell Streamdown where to find them
 
-### Step 1: Download Shiki Files
+### Step 1: Download Required Files
 
-Install Shiki as a dependency (if not already installed):
+Install Shiki and Mermaid as dependencies:
 
 ```package-install
-npm install shiki
+npm install shiki mermaid
 ```
 
 The files you need to serve are located in:
 - `node_modules/shiki/dist/langs/` - Language grammar files
 - `node_modules/shiki/dist/themes/` - Theme definition files
+- `node_modules/mermaid/dist/mermaid.esm.min.mjs` - Mermaid library
 
-### Step 2: Serve Shiki Files
+### Step 2: Serve Files
 
-Configure your framework to serve the Shiki language and theme files as static assets.
+Configure your framework to serve the Shiki and Mermaid files as static assets.
 
 #### Next.js (App Router or Pages Router)
 
@@ -71,6 +76,10 @@ const config: NextConfig = {
       {
         source: '/cdn/shiki/:version/themes/:path*',
         destination: '/node_modules/shiki/dist/themes/:path*',
+      },
+      {
+        source: '/cdn/mermaid/:version/:path*',
+        destination: '/node_modules/mermaid/dist/:path*',
       },
     ];
   },
@@ -107,6 +116,15 @@ const config: NextConfig = {
       for (const file of themeFiles) {
         copyFileSync(join(shikiThemesSource, file), join(shikiThemesDest, file));
       }
+
+      // Copy Mermaid to public directory
+      const mermaidSource = join(process.cwd(), 'node_modules/mermaid/dist');
+      const mermaidDest = join(process.cwd(), 'public/mermaid');
+      mkdirSync(mermaidDest, { recursive: true });
+      copyFileSync(
+        join(mermaidSource, 'mermaid.esm.min.mjs'),
+        join(mermaidDest, 'mermaid.esm.min.mjs')
+      );
     }
     return config;
   },
@@ -147,7 +165,7 @@ export default function Index() {
 
 #### Express / Node.js Server
 
-Serve the Shiki files as static assets:
+Serve the Shiki and Mermaid files as static assets:
 
 ```javascript title="server.js"
 const express = require('express');
@@ -165,6 +183,12 @@ app.use(
 app.use(
   '/cdn/shiki/:version/themes',
   express.static(path.join(__dirname, 'node_modules/shiki/dist/themes'))
+);
+
+// Serve Mermaid files from node_modules
+app.use(
+  '/cdn/mermaid/:version',
+  express.static(path.join(__dirname, 'node_modules/mermaid/dist'))
 );
 
 app.listen(3000);

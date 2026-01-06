@@ -6,20 +6,42 @@ import { Mermaid } from "../lib/mermaid";
 import { MermaidDownloadDropdown } from "../lib/mermaid/download-button";
 import { MermaidFullscreenButton } from "../lib/mermaid/fullscreen-button";
 
-const { saveMock } = vi.hoisted(() => ({
-  saveMock: vi.fn(),
-}));
-
-// Mock mermaid
-const mockInitialize = vi.fn();
-const mockRender = vi.fn().mockResolvedValue({ svg: "<svg>Test SVG</svg>" });
-
-vi.mock("mermaid", () => ({
-  default: {
+const { saveMock, mockInitialize, mockRender, mockMermaid } = vi.hoisted(() => {
+  const mockInitialize = vi.fn();
+  const mockRender = vi.fn().mockResolvedValue({ svg: "<svg>Test SVG</svg>" });
+  const mockMermaid = {
     initialize: mockInitialize,
     render: mockRender,
-  },
-}));
+  };
+  return {
+    saveMock: vi.fn(),
+    mockInitialize,
+    mockRender,
+    mockMermaid,
+  };
+});
+
+// Mock the initializeMermaid function to return our mock
+vi.mock("../lib/mermaid/utils", async () => {
+  const actual = await vi.importActual<typeof import("../lib/mermaid/utils")>(
+    "../lib/mermaid/utils"
+  );
+  return {
+    ...actual,
+    initializeMermaid: vi.fn().mockImplementation(async (config) => {
+      // Simulate real initializeMermaid behavior - call initialize with merged config
+      const defaultConfig = {
+        startOnLoad: false,
+        theme: "default",
+        securityLevel: "strict",
+        fontFamily: "monospace",
+        suppressErrorRendering: true,
+      };
+      mockInitialize({ ...defaultConfig, ...config });
+      return mockMermaid;
+    }),
+  };
+});
 
 vi.mock("../lib/utils", async () => {
   const actual =

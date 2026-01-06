@@ -1,4 +1,17 @@
 import type { MermaidConfig } from "mermaid";
+import packageJson from "../../package.json";
+
+// Get mermaid version for CDN URL
+const MERMAID_VERSION = (
+  packageJson.dependencies?.mermaid ?? packageJson.devDependencies?.mermaid ?? "11"
+).replace(/^\^/, "");
+
+// Use a proxy URL that can be rewritten by the host application
+// For example, Next.js can rewrite /cdn/mermaid/:version/* to jsDelivr
+const MERMAID_CDN_URL = `/cdn/mermaid/${MERMAID_VERSION}/mermaid.esm.min.mjs`;
+
+// Cache the mermaid module once loaded
+let mermaidModuleCache: typeof import("mermaid") | null = null;
 
 export const initializeMermaid = async (customConfig?: MermaidConfig) => {
   const defaultConfig: MermaidConfig = {
@@ -11,8 +24,12 @@ export const initializeMermaid = async (customConfig?: MermaidConfig) => {
 
   const config = { ...defaultConfig, ...customConfig };
 
-  const mermaidModule = await import("mermaid");
-  const mermaid = mermaidModule.default;
+  // Load mermaid from CDN if not cached
+  if (!mermaidModuleCache) {
+    mermaidModuleCache = await import(/* webpackIgnore: true */ MERMAID_CDN_URL);
+  }
+
+  const mermaid = mermaidModuleCache.default;
 
   // Always reinitialize with the current config to support different configs per component
   mermaid.initialize(config);

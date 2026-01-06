@@ -32,6 +32,11 @@ const config: NextConfig = {
         source: "/cdn/katex/:version/:path*",
         destination: "https://cdn.jsdelivr.net/npm/katex@:version/dist/:path*",
       },
+      {
+        source: "/cdn/mermaid/:version/:path*",
+        destination:
+          "https://cdn.jsdelivr.net/npm/mermaid@:version/dist/:path*",
+      },
     ];
   },
 };
