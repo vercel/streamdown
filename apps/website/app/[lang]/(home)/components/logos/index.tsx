@@ -44,11 +44,13 @@ export const Logos = () => (
             // Mobile: all except last 2 get border-b
             index < logos.length - 2 && "border-b",
             // MD: remove border-b for items 5-7 (last 5 on md, not last 2 on mobile)
-            index >= logos.length - 5 && index < logos.length - 2 && "md:border-b-0"
+            index >= logos.length - 5 &&
+              index < logos.length - 2 &&
+              "md:border-b-0"
           )}
           key={logo.name}
         >
-          <logo.src />
+          <logo.src className="max-h-10" />
         </div>
       ))}
     </div>
