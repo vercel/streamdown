@@ -1,5 +1,11 @@
 # streamdown
 
+## 2.0.0-canary.1
+
+### Patch Changes
+
+- 1b898b0: Fix dynamic module imports
+
 ## 2.0.0-canary.0
 
 ### Major Changes
