@@ -29,7 +29,8 @@
     "test:ui": "vitest --ui run",
     "test:coverage": "vitest --coverage run",
     "bench": "vitest bench --run > results.txt",
-    "bench:ui": "vitest bench --ui --run"
+    "bench:ui": "vitest bench --ui --run",
+    "size": "node scripts/bundle-size.js"
   },
   "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
   "license": "Apache-2.0",
@@ -54,8 +55,10 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "esbuild": "^0.27.2",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "html-url-attributes": "^3.0.1",
+    "katex": "^0.16.27",
     "lucide-react": "^0.560.0",
     "marked": "^17.0.1",
     "mermaid": "^11.12.2",
