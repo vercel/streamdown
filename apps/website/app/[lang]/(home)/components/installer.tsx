@@ -12,7 +12,7 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group";
 
-const CODE = "npx ai-elements@latest add message";
+const CODE = "npm i streamdown";
 const TIMEOUT = 2000;
 
 export const Installer = () => {
@@ -32,7 +32,7 @@ export const Installer = () => {
   const Icon = copied ? CheckIcon : CopyIcon;
 
   return (
-    <InputGroup className="min-w-64 font-mono shadow-none">
+    <InputGroup className="font-mono shadow-none">
       <InputGroupAddon>
         <InputGroupText className="font-normal text-muted-foreground">
           $

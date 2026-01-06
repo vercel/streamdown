@@ -36,9 +36,9 @@ export const Hero = () => (
             </Button>
           </div>
           <p className="text-muted-foreground text-sm">
-            or install it directly with{" "}
+            or with AI Elements:{" "}
             <code className="block rounded-md bg-foreground/5 px-2 py-1 tracking-tight sm:inline">
-              npm i streamdown
+              npx ai-elements@latest add message
             </code>
           </p>
         </div>

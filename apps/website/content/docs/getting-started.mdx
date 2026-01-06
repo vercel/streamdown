@@ -15,20 +15,20 @@ Get up and running with Streamdown in minutes. This guide will walk you through 
 
 You can install Streamdown directly, or use it as part of the [AI Elements](https://ai-sdk.dev/elements) library.
 
-### AI Elements
-
-Install the `message` component from AI Elements:
-
-```package-install
-npx ai-elements@latest add message
-```
-
 ### Direct Installation
 
 Install Streamdown using your preferred package manager:
 
 ```package-install
 npm i streamdown
+```
+
+### AI Elements
+
+Install the `message` component from AI Elements:
+
+```package-install
+npx ai-elements@latest add message
 ```
 
 ## Tailwind CSS Configuration
@@ -52,9 +52,9 @@ Add Streamdown to your `content` array in your `tailwind.config.js`:
 ```js title="tailwind.config.js"
 module.exports = {
   content: [
-    './app/**/*.{js,ts,jsx,tsx,mdx}',
-    './node_modules/streamdown/dist/*.js',
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/streamdown/dist/*.js",
   ],
   // ... rest of your config
-}
+};
 ```
