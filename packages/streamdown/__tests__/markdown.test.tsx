@@ -318,6 +318,25 @@ describe("Markdown Component", () => {
         expect(em.textContent).toBe("HTML");
       }
     });
+
+    it("should escape HTML when rehype-raw is omitted", () => {
+      const options: Options = {
+        children: "Text with <em>HTML</em> and <h2>heading</h2> tags",
+        rehypePlugins: [], // No rehype-raw
+      };
+
+      const { container } = render(<Markdown {...options} />);
+
+      // HTML should be escaped and displayed as text
+      expect(container.innerHTML).toContain("&lt;em&gt;");
+      expect(container.innerHTML).toContain("&lt;/em&gt;");
+      expect(container.innerHTML).toContain("&lt;h2&gt;");
+      expect(container.innerHTML).toContain("&lt;/h2&gt;");
+
+      // Should not contain actual HTML elements
+      expect(container.querySelector("em")).toBeFalsy();
+      expect(container.querySelector("h2")).toBeFalsy();
+    });
   });
 
   describe("Processor Caching", () => {
