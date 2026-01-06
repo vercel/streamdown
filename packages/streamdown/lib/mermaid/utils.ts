@@ -13,6 +13,12 @@ const MERMAID_CDN_URL = `/cdn/mermaid/${MERMAID_VERSION}/mermaid.esm.min.mjs`;
 // Cache the mermaid module once loaded
 let mermaidModuleCache: typeof import("mermaid") | null = null;
 
+// Dynamic import that bypasses bundler static analysis (works with Webpack, Turbopack, etc.)
+// Using Function constructor to create an indirect import that bundlers won't analyze
+const dynamicImport = new Function("url", "return import(url)") as (
+  url: string
+) => Promise<typeof import("mermaid")>;
+
 export const initializeMermaid = async (customConfig?: MermaidConfig) => {
   const defaultConfig: MermaidConfig = {
     startOnLoad: false,
@@ -26,7 +32,7 @@ export const initializeMermaid = async (customConfig?: MermaidConfig) => {
 
   // Load mermaid from CDN if not cached
   if (!mermaidModuleCache) {
-    mermaidModuleCache = await import(/* webpackIgnore: true */ MERMAID_CDN_URL);
+    mermaidModuleCache = await dynamicImport(MERMAID_CDN_URL);
   }
 
   const mermaid = mermaidModuleCache.default;
