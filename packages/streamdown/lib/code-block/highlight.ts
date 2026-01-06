@@ -14,7 +14,12 @@ import {
   bundledLanguages,
   isBundledLanguage,
 } from "./bundled-languages";
-import { loadLanguageFromCDN } from "./cdn-loader";
+import {
+  type BundledThemeName,
+  bundledThemes,
+  isBundledTheme,
+} from "./bundled-themes";
+import { loadLanguageFromCDN, loadThemeFromCDN } from "./cdn-loader";
 
 const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
 
@@ -44,6 +49,34 @@ const getTokensCacheKey = (
   const end = code.length > 100 ? code.slice(-100) : "";
   return `${language}:${themes[0]}:${themes[1]}:${code.length}:${start}:${end}`;
 };
+
+/**
+ * Load a theme - either from bundled themes or CDN
+ */
+async function loadTheme(
+  themeName: string,
+  cdnUrl?: string | null
+) {
+  // Check if it's a bundled theme (instant load)
+  if (isBundledTheme(themeName)) {
+    return bundledThemes[themeName as BundledThemeName];
+  }
+
+  // Otherwise, load from CDN
+  const theme = await loadThemeFromCDN(themeName, cdnUrl);
+
+  if (theme) {
+    return theme;
+  }
+
+  // Fall back to github-light or github-dark if CDN load fails
+  console.warn(
+    `[Streamdown] Theme "${themeName}" not found. Falling back to ${themeName.includes("dark") ? "github-dark" : "github-light"}.`
+  );
+  return themeName.includes("dark")
+    ? bundledThemes["github-dark"]
+    : bundledThemes["github-light"];
+}
 
 /**
  * Load a language grammar - either from bundled languages or CDN
@@ -99,8 +132,13 @@ export const createShiki = (
       | SpecialLanguage
     )[] = languageGrammar ? [languageGrammar] : ["text"];
 
+    // Load themes (bundled or from CDN)
+    const themeRegistrations = await Promise.all(
+      shikiTheme.map((theme) => loadTheme(theme, cdnUrl))
+    );
+
     const highlighter = await createHighlighterCore({
-      themes: shikiTheme,
+      themes: themeRegistrations,
       langs,
       engine: jsEngine,
     });

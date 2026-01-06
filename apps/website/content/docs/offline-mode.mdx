@@ -3,9 +3,11 @@ title: Offline Mode
 description: Configure Streamdown for offline, on-premise, or air-gapped environments.
 ---
 
-Streamdown uses a hybrid approach for syntax highlighting: common languages are bundled locally, while additional languages load on-demand from a CDN. This guide shows you how to configure Streamdown for environments without internet access.
+Streamdown uses a hybrid approach for syntax highlighting: common languages and themes are bundled locally, while additional ones load on-demand from a CDN. This guide shows you how to configure Streamdown for environments without internet access.
 
-## How Language Loading Works
+## How CDN Loading Works
+
+### Languages
 
 Streamdown includes 15 common languages bundled with the library for instant syntax highlighting:
 
@@ -15,17 +17,28 @@ Streamdown includes 15 common languages bundled with the library for instant syn
 - **Backend**: Python, Go
 - **Markup**: Markdown, SQL
 
-For other languages (like Rust, Java, Ruby, Elixir), Streamdown loads syntax grammars on-demand from jsDelivr through a CDN proxy. In offline environments, this loading fails and code blocks fall back to plain text.
+For other languages (like Rust, Java, Ruby, Elixir), Streamdown loads syntax grammars on-demand from a CDN proxy.
+
+### Themes
+
+Streamdown includes 2 themes bundled with the library:
+
+- `github-light` (default light theme)
+- `github-dark` (default dark theme)
+
+For other themes (like `dracula`, `nord`, `one-dark-pro`), Streamdown loads theme definitions on-demand from a CDN proxy.
+
+In offline environments, CDN loading fails and code blocks fall back to plain text (for languages) or the default GitHub themes (for themes).
 
 ## Configure Self-Hosted Assets
 
 To run Streamdown offline, you need to:
 
-1. Host Shiki language files locally
+1. Host Shiki language and theme files locally
 2. Configure your application to serve them
 3. Tell Streamdown where to find them
 
-### Step 1: Download Shiki Language Files
+### Step 1: Download Shiki Files
 
 Install Shiki as a dependency (if not already installed):
 
@@ -33,15 +46,17 @@ Install Shiki as a dependency (if not already installed):
 npm install shiki
 ```
 
-The language grammar files are located in `node_modules/shiki/dist/langs/`. You need to serve these files from your application.
+The files you need to serve are located in:
+- `node_modules/shiki/dist/langs/` - Language grammar files
+- `node_modules/shiki/dist/themes/` - Theme definition files
 
-### Step 2: Serve Language Files
+### Step 2: Serve Shiki Files
 
-Configure your framework to serve the Shiki language files as static assets.
+Configure your framework to serve the Shiki language and theme files as static assets.
 
 #### Next.js (App Router or Pages Router)
 
-Add a rewrite to your `next.config.ts` to serve files from `node_modules`:
+Add rewrites to your `next.config.ts` to serve files from `node_modules`:
 
 ```tsx title="next.config.ts"
 import type { NextConfig } from 'next';
@@ -53,6 +68,10 @@ const config: NextConfig = {
         source: '/cdn/shiki/:version/langs/:path*',
         destination: '/node_modules/shiki/dist/langs/:path*',
       },
+      {
+        source: '/cdn/shiki/:version/themes/:path*',
+        destination: '/node_modules/shiki/dist/themes/:path*',
+      },
     ];
   },
 };
@@ -63,7 +82,7 @@ export default config;
 Alternatively, copy the files to your `public` directory during build:
 
 ```tsx title="next.config.ts"
-import { copyFileSync, mkdirSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const config: NextConfig = {
@@ -72,18 +91,21 @@ const config: NextConfig = {
       // Copy Shiki languages to public directory
       const shikiLangsSource = join(process.cwd(), 'node_modules/shiki/dist/langs');
       const shikiLangsDest = join(process.cwd(), 'public/shiki/langs');
-
       mkdirSync(shikiLangsDest, { recursive: true });
 
-      // Copy all .mjs files
-      const { readdirSync } = require('node:fs');
-      const files = readdirSync(shikiLangsSource).filter(f => f.endsWith('.mjs'));
+      const langFiles = readdirSync(shikiLangsSource).filter(f => f.endsWith('.mjs'));
+      for (const file of langFiles) {
+        copyFileSync(join(shikiLangsSource, file), join(shikiLangsDest, file));
+      }
 
-      for (const file of files) {
-        copyFileSync(
-          join(shikiLangsSource, file),
-          join(shikiLangsDest, file)
-        );
+      // Copy Shiki themes to public directory
+      const shikiThemesSource = join(process.cwd(), 'node_modules/shiki/dist/themes');
+      const shikiThemesDest = join(process.cwd(), 'public/shiki/themes');
+      mkdirSync(shikiThemesDest, { recursive: true });
+
+      const themeFiles = readdirSync(shikiThemesSource).filter(f => f.endsWith('.mjs'));
+      for (const file of themeFiles) {
+        copyFileSync(join(shikiThemesSource, file), join(shikiThemesDest, file));
       }
     }
     return config;
@@ -100,7 +122,7 @@ import { Streamdown } from 'streamdown';
 
 export default function Page() {
   return (
-    <Streamdown cdnUrl="/shiki/langs">
+    <Streamdown cdnUrl="/shiki">
       {markdown}
     </Streamdown>
   );
@@ -109,14 +131,14 @@ export default function Page() {
 
 #### Vite / Remix
 
-Copy the Shiki language files to your `public` directory and use the `cdnUrl` prop:
+Copy the Shiki files to your `public` directory and use the `cdnUrl` prop:
 
 ```tsx title="app/routes/_index.tsx"
 import { Streamdown } from 'streamdown';
 
 export default function Index() {
   return (
-    <Streamdown cdnUrl="/shiki/langs">
+    <Streamdown cdnUrl="/shiki">
       {markdown}
     </Streamdown>
   );
@@ -125,7 +147,7 @@ export default function Index() {
 
 #### Express / Node.js Server
 
-Serve the Shiki language files as static assets:
+Serve the Shiki files as static assets:
 
 ```javascript title="server.js"
 const express = require('express');
@@ -139,12 +161,18 @@ app.use(
   express.static(path.join(__dirname, 'node_modules/shiki/dist/langs'))
 );
 
+// Serve Shiki theme files from node_modules
+app.use(
+  '/cdn/shiki/:version/themes',
+  express.static(path.join(__dirname, 'node_modules/shiki/dist/themes'))
+);
+
 app.listen(3000);
 ```
 
 ### Step 3: Configure Streamdown CDN Path
 
-Pass the `cdnUrl` prop to the Streamdown component to specify where language files should be loaded from:
+Pass the `cdnUrl` prop to the Streamdown component to specify the base path for Shiki files:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from 'streamdown';
@@ -159,14 +187,14 @@ fn main() {
 
 export default function Page() {
   return (
-    <Streamdown cdnUrl="/shiki/langs">
+    <Streamdown cdnUrl="/shiki">
       {markdown}
     </Streamdown>
   );
 }
 ```
 
-The CDN path should point to the directory containing the `.mjs` language files. Streamdown will append the language name and `.mjs` extension automatically.
+The `cdnUrl` prop sets the base path. Streamdown will automatically append `/langs/{language}.mjs` for languages and `/themes/{theme}.mjs` for themes.
 
 ## KaTeX CSS for Math Rendering
 

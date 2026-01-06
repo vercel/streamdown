@@ -48,13 +48,25 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
 <TypeTable
   type={{
     shikiTheme: {
-      description: 'Light and dark themes for code syntax highlighting',
-      type: '[BundledTheme, BundledTheme]',
+      description: 'Light and dark themes for code syntax highlighting. Any Shiki theme name can be used - bundled themes (github-light, github-dark) load instantly, others load from CDN.',
+      type: '[string, string]',
       default: "['github-light', 'github-dark']",
     },
     components: {
       description: 'Custom component overrides for Markdown elements',
       type: 'object',
+    },
+  }}
+/>
+
+## CDN Props
+
+<TypeTable
+  type={{
+    cdnUrl: {
+      description: 'Base URL for loading Shiki languages and themes. Set to null to disable CDN loading (only bundled languages/themes will work). See Offline Mode for self-hosting.',
+      type: 'string | null',
+      default: "'/cdn/shiki/{version}'",
     },
   }}
 />

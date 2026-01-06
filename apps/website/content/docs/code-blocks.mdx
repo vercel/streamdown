@@ -100,20 +100,36 @@ Streamdown uses dual themes for light and dark modes. You can customize the them
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from 'streamdown';
-import type { BundledTheme } from 'shiki';
-
-const themes = ['github-light', 'github-dark'] as [BundledTheme, BundledTheme];
 
 export default function Page() {
   return (
-    <Streamdown shikiTheme={themes}>
+    <Streamdown shikiTheme={['dracula', 'dracula']}>
       {markdown}
     </Streamdown>
   );
 }
 ```
 
-Refer to the [Shiki Themes](https://shiki.style/themes) page for a full list of available themes.
+### Bundled Themes (Instant Loading)
+
+These themes are bundled with Streamdown for zero-latency loading:
+
+- `github-light` (default light theme)
+- `github-dark` (default dark theme)
+
+### On-Demand Themes (Loaded from CDN)
+
+All other Shiki themes are loaded on-demand when first used, including popular themes like:
+
+- `dracula`, `nord`, `one-dark-pro`, `monokai`
+- `catppuccin-latte`, `catppuccin-mocha`
+- `vitesse-light`, `vitesse-dark`
+- `tokyo-night`, `slack-dark`, `slack-ochin`
+- And [many more](https://shiki.style/themes)
+
+Themes are cached after the first load, so subsequent uses are instant.
+
+For offline or air-gapped environments, see [Offline Mode](/docs/offline-mode) to learn how to self-host theme files.
 
 ## Interactive Features
 

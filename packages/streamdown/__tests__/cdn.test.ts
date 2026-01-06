@@ -299,7 +299,8 @@ describe("CDN Configuration", () => {
   });
 
   it("should use custom CDN base URL when provided", async () => {
-    const customCdnBase = "https://my-cdn.example.com/shiki/langs";
+    // cdnUrl is the base path - /langs is appended automatically
+    const customCdnBase = "https://my-cdn.example.com/shiki";
 
     const fetchSpy = vi.spyOn(global, "fetch");
     fetchSpy.mockResolvedValue({
@@ -316,7 +317,7 @@ describe("CDN Configuration", () => {
     await loadLanguageFromCDN("customlang1", customCdnBase);
 
     expect(fetchSpy).toHaveBeenCalledWith(
-      `${customCdnBase}/customlang1.mjs`,
+      `${customCdnBase}/langs/customlang1.mjs`,
       expect.any(Object)
     );
 

@@ -1,23 +1,29 @@
 /**
- * CDN Language Loader
- * Loads Shiki language grammars from CDN for languages not bundled with Streamdown
+ * CDN Loader
+ * Loads Shiki language grammars and themes from CDN for items not bundled with Streamdown
  */
 
-import type { LanguageRegistration } from "shiki";
+import type { LanguageRegistration, ThemeRegistration } from "shiki";
 import packageJson from "../../package.json";
 
 // Default CDN configuration
 // Uses a relative URL that can be proxied by the host application
-// For example, Next.js can rewrite /cdn/shiki/:version/langs/* to jsDelivr
+// For example, Next.js can rewrite /cdn/shiki/:version/* to jsDelivr
 const SHIKI_VERSION = packageJson.dependencies.shiki.replace(/^\^/, "");
-const DEFAULT_CDN_BASE = `/cdn/shiki/${SHIKI_VERSION}/langs`;
+const DEFAULT_CDN_BASE = `/cdn/shiki/${SHIKI_VERSION}`;
 const DEFAULT_TIMEOUT = 5000;
 
 // In-memory cache for loaded language grammars
 const cdnLanguageCache = new Map<string, LanguageRegistration[]>();
 
+// In-memory cache for loaded themes
+const cdnThemeCache = new Map<string, ThemeRegistration>();
+
 // Track failed language loads to avoid repeated requests
 const failedLanguages = new Set<string>();
+
+// Track failed theme loads to avoid repeated requests
+const failedThemes = new Set<string>();
 
 const jsonParseRegex = /JSON\.parse\(("(?:[^"\\]|\\.)*")\)/;
 
@@ -38,9 +44,10 @@ export async function loadLanguageFromCDN(
     return null;
   }
 
-  const cdnUrl = cdnBaseUrl ?? DEFAULT_CDN_BASE;
+  const baseUrl = cdnBaseUrl ?? DEFAULT_CDN_BASE;
+  const langsUrl = `${baseUrl}/langs`;
 
-  const cacheKey = `${cdnUrl}/${language}`;
+  const cacheKey = `${langsUrl}/${language}`;
 
   // Return cached language if available
   if (cdnLanguageCache.has(cacheKey)) {
@@ -53,7 +60,7 @@ export async function loadLanguageFromCDN(
   }
 
   try {
-    const url = `${cdnUrl}/${language}.mjs`;
+    const url = `${langsUrl}/${language}.mjs`;
 
     // Create abort controller for timeout
     const controller = new AbortController();
@@ -109,6 +116,96 @@ export async function loadLanguageFromCDN(
 
     console.warn(
       `[Streamdown] Failed to load language "${language}" from CDN: ${errorMessage}`
+    );
+
+    return null;
+  }
+}
+
+/**
+ * Load a theme from CDN
+ * @param theme - Theme identifier (e.g., 'dracula', 'nord', 'one-dark-pro')
+ * @param cdnBaseUrl - Base URL for CDN (optional, defaults to /cdn/shiki/{version}/themes), or null to disable
+ * @param timeout - Request timeout in milliseconds (default: 5000)
+ * @returns Theme registration or null if loading fails
+ */
+export async function loadThemeFromCDN(
+  theme: string,
+  cdnBaseUrl?: string | null,
+  timeout: number = DEFAULT_TIMEOUT
+): Promise<ThemeRegistration | null> {
+  // If CDN is explicitly disabled (null), return null immediately
+  if (cdnBaseUrl === null) {
+    return null;
+  }
+
+  const baseUrl = cdnBaseUrl ?? DEFAULT_CDN_BASE;
+  const themesUrl = `${baseUrl}/themes`;
+
+  const cacheKey = `${themesUrl}/${theme}`;
+
+  // Return cached theme if available
+  if (cdnThemeCache.has(cacheKey)) {
+    return cdnThemeCache.get(cacheKey) as ThemeRegistration;
+  }
+
+  // Skip if previously failed
+  if (failedThemes.has(cacheKey)) {
+    return null;
+  }
+
+  try {
+    const url = `${themesUrl}/${theme}.mjs`;
+
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    const response = await fetch(url, {
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    // Get the module text
+    // Shiki theme files have structure: export default Object.freeze(JSON.parse("{...}"))
+    const moduleText = await response.text();
+
+    try {
+      // Extract the JSON string from the JSON.parse() call
+      const jsonParseMatch = moduleText.match(jsonParseRegex);
+      if (!jsonParseMatch) {
+        throw new Error("Could not find JSON.parse() in CDN response");
+      }
+
+      // The matched string is already a valid JSON string literal
+      const jsonString = JSON.parse(jsonParseMatch[1]);
+
+      // Now parse the actual theme JSON
+      const themeObject = JSON.parse(jsonString) as ThemeRegistration;
+
+      // Cache the theme
+      cdnThemeCache.set(cacheKey, themeObject);
+
+      return themeObject;
+    } catch (parseError) {
+      throw new Error(
+        `Failed to parse theme: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
+      );
+    }
+  } catch (error) {
+    // Mark as failed to avoid repeated attempts
+    failedThemes.add(cacheKey);
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    console.warn(
+      `[Streamdown] Failed to load theme "${theme}" from CDN: ${errorMessage}`
     );
 
     return null;
