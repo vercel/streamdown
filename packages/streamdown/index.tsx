@@ -90,6 +90,7 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
   raw: rehypeRaw,
   sanitize: [rehypeSanitize, {}],
   katex: [rehypeKatex, { errorColor: "var(--color-muted-foreground)" }],
+  sanitize: [rehypeSanitize, {}],
   harden: [
     harden,
     {

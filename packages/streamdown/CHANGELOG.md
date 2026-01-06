@@ -1,5 +1,11 @@
 # streamdown
 
+## 1.6.11
+
+### Patch Changes
+
+- 0b7fe77: Add rehype sanitize
+
 ## 1.6.10
 
 ### Patch Changes
