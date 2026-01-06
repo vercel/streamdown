@@ -1,4 +1,4 @@
-import { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } from "lucide-react";
+import { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } from "../icons";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "../utils";

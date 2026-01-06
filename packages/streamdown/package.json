@@ -60,7 +60,6 @@
     "hast-util-to-jsx-runtime": "^2.3.6",
     "html-url-attributes": "^3.0.1",
     "katex": "^0.16.27",
-    "lucide-react": "^0.560.0",
     "marked": "^17.0.1",
     "rehype-harden": "^1.1.7",
     "rehype-katex": "^7.0.1",

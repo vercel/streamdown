@@ -1,4 +1,4 @@
-import { DownloadIcon } from "lucide-react";
+import { DownloadIcon } from "../icons";
 import { type ComponentProps, useContext } from "react";
 import { StreamdownContext } from "../../index";
 import { cn, save } from "../utils";

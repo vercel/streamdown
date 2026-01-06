@@ -1,4 +1,4 @@
-import { Loader2Icon } from "lucide-react";
+import { Loader2Icon } from "../icons";
 
 export const CodeBlockSkeleton = () => (
   <div className="w-full divide-y divide-border overflow-hidden rounded-xl border border-border">

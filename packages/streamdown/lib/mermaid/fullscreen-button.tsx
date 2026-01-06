@@ -1,4 +1,4 @@
-import { Maximize2Icon, XIcon } from "lucide-react";
+import { Maximize2Icon, XIcon } from "../icons";
 import type { MermaidConfig } from "mermaid";
 import { type ComponentProps, useContext, useEffect, useState } from "react";
 import { StreamdownContext } from "../../index";
