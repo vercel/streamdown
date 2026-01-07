@@ -6,8 +6,10 @@ type IconProps = SVGProps<SVGSVGElement>;
 export const CheckIcon = (props: IconProps) => (
   <svg
     color="currentColor"
+    height={16}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
+    width={16}
     {...props}
   >
     <path
@@ -22,8 +24,10 @@ export const CheckIcon = (props: IconProps) => (
 export const CopyIcon = (props: IconProps) => (
   <svg
     color="currentColor"
+    height={16}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
+    width={16}
     {...props}
   >
     <path
@@ -38,8 +42,10 @@ export const CopyIcon = (props: IconProps) => (
 export const DownloadIcon = (props: IconProps) => (
   <svg
     color="currentColor"
+    height={16}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
+    width={16}
     {...props}
   >
     <path
@@ -54,8 +60,10 @@ export const DownloadIcon = (props: IconProps) => (
 export const Loader2Icon = (props: IconProps) => (
   <svg
     color="currentColor"
+    height={16}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
+    width={16}
     {...props}
   >
     <path d="M8 0V4" stroke="currentColor" strokeWidth="1.5" />
@@ -114,8 +122,10 @@ export const Loader2Icon = (props: IconProps) => (
 export const Maximize2Icon = (props: IconProps) => (
   <svg
     color="currentColor"
+    height={16}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
+    width={16}
     {...props}
   >
     <path
@@ -130,8 +140,10 @@ export const Maximize2Icon = (props: IconProps) => (
 export const RotateCcwIcon = (props: IconProps) => (
   <svg
     color="currentColor"
+    height={16}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
+    width={16}
     {...props}
   >
     <path
@@ -146,8 +158,10 @@ export const RotateCcwIcon = (props: IconProps) => (
 export const XIcon = (props: IconProps) => (
   <svg
     color="currentColor"
+    height={16}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
+    width={16}
     {...props}
   >
     <path
@@ -162,8 +176,10 @@ export const XIcon = (props: IconProps) => (
 export const ZoomInIcon = (props: IconProps) => (
   <svg
     color="currentColor"
+    height={16}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
+    width={16}
     {...props}
   >
     <path
@@ -178,8 +194,10 @@ export const ZoomInIcon = (props: IconProps) => (
 export const ZoomOutIcon = (props: IconProps) => (
   <svg
     color="currentColor"
+    height={16}
     strokeLinejoin="round"
     viewBox="0 0 16 16"
+    width={16}
     {...props}
   >
     <path
