@@ -8,6 +8,19 @@ const config: NextConfig = {
     turbopackFileSystemCacheForDev: true,
   },
 
+  async headers() {
+    return [
+      {
+        // Add CORS headers for CDN routes to support cross-origin requests
+        source: "/cdn/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Methods", value: "GET, OPTIONS" },
+        ],
+      },
+    ];
+  },
+
   async rewrites() {
     return [
       {

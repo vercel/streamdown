@@ -25,8 +25,8 @@ const proxy = (request: NextRequest, context: NextFetchEvent) => {
 };
 
 export const config = {
-  // Matcher ignoring `/_next/`, `/api/`, static assets, favicon, etc.
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // Matcher ignoring `/_next/`, `/api/`, `/cdn/`, static assets, favicon, etc.
+  matcher: ["/((?!api|cdn|_next/static|_next/image|favicon.ico).*)"],
 };
 
 export default proxy;
