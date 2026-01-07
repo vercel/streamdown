@@ -1,5 +1,11 @@
 # streamdown
 
+## 2.0.0-canary.2
+
+### Patch Changes
+
+- Fix loading langs dynamically
+
 ## 2.0.0-canary.1
 
 ### Patch Changes
@@ -24,6 +30,7 @@
 - 68109f2: Fix setext heading issues
 - ee12ec8: Add support for CDN offline mode
 - 6a7dc7c: Optimize Mermaid rendering performance with viewport-based lazy loading
+
   - Add useDeferredRender hook for lazy loading components when entering viewport
   - Use Intersection Observer + debounce + requestIdleCallback for optimal performance
   - Only render Mermaid charts when they are visible or about to enter viewport
@@ -85,6 +92,7 @@
 - cfc8c37: Fix p tags inside list items
 - e4e5bb5: Fix unit tests
 - 00ca9a9: Add PanZoom controls configurability for Mermaid diagrams.
+
   - Support `controls.mermaid.panZoom` (boolean) to toggle zoom controls globally
   - Support `mermaid.config.panZoom` (boolean or `{ showControls?: boolean }`) per-instance
   - Keep defaults enabled; `false` explicitly hides the zoom controls
@@ -217,6 +225,7 @@
 - 266fa2b: Fix word-internal underscores being incorrectly treated as incomplete markdown
 
   Previously, underscores used as word separators (e.g., `hello_world`, `snake_case`) were incorrectly identified as incomplete italic markdown, causing an extra underscore to be appended. This fix:
+
   - Detects when underscores are between word characters and treats them as literals
   - Preserves the streaming markdown completion for genuine incomplete italics (e.g., `_italic text`)
   - Correctly handles trailing newlines when completing italic formatting
