@@ -34,12 +34,12 @@ const config: NextConfig = {
       {
         source: "/cdn/shiki/:version/langs/:path*",
         destination:
-          "https://cdn.jsdelivr.net/npm/shiki@:version/dist/langs/:path*",
+          "https://cdn.jsdelivr.net/npm/@shikijs/langs@:version/dist/:path*",
       },
       {
         source: "/cdn/shiki/:version/themes/:path*",
         destination:
-          "https://cdn.jsdelivr.net/npm/shiki@:version/dist/themes/:path*",
+          "https://cdn.jsdelivr.net/npm/@shikijs/themes@:version/dist/:path*",
       },
       {
         source: "/cdn/katex/:version/:path*",
