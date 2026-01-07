@@ -26,7 +26,7 @@ export const Mermaid = ({
   const [svgContent, setSvgContent] = useState<string>("");
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
-  const { mermaid: mermaidContext } = useContext(StreamdownContext);
+  const { mermaid: mermaidContext, cdnUrl } = useContext(StreamdownContext);
   const ErrorComponent = mermaidContext?.errorComponent;
 
   // Use deferred render hook for optimal performance
@@ -47,7 +47,7 @@ export const Mermaid = ({
         setIsLoading(true);
 
         // Initialize mermaid with optional custom config
-        const mermaid = await initializeMermaid(config);
+        const mermaid = await initializeMermaid(config, cdnUrl);
 
         // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
         const chartHash = chart.split("").reduce((acc, char) => {
@@ -79,7 +79,7 @@ export const Mermaid = ({
     };
 
     renderChart();
-  }, [chart, config, retryCount, shouldRender]);
+  }, [chart, config, retryCount, shouldRender, cdnUrl]);
 
   // Show placeholder when not scheduled to render
   if (!(shouldRender || svgContent || lastValidSvg)) {

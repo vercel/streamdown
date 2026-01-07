@@ -5,13 +5,14 @@ import {
 } from "../lib/code-block/bundled-languages";
 import { loadLanguageFromCDN } from "../lib/code-block/cdn-loader";
 
-// Regex patterns for CDN URL validation
+// Regex patterns for CDN URL validation (using the default cdnUrl: https://www.streamdown.ai/cdn)
 const CDN_URL_PATTERN_UNIQUELANG1 =
-  /^\/cdn\/shiki\/[\d.]+\/langs\/uniquelang1\.mjs$/;
+  /^https:\/\/www\.streamdown\.ai\/cdn\/shiki\/[\d.]+\/langs\/uniquelang1\.mjs$/;
 const CDN_URL_PATTERN_UNIQUELANG8 =
-  /^\/cdn\/shiki\/\d+\.\d+\.\d+\/langs\/uniquelang8\.mjs$/;
-const CDN_URL_PATTERN_CUSTOMLANG4 =
-  /^\/cdn\/shiki\/[\d.]+\/langs\/customlang4\.mjs$/;
+  /^https:\/\/www\.streamdown\.ai\/cdn\/shiki\/\d+\.\d+\.\d+\/langs\/uniquelang8\.mjs$/;
+
+// Default CDN base URL for tests
+const DEFAULT_CDN_URL = "https://www.streamdown.ai/cdn";
 
 describe("Bundled Languages", () => {
   it("should have exactly 15 common languages bundled", () => {
@@ -93,7 +94,7 @@ describe("CDN Language Loader", () => {
       // Suppress console warnings during test
     });
 
-    await loadLanguageFromCDN("uniquelang1");
+    await loadLanguageFromCDN("uniquelang1", DEFAULT_CDN_URL);
 
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringMatching(CDN_URL_PATTERN_UNIQUELANG1),
@@ -120,7 +121,7 @@ export default [lang];`;
       text: async () => mockModuleText,
     } as Response);
 
-    const result = await loadLanguageFromCDN("uniquelang2");
+    const result = await loadLanguageFromCDN("uniquelang2", DEFAULT_CDN_URL);
 
     expect(result).toBeTruthy();
     expect(Array.isArray(result)).toBe(true);
@@ -148,11 +149,11 @@ export default [lang];`;
     } as Response);
 
     // First load
-    const result1 = await loadLanguageFromCDN("uniquelang3");
+    const result1 = await loadLanguageFromCDN("uniquelang3", DEFAULT_CDN_URL);
     expect(result1).toBeTruthy();
 
     // Second load should use cache
-    const result2 = await loadLanguageFromCDN("uniquelang3");
+    const result2 = await loadLanguageFromCDN("uniquelang3", DEFAULT_CDN_URL);
     expect(result2).toBeTruthy();
 
     // Should have only called fetch once due to caching
@@ -169,7 +170,7 @@ export default [lang];`;
       // Suppress console warnings during test
     });
 
-    const result = await loadLanguageFromCDN("uniquelang4");
+    const result = await loadLanguageFromCDN("uniquelang4", DEFAULT_CDN_URL);
 
     expect(result).toBeNull();
     expect(consoleWarnSpy).toHaveBeenCalled();
@@ -194,7 +195,7 @@ export default [lang];`;
       // Suppress console warnings during test
     });
 
-    const result = await loadLanguageFromCDN("uniquelang5");
+    const result = await loadLanguageFromCDN("uniquelang5", DEFAULT_CDN_URL);
 
     expect(result).toBeNull();
     expect(consoleWarnSpy).toHaveBeenCalled();
@@ -217,7 +218,7 @@ export default [lang];`;
       // Suppress console warnings during test
     });
 
-    const result = await loadLanguageFromCDN("uniquelang6");
+    const result = await loadLanguageFromCDN("uniquelang6", DEFAULT_CDN_URL);
 
     expect(result).toBeNull();
     expect(consoleWarnSpy).toHaveBeenCalled();
@@ -243,11 +244,11 @@ export default [lang];`;
     });
 
     // First attempt
-    const result1 = await loadLanguageFromCDN("uniquelang7");
+    const result1 = await loadLanguageFromCDN("uniquelang7", DEFAULT_CDN_URL);
     expect(result1).toBeNull();
 
     // Second attempt should not trigger fetch due to failed languages tracking
-    const result2 = await loadLanguageFromCDN("uniquelang7");
+    const result2 = await loadLanguageFromCDN("uniquelang7", DEFAULT_CDN_URL);
     expect(result2).toBeNull();
 
     // Should have only called fetch once
@@ -279,12 +280,12 @@ describe("Hybrid Language Loading Integration", () => {
       // Suppress console warnings during test
     });
 
-    await loadLanguageFromCDN("uniquelang8");
+    await loadLanguageFromCDN("uniquelang8", DEFAULT_CDN_URL);
 
     expect(fetchSpy).toHaveBeenCalled();
     const callUrl = fetchSpy.mock.calls[0][0] as string;
 
-    // Should have format: /cdn/shiki/{version}/langs/uniquelang8.mjs
+    // Should have format: https://www.streamdown.ai/cdn/shiki/{version}/langs/uniquelang8.mjs
     expect(callUrl).toMatch(CDN_URL_PATTERN_UNIQUELANG8);
 
     fetchSpy.mockRestore();
@@ -299,8 +300,8 @@ describe("CDN Configuration", () => {
   });
 
   it("should use custom CDN base URL when provided", async () => {
-    // cdnUrl is the base path - /langs is appended automatically
-    const customCdnBase = "https://my-cdn.example.com/shiki";
+    // cdnUrl is the root CDN path - shiki version and /langs are appended automatically
+    const customCdnBase = "https://my-cdn.example.com/cdn";
 
     const fetchSpy = vi.spyOn(global, "fetch");
     fetchSpy.mockResolvedValue({
@@ -316,9 +317,11 @@ describe("CDN Configuration", () => {
 
     await loadLanguageFromCDN("customlang1", customCdnBase);
 
-    expect(fetchSpy).toHaveBeenCalledWith(
-      `${customCdnBase}/langs/customlang1.mjs`,
-      expect.any(Object)
+    expect(fetchSpy).toHaveBeenCalled();
+    const callUrl = fetchSpy.mock.calls[0][0] as string;
+    // Should have format: https://my-cdn.example.com/cdn/shiki/{version}/langs/customlang1.mjs
+    expect(callUrl).toMatch(
+      /^https:\/\/my-cdn\.example\.com\/cdn\/shiki\/[\d.]+\/langs\/customlang1\.mjs$/
     );
 
     fetchSpy.mockRestore();
@@ -345,7 +348,7 @@ describe("CDN Configuration", () => {
 
     const result = await loadLanguageFromCDN(
       "customlang2",
-      undefined,
+      DEFAULT_CDN_URL,
       customTimeout
     );
 
@@ -378,24 +381,22 @@ describe("CDN Configuration", () => {
     consoleWarnSpy.mockRestore();
   });
 
-  it("should use default CDN when cdnUrl is undefined", async () => {
+  it("should disable CDN loading when cdnUrl is undefined", async () => {
     const fetchSpy = vi.spyOn(global, "fetch");
     fetchSpy.mockResolvedValue({
-      ok: false,
-      status: 404,
-      text: async () => "",
+      ok: true,
+      text: async () => 'const lang = Object.freeze(JSON.parse("{}"));',
     } as Response);
 
     const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {
       // Suppress console warnings during test
     });
 
-    await loadLanguageFromCDN("customlang4", undefined);
+    const result = await loadLanguageFromCDN("customlang4", undefined);
 
-    // Should use default CDN path
-    expect(fetchSpy).toHaveBeenCalled();
-    const callUrl = fetchSpy.mock.calls[0][0] as string;
-    expect(callUrl).toMatch(CDN_URL_PATTERN_CUSTOMLANG4);
+    // When CDN URL is undefined, should return null immediately without fetching
+    expect(result).toBeNull();
+    expect(fetchSpy).not.toHaveBeenCalled();
 
     fetchSpy.mockRestore();
     consoleWarnSpy.mockRestore();

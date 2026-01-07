@@ -64,9 +64,9 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
 <TypeTable
   type={{
     cdnUrl: {
-      description: 'Base URL for loading Shiki languages and themes. Set to null to disable CDN loading (only bundled languages/themes will work). See Offline Mode for self-hosting.',
+      description: 'Base URL for loading Shiki languages/themes, Mermaid, and KaTeX CSS. Set to null to disable CDN loading (only bundled languages/themes will work, Mermaid will not load). See Offline Mode for self-hosting.',
       type: 'string | null',
-      default: "'/cdn/shiki/{version}'",
+      default: "'https://www.streamdown.ai/cdn'",
     },
   }}
 />

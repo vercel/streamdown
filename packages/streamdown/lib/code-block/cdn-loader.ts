@@ -7,11 +7,13 @@ import type { LanguageRegistration, ThemeRegistration } from "shiki";
 import packageJson from "../../package.json";
 
 // Default CDN configuration
-// Uses a relative URL that can be proxied by the host application
-// For example, Next.js can rewrite /cdn/shiki/:version/* to jsDelivr
+// Uses a base URL that can be configured via the cdnUrl prop
 const SHIKI_VERSION = packageJson.dependencies.shiki.replace(/^\^/, "");
-const DEFAULT_CDN_BASE = `/cdn/shiki/${SHIKI_VERSION}`;
 const DEFAULT_TIMEOUT = 5000;
+
+// Helper to construct the full shiki CDN path from a base CDN URL
+const getShikiBasePath = (cdnBaseUrl: string) =>
+  `${cdnBaseUrl}/shiki/${SHIKI_VERSION}`;
 
 // In-memory cache for loaded language grammars
 const cdnLanguageCache = new Map<string, LanguageRegistration[]>();
@@ -30,7 +32,7 @@ const jsonParseRegex = /JSON\.parse\(("(?:[^"\\]|\\.)*")\)/;
 /**
  * Load a language grammar from CDN
  * @param language - Language identifier (e.g., 'rust', 'ruby', 'elixir')
- * @param cdnBaseUrl - Base URL for CDN (optional, defaults to /cdn/shiki/{version}/langs), or null to disable
+ * @param cdnBaseUrl - Base URL for CDN (e.g., 'https://www.streamdown.ai/cdn'), or null to disable
  * @param timeout - Request timeout in milliseconds (default: 5000)
  * @returns Language grammar array or null if loading fails
  */
@@ -39,13 +41,13 @@ export async function loadLanguageFromCDN(
   cdnBaseUrl?: string | null,
   timeout: number = DEFAULT_TIMEOUT
 ): Promise<LanguageRegistration[] | null> {
-  // If CDN is explicitly disabled (null), return null immediately
-  if (cdnBaseUrl === null) {
+  // If CDN is explicitly disabled (null) or no base URL provided, return null
+  if (cdnBaseUrl === null || cdnBaseUrl === undefined) {
     return null;
   }
 
-  const baseUrl = cdnBaseUrl ?? DEFAULT_CDN_BASE;
-  const langsUrl = `${baseUrl}/langs`;
+  const shikiBasePath = getShikiBasePath(cdnBaseUrl);
+  const langsUrl = `${shikiBasePath}/langs`;
 
   const cacheKey = `${langsUrl}/${language}`;
 
@@ -125,7 +127,7 @@ export async function loadLanguageFromCDN(
 /**
  * Load a theme from CDN
  * @param theme - Theme identifier (e.g., 'dracula', 'nord', 'one-dark-pro')
- * @param cdnBaseUrl - Base URL for CDN (optional, defaults to /cdn/shiki/{version}/themes), or null to disable
+ * @param cdnBaseUrl - Base URL for CDN (e.g., 'https://www.streamdown.ai/cdn'), or null to disable
  * @param timeout - Request timeout in milliseconds (default: 5000)
  * @returns Theme registration or null if loading fails
  */
@@ -134,13 +136,13 @@ export async function loadThemeFromCDN(
   cdnBaseUrl?: string | null,
   timeout: number = DEFAULT_TIMEOUT
 ): Promise<ThemeRegistration | null> {
-  // If CDN is explicitly disabled (null), return null immediately
-  if (cdnBaseUrl === null) {
+  // If CDN is explicitly disabled (null) or no base URL provided, return null
+  if (cdnBaseUrl === null || cdnBaseUrl === undefined) {
     return null;
   }
 
-  const baseUrl = cdnBaseUrl ?? DEFAULT_CDN_BASE;
-  const themesUrl = `${baseUrl}/themes`;
+  const shikiBasePath = getShikiBasePath(cdnBaseUrl);
+  const themesUrl = `${shikiBasePath}/themes`;
 
   const cacheKey = `${themesUrl}/${theme}`;
 

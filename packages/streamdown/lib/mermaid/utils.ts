@@ -6,12 +6,12 @@ const MERMAID_VERSION = (
   packageJson.dependencies?.mermaid ?? packageJson.devDependencies?.mermaid ?? "11"
 ).replace(/^\^/, "");
 
-// Use a proxy URL that can be rewritten by the host application
-// For example, Next.js can rewrite /cdn/mermaid/:version/* to jsDelivr
-const MERMAID_CDN_URL = `/cdn/mermaid/${MERMAID_VERSION}/mermaid.esm.min.mjs`;
+// Helper to construct the mermaid CDN URL from a base CDN URL
+const getMermaidCdnUrl = (cdnBaseUrl: string) =>
+  `${cdnBaseUrl}/mermaid/${MERMAID_VERSION}/mermaid.esm.min.mjs`;
 
-// Cache the mermaid module once loaded
-let mermaidModuleCache: typeof import("mermaid") | null = null;
+// Cache the mermaid module once loaded (keyed by URL)
+const mermaidModuleCache = new Map<string, typeof import("mermaid")>();
 
 // Dynamic import that bypasses bundler static analysis (works with Webpack, Turbopack, etc.)
 // Using Function constructor to create an indirect import that bundlers won't analyze
@@ -19,7 +19,10 @@ const dynamicImport = new Function("url", "return import(url)") as (
   url: string
 ) => Promise<typeof import("mermaid")>;
 
-export const initializeMermaid = async (customConfig?: MermaidConfig) => {
+export const initializeMermaid = async (
+  customConfig?: MermaidConfig,
+  cdnBaseUrl?: string | null
+) => {
   const defaultConfig: MermaidConfig = {
     startOnLoad: false,
     theme: "default",
@@ -30,12 +33,23 @@ export const initializeMermaid = async (customConfig?: MermaidConfig) => {
 
   const config = { ...defaultConfig, ...customConfig };
 
-  // Load mermaid from CDN if not cached
-  if (!mermaidModuleCache) {
-    mermaidModuleCache = await dynamicImport(MERMAID_CDN_URL);
+  // If CDN is disabled (null) or no base URL provided, throw an error
+  if (cdnBaseUrl === null || cdnBaseUrl === undefined) {
+    throw new Error(
+      "[Streamdown] Mermaid requires a CDN URL to load. Please provide a cdnUrl prop."
+    );
   }
 
-  const mermaid = mermaidModuleCache.default;
+  const mermaidUrl = getMermaidCdnUrl(cdnBaseUrl);
+
+  // Load mermaid from CDN if not cached for this URL
+  if (!mermaidModuleCache.has(mermaidUrl)) {
+    const module = await dynamicImport(mermaidUrl);
+    mermaidModuleCache.set(mermaidUrl, module);
+  }
+
+  const mermaidModule = mermaidModuleCache.get(mermaidUrl) as typeof import("mermaid");
+  const mermaid = mermaidModule.default;
 
   // Always reinitialize with the current config to support different configs per component
   mermaid.initialize(config);

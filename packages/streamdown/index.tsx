@@ -129,13 +129,15 @@ export type StreamdownContextType = {
   cdnUrl?: string | null;
 };
 
+const defaultCdnUrl = "https://www.streamdown.ai/cdn";
+
 const defaultStreamdownContext: StreamdownContextType = {
   shikiTheme: ["github-light" as BundledTheme, "github-dark" as BundledTheme],
   controls: true,
   isAnimating: false,
   mode: "streaming",
   mermaid: undefined,
-  cdnUrl: undefined,
+  cdnUrl: defaultCdnUrl,
 };
 
 export const StreamdownContext = createContext<StreamdownContextType>(
@@ -247,7 +249,7 @@ const checkMathSyntax = (
 
 const versionRegex = /^\^/;
 
-const loadKatexCSS = (): void => {
+const loadKatexCSS = (cdnBaseUrl: string): void => {
   // Extract KaTeX version from package.json dependencies
   const katexVersion = packageJson.dependencies["rehype-katex"]
     .replace(versionRegex, "")
@@ -263,7 +265,7 @@ const loadKatexCSS = (): void => {
 
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = `/cdn/katex/${katexCssVersion}/katex.min.css`;
+  link.href = `${cdnBaseUrl}/katex/${katexCssVersion}/katex.min.css`;
   document.head.appendChild(link);
 };
 
@@ -283,7 +285,7 @@ export const Streamdown = memo(
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     caret,
-    cdnUrl,
+    cdnUrl = defaultCdnUrl,
     remend: remendOptions,
     ...props
   }: StreamdownProps) => {
@@ -355,6 +357,11 @@ export const Streamdown = memo(
 
     // Only load KaTeX CSS when math syntax is detected in content
     useEffect(() => {
+      // Skip if CDN is disabled
+      if (cdnUrl === null) {
+        return;
+      }
+
       const hasKatexPlugin = checkKatexPlugin(rehypePlugins);
       if (!hasKatexPlugin) {
         return;
@@ -365,9 +372,9 @@ export const Streamdown = memo(
       const hasMathSyntax = checkMathSyntax(content, singleDollarEnabled);
 
       if (hasMathSyntax) {
-        loadKatexCSS();
+        loadKatexCSS(cdnUrl);
       }
-    }, [rehypePlugins, remarkPlugins, children]);
+    }, [rehypePlugins, remarkPlugins, children, cdnUrl]);
 
     const style = useMemo(
       () =>

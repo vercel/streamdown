@@ -5,7 +5,9 @@ description: Create interactive flowcharts, sequence diagrams, and more with Mer
 
 Streamdown includes built-in support for [Mermaid](https://mermaid.js.org/) diagrams, allowing you to create flowcharts, sequence diagrams, state diagrams, and more using simple text-based syntax. Each diagram includes interactive controls for fullscreen viewing, downloading, and copying.
 
-Mermaid is loaded on-demand from a CDN only when a diagram is rendered, keeping your initial bundle size small. See [Offline Mode](/docs/offline-mode) for self-hosting options.
+Mermaid is loaded on-demand from a CDN only when a diagram is rendered, keeping your initial bundle size small. By default, Mermaid loads from `https://www.streamdown.ai/cdn`. See [Offline Mode](/docs/offline-mode) for self-hosting options.
+
+**Note:** Mermaid requires CDN access to function. If you set `cdnUrl={null}` to disable CDN loading, Mermaid diagrams will not render.
 
 ## Basic Usage
 

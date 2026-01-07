@@ -179,7 +179,7 @@ You can escape special characters: \\* \\_ \\# \\[ \\]
 
 const StaticPage = () => (
   <div className="mx-auto max-w-prose py-12">
-    <Streamdown mode="static">{markdown}</Streamdown>
+    <Streamdown cdnUrl="http://localhost:3000/cdn" mode="static">{markdown}</Streamdown>
   </div>
 );
 

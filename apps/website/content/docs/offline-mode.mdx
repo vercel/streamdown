@@ -3,7 +3,7 @@ title: Offline Mode
 description: Configure Streamdown for offline, on-premise, or air-gapped environments.
 ---
 
-Streamdown uses a hybrid approach for syntax highlighting: common languages and themes are bundled locally, while additional ones load on-demand from a CDN. This guide shows you how to configure Streamdown for environments without internet access.
+Streamdown uses a hybrid approach for syntax highlighting: common languages and themes are bundled locally, while additional ones load on-demand from a CDN. By default, Streamdown loads assets from `https://www.streamdown.ai/cdn`. This guide shows you how to configure Streamdown for environments without internet access.
 
 ## How CDN Loading Works
 
@@ -140,7 +140,7 @@ import { Streamdown } from 'streamdown';
 
 export default function Page() {
   return (
-    <Streamdown cdnUrl="/shiki">
+    <Streamdown cdnUrl="/cdn">
       {markdown}
     </Streamdown>
   );
@@ -156,7 +156,7 @@ import { Streamdown } from 'streamdown';
 
 export default function Index() {
   return (
-    <Streamdown cdnUrl="/shiki">
+    <Streamdown cdnUrl="/cdn">
       {markdown}
     </Streamdown>
   );
@@ -196,7 +196,7 @@ app.listen(3000);
 
 ### Step 3: Configure Streamdown CDN Path
 
-Pass the `cdnUrl` prop to the Streamdown component to specify the base path for Shiki files:
+Pass the `cdnUrl` prop to the Streamdown component to specify the base path for all CDN assets:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from 'streamdown';
@@ -211,26 +211,32 @@ fn main() {
 
 export default function Page() {
   return (
-    <Streamdown cdnUrl="/shiki">
+    <Streamdown cdnUrl="/cdn">
       {markdown}
     </Streamdown>
   );
 }
 ```
 
-The `cdnUrl` prop sets the base path. Streamdown will automatically append `/langs/{language}.mjs` for languages and `/themes/{theme}.mjs` for themes.
+The `cdnUrl` prop sets the base path. Streamdown will automatically construct full paths:
+- Shiki languages: `{cdnUrl}/shiki/{version}/langs/{language}.mjs`
+- Shiki themes: `{cdnUrl}/shiki/{version}/themes/{theme}.mjs`
+- Mermaid: `{cdnUrl}/mermaid/{version}/mermaid.esm.min.mjs`
+- KaTeX CSS: `{cdnUrl}/katex/{version}/katex.min.css`
 
 ## KaTeX CSS for Math Rendering
 
-If you use math rendering with KaTeX, you also need to self-host the KaTeX CSS file. By default, Streamdown loads it from:
+If you use math rendering with KaTeX, Streamdown automatically loads the KaTeX CSS from:
 
 ```
-/cdn/katex/{version}/katex.min.css
+{cdnUrl}/katex/{version}/katex.min.css
 ```
+
+When you configure a custom `cdnUrl`, KaTeX CSS will be loaded from the same base path. Ensure your server serves the KaTeX CSS files at the expected path.
 
 ### Self-Host KaTeX CSS
 
-Configure your framework to serve KaTeX CSS:
+Configure your framework to serve KaTeX CSS alongside other CDN assets:
 
 #### Next.js
 
@@ -243,8 +249,16 @@ const config: NextConfig = {
         destination: '/node_modules/shiki/dist/langs/:path*',
       },
       {
+        source: '/cdn/shiki/:version/themes/:path*',
+        destination: '/node_modules/shiki/dist/themes/:path*',
+      },
+      {
         source: '/cdn/katex/:version/:path*',
         destination: '/node_modules/katex/dist/:path*',
+      },
+      {
+        source: '/cdn/mermaid/:version/:path*',
+        destination: '/node_modules/mermaid/dist/:path*',
       },
     ];
   },
@@ -256,10 +270,9 @@ const config: NextConfig = {
 Alternatively, copy the KaTeX CSS to your `public` directory:
 
 ```bash
-cp node_modules/katex/dist/katex.min.css public/katex/katex.min.css
+mkdir -p public/cdn/katex/0.16.22
+cp node_modules/katex/dist/katex.min.css public/cdn/katex/0.16.22/katex.min.css
 ```
-
-And update the CDN path in the Streamdown source or create a custom fork.
 
 ## Disable CDN Loading
 
@@ -277,7 +290,11 @@ export default function Page() {
 }
 ```
 
-With this configuration, only the 15 bundled languages will work. All other languages will fall back to plain text rendering.
+With this configuration:
+- Only the 15 bundled languages will work (others fall back to plain text)
+- Only the 2 bundled themes will work (`github-light`, `github-dark`)
+- Mermaid diagrams will not render (Mermaid requires CDN loading)
+- KaTeX CSS will not be loaded (math may render without proper styling)
 
 ## Verify Configuration
 
@@ -318,13 +335,15 @@ You can fork Streamdown and modify `packages/streamdown/lib/code-block/bundled-l
 
 ### Use a Local CDN Mirror
 
-For large deployments, consider setting up a local CDN mirror that serves Shiki language files from an internal server:
+For large deployments, consider setting up a local CDN mirror that serves assets from an internal server:
 
 ```tsx title="app/page.tsx"
-<Streamdown cdnUrl="https://internal-cdn.company.com/shiki/langs">
+<Streamdown cdnUrl="https://internal-cdn.company.com/cdn">
   {markdown}
 </Streamdown>
 ```
+
+The internal server should mirror the same path structure as the default CDN.
 
 ### Monitor Failed Loads
 
