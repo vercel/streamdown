@@ -29,6 +29,58 @@ const failedThemes = new Set<string>();
 
 const jsonParseRegex = /JSON\.parse\(("(?:[^"\\]|\\.)*")\)/;
 
+// Regex to extract relative imports like: import foo from './bar.mjs'
+const importRegex = /import\s+\w+\s+from\s+['"]\.\/([\w-]+)\.mjs['"]/g;
+
+// Track languages currently being loaded to prevent circular dependencies
+const loadingLanguages = new Set<string>();
+
+/**
+ * Load a single language grammar file from CDN (without dependencies)
+ */
+async function loadSingleLanguageFromCDN(
+  language: string,
+  langsUrl: string,
+  timeout: number
+): Promise<{ grammar: LanguageRegistration; dependencies: string[] } | null> {
+  const url = `${langsUrl}/${language}.mjs`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  const response = await fetch(url, {
+    signal: controller.signal,
+  });
+
+  clearTimeout(timeoutId);
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  const moduleText = await response.text();
+
+  // Extract dependencies from import statements
+  const dependencies: string[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = importRegex.exec(moduleText)) !== null) {
+    dependencies.push(match[1]);
+  }
+  // Reset regex lastIndex for next use
+  importRegex.lastIndex = 0;
+
+  // Extract the JSON string from the JSON.parse() call
+  const jsonParseMatch = moduleText.match(jsonParseRegex);
+  if (!jsonParseMatch) {
+    throw new Error("Could not find JSON.parse() in CDN response");
+  }
+
+  const jsonString = JSON.parse(jsonParseMatch[1]);
+  const grammar = JSON.parse(jsonString) as LanguageRegistration;
+
+  return { grammar, dependencies };
+}
+
 /**
  * Load a language grammar from CDN
  * @param language - Language identifier (e.g., 'rust', 'ruby', 'elixir')
@@ -61,56 +113,53 @@ export async function loadLanguageFromCDN(
     return null;
   }
 
+  // Prevent circular dependencies
+  if (loadingLanguages.has(cacheKey)) {
+    return null;
+  }
+
   try {
-    const url = `${langsUrl}/${language}.mjs`;
+    loadingLanguages.add(cacheKey);
 
-    // Create abort controller for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-    const response = await fetch(url, {
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    const result = await loadSingleLanguageFromCDN(language, langsUrl, timeout);
+    if (!result) {
+      throw new Error("Failed to load language");
     }
 
-    // Get the module text
-    // Shiki language files have structure: const lang = Object.freeze(JSON.parse("{...}")); export default [lang];
-    const moduleText = await response.text();
+    const { grammar, dependencies } = result;
+    const allGrammars: LanguageRegistration[] = [];
 
-    try {
-      // Extract the JSON string from the JSON.parse() call
-      // Need to handle nested quotes and escapes properly
-      const jsonParseMatch = moduleText.match(jsonParseRegex);
-      if (!jsonParseMatch) {
-        throw new Error("Could not find JSON.parse() in CDN response");
+    // Load dependencies first (they need to be registered before the main language)
+    for (const dep of dependencies) {
+      const depCacheKey = `${langsUrl}/${dep}`;
+
+      // Skip if already cached
+      if (cdnLanguageCache.has(depCacheKey)) {
+        const cached = cdnLanguageCache.get(depCacheKey) as LanguageRegistration[];
+        allGrammars.push(...cached);
+        continue;
       }
 
-      // The matched string is already a valid JSON string literal
-      // We can parse it directly to get the unescaped version
-      const jsonString = JSON.parse(jsonParseMatch[1]);
+      // Skip if already loading (circular dep) or failed
+      if (loadingLanguages.has(depCacheKey) || failedLanguages.has(depCacheKey)) {
+        continue;
+      }
 
-      // Now parse the actual grammar JSON
-      const langObject = JSON.parse(jsonString) as LanguageRegistration;
-
-      // Shiki expects an array, so wrap it
-      const grammar: LanguageRegistration[] = [langObject];
-
-      // Cache the grammar
-      cdnLanguageCache.set(cacheKey, grammar);
-
-      return grammar;
-    } catch (parseError) {
-      throw new Error(
-        `Failed to parse language grammar: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
-      );
+      // Recursively load dependency
+      const depGrammars = await loadLanguageFromCDN(dep, cdnBaseUrl, timeout);
+      if (depGrammars) {
+        allGrammars.push(...depGrammars);
+      }
     }
+
+    // Add the main grammar last
+    allGrammars.push(grammar);
+
+    // Cache the complete result (main grammar only, deps are cached separately)
+    cdnLanguageCache.set(cacheKey, [grammar]);
+
+    return allGrammars;
   } catch (error) {
-    // Mark as failed to avoid repeated attempts
     failedLanguages.add(cacheKey);
 
     const errorMessage =
@@ -121,6 +170,8 @@ export async function loadLanguageFromCDN(
     );
 
     return null;
+  } finally {
+    loadingLanguages.delete(cacheKey);
   }
 }
 
