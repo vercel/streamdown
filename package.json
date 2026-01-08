@@ -2,7 +2,7 @@
   "name": "streamdown-monorepo",
   "private": true,
   "scripts": {
-    "build": "turbo run build",
+    "build": "pnpm dlx rimraf packages/streamdown/dist && turbo run build --force",
     "dev": "turbo run dev",
     "check": "ultracite check",
     "fix": "ultracite fix",

@@ -4,6 +4,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  ReactNode
 } from "react";
 import type { TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
@@ -16,6 +17,7 @@ import { getHighlightedTokens } from "./highlight";
 type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
   language: string;
+  extraCodeHeader?: ReactNode
 };
 
 export const CodeBlock = ({
@@ -23,6 +25,7 @@ export const CodeBlock = ({
   language,
   className,
   children,
+  extraCodeHeader,
   ...rest
 }: CodeBlockProps) => {
   const { shikiTheme, cdnUrl } = useContext(StreamdownContext);
@@ -78,7 +81,7 @@ export const CodeBlock = ({
   return (
     <CodeBlockContext.Provider value={{ code }}>
       <CodeBlockContainer language={language}>
-        <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
+        <CodeBlockHeader extraComponent={extraCodeHeader} language={language}>{children}</CodeBlockHeader>
         <CodeBlockBody
           className={className}
           language={language}
