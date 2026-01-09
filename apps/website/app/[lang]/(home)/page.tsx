@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CJKLanguageSupport } from "./components/cjk";
 import { CodeBlocks } from "./components/code-blocks";
+import { Caret } from "./components/caret";
 import { CallToAction } from "./components/cta";
 import { GitHubFlavoredMarkdown } from "./components/gfm";
 import { HardenedMarkdown } from "./components/hardened";
@@ -23,6 +24,7 @@ const Home = () => (
       <Hero />
       <Logos />
       <Styles />
+      <Caret />
       <GitHubFlavoredMarkdown />
       <CJKLanguageSupport />
       <CodeBlocks />

@@ -112,7 +112,11 @@ export const Section = ({
               With Streamdown
             </div>
             <div className="h-[400px] overflow-y-auto bg-background p-4">
-              <Streamdown cdnUrl="/cdn" {...streamdownProps}>
+              <Streamdown
+                cdnUrl="/cdn"
+                isAnimating={isAnimating}
+                {...streamdownProps}
+              >
                 {content}
               </Streamdown>
             </div>
