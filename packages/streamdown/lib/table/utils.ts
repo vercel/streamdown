@@ -1,7 +1,7 @@
-export type TableData = {
+export interface TableData {
   headers: string[];
   rows: string[][];
-};
+}
 
 export const extractTableDataFromElement = (
   tableElement: HTMLElement
@@ -83,7 +83,6 @@ export const tableDataToCSV = (data: TableData): string => {
 export const tableDataToTSV = (data: TableData): string => {
   const { headers, rows } = data;
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "TSV escaping requires character-by-character inspection"
   const escapeTSV = (value: string): string => {
     // OPTIMIZATION: Check characters directly instead of multiple includes() calls
     let needsEscaping = false;

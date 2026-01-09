@@ -62,9 +62,10 @@ async function loadSingleLanguageFromCDN(
 
   // Extract dependencies from import statements
   const dependencies: string[] = [];
-  let match: RegExpExecArray | null;
-  while ((match = importRegex.exec(moduleText)) !== null) {
+  let match = importRegex.exec(moduleText);
+  while (match !== null) {
     dependencies.push(match[1]);
+    match = importRegex.exec(moduleText);
   }
   // Reset regex lastIndex for next use
   importRegex.lastIndex = 0;

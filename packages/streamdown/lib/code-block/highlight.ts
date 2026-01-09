@@ -145,13 +145,13 @@ export const createShiki = (
   return highlighterPromise;
 };
 
-export type GetHighlightedTokensOptions = {
+export interface GetHighlightedTokensOptions {
   code: string;
   language: string;
   shikiTheme: [BundledTheme, BundledTheme];
   cdnUrl?: string | null;
   callback?: (result: TokensResult) => void;
-};
+}
 
 /**
  * Get cached tokens or trigger highlighting

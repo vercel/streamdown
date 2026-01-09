@@ -10,6 +10,8 @@ const CDN_URL_PATTERN_UNIQUELANG1 =
   /^https:\/\/www\.streamdown\.ai\/cdn\/shiki\/[\d.]+\/langs\/uniquelang1\.mjs$/;
 const CDN_URL_PATTERN_UNIQUELANG8 =
   /^https:\/\/www\.streamdown\.ai\/cdn\/shiki\/\d+\.\d+\.\d+\/langs\/uniquelang8\.mjs$/;
+const CDN_URL_PATTERN_CUSTOMLANG1 =
+  /^https:\/\/my-cdn\.example\.com\/cdn\/shiki\/[\d.]+\/langs\/customlang1\.mjs$/;
 
 // Default CDN base URL for tests
 const DEFAULT_CDN_URL = "https://www.streamdown.ai/cdn";
@@ -320,9 +322,7 @@ describe("CDN Configuration", () => {
     expect(fetchSpy).toHaveBeenCalled();
     const callUrl = fetchSpy.mock.calls[0][0] as string;
     // Should have format: https://my-cdn.example.com/cdn/shiki/{version}/langs/customlang1.mjs
-    expect(callUrl).toMatch(
-      /^https:\/\/my-cdn\.example\.com\/cdn\/shiki\/[\d.]+\/langs\/customlang1\.mjs$/
-    );
+    expect(callUrl).toMatch(CDN_URL_PATTERN_CUSTOMLANG1);
 
     fetchSpy.mockRestore();
     consoleWarnSpy.mockRestore();

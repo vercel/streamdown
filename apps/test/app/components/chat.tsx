@@ -27,12 +27,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Column } from "./column";
 
-type ChatProps = {
+interface ChatProps {
   models: {
     label: string;
     value: string;
   }[];
-};
+}
 
 export const Chat = ({ models }: ChatProps) => {
   const { messages, sendMessage, status, setMessages } = useChat({

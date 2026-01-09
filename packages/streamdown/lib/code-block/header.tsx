@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
-type CodeBlockHeaderProps = {
+interface CodeBlockHeaderProps {
   language: string;
   children: ReactNode;
-};
+}
 
 export const CodeBlockHeader = ({
   language,

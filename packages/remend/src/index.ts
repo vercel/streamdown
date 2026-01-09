@@ -16,7 +16,7 @@ import { handleIncompleteStrikethrough } from "./strikethrough-handler";
  * All options default to `true` when not specified.
  * Set an option to `false` to disable that specific completion.
  */
-export type RemendOptions = {
+export interface RemendOptions {
   /** Complete links and images (e.g., `[text](url` → `[text](streamdown:incomplete-link)`) */
   links?: boolean;
   /** Complete images (e.g., `![alt](url` → removed) */
@@ -35,7 +35,7 @@ export type RemendOptions = {
   katex?: boolean;
   /** Handle incomplete setext headings to prevent misinterpretation */
   setextHeadings?: boolean;
-};
+}
 
 // Helper to check if an option is enabled (defaults to true)
 const isEnabled = (option: boolean | undefined): boolean => option !== false;

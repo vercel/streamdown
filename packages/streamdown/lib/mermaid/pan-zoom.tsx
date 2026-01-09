@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } from "../icons";
 import { cn } from "../utils";
 
-type PanZoomProps = {
+interface PanZoomProps {
   children: ReactNode;
   className?: string;
   minZoom?: number;
@@ -12,7 +12,7 @@ type PanZoomProps = {
   showControls?: boolean;
   initialZoom?: number;
   fullscreen?: boolean;
-};
+}
 
 export const PanZoom = ({
   children,

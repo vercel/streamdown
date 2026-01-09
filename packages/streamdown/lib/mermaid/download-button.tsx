@@ -5,14 +5,14 @@ import { DownloadIcon } from "../icons";
 import { cn, save } from "../utils";
 import { initializeMermaid, svgToPngBlob } from "./utils";
 
-type MermaidDownloadDropdownProps = {
+interface MermaidDownloadDropdownProps {
   chart: string;
   children?: React.ReactNode;
   className?: string;
   onDownload?: (format: "mmd" | "png" | "svg") => void;
   onError?: (error: Error) => void;
   config?: MermaidConfig;
-};
+}
 
 export const MermaidDownloadDropdown = ({
   chart,

@@ -8,9 +8,9 @@ import remarkRehype from "remark-rehype";
 import type { PluggableList } from "unified";
 import { unified } from "unified";
 
-export type ExtraProps = {
+export interface ExtraProps {
   node?: Element | undefined;
-};
+}
 
 export type Components = {
   [Key in keyof JSX.IntrinsicElements]?:
@@ -18,13 +18,13 @@ export type Components = {
     | keyof JSX.IntrinsicElements;
 };
 
-export type Options = {
+export interface Options {
   children?: string;
   components?: Components;
   rehypePlugins?: PluggableList;
   remarkPlugins?: PluggableList;
   remarkRehypeOptions?: Readonly<RemarkRehypeOptions>;
-};
+}
 
 // Stable references for common cases
 const EMPTY_PLUGINS: PluggableList = [];

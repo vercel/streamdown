@@ -9,13 +9,13 @@ import { Button } from "@/components/ui/button";
 
 const DEFAULT_SPEED = 100;
 
-type SectionProps = {
+interface SectionProps {
   title: string;
   description: string | ReactNode;
   markdown: string;
   streamdownProps?: StreamdownProps;
   speed?: number;
-};
+}
 
 export const Section = ({
   title,

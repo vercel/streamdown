@@ -8,13 +8,13 @@ import {
   tableDataToTSV,
 } from "./utils";
 
-export type TableCopyDropdownProps = {
+export interface TableCopyDropdownProps {
   children?: React.ReactNode;
   className?: string;
   onCopy?: (format: "csv" | "tsv") => void;
   onError?: (error: Error) => void;
   timeout?: number;
-};
+}
 
 export const TableCopyDropdown = ({
   children,

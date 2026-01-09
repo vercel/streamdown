@@ -1,7 +1,7 @@
+import { unlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { build } from "esbuild";
-import { unlinkSync } from "fs";
-import { tmpdir } from "os";
-import { join } from "path";
 
 const outfile = join(tmpdir(), "streamdown-bundle.js");
 
@@ -51,7 +51,9 @@ async function analyzeBundle() {
   // Cleanup
   try {
     unlinkSync(outfile);
-  } catch {}
+  } catch {
+    // File may not exist, ignore
+  }
 
   console.log("");
 }

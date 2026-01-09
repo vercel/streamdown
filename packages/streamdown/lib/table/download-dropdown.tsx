@@ -8,14 +8,14 @@ import {
   tableDataToMarkdown,
 } from "./utils";
 
-export type TableDownloadButtonProps = {
+export interface TableDownloadButtonProps {
   children?: React.ReactNode;
   className?: string;
   onDownload?: () => void;
   onError?: (error: Error) => void;
   format?: "csv" | "markdown";
   filename?: string;
-};
+}
 
 export const TableDownloadButton = ({
   children,
@@ -95,12 +95,12 @@ export const TableDownloadButton = ({
   );
 };
 
-export type TableDownloadDropdownProps = {
+export interface TableDownloadDropdownProps {
   children?: React.ReactNode;
   className?: string;
   onDownload?: (format: "csv" | "markdown") => void;
   onError?: (error: Error) => void;
-};
+}
 
 export const TableDownloadDropdown = ({
   children,
