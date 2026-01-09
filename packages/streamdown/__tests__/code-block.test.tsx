@@ -410,7 +410,8 @@ describe("CodeBlock with multiple languages", () => {
     );
 
     // Simulate streaming by updating in chunks
-    const chunkSize = 100;
+    // Use larger chunks to avoid timeout in CI (195 iterations at 100 bytes is too slow)
+    const chunkSize = 1000;
     let currentIndex = 0;
     let currentContent = "";
 
