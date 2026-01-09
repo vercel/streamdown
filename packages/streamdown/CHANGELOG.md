@@ -1,5 +1,12 @@
 # streamdown
 
+## 2.0.0-canary.3
+
+### Patch Changes
+
+- 23f2a40: Attempt to fallback to raw to prevent cdn-loader blocking
+- 91b425f: Refactor click outside handler for Shadow DOM compatibility
+
 ## 2.0.0-canary.2
 
 ### Patch Changes
