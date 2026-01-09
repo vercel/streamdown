@@ -2,4 +2,4 @@
 "streamdown": patch
 ---
 
-Add support for CDN offline mode
+Add support for self-hosted CDN

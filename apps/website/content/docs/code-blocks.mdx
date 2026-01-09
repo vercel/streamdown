@@ -46,7 +46,7 @@ All other languages are loaded on-demand from the CDN (default: `https://www.str
 
 Languages are cached after the first load, so subsequent uses are instant.
 
-For offline or air-gapped environments, see [Offline Mode](/docs/offline-mode) to learn how to self-host language files.
+For offline or air-gapped environments, see [Self-Hosting CDN](/docs/self-hosting-cdn) to learn how to self-host language files.
 
 ### Language Examples
 
@@ -99,13 +99,11 @@ fn main() {
 Streamdown uses dual themes for light and dark modes. You can customize the themes using the `shikiTheme` prop:
 
 ```tsx title="app/page.tsx"
-import { Streamdown } from 'streamdown';
+import { Streamdown } from "streamdown";
 
 export default function Page() {
   return (
-    <Streamdown shikiTheme={['dracula', 'dracula']}>
-      {markdown}
-    </Streamdown>
+    <Streamdown shikiTheme={["dracula", "dracula"]}>{markdown}</Streamdown>
   );
 }
 ```
@@ -129,7 +127,7 @@ All other Shiki themes are loaded on-demand from the CDN (default: `https://www.
 
 Themes are cached after the first load, so subsequent uses are instant.
 
-For offline or air-gapped environments, see [Offline Mode](/docs/offline-mode) to learn how to self-host theme files.
+For offline or air-gapped environments, see [Self-Hosting CDN](/docs/self-hosting-cdn) to learn how to self-host theme files.
 
 ## Interactive Features
 
@@ -138,6 +136,7 @@ For offline or air-gapped environments, see [Offline Mode](/docs/offline-mode) t
 Every code block includes a copy button that appears on hover. Users can click to copy the entire code block content to their clipboard.
 
 The copy button:
+
 - Appears on hover (desktop) or is always visible (mobile)
 - Provides visual feedback on successful copy
 - Is automatically disabled during streaming (when `isAnimating={true}`)
@@ -147,17 +146,13 @@ The copy button:
 You can disable the copy button using the `controls` prop:
 
 ```tsx title="app/page.tsx"
-<Streamdown controls={{ code: false }}>
-  {markdown}
-</Streamdown>
+<Streamdown controls={{ code: false }}>{markdown}</Streamdown>
 ```
 
 Or disable all controls:
 
 ```tsx title="app/page.tsx"
-<Streamdown controls={false}>
-  {markdown}
-</Streamdown>
+<Streamdown controls={false}>{markdown}</Streamdown>
 ```
 
 ## Inline Code
@@ -169,6 +164,7 @@ Use the `useState` hook to manage state in React.
 ```
 
 Inline code is styled with:
+
 - Monospace font family
 - Subtle background color
 - Rounded corners
@@ -177,6 +173,7 @@ Inline code is styled with:
 ## Code Block Styling
 
 Code blocks include:
+
 - **Line Numbers** - Optional line numbers for reference
 - **Rounded Corners** - Modern, polished appearance
 - **Proper Padding** - Comfortable spacing
@@ -195,6 +192,7 @@ When a code block is streaming in, Streamdown handles the incomplete state grace
 ```javascript
 function example() {
   // Streaming in progress...
+```
 ````
 
 The unterminated block parser ensures the code block renders properly even without the closing backticks.
@@ -204,9 +202,7 @@ The unterminated block parser ensures the code block renders properly even witho
 Use the `isAnimating` prop to disable copy buttons while streaming:
 
 ```tsx title="app/page.tsx"
-<Streamdown isAnimating={isStreaming}>
-  {markdown}
-</Streamdown>
+<Streamdown isAnimating={isStreaming}>{markdown}</Streamdown>
 ```
 
 This prevents users from copying incomplete code.

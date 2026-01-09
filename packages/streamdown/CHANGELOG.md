@@ -35,7 +35,7 @@
 - 133c6c8: Load KaTeX CSS from CDN
 - 0c830f5: Fix Mermaid pan/zoom controls layout issues in fullscreen and non-fullscreen modes
 - 68109f2: Fix setext heading issues
-- ee12ec8: Add support for CDN offline mode
+- ee12ec8: Add support for self-hosting CDN
 - 6a7dc7c: Optimize Mermaid rendering performance with viewport-based lazy loading
 
   - Add useDeferredRender hook for lazy loading components when entering viewport
