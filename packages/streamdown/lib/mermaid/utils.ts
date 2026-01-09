@@ -3,7 +3,9 @@ import packageJson from "../../package.json";
 
 // Get mermaid version for CDN URL
 const MERMAID_VERSION = (
-  packageJson.dependencies?.mermaid ?? packageJson.devDependencies?.mermaid ?? "11"
+  packageJson.dependencies?.mermaid ??
+  packageJson.devDependencies?.mermaid ??
+  "11"
 ).replace(/^\^/, "");
 
 // Helper to construct the mermaid CDN URL from a base CDN URL
@@ -48,7 +50,9 @@ export const initializeMermaid = async (
     mermaidModuleCache.set(mermaidUrl, module);
   }
 
-  const mermaidModule = mermaidModuleCache.get(mermaidUrl) as typeof import("mermaid");
+  const mermaidModule = mermaidModuleCache.get(
+    mermaidUrl
+  ) as typeof import("mermaid");
   const mermaid = mermaidModule.default;
 
   // Always reinitialize with the current config to support different configs per component

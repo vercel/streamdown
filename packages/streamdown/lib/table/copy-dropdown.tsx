@@ -1,6 +1,6 @@
-import { CheckIcon, CopyIcon } from "../icons";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
+import { CheckIcon, CopyIcon } from "../icons";
 import { cn } from "../utils";
 import {
   extractTableDataFromElement,
@@ -74,10 +74,7 @@ export const TableCopyDropdown = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const path = event.composedPath();
-      if (
-        dropdownRef.current &&
-        !path.includes(dropdownRef.current)
-      ) {
+      if (dropdownRef.current && !path.includes(dropdownRef.current)) {
         setIsOpen(false);
       }
     };

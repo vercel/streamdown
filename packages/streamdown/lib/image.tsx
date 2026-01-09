@@ -1,5 +1,5 @@
-import { DownloadIcon } from "./icons";
 import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
+import { DownloadIcon } from "./icons";
 import type { ExtraProps } from "./markdown";
 import { cn, save } from "./utils";
 

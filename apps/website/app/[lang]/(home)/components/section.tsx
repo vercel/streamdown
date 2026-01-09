@@ -112,13 +112,15 @@ export const Section = ({
               With Streamdown
             </div>
             <div className="h-[400px] overflow-y-auto bg-background p-4">
-              <Streamdown cdnUrl="/cdn" {...streamdownProps}>{content}</Streamdown>
+              <Streamdown cdnUrl="/cdn" {...streamdownProps}>
+                {content}
+              </Streamdown>
             </div>
           </div>
         </div>
         {!isAnimating && (
           <Button
-            className="-translate-x-1/2 absolute bottom-0 left-1/2 translate-y-1/2 cursor-pointer rounded-full disabled:opacity-80"
+            className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 cursor-pointer rounded-full disabled:opacity-80"
             disabled={isAnimating}
             onClick={reset}
           >

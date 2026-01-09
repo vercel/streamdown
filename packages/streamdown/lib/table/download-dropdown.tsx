@@ -1,6 +1,6 @@
-import { DownloadIcon } from "../icons";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
+import { DownloadIcon } from "../icons";
 import { cn, save } from "../utils";
 import {
   extractTableDataFromElement,
@@ -146,10 +146,7 @@ export const TableDownloadDropdown = ({
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const path = event.composedPath();
-      if (
-        dropdownRef.current &&
-        !path.includes(dropdownRef.current)
-      ) {
+      if (dropdownRef.current && !path.includes(dropdownRef.current)) {
         setIsOpen(false);
       }
     };

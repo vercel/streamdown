@@ -240,7 +240,11 @@ export const Chat = ({ models }: ChatProps) => {
                     );
                   case "reasoning":
                     return (
-                      <Streamdown cdnUrl="http://localhost:3000/cdn" className="italic" key={key}>
+                      <Streamdown
+                        cdnUrl="http://localhost:3000/cdn"
+                        className="italic"
+                        key={key}
+                      >
                         {part.text}
                       </Streamdown>
                     );

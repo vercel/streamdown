@@ -1,7 +1,7 @@
 import type { Link, Root, Text } from "mdast";
 import type { Plugin } from "unified";
-import { visit } from "unist-util-visit";
 import type { Parent } from "unist";
+import { visit } from "unist-util-visit";
 
 const CJK_AUTOLINK_BOUNDARY_CHARS = new Set<string>([
   "。",

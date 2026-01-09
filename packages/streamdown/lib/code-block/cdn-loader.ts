@@ -135,13 +135,18 @@ export async function loadLanguageFromCDN(
 
       // Skip if already cached
       if (cdnLanguageCache.has(depCacheKey)) {
-        const cached = cdnLanguageCache.get(depCacheKey) as LanguageRegistration[];
+        const cached = cdnLanguageCache.get(
+          depCacheKey
+        ) as LanguageRegistration[];
         allGrammars.push(...cached);
         continue;
       }
 
       // Skip if already loading (circular dep) or failed
-      if (loadingLanguages.has(depCacheKey) || failedLanguages.has(depCacheKey)) {
+      if (
+        loadingLanguages.has(depCacheKey) ||
+        failedLanguages.has(depCacheKey)
+      ) {
         continue;
       }
 
