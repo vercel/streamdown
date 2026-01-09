@@ -73,9 +73,10 @@ export const TableCopyDropdown = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const path = event.composedPath();
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        !path.includes(dropdownRef.current)
       ) {
         setIsOpen(false);
       }
