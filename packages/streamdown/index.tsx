@@ -151,7 +151,13 @@ type BlockProps = Options & {
 };
 
 export const Block = memo(
-  ({ content, ...props }: BlockProps) => {
+  // Destructure shouldParseIncompleteMarkdown and index to prevent them from leaking to the DOM
+  ({
+    content,
+    shouldParseIncompleteMarkdown: _,
+    index: __,
+    ...props
+  }: BlockProps) => {
     // Note: remend is already applied to the entire markdown before parsing into blocks
     // in the Streamdown component, so we don't need to apply it again here
     return <Markdown {...props}>{content}</Markdown>;
