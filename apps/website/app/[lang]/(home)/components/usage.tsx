@@ -63,6 +63,7 @@ export const Usage = async () => {
           <CodeBlock title="app/chat/page.tsx">
             <code
               className="language-tsx"
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               dangerouslySetInnerHTML={{ __html: light }}
             />
           </CodeBlock>
@@ -71,6 +72,7 @@ export const Usage = async () => {
           <CodeBlock title="app/chat/page.tsx">
             <code
               className="language-tsx"
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
               dangerouslySetInnerHTML={{ __html: dark }}
             />
           </CodeBlock>
