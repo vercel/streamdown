@@ -14,8 +14,6 @@ import {
 import { harden } from "rehype-harden";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
-import remarkCjkFriendly from "remark-cjk-friendly";
-import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
 import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
 import type { BundledTheme } from "shiki";
@@ -25,13 +23,12 @@ import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig } from "./lib/plugin-types";
-import { remarkCjkAutolinkBoundary } from "./lib/remark/cjk-autolink";
 import { cn } from "./lib/utils";
 
 export type { MermaidConfig } from "mermaid";
 export type { RemendOptions } from "remend";
 export type { BundledLanguageName } from "./lib/code-block/bundled-languages";
-export type { PluginConfig, CodeHighlighterPlugin, DiagramPlugin, MathPlugin } from "./lib/plugin-types";
+export type { PluginConfig, CodeHighlighterPlugin, DiagramPlugin, MathPlugin, CjkPlugin } from "./lib/plugin-types";
 
 // biome-ignore lint/performance/noBarrelFile: "required"
 export {
@@ -98,9 +95,6 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
 
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
   gfm: [remarkGfm, {}],
-  cjkAutolinkBoundary: [remarkCjkAutolinkBoundary, {}],
-  cjkFriendly: [remarkCjkFriendly, {}],
-  cjkFriendlyGfmStrikethrough: [remarkCjkFriendlyGfmStrikethrough, {}],
 } as const;
 
 // Stable plugin arrays for cache efficiency - created once at module level
@@ -287,13 +281,17 @@ export const Streamdown = memo(
       [components]
     );
 
-    // Merge katex plugin's remark/rehype plugins if katex plugin is provided
+    // Merge plugin remark plugins (katex, cjk)
     const mergedRemarkPlugins = useMemo(() => {
-      if (!plugins?.katex) {
-        return remarkPlugins;
+      let result = remarkPlugins;
+      if (plugins?.katex) {
+        result = [...result, plugins.katex.remarkPlugin];
       }
-      return [...remarkPlugins, plugins.katex.remarkPlugin];
-    }, [remarkPlugins, plugins?.katex]);
+      if (plugins?.cjk) {
+        result = [...result, ...plugins.cjk.remarkPlugins];
+      }
+      return result;
+    }, [remarkPlugins, plugins?.katex, plugins?.cjk]);
 
     const mergedRehypePlugins = useMemo(() => {
       if (!plugins?.katex) {

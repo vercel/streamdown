@@ -8,6 +8,7 @@ import { Streamdown } from "streamdown";
 import { shikiPlugin } from "streamdown/plugins/shiki";
 import { mermaidPlugin } from "streamdown/plugins/mermaid";
 import { katexPlugin } from "streamdown/plugins/katex";
+import { cjkPlugin } from "streamdown/plugins/cjk";
 import "katex/dist/katex.min.css";
 
 export default function Chat() {
@@ -22,6 +23,7 @@ export default function Chat() {
             shiki: shikiPlugin,
             mermaid: mermaidPlugin,
             katex: katexPlugin,
+            cjk: cjkPlugin,
           }}
           isAnimating={isLoading}
         >

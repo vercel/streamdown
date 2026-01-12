@@ -8,6 +8,7 @@ import { Streamdown, type StreamdownProps } from "streamdown";
 import { shikiPlugin } from "streamdown/plugins/shiki";
 import { mermaidPlugin } from "streamdown/plugins/mermaid";
 import { katexPlugin } from "streamdown/plugins/katex";
+import { cjkPlugin } from "streamdown/plugins/cjk";
 import { Button } from "@/components/ui/button";
 
 const DEFAULT_SPEED = 100;
@@ -120,6 +121,7 @@ export const Section = ({
                   shiki: shikiPlugin,
                   mermaid: mermaidPlugin,
                   katex: katexPlugin,
+                  cjk: cjkPlugin,
                 }}
                 isAnimating={isAnimating}
                 {...streamdownProps}

@@ -7,10 +7,10 @@ Streamdown uses a plugin architecture for rendering features like syntax highlig
 
 ## Rendering Plugins
 
-Rendering plugins provide advanced features for code blocks, diagrams, and math. Each plugin requires installing its peer dependency. Install only what you need:
+Rendering plugins provide advanced features for code blocks, diagrams, math, and CJK text. Each plugin requires installing its peer dependency. Install only what you need:
 
 ```package-install
-npm install shiki mermaid katex rehype-katex remark-math
+npm install shiki mermaid katex rehype-katex remark-math remark-cjk-friendly remark-cjk-friendly-gfm-strikethrough
 ```
 
 Then import the plugins:
@@ -20,6 +20,7 @@ import { Streamdown } from 'streamdown';
 import { shikiPlugin } from 'streamdown/plugins/shiki';
 import { mermaidPlugin } from 'streamdown/plugins/mermaid';
 import { katexPlugin } from 'streamdown/plugins/katex';
+import { cjkPlugin } from 'streamdown/plugins/cjk';
 
 // KaTeX requires CSS
 import 'katex/dist/katex.min.css';
@@ -29,6 +30,7 @@ import 'katex/dist/katex.min.css';
     shiki: shikiPlugin,
     mermaid: mermaidPlugin,
     katex: katexPlugin,
+    cjk: cjkPlugin,
   }}
 >
   {markdown}
@@ -114,6 +116,32 @@ import 'katex/dist/katex.min.css';
 
 See [Mathematics](/docs/mathematics) for details.
 
+### cjkPlugin
+
+Improves handling of CJK (Chinese, Japanese, Korean) text with proper spacing, line breaks, and autolink boundaries.
+
+- Proper spacing between CJK and Latin characters
+- Correct line breaking behavior for CJK text
+- Fixes autolink boundaries at CJK punctuation
+
+**Install:**
+
+```package-install
+npm install remark-cjk-friendly remark-cjk-friendly-gfm-strikethrough
+```
+
+**Usage:**
+
+```tsx
+import { cjkPlugin } from 'streamdown/plugins/cjk';
+
+<Streamdown plugins={{ cjk: cjkPlugin }}>
+  {markdown}
+</Streamdown>
+```
+
+See [CJK Language Support](/docs/cjk-support) for details.
+
 ## Remark and Rehype Plugins
 
 Streamdown also includes Remark plugins (which process Markdown syntax) and Rehype plugins (which process the resulting HTML).
@@ -171,55 +199,6 @@ remarkGfm
 ~~Strikethrough text~~
 ```
 
-### remark-math
-
-Enables mathematical notation using LaTeX syntax. Supports both inline and block math expressions.
-
-**Configuration:**
-
-```tsx
-[remarkMath, { singleDollarTextMath: false }]
-```
-
-**Options:**
-- `singleDollarTextMath`: When `false` (default), requires `$$` for math expressions. When `true`, allows single `$` for inline math.
-
-**Example:**
-
-```markdown
-Inline math: $$E = mc^2$$
-
-Block math:
-$$
-\int_{0}^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
-$$
-```
-
-### remark-cjk-friendly
-
-Improves handling of CJK (Chinese, Japanese, Korean) text by properly managing spacing and line breaks around CJK characters.
-
-**Configuration:**
-
-```tsx
-remarkCjkFriendly
-```
-
-**Benefits:**
-- Proper spacing between CJK and Latin characters
-- Correct line breaking behavior for CJK text
-- Better typography for mixed-script content
-
-### remark-cjk-friendly-gfm-strikethrough
-
-Extends GFM strikethrough support with proper CJK text handling, ensuring strikethrough syntax works correctly with CJK characters.
-
-**Configuration:**
-
-```tsx
-remarkCjkFriendlyGfmStrikethrough
-```
-
 ## Rehype Plugins
 
 Rehype plugins process HTML after Markdown has been converted. Streamdown includes the following Rehype plugins by default:
@@ -244,25 +223,6 @@ This is **Markdown** with <span style="color: red">raw HTML</span>.
   Hidden content here
 </details>
 ```
-
-### rehype-katex
-
-Renders mathematical expressions using KaTeX. Works in conjunction with `remark-math` to display beautiful, fast math notation.
-
-**Configuration:**
-
-```tsx
-[rehypeKatex, { errorColor: 'var(--color-muted-foreground)' }]
-```
-
-**Options:**
-- `errorColor`: Color used for rendering LaTeX errors
-
-**Features:**
-- Automatic KaTeX CSS loading when math syntax is detected
-- Support for inline and block math expressions
-- Fast client-side rendering
-- No server-side dependencies
 
 ### rehype-sanitize
 
@@ -315,21 +275,16 @@ import {
   defaultRehypePlugins,
 } from 'streamdown';
 
-// Access individual plugins by key
-import { defaultRemarkPlugins, defaultRehypePlugins } from 'streamdown';
-
 // defaultRemarkPlugins object contains:
 // - gfm: [remarkGfm, {}]
-// - math: [remarkMath, { singleDollarTextMath: false }]
-// - cjkFriendly: [remarkCjkFriendly, {}]
-// - cjkFriendlyGfmStrikethrough: [remarkCjkFriendlyGfmStrikethrough, {}]
 
 // defaultRehypePlugins object contains:
 // - raw: rehypeRaw
-// - katex: [rehypeKatex, { errorColor: 'var(--color-muted-foreground)' }]
 // - sanitize: [rehypeSanitize, {}]
 // - harden: [harden, { /* config */ }]
 ```
+
+Note: Math (katex) and CJK plugins are not included by default. Use the `plugins` prop to enable them.
 
 ## Customizing Plugins
 

@@ -91,9 +91,21 @@ export interface MathPlugin {
 }
 
 /**
+ * Plugin for CJK text handling
+ */
+export interface CjkPlugin {
+  name: "cjk";
+  type: "cjk";
+  /**
+   * Get remark plugins for CJK text handling
+   */
+  remarkPlugins: Pluggable[];
+}
+
+/**
  * Union type for all plugins
  */
-export type StreamdownPlugin = CodeHighlighterPlugin | DiagramPlugin | MathPlugin;
+export type StreamdownPlugin = CodeHighlighterPlugin | DiagramPlugin | MathPlugin | CjkPlugin;
 
 /**
  * Plugin configuration passed to Streamdown
@@ -102,4 +114,5 @@ export interface PluginConfig {
   shiki?: CodeHighlighterPlugin;
   mermaid?: DiagramPlugin;
   katex?: MathPlugin;
+  cjk?: CjkPlugin;
 }

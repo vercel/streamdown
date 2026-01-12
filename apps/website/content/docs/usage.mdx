@@ -23,10 +23,10 @@ That's it! Streamdown will render your Markdown with all the built-in features e
 
 ## With Plugins
 
-For syntax highlighting, diagrams, and math rendering, first install the required peer dependencies:
+For syntax highlighting, diagrams, math rendering, and CJK support, first install the required peer dependencies:
 
 ```package-install
-npm install shiki mermaid katex rehype-katex remark-math
+npm install shiki mermaid katex rehype-katex remark-math remark-cjk-friendly remark-cjk-friendly-gfm-strikethrough
 ```
 
 Then import the plugins:
@@ -36,6 +36,7 @@ import { Streamdown } from 'streamdown';
 import { shikiPlugin } from 'streamdown/plugins/shiki';
 import { mermaidPlugin } from 'streamdown/plugins/mermaid';
 import { katexPlugin } from 'streamdown/plugins/katex';
+import { cjkPlugin } from 'streamdown/plugins/cjk';
 
 // Import KaTeX styles for math rendering
 import 'katex/dist/katex.min.css';
@@ -67,6 +68,7 @@ And some math: $$E = mc^2$$
         shiki: shikiPlugin,
         mermaid: mermaidPlugin,
         katex: katexPlugin,
+        cjk: cjkPlugin,
       }}
     >
       {markdown}
@@ -118,6 +120,20 @@ import { katexPlugin } from 'streamdown/plugins/katex';
 import 'katex/dist/katex.min.css';
 
 <Streamdown plugins={{ katex: katexPlugin }}>
+  {markdown}
+</Streamdown>
+```
+
+```bash
+# Just CJK support
+npm install remark-cjk-friendly remark-cjk-friendly-gfm-strikethrough
+```
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+import { cjkPlugin } from 'streamdown/plugins/cjk';
+
+<Streamdown plugins={{ cjk: cjkPlugin }}>
   {markdown}
 </Streamdown>
 ```

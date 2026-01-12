@@ -36,3 +36,11 @@ export const useKatexPlugin = () => {
   const plugins = usePlugins();
   return plugins?.katex ?? null;
 };
+
+/**
+ * Hook to access the cjk plugin
+ */
+export const useCjkPlugin = () => {
+  const plugins = usePlugins();
+  return plugins?.cjk ?? null;
+};
