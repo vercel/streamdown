@@ -1,5 +1,11 @@
 # streamdown
 
+## 2.0.1
+
+### Patch Changes
+
+- 61b3685: Fix Streamdown URL
+
 ## 2.0.0
 
 ### Major Changes
