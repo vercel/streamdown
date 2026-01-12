@@ -1,9 +1,122 @@
 ---
 title: Plugins
-description: Learn about Streamdown's built-in Remark and Rehype plugins.
+description: Learn about Streamdown's plugin system for rendering and processing.
 ---
 
-Streamdown includes a powerful set of plugins that process your Markdown content. These plugins are divided into two categories: **Remark plugins** (which process Markdown syntax) and **Rehype plugins** (which process the resulting HTML).
+Streamdown uses a plugin architecture for rendering features like syntax highlighting, diagrams, and math. It also includes Remark and Rehype plugins for processing Markdown content.
+
+## Rendering Plugins
+
+Rendering plugins provide advanced features for code blocks, diagrams, and math. Each plugin requires installing its peer dependency. Install only what you need:
+
+```package-install
+npm install shiki mermaid katex rehype-katex remark-math
+```
+
+Then import the plugins:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+import { shikiPlugin } from 'streamdown/plugins/shiki';
+import { mermaidPlugin } from 'streamdown/plugins/mermaid';
+import { katexPlugin } from 'streamdown/plugins/katex';
+
+// KaTeX requires CSS
+import 'katex/dist/katex.min.css';
+
+<Streamdown
+  plugins={{
+    shiki: shikiPlugin,
+    mermaid: mermaidPlugin,
+    katex: katexPlugin,
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+### shikiPlugin
+
+Provides syntax highlighting for code blocks using [Shiki](https://shiki.style/).
+
+- Supports 200+ programming languages
+- Languages are lazy-loaded on demand
+- Dual theme support (light/dark mode)
+
+**Install:**
+
+```package-install
+npm install shiki
+```
+
+**Usage:**
+
+```tsx
+import { shikiPlugin } from 'streamdown/plugins/shiki';
+
+<Streamdown plugins={{ shiki: shikiPlugin }}>
+  {markdown}
+</Streamdown>
+```
+
+See [Code Blocks](/docs/code-blocks) for details.
+
+### mermaidPlugin
+
+Renders [Mermaid](https://mermaid.js.org/) diagrams including flowcharts, sequence diagrams, and more.
+
+- Interactive controls (fullscreen, download, copy)
+- Custom theming support
+- Error handling
+
+**Install:**
+
+```package-install
+npm install mermaid
+```
+
+**Usage:**
+
+```tsx
+import { mermaidPlugin } from 'streamdown/plugins/mermaid';
+
+<Streamdown plugins={{ mermaid: mermaidPlugin }}>
+  {markdown}
+</Streamdown>
+```
+
+See [Mermaid Diagrams](/docs/mermaid) for details.
+
+### katexPlugin
+
+Renders mathematical expressions using [KaTeX](https://katex.org/).
+
+- Fast LaTeX rendering
+- Inline and block math support
+- Requires CSS import
+
+**Install:**
+
+```package-install
+npm install katex rehype-katex remark-math
+```
+
+**Usage:**
+
+```tsx
+import { katexPlugin } from 'streamdown/plugins/katex';
+import 'katex/dist/katex.min.css';
+
+<Streamdown plugins={{ katex: katexPlugin }}>
+  {markdown}
+</Streamdown>
+```
+
+See [Mathematics](/docs/mathematics) for details.
+
+## Remark and Rehype Plugins
+
+Streamdown also includes Remark plugins (which process Markdown syntax) and Rehype plugins (which process the resulting HTML).
 
 ## Default Plugin Configuration
 

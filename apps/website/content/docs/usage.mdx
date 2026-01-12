@@ -21,6 +21,107 @@ export default function Page() {
 
 That's it! Streamdown will render your Markdown with all the built-in features enabled.
 
+## With Plugins
+
+For syntax highlighting, diagrams, and math rendering, first install the required peer dependencies:
+
+```package-install
+npm install shiki mermaid katex rehype-katex remark-math
+```
+
+Then import the plugins:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+import { shikiPlugin } from 'streamdown/plugins/shiki';
+import { mermaidPlugin } from 'streamdown/plugins/mermaid';
+import { katexPlugin } from 'streamdown/plugins/katex';
+
+// Import KaTeX styles for math rendering
+import 'katex/dist/katex.min.css';
+
+export default function Page() {
+  const markdown = `
+# Hello World
+
+Here's some code:
+
+\`\`\`typescript
+const greeting = "Hello, World!";
+console.log(greeting);
+\`\`\`
+
+And a diagram:
+
+\`\`\`mermaid
+graph LR
+    A[Start] --> B[End]
+\`\`\`
+
+And some math: $$E = mc^2$$
+  `;
+
+  return (
+    <Streamdown
+      plugins={{
+        shiki: shikiPlugin,
+        mermaid: mermaidPlugin,
+        katex: katexPlugin,
+      }}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+### Plugin Options
+
+Each plugin is optional - install and import only what you need:
+
+```bash
+# Just syntax highlighting
+npm install shiki
+```
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+import { shikiPlugin } from 'streamdown/plugins/shiki';
+
+<Streamdown plugins={{ shiki: shikiPlugin }}>
+  {markdown}
+</Streamdown>
+```
+
+```bash
+# Just diagrams
+npm install mermaid
+```
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+import { mermaidPlugin } from 'streamdown/plugins/mermaid';
+
+<Streamdown plugins={{ mermaid: mermaidPlugin }}>
+  {markdown}
+</Streamdown>
+```
+
+```bash
+# Just math
+npm install katex rehype-katex remark-math
+```
+
+```tsx title="app/page.tsx"
+import { Streamdown } from 'streamdown';
+import { katexPlugin } from 'streamdown/plugins/katex';
+import 'katex/dist/katex.min.css';
+
+<Streamdown plugins={{ katex: katexPlugin }}>
+  {markdown}
+</Streamdown>
+```
+
 ## With AI Streaming
 
 Streamdown really shines when used with AI streaming. Here's an example using the Vercel AI SDK:
@@ -30,6 +131,8 @@ Streamdown really shines when used with AI streaming. Here's an example using th
 
 import { useChat } from '@ai-sdk/react';
 import { Streamdown } from 'streamdown';
+import { shikiPlugin } from 'streamdown/plugins/shiki';
+import { mermaidPlugin } from 'streamdown/plugins/mermaid';
 
 export default function ChatPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
@@ -43,7 +146,13 @@ export default function ChatPage() {
             className={message.role === 'user' ? 'text-right' : 'text-left'}
           >
             <div className="inline-block max-w-2xl">
-              <Streamdown isAnimating={isLoading && message.role === 'assistant'}>
+              <Streamdown
+                plugins={{
+                  shiki: shikiPlugin,
+                  mermaid: mermaidPlugin,
+                }}
+                isAnimating={isLoading && message.role === 'assistant'}
+              >
                 {message.content}
               </Streamdown>
             </div>
@@ -84,9 +193,17 @@ Enable static mode by setting the `mode` prop to `"static"`:
 
 ```tsx title="app/blog/[slug]/page.tsx"
 import { Streamdown } from 'streamdown';
+import { shikiPlugin } from 'streamdown/plugins/shiki';
 
 export default function BlogPost({ content }: { content: string }) {
-  return <Streamdown mode="static">{content}</Streamdown>;
+  return (
+    <Streamdown
+      mode="static"
+      plugins={{ shiki: shikiPlugin }}
+    >
+      {content}
+    </Streamdown>
+  );
 }
 ```
 
@@ -111,8 +228,12 @@ All standard Streamdown props work in static mode, including:
 ```tsx title="app/blog/[slug]/page.tsx"
 <Streamdown
   mode="static"
+  plugins={{
+    shiki: shikiPlugin,
+    mermaid: mermaidPlugin,
+  }}
   shikiTheme={['github-light', 'github-dark']}
-  mermaidConfig={{ theme: 'neutral' }}
+  mermaid={{ config: { theme: 'neutral' } }}
 >
   {content}
 </Streamdown>
