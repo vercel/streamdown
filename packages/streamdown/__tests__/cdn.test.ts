@@ -7,9 +7,9 @@ import { loadLanguageFromCDN } from "../lib/code-block/cdn-loader";
 
 // Regex patterns for CDN URL validation (using the default cdnUrl: https://streamdown.ai/cdn)
 const CDN_URL_PATTERN_UNIQUELANG1 =
-  /^https:\/\/www\.streamdown\.ai\/cdn\/shiki\/[\d.]+\/langs\/uniquelang1\.mjs$/;
+  /^https:\/\/streamdown\.ai\/cdn\/shiki\/[\d.]+\/langs\/uniquelang1\.mjs$/;
 const CDN_URL_PATTERN_UNIQUELANG8 =
-  /^https:\/\/www\.streamdown\.ai\/cdn\/shiki\/\d+\.\d+\.\d+\/langs\/uniquelang8\.mjs$/;
+  /^https:\/\/streamdown\.ai\/cdn\/shiki\/\d+\.\d+\.\d+\/langs\/uniquelang8\.mjs$/;
 const CDN_URL_PATTERN_CUSTOMLANG1 =
   /^https:\/\/my-cdn\.example\.com\/cdn\/shiki\/[\d.]+\/langs\/customlang1\.mjs$/;
 
