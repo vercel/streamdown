@@ -7,11 +7,11 @@ import {
 } from "react";
 import type { TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
+import { useShikiPlugin } from "../plugin-context";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContainer } from "./container";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
-import { getHighlightedTokens } from "./highlight";
 
 type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
@@ -25,7 +25,8 @@ export const CodeBlock = ({
   children,
   ...rest
 }: CodeBlockProps) => {
-  const { shikiTheme, cdnUrl } = useContext(StreamdownContext);
+  const { shikiTheme } = useContext(StreamdownContext);
+  const shikiPlugin = useShikiPlugin();
 
   // Memoize the raw fallback tokens to avoid recomputing on every render
   const raw: TokensResult = useMemo(
@@ -50,12 +51,22 @@ export const CodeBlock = ({
 
   // Try to get cached result or subscribe to highlighting
   useEffect(() => {
-    const cachedResult = getHighlightedTokens({
-      code,
-      language,
-      shikiTheme,
-      cdnUrl,
-    });
+    // If no shiki plugin, just use raw tokens (plain text)
+    if (!shikiPlugin) {
+      setResult(raw);
+      return;
+    }
+
+    const cachedResult = shikiPlugin.highlight(
+      {
+        code,
+        language,
+        themes: shikiTheme,
+      },
+      (highlightedResult) => {
+        setResult(highlightedResult);
+      }
+    );
 
     if (cachedResult) {
       // Already cached, use it immediately
@@ -66,18 +77,7 @@ export const CodeBlock = ({
     // Not cached - reset to raw tokens while waiting for highlighting
     // This is critical for streaming: ensures we show current code, not stale tokens
     setResult(raw);
-
-    // Subscribe to get highlighted tokens when ready
-    getHighlightedTokens({
-      code,
-      language,
-      shikiTheme,
-      cdnUrl,
-      callback: (highlightedResult) => {
-        setResult(highlightedResult);
-      },
-    });
-  }, [code, language, shikiTheme, cdnUrl, raw]);
+  }, [code, language, shikiTheme, shikiPlugin, raw]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>

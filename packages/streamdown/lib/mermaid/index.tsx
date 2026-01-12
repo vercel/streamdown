@@ -2,9 +2,9 @@ import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useState } from "react";
 import { useDeferredRender } from "../../hooks/use-deferred-render";
 import { StreamdownContext } from "../../index";
+import { useMermaidPlugin } from "../plugin-context";
 import { cn } from "../utils";
 import { PanZoom } from "./pan-zoom";
-import { initializeMermaid } from "./utils";
 
 interface MermaidProps {
   chart: string;
@@ -26,7 +26,8 @@ export const Mermaid = ({
   const [svgContent, setSvgContent] = useState<string>("");
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
-  const { mermaid: mermaidContext, cdnUrl } = useContext(StreamdownContext);
+  const { mermaid: mermaidContext } = useContext(StreamdownContext);
+  const mermaidPlugin = useMermaidPlugin();
   const ErrorComponent = mermaidContext?.errorComponent;
 
   // Use deferred render hook for optimal performance
@@ -41,13 +42,19 @@ export const Mermaid = ({
       return;
     }
 
+    // If no mermaid plugin, show error
+    if (!mermaidPlugin) {
+      setError("Mermaid plugin not available. Please add the mermaid plugin to enable diagram rendering.");
+      return;
+    }
+
     const renderChart = async () => {
       try {
         setError(null);
         setIsLoading(true);
 
-        // Initialize mermaid with optional custom config
-        const mermaid = await initializeMermaid(config, cdnUrl);
+        // Get mermaid instance from plugin
+        const mermaid = mermaidPlugin.getMermaid(config);
 
         // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
         const chartHash = chart.split("").reduce((acc, char) => {
@@ -79,7 +86,7 @@ export const Mermaid = ({
     };
 
     renderChart();
-  }, [chart, config, retryCount, shouldRender, cdnUrl]);
+  }, [chart, config, retryCount, shouldRender, mermaidPlugin]);
 
   // Show placeholder when not scheduled to render
   if (!(shouldRender || svgContent || lastValidSvg)) {

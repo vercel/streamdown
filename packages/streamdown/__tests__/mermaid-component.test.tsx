@@ -1,43 +1,64 @@
 import { act, render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StreamdownContext } from "../index";
+import { PluginContext } from "../lib/plugin-context";
+import type { DiagramPlugin, MermaidInstance } from "../lib/plugin-types";
 import { Mermaid } from "../lib/mermaid/index";
 
-// Mock the mermaid utils
-vi.mock("../lib/mermaid/utils", () => ({
-  initializeMermaid: vi.fn().mockResolvedValue({
-    render: vi.fn().mockResolvedValue({
-      svg: "<svg><text>Mocked Diagram</text></svg>",
-    }),
-  }),
-}));
+// Create a mock mermaid plugin
+const createMockMermaidPlugin = (
+  mockRender = vi.fn().mockResolvedValue({
+    svg: "<svg><text>Mocked Diagram</text></svg>",
+  })
+): DiagramPlugin => {
+  const mockMermaidInstance: MermaidInstance = {
+    initialize: vi.fn(),
+    render: mockRender,
+  };
+
+  return {
+    name: "mermaid",
+    type: "diagram",
+    language: "mermaid",
+    getMermaid: vi.fn().mockReturnValue(mockMermaidInstance),
+  };
+};
 
 describe("Mermaid Component", () => {
   const simpleChart = "graph TD;\n    A-->B;";
 
-  const defaultContext = {
+  const defaultStreamdownContext = {
     shikiTheme: ["github-light", "github-dark"] as [string, string],
     controls: true,
     isAnimating: false,
     mode: "streaming" as const,
-    cdnUrl: "https://streamdown.ai/cdn",
   };
 
-  const renderWithContext = (ui: React.ReactElement, contextOverrides = {}) => {
-    const contextValue = { ...defaultContext, ...contextOverrides };
+  const renderWithContext = (
+    ui: React.ReactElement,
+    contextOverrides = {},
+    pluginOverrides?: { mermaid?: DiagramPlugin }
+  ) => {
+    const streamdownContextValue = { ...defaultStreamdownContext, ...contextOverrides };
+    const pluginContextValue = pluginOverrides ?? { mermaid: createMockMermaidPlugin() };
+
     const result = render(
-      <StreamdownContext.Provider value={contextValue}>
-        {ui}
-      </StreamdownContext.Provider>
+      <PluginContext.Provider value={pluginContextValue}>
+        <StreamdownContext.Provider value={streamdownContextValue}>
+          {ui}
+        </StreamdownContext.Provider>
+      </PluginContext.Provider>
     );
 
     return {
       ...result,
       rerender: (newUi: React.ReactElement) =>
         result.rerender(
-          <StreamdownContext.Provider value={contextValue}>
-            {newUi}
-          </StreamdownContext.Provider>
+          <PluginContext.Provider value={pluginContextValue}>
+            <StreamdownContext.Provider value={streamdownContextValue}>
+              {newUi}
+            </StreamdownContext.Provider>
+          </PluginContext.Provider>
         ),
     };
   };
@@ -72,15 +93,27 @@ describe("Mermaid Component", () => {
     });
   });
 
-  it("should handle errors gracefully", async () => {
-    const { initializeMermaid } = await import("../lib/mermaid/utils");
-
-    // Mock to throw an error
-    (initializeMermaid as any).mockRejectedValueOnce(
-      new Error("Invalid syntax")
+  it("should show error when no mermaid plugin is provided", async () => {
+    const { container } = renderWithContext(
+      <Mermaid chart={simpleChart} />,
+      {},
+      {} // No mermaid plugin
     );
 
-    const { container } = renderWithContext(<Mermaid chart="invalid chart" />);
+    await waitFor(() => {
+      expect(container.textContent).toContain("Mermaid plugin not available");
+    });
+  });
+
+  it("should handle render errors gracefully", async () => {
+    const mockRender = vi.fn().mockRejectedValue(new Error("Invalid syntax"));
+    const plugin = createMockMermaidPlugin(mockRender);
+
+    const { container } = renderWithContext(
+      <Mermaid chart="invalid chart" />,
+      {},
+      { mermaid: plugin }
+    );
 
     await waitFor(() => {
       expect(container.textContent).toContain("Mermaid Error");
@@ -88,12 +121,14 @@ describe("Mermaid Component", () => {
   });
 
   it("should show error details in collapsible section", async () => {
-    const { initializeMermaid } = await import("../lib/mermaid/utils");
+    const mockRender = vi.fn().mockRejectedValue(new Error("Parse error"));
+    const plugin = createMockMermaidPlugin(mockRender);
 
-    // Mock to throw an error
-    (initializeMermaid as any).mockRejectedValueOnce(new Error("Parse error"));
-
-    const { container } = renderWithContext(<Mermaid chart="bad syntax" />);
+    const { container } = renderWithContext(
+      <Mermaid chart="bad syntax" />,
+      {},
+      { mermaid: plugin }
+    );
 
     await waitFor(() => {
       const details = container.querySelector("details");
@@ -103,10 +138,8 @@ describe("Mermaid Component", () => {
   });
 
   it("should use custom error component when provided", async () => {
-    const { initializeMermaid } = await import("../lib/mermaid/utils");
-
-    // Mock to throw an error
-    (initializeMermaid as any).mockRejectedValueOnce(new Error("Test error"));
+    const mockRender = vi.fn().mockRejectedValue(new Error("Test error"));
+    const plugin = createMockMermaidPlugin(mockRender);
 
     const CustomError = ({
       error,
@@ -116,9 +149,11 @@ describe("Mermaid Component", () => {
       retry: () => void;
     }) => <div data-testid="custom-error">Custom Error: {error}</div>;
 
-    const { container } = renderWithContext(<Mermaid chart="invalid" />, {
-      mermaid: { errorComponent: CustomError },
-    });
+    const { container } = renderWithContext(
+      <Mermaid chart="invalid" />,
+      { mermaid: { errorComponent: CustomError } },
+      { mermaid: plugin }
+    );
 
     await waitFor(() => {
       const customError = container.querySelector(
@@ -141,32 +176,31 @@ describe("Mermaid Component", () => {
     });
   });
 
-  it("should pass config to mermaid initialization", async () => {
-    const { initializeMermaid } = await import("../lib/mermaid/utils");
+  it("should pass config to mermaid getMermaid", async () => {
+    const mockPlugin = createMockMermaidPlugin();
 
     const config = { theme: "dark" };
-    renderWithContext(<Mermaid chart={simpleChart} config={config} />);
+    renderWithContext(
+      <Mermaid chart={simpleChart} config={config} />,
+      {},
+      { mermaid: mockPlugin }
+    );
 
     await waitFor(() => {
-      expect(initializeMermaid).toHaveBeenCalledWith(
-        config,
-        "https://streamdown.ai/cdn"
-      );
+      expect(mockPlugin.getMermaid).toHaveBeenCalledWith(config);
     });
   });
 
   it("should keep last valid SVG on subsequent errors", async () => {
-    const { initializeMermaid } = await import("../lib/mermaid/utils");
-
-    // First render succeeds
-    (initializeMermaid as any).mockResolvedValueOnce({
-      render: vi.fn().mockResolvedValue({
-        svg: '<svg data-testid="valid-svg"><text>Valid</text></svg>',
-      }),
+    const mockRender = vi.fn().mockResolvedValueOnce({
+      svg: '<svg data-testid="valid-svg"><text>Valid</text></svg>',
     });
+    const plugin = createMockMermaidPlugin(mockRender);
 
     const { container, rerender } = renderWithContext(
-      <Mermaid chart={simpleChart} />
+      <Mermaid chart={simpleChart} />,
+      {},
+      { mermaid: plugin }
     );
 
     await waitFor(() => {
@@ -175,7 +209,7 @@ describe("Mermaid Component", () => {
     });
 
     // Second render fails
-    (initializeMermaid as any).mockRejectedValueOnce(new Error("Error"));
+    mockRender.mockRejectedValueOnce(new Error("Error"));
 
     rerender(<Mermaid chart="new invalid chart" />);
 
@@ -207,17 +241,16 @@ describe("Mermaid Component", () => {
   });
 
   it("should generate unique IDs for multiple charts", async () => {
-    const { initializeMermaid } = await import("../lib/mermaid/utils");
-
     const mockRender = vi.fn().mockResolvedValue({
       svg: "<svg><text>Chart</text></svg>",
     });
+    const plugin = createMockMermaidPlugin(mockRender);
 
-    (initializeMermaid as any).mockResolvedValue({
-      render: mockRender,
-    });
-
-    const { rerender } = renderWithContext(<Mermaid chart="graph TD; A-->B" />);
+    const { rerender } = renderWithContext(
+      <Mermaid chart="graph TD; A-->B" />,
+      {},
+      { mermaid: plugin }
+    );
 
     await waitFor(() => {
       expect(mockRender).toHaveBeenCalled();

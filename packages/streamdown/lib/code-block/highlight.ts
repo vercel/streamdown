@@ -16,7 +16,6 @@ import {
   bundledThemes,
   isBundledTheme,
 } from "./bundled-themes";
-import { loadLanguageFromCDN, loadThemeFromCDN } from "./cdn-loader";
 
 const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
 
@@ -48,22 +47,15 @@ const getTokensCacheKey = (
 };
 
 /**
- * Load a theme - either from bundled themes or CDN
+ * Load a theme from bundled themes only
  */
-async function loadTheme(themeName: string, cdnUrl?: string | null) {
+function loadTheme(themeName: string) {
   // Check if it's a bundled theme (instant load)
   if (isBundledTheme(themeName)) {
     return bundledThemes[themeName as BundledThemeName];
   }
 
-  // Otherwise, load from CDN
-  const theme = await loadThemeFromCDN(themeName, cdnUrl);
-
-  if (theme) {
-    return theme;
-  }
-
-  // Fall back to github-light or github-dark if CDN load fails
+  // Fall back to github-light or github-dark if theme not found
   console.warn(
     `[Streamdown] Theme "${themeName}" not found. Falling back to ${themeName.includes("dark") ? "github-dark" : "github-light"}.`
   );
@@ -73,38 +65,31 @@ async function loadTheme(themeName: string, cdnUrl?: string | null) {
 }
 
 /**
- * Load a language grammar - either from bundled languages or CDN
+ * Load a language grammar from bundled languages only
  */
-async function loadLanguageGrammar(
-  language: string,
-  cdnUrl?: string | null
-): Promise<LanguageRegistration | LanguageRegistration[] | null> {
+function loadLanguageGrammar(
+  language: string
+): LanguageRegistration | LanguageRegistration[] | null {
   // Check if it's a bundled language (instant load)
   if (isBundledLanguage(language)) {
-    const bundled = bundledLanguages[language as BundledLanguageName];
-    return bundled;
+    return bundledLanguages[language as BundledLanguageName];
   }
 
-  // Otherwise, load from CDN
-  const grammar = await loadLanguageFromCDN(language, cdnUrl);
+  console.warn(
+    `[Streamdown] Language "${language}" not found in bundled languages. Falling back to plain text.`
+  );
 
-  if (!grammar) {
-    console.warn(
-      `[Streamdown] Language "${language}" not found in bundled languages or CDN. Falling back to plain text.`
-    );
-  }
-
-  return grammar;
+  return null;
 }
 
 /**
  * Create a Shiki highlighter for a specific language and themes
- * Uses hybrid loading: bundled languages load instantly, others load from CDN
+ * Uses bundled languages and themes only
+ * @deprecated Use the shiki plugin from streamdown/plugins/shiki instead
  */
 export const createShiki = (
   language: string,
-  shikiTheme: [BundledTheme, BundledTheme],
-  cdnUrl?: string | null
+  shikiTheme: [BundledTheme, BundledTheme]
 ): Promise<HighlighterCore> => {
   const cacheKey = getHighlighterCacheKey(language, shikiTheme);
 
@@ -115,21 +100,18 @@ export const createShiki = (
 
   // Create new highlighter and cache it
   const highlighterPromise = (async () => {
-    // Load the language grammar (bundled or from CDN)
-    const languageGrammar = await loadLanguageGrammar(language, cdnUrl);
+    // Load the language grammar (bundled only)
+    const languageGrammar = loadLanguageGrammar(language);
 
     // Fall back to 'text' if language couldn't be loaded
-    // Note: languageGrammar can be a single LanguageRegistration or an array of them
     const langs: (
       | LanguageRegistration
       | LanguageRegistration[]
       | SpecialLanguage
     )[] = languageGrammar ? [languageGrammar] : ["text"];
 
-    // Load themes (bundled or from CDN)
-    const themeRegistrations = await Promise.all(
-      shikiTheme.map((theme) => loadTheme(theme, cdnUrl))
-    );
+    // Load themes (bundled only)
+    const themeRegistrations = shikiTheme.map((theme) => loadTheme(theme));
 
     const highlighter = await createHighlighterCore({
       themes: themeRegistrations,
@@ -145,25 +127,17 @@ export const createShiki = (
   return highlighterPromise;
 };
 
-export interface GetHighlightedTokensOptions {
-  code: string;
-  language: string;
-  shikiTheme: [BundledTheme, BundledTheme];
-  cdnUrl?: string | null;
-  callback?: (result: TokensResult) => void;
-}
-
 /**
  * Get cached tokens or trigger highlighting
  * Returns cached result immediately if available, otherwise returns null and calls callback when ready
+ * @deprecated Use the shiki plugin from streamdown/plugins/shiki instead
  */
-export const getHighlightedTokens = ({
-  code,
-  language,
-  shikiTheme,
-  cdnUrl,
-  callback,
-}: GetHighlightedTokensOptions): TokensResult | null => {
+export const getHighlightedTokens = (
+  code: string,
+  language: string,
+  shikiTheme: [BundledTheme, BundledTheme],
+  callback?: (result: TokensResult) => void
+): TokensResult | null => {
   const tokensCacheKey = getTokensCacheKey(code, language, shikiTheme);
 
   // Return cached result if available
@@ -185,7 +159,7 @@ export const getHighlightedTokens = ({
   }
 
   // Start highlighting in background
-  createShiki(language, shikiTheme, cdnUrl)
+  createShiki(language, shikiTheme)
     .then((highlighter) => {
       // Determine which language to use for highlighting
       // If the requested language wasn't loaded, the highlighter will only have 'text'
