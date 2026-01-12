@@ -2,7 +2,30 @@
 
 import mermaid from "mermaid";
 import type { MermaidConfig } from "mermaid";
-import type { DiagramPlugin, MermaidInstance } from "../../lib/plugin-types";
+
+/**
+ * Mermaid instance interface
+ */
+export interface MermaidInstance {
+  initialize: (config: MermaidConfig) => void;
+  render: (id: string, source: string) => Promise<{ svg: string }>;
+}
+
+/**
+ * Plugin for diagram rendering (Mermaid)
+ */
+export interface DiagramPlugin {
+  name: "mermaid";
+  type: "diagram";
+  /**
+   * Language identifier for code blocks
+   */
+  language: string;
+  /**
+   * Get the mermaid instance (initialized with optional config)
+   */
+  getMermaid: (config?: MermaidConfig) => MermaidInstance;
+}
 
 /**
  * Options for creating a Mermaid plugin
@@ -25,7 +48,9 @@ const defaultConfig: MermaidConfig = {
 /**
  * Create a Mermaid plugin with optional configuration
  */
-export function createMermaidPlugin(options: MermaidPluginOptions = {}): DiagramPlugin {
+export function createMermaidPlugin(
+  options: MermaidPluginOptions = {}
+): DiagramPlugin {
   let initialized = false;
   let currentConfig: MermaidConfig = { ...defaultConfig, ...options.config };
 
@@ -62,6 +87,5 @@ export function createMermaidPlugin(options: MermaidPluginOptions = {}): Diagram
  */
 export const mermaidPlugin = createMermaidPlugin();
 
-// Re-export types
-export type { DiagramPlugin, MermaidInstance } from "../../lib/plugin-types";
+// Re-export MermaidConfig for convenience
 export type { MermaidConfig } from "mermaid";

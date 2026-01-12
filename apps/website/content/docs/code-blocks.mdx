@@ -21,28 +21,28 @@ Streamdown will automatically apply syntax highlighting based on the specified l
 
 ## Enabling Syntax Highlighting
 
-Syntax highlighting requires the Shiki plugin. First, install Shiki:
+Syntax highlighting requires the code plugin. Install it:
 
 ```package-install
-npm install shiki
+npm install @streamdown/code
 ```
 
 Then import and pass the plugin to Streamdown:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
-import { shikiPlugin } from "streamdown/plugins/shiki";
+import { codePlugin } from "@streamdown/code";
 
 export default function Page() {
   return (
-    <Streamdown plugins={{ shiki: shikiPlugin }}>
+    <Streamdown plugins={{ code: codePlugin }}>
       {markdown}
     </Streamdown>
   );
 }
 ```
 
-Without the Shiki plugin, code blocks render as plain text with no highlighting.
+Without the code plugin, code blocks render as plain text with no highlighting.
 
 ## Supported Languages
 
@@ -110,12 +110,12 @@ Streamdown uses dual themes for light and dark modes. You can customize the them
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
-import { shikiPlugin } from "streamdown/plugins/shiki";
+import { codePlugin } from "@streamdown/code";
 
 export default function Page() {
   return (
     <Streamdown
-      plugins={{ shiki: shikiPlugin }}
+      plugins={{ code: codePlugin }}
       shikiTheme={["dracula", "dracula"]}
     >
       {markdown}

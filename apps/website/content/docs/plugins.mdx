@@ -7,29 +7,29 @@ Streamdown uses a plugin architecture for rendering features like syntax highlig
 
 ## Rendering Plugins
 
-Rendering plugins provide advanced features for code blocks, diagrams, math, and CJK text. Each plugin requires installing its peer dependency. Install only what you need:
+Rendering plugins provide advanced features for code blocks, diagrams, math, and CJK text. Each plugin is a standalone package with dependencies bundled. Install only what you need:
 
 ```package-install
-npm install shiki mermaid katex rehype-katex remark-math remark-cjk-friendly remark-cjk-friendly-gfm-strikethrough
+npm install @streamdown/code @streamdown/mermaid @streamdown/math @streamdown/cjk
 ```
 
 Then import the plugins:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from 'streamdown';
-import { shikiPlugin } from 'streamdown/plugins/shiki';
-import { mermaidPlugin } from 'streamdown/plugins/mermaid';
-import { katexPlugin } from 'streamdown/plugins/katex';
-import { cjkPlugin } from 'streamdown/plugins/cjk';
+import { codePlugin } from '@streamdown/code';
+import { mermaidPlugin } from '@streamdown/mermaid';
+import { mathPlugin } from '@streamdown/math';
+import { cjkPlugin } from '@streamdown/cjk';
 
 // KaTeX requires CSS
 import 'katex/dist/katex.min.css';
 
 <Streamdown
   plugins={{
-    shiki: shikiPlugin,
+    code: codePlugin,
     mermaid: mermaidPlugin,
-    katex: katexPlugin,
+    math: mathPlugin,
     cjk: cjkPlugin,
   }}
 >
@@ -37,7 +37,7 @@ import 'katex/dist/katex.min.css';
 </Streamdown>
 ```
 
-### shikiPlugin
+### @streamdown/code
 
 Provides syntax highlighting for code blocks using [Shiki](https://shiki.style/).
 
@@ -48,22 +48,22 @@ Provides syntax highlighting for code blocks using [Shiki](https://shiki.style/)
 **Install:**
 
 ```package-install
-npm install shiki
+npm install @streamdown/code
 ```
 
 **Usage:**
 
 ```tsx
-import { shikiPlugin } from 'streamdown/plugins/shiki';
+import { codePlugin } from '@streamdown/code';
 
-<Streamdown plugins={{ shiki: shikiPlugin }}>
+<Streamdown plugins={{ code: codePlugin }}>
   {markdown}
 </Streamdown>
 ```
 
 See [Code Blocks](/docs/code-blocks) for details.
 
-### mermaidPlugin
+### @streamdown/mermaid
 
 Renders [Mermaid](https://mermaid.js.org/) diagrams including flowcharts, sequence diagrams, and more.
 
@@ -74,13 +74,13 @@ Renders [Mermaid](https://mermaid.js.org/) diagrams including flowcharts, sequen
 **Install:**
 
 ```package-install
-npm install mermaid
+npm install @streamdown/mermaid
 ```
 
 **Usage:**
 
 ```tsx
-import { mermaidPlugin } from 'streamdown/plugins/mermaid';
+import { mermaidPlugin } from '@streamdown/mermaid';
 
 <Streamdown plugins={{ mermaid: mermaidPlugin }}>
   {markdown}
@@ -89,7 +89,7 @@ import { mermaidPlugin } from 'streamdown/plugins/mermaid';
 
 See [Mermaid Diagrams](/docs/mermaid) for details.
 
-### katexPlugin
+### @streamdown/math
 
 Renders mathematical expressions using [KaTeX](https://katex.org/).
 
@@ -100,23 +100,23 @@ Renders mathematical expressions using [KaTeX](https://katex.org/).
 **Install:**
 
 ```package-install
-npm install katex rehype-katex remark-math
+npm install @streamdown/math
 ```
 
 **Usage:**
 
 ```tsx
-import { katexPlugin } from 'streamdown/plugins/katex';
+import { mathPlugin } from '@streamdown/math';
 import 'katex/dist/katex.min.css';
 
-<Streamdown plugins={{ katex: katexPlugin }}>
+<Streamdown plugins={{ math: mathPlugin }}>
   {markdown}
 </Streamdown>
 ```
 
 See [Mathematics](/docs/mathematics) for details.
 
-### cjkPlugin
+### @streamdown/cjk
 
 Improves handling of CJK (Chinese, Japanese, Korean) text with proper spacing, line breaks, and autolink boundaries.
 
@@ -127,13 +127,13 @@ Improves handling of CJK (Chinese, Japanese, Korean) text with proper spacing, l
 **Install:**
 
 ```package-install
-npm install remark-cjk-friendly remark-cjk-friendly-gfm-strikethrough
+npm install @streamdown/cjk
 ```
 
 **Usage:**
 
 ```tsx
-import { cjkPlugin } from 'streamdown/plugins/cjk';
+import { cjkPlugin } from '@streamdown/cjk';
 
 <Streamdown plugins={{ cjk: cjkPlugin }}>
   {markdown}

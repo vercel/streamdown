@@ -7,22 +7,22 @@ Streamdown provides built-in support for rendering mathematical expressions usin
 
 ## Enabling Math
 
-Math rendering requires the KaTeX plugin. First, install the required dependencies:
+Math rendering requires the math plugin. Install it:
 
 ```package-install
-npm install katex rehype-katex remark-math
+npm install @streamdown/math
 ```
 
 Then import and pass the plugin to Streamdown:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
-import { katexPlugin } from "streamdown/plugins/katex";
+import { mathPlugin } from "@streamdown/math";
 import "katex/dist/katex.min.css";
 
 export default function Page() {
   return (
-    <Streamdown plugins={{ katex: katexPlugin }}>
+    <Streamdown plugins={{ math: mathPlugin }}>
       {markdown}
     </Streamdown>
   );

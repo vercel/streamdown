@@ -116,17 +116,17 @@ Language models generate markdown naturally, often placing emphasis markers arou
 
 ## Enabling CJK Support
 
-CJK support requires the CJK plugin. First, install the required dependencies:
+CJK support requires the CJK plugin. Install it:
 
 ```package-install
-npm install remark-cjk-friendly remark-cjk-friendly-gfm-strikethrough
+npm install @streamdown/cjk
 ```
 
 Then import and pass the plugin to Streamdown:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
-import { cjkPlugin } from "streamdown/plugins/cjk";
+import { cjkPlugin } from "@streamdown/cjk";
 
 export default function Page() {
   return (

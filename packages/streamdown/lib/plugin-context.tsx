@@ -14,11 +14,11 @@ export const PluginContext = createContext<PluginConfig | null>(null);
 export const usePlugins = (): PluginConfig | null => useContext(PluginContext);
 
 /**
- * Hook to access the shiki plugin
+ * Hook to access the code plugin
  */
-export const useShikiPlugin = () => {
+export const useCodePlugin = () => {
   const plugins = usePlugins();
-  return plugins?.shiki ?? null;
+  return plugins?.code ?? null;
 };
 
 /**
@@ -30,11 +30,11 @@ export const useMermaidPlugin = () => {
 };
 
 /**
- * Hook to access the katex plugin
+ * Hook to access the math plugin
  */
-export const useKatexPlugin = () => {
+export const useMathPlugin = () => {
   const plugins = usePlugins();
-  return plugins?.katex ?? null;
+  return plugins?.math ?? null;
 };
 
 /**

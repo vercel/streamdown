@@ -1,0 +1,39 @@
+{
+  "name": "@streamdown/code",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "shiki": "^3.19.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  },
+  "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
+  "license": "Apache-2.0",
+  "description": "Shiki syntax highlighting plugin for Streamdown",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vercel/streamdown.git",
+    "directory": "packages/streamdown-code"
+  }
+}

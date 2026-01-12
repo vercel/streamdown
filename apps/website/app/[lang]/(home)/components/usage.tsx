@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 
 const exampleCode = `import { useChat } from "@ai-sdk/react";
 import { Streamdown } from "streamdown";
-import { shikiPlugin } from "streamdown/plugins/shiki";
-import { mermaidPlugin } from "streamdown/plugins/mermaid";
-import { katexPlugin } from "streamdown/plugins/katex";
-import { cjkPlugin } from "streamdown/plugins/cjk";
+import { codePlugin } from "@streamdown/code";
+import { mermaidPlugin } from "@streamdown/mermaid";
+import { mathPlugin } from "@streamdown/math";
+import { cjkPlugin } from "@streamdown/cjk";
 import "katex/dist/katex.min.css";
 
 export default function Chat() {
@@ -20,9 +20,9 @@ export default function Chat() {
         <Streamdown
           key={m.id}
           plugins={{
-            shiki: shikiPlugin,
+            code: codePlugin,
             mermaid: mermaidPlugin,
-            katex: katexPlugin,
+            math: mathPlugin,
             cjk: cjkPlugin,
           }}
           isAnimating={isLoading}

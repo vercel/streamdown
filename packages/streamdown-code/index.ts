@@ -1,10 +1,58 @@
 "use client";
 
-import type { BundledTheme, TokensResult, HighlighterCore, SpecialLanguage, LanguageInput } from "shiki";
+import type {
+  BundledTheme,
+  TokensResult,
+  HighlighterCore,
+  SpecialLanguage,
+  LanguageInput,
+} from "shiki";
 import { bundledLanguages, bundledThemes } from "shiki";
 import { createHighlighterCore } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-import type { CodeHighlighterPlugin, HighlightOptions, HighlightResult } from "../../lib/plugin-types";
+
+/**
+ * Result from code highlighting
+ */
+export type HighlightResult = TokensResult;
+
+/**
+ * Options for highlighting code
+ */
+export interface HighlightOptions {
+  code: string;
+  language: string;
+  themes: [string, string];
+}
+
+/**
+ * Plugin for code syntax highlighting (Shiki)
+ */
+export interface CodeHighlighterPlugin {
+  name: "shiki";
+  type: "code-highlighter";
+  /**
+   * Highlight code and return tokens
+   * Returns null if highlighting not ready yet (async loading)
+   * Use callback for async result
+   */
+  highlight: (
+    options: HighlightOptions,
+    callback?: (result: HighlightResult) => void
+  ) => HighlightResult | null;
+  /**
+   * Check if language is supported
+   */
+  supportsLanguage: (language: string) => boolean;
+  /**
+   * Get list of supported languages
+   */
+  getSupportedLanguages: () => string[];
+  /**
+   * Get the configured themes
+   */
+  getThemes: () => [BundledTheme, BundledTheme];
+}
 
 const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
 
@@ -47,7 +95,8 @@ const createHighlighter = (
 
   const highlighterPromise = (async () => {
     // Get language grammar (lazy-loaded from shiki)
-    const langLoader = bundledLanguages[language as keyof typeof bundledLanguages];
+    const langLoader =
+      bundledLanguages[language as keyof typeof bundledLanguages];
 
     // Build langs array - either load the language or fall back to "text"
     let langs: LanguageInput[];
@@ -65,7 +114,9 @@ const createHighlighter = (
       themeNames.map(async (name) => {
         const themeLoader = bundledThemes[name as keyof typeof bundledThemes];
         if (!themeLoader) {
-          console.warn(`[Streamdown Shiki] Theme "${name}" not found. Using github-${name.includes("dark") ? "dark" : "light"}.`);
+          console.warn(
+            `[Streamdown Code] Theme "${name}" not found. Using github-${name.includes("dark") ? "dark" : "light"}.`
+          );
           const fallbackLoader = name.includes("dark")
             ? bundledThemes["github-dark"]
             : bundledThemes["github-light"];
@@ -89,10 +140,10 @@ const createHighlighter = (
 };
 
 /**
- * Shiki plugin for syntax highlighting
+ * Code plugin for syntax highlighting
  * Supports all languages and themes from shiki
  */
-export const shikiPlugin: CodeHighlighterPlugin = {
+export const codePlugin: CodeHighlighterPlugin = {
   name: "shiki",
   type: "code-highlighter",
 
@@ -112,7 +163,11 @@ export const shikiPlugin: CodeHighlighterPlugin = {
     { code, language, themes: themeNames }: HighlightOptions,
     callback?: (result: HighlightResult) => void
   ): HighlightResult | null {
-    const tokensCacheKey = getTokensCacheKey(code, language, themeNames as [string, string]);
+    const tokensCacheKey = getTokensCacheKey(
+      code,
+      language,
+      themeNames as [string, string]
+    );
 
     // Return cached result if available
     if (tokensCache.has(tokensCacheKey)) {
@@ -124,7 +179,9 @@ export const shikiPlugin: CodeHighlighterPlugin = {
       if (!subscribers.has(tokensCacheKey)) {
         subscribers.set(tokensCacheKey, new Set());
       }
-      const subs = subscribers.get(tokensCacheKey) as Set<(result: TokensResult) => void>;
+      const subs = subscribers.get(tokensCacheKey) as Set<
+        (result: TokensResult) => void
+      >;
       subs.add(callback);
     }
 
@@ -157,13 +214,10 @@ export const shikiPlugin: CodeHighlighterPlugin = {
         }
       })
       .catch((error) => {
-        console.error("[Streamdown Shiki] Failed to highlight code:", error);
+        console.error("[Streamdown Code] Failed to highlight code:", error);
         subscribers.delete(tokensCacheKey);
       });
 
     return null;
   },
 };
-
-// Re-export types
-export type { CodeHighlighterPlugin, HighlightOptions, HighlightResult } from "../../lib/plugin-types";

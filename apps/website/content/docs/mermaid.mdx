@@ -7,17 +7,17 @@ Streamdown includes built-in support for [Mermaid](https://mermaid.js.org/) diag
 
 ## Enabling Mermaid
 
-Mermaid diagrams require the Mermaid plugin. First, install Mermaid:
+Mermaid diagrams require the mermaid plugin. Install it:
 
 ```package-install
-npm install mermaid
+npm install @streamdown/mermaid
 ```
 
 Then import and pass the plugin to Streamdown:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
-import { mermaidPlugin } from "streamdown/plugins/mermaid";
+import { mermaidPlugin } from "@streamdown/mermaid";
 
 export default function Page() {
   return (
@@ -28,7 +28,7 @@ export default function Page() {
 }
 ```
 
-Without the Mermaid plugin, mermaid code blocks render as plain code instead of diagrams.
+Without the mermaid plugin, mermaid code blocks render as plain code instead of diagrams.
 
 ## Basic Usage
 
@@ -235,7 +235,7 @@ Customize the Mermaid theme using the `mermaid.config` prop:
 
 ```tsx
 import { Streamdown } from "streamdown";
-import { mermaidPlugin } from "streamdown/plugins/mermaid";
+import { mermaidPlugin } from "@streamdown/mermaid";
 import type { MermaidConfig } from "streamdown";
 
 export default function Page() {
@@ -322,7 +322,7 @@ When Mermaid diagrams fail to render due to invalid syntax, you can provide a cu
 
 ```tsx
 import { Streamdown } from "streamdown";
-import { mermaidPlugin } from "streamdown/plugins/mermaid";
+import { mermaidPlugin } from "@streamdown/mermaid";
 import type { MermaidErrorComponentProps } from "streamdown";
 
 const CustomMermaidError = ({

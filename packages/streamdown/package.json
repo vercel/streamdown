@@ -10,26 +10,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./plugins/shiki": {
-      "types": "./dist/plugins/shiki/index.d.ts",
-      "import": "./dist/plugins/shiki/index.js",
-      "require": "./dist/plugins/shiki/index.cjs"
-    },
-    "./plugins/mermaid": {
-      "types": "./dist/plugins/mermaid/index.d.ts",
-      "import": "./dist/plugins/mermaid/index.js",
-      "require": "./dist/plugins/mermaid/index.cjs"
-    },
-    "./plugins/katex": {
-      "types": "./dist/plugins/katex/index.d.ts",
-      "import": "./dist/plugins/katex/index.js",
-      "require": "./dist/plugins/katex/index.cjs"
-    },
-    "./plugins/cjk": {
-      "types": "./dist/plugins/cjk/index.d.ts",
-      "import": "./dist/plugins/cjk/index.js",
-      "require": "./dist/plugins/cjk/index.cjs"
     }
   },
   "files": [
@@ -64,51 +44,14 @@
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/coverage-v8": "^4.0.15",
     "jsdom": "^27.3.0",
-    "katex": "^0.16.27",
-    "mermaid": "^11.12.2",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "react-markdown": "^10.1.0",
-    "rehype-katex": "^7.0.1",
-    "remark-cjk-friendly": "^1.2.3",
-    "remark-cjk-friendly-gfm-strikethrough": "^1.2.3",
-    "remark-math": "^6.0.0",
-    "shiki": "^3.19.0",
     "tsup": "^8.5.1",
     "vitest": "^4.0.15"
   },
   "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0",
-    "shiki": "^3.0.0",
-    "mermaid": "^11.0.0",
-    "katex": "^0.16.0",
-    "rehype-katex": "^7.0.0",
-    "remark-math": "^6.0.0",
-    "remark-cjk-friendly": "^1.0.0",
-    "remark-cjk-friendly-gfm-strikethrough": "^1.0.0"
-  },
-  "peerDependenciesMeta": {
-    "shiki": {
-      "optional": true
-    },
-    "mermaid": {
-      "optional": true
-    },
-    "katex": {
-      "optional": true
-    },
-    "rehype-katex": {
-      "optional": true
-    },
-    "remark-math": {
-      "optional": true
-    },
-    "remark-cjk-friendly": {
-      "optional": true
-    },
-    "remark-cjk-friendly-gfm-strikethrough": {
-      "optional": true
-    }
+    "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
     "clsx": "^2.1.1",

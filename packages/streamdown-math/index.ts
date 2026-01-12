@@ -3,15 +3,31 @@
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import type { Pluggable } from "unified";
-import type { MathPlugin } from "../../lib/plugin-types";
-
-// Note: katex.min.css should be imported by the user or bundled appropriately
-// We provide a getStyles method that returns the CSS import path
 
 /**
- * Options for creating a KaTeX plugin
+ * Plugin for math rendering (KaTeX)
  */
-export interface KatexPluginOptions {
+export interface MathPlugin {
+  name: "katex";
+  type: "math";
+  /**
+   * Remark plugin for parsing math syntax
+   */
+  remarkPlugin: Pluggable;
+  /**
+   * Rehype plugin for rendering math
+   */
+  rehypePlugin: Pluggable;
+  /**
+   * Get CSS styles path for math rendering
+   */
+  getStyles?: () => string;
+}
+
+/**
+ * Options for creating a math plugin
+ */
+export interface MathPluginOptions {
   /**
    * Enable single dollar sign for inline math ($...$)
    * @default false
@@ -25,9 +41,9 @@ export interface KatexPluginOptions {
 }
 
 /**
- * Create a KaTeX plugin with optional configuration
+ * Create a math plugin with optional configuration
  */
-export function createKatexPlugin(options: KatexPluginOptions = {}): MathPlugin {
+export function createMathPlugin(options: MathPluginOptions = {}): MathPlugin {
   const remarkMathPlugin: Pluggable = [
     remarkMath,
     { singleDollarTextMath: options.singleDollarTextMath ?? false },
@@ -53,9 +69,6 @@ export function createKatexPlugin(options: KatexPluginOptions = {}): MathPlugin 
 }
 
 /**
- * Pre-configured KaTeX plugin with default settings
+ * Pre-configured math plugin with default settings
  */
-export const katexPlugin = createKatexPlugin();
-
-// Re-export types
-export type { MathPlugin } from "../../lib/plugin-types";
+export const mathPlugin = createMathPlugin();

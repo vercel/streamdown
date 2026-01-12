@@ -263,13 +263,13 @@ export const Streamdown = memo(
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
       () => ({
-        shikiTheme: plugins?.shiki?.getThemes() ?? shikiTheme,
+        shikiTheme: plugins?.code?.getThemes() ?? shikiTheme,
         controls,
         isAnimating,
         mode,
         mermaid,
       }),
-      [shikiTheme, controls, isAnimating, mode, mermaid, plugins?.shiki]
+      [shikiTheme, controls, isAnimating, mode, mermaid, plugins?.code]
     );
 
     // Memoize merged components to avoid recreating on every render
@@ -281,24 +281,24 @@ export const Streamdown = memo(
       [components]
     );
 
-    // Merge plugin remark plugins (katex, cjk)
+    // Merge plugin remark plugins (math, cjk)
     const mergedRemarkPlugins = useMemo(() => {
       let result = remarkPlugins;
-      if (plugins?.katex) {
-        result = [...result, plugins.katex.remarkPlugin];
+      if (plugins?.math) {
+        result = [...result, plugins.math.remarkPlugin];
       }
       if (plugins?.cjk) {
         result = [...result, ...plugins.cjk.remarkPlugins];
       }
       return result;
-    }, [remarkPlugins, plugins?.katex, plugins?.cjk]);
+    }, [remarkPlugins, plugins?.math, plugins?.cjk]);
 
     const mergedRehypePlugins = useMemo(() => {
-      if (!plugins?.katex) {
+      if (!plugins?.math) {
         return rehypePlugins;
       }
-      return [...rehypePlugins, plugins.katex.rehypePlugin];
-    }, [rehypePlugins, plugins?.katex]);
+      return [...rehypePlugins, plugins.math.rehypePlugin];
+    }, [rehypePlugins, plugins?.math]);
 
     const style = useMemo(
       () =>

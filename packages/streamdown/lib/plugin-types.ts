@@ -111,8 +111,8 @@ export type StreamdownPlugin = CodeHighlighterPlugin | DiagramPlugin | MathPlugi
  * Plugin configuration passed to Streamdown
  */
 export interface PluginConfig {
-  shiki?: CodeHighlighterPlugin;
+  code?: CodeHighlighterPlugin;
   mermaid?: DiagramPlugin;
-  katex?: MathPlugin;
+  math?: MathPlugin;
   cjk?: CjkPlugin;
 }

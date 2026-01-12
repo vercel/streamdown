@@ -1,8 +1,25 @@
+"use client";
+
+import remarkCjkFriendly from "remark-cjk-friendly";
+import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
+import type { Pluggable, Plugin } from "unified";
 import type { Link, Root, Text } from "mdast";
-import type { Plugin } from "unified";
 import type { Parent } from "unist";
 import { visit } from "unist-util-visit";
 
+/**
+ * Plugin for CJK text handling
+ */
+export interface CjkPlugin {
+  name: "cjk";
+  type: "cjk";
+  /**
+   * Remark plugins for CJK text handling
+   */
+  remarkPlugins: Pluggable[];
+}
+
+// CJK punctuation characters that should not be part of autolinks
 const CJK_AUTOLINK_BOUNDARY_CHARS = new Set<string>([
   "。",
   "．",
@@ -28,7 +45,9 @@ const CJK_AUTOLINK_BOUNDARY_CHARS = new Set<string>([
 
 const AUTOLINK_PREFIX_PATTERN = /^(https?:\/\/|mailto:|www\.)/i;
 
-const isAutolinkLiteral = (node: Link): node is Link & { children: [Text] } => {
+const isAutolinkLiteral = (
+  node: Link
+): node is Link & { children: [Text] } => {
   if (node.children.length !== 1) {
     return false;
   }
@@ -64,9 +83,11 @@ const buildTrailingText = (value: string): Text => ({
   value,
 });
 
-// Split literal autolinks at CJK punctuation boundaries so trailing text
-// is not swallowed by the URL.
-export const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
+/**
+ * Remark plugin to split literal autolinks at CJK punctuation boundaries
+ * so trailing text is not swallowed by the URL.
+ */
+const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
   visit(tree, "link", (node: Link, index: number | null, parent?: Parent) => {
     if (!parent || typeof index !== "number") {
       return;
@@ -95,3 +116,25 @@ export const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
     return index + 1;
   });
 };
+
+/**
+ * Create a CJK plugin
+ */
+export function createCjkPlugin(): CjkPlugin {
+  const remarkPlugins: Pluggable[] = [
+    [remarkCjkAutolinkBoundary, {}],
+    [remarkCjkFriendly, {}],
+    [remarkCjkFriendlyGfmStrikethrough, {}],
+  ];
+
+  return {
+    name: "cjk",
+    type: "cjk",
+    remarkPlugins,
+  };
+}
+
+/**
+ * Pre-configured CJK plugin with default settings
+ */
+export const cjkPlugin = createCjkPlugin();
