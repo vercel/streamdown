@@ -11,6 +11,7 @@ import { Mathematics } from "./components/mathematics";
 import { MermaidDemo } from "./components/mermaid";
 import { Styles } from "./components/styles";
 import { TerminatorParser } from "./components/terminator-parser";
+import { Usage } from "./components/usage";
 
 export const metadata: Metadata = {
   title: "Streamdown",
@@ -23,6 +24,7 @@ const Home = () => (
     <div className="container mx-auto max-w-6xl divide-y border-b px-0 sm:border-x">
       <Hero />
       <Logos />
+      <Usage />
       <Styles />
       <Caret />
       <GitHubFlavoredMarkdown />

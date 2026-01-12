@@ -5,6 +5,9 @@ import { useInView } from "motion/react";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Streamdown, type StreamdownProps } from "streamdown";
+import { shikiPlugin } from "streamdown/plugins/shiki";
+import { mermaidPlugin } from "streamdown/plugins/mermaid";
+import { katexPlugin } from "streamdown/plugins/katex";
 import { Button } from "@/components/ui/button";
 
 const DEFAULT_SPEED = 100;
@@ -113,7 +116,11 @@ export const Section = ({
             </div>
             <div className="h-[400px] overflow-y-auto bg-background p-4">
               <Streamdown
-                cdnUrl="/cdn"
+                plugins={{
+                  shiki: shikiPlugin,
+                  mermaid: mermaidPlugin,
+                  katex: katexPlugin,
+                }}
                 isAnimating={isAnimating}
                 {...streamdownProps}
               >
