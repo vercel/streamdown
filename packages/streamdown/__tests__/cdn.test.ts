@@ -5,7 +5,7 @@ import {
 } from "../lib/code-block/bundled-languages";
 import { loadLanguageFromCDN } from "../lib/code-block/cdn-loader";
 
-// Regex patterns for CDN URL validation (using the default cdnUrl: https://www.streamdown.ai/cdn)
+// Regex patterns for CDN URL validation (using the default cdnUrl: https://streamdown.ai/cdn)
 const CDN_URL_PATTERN_UNIQUELANG1 =
   /^https:\/\/www\.streamdown\.ai\/cdn\/shiki\/[\d.]+\/langs\/uniquelang1\.mjs$/;
 const CDN_URL_PATTERN_UNIQUELANG8 =
@@ -14,7 +14,7 @@ const CDN_URL_PATTERN_CUSTOMLANG1 =
   /^https:\/\/my-cdn\.example\.com\/cdn\/shiki\/[\d.]+\/langs\/customlang1\.mjs$/;
 
 // Default CDN base URL for tests
-const DEFAULT_CDN_URL = "https://www.streamdown.ai/cdn";
+const DEFAULT_CDN_URL = "https://streamdown.ai/cdn";
 
 describe("Bundled Languages", () => {
   it("should have exactly 15 common languages bundled", () => {
@@ -287,7 +287,7 @@ describe("Hybrid Language Loading Integration", () => {
     expect(fetchSpy).toHaveBeenCalled();
     const callUrl = fetchSpy.mock.calls[0][0] as string;
 
-    // Should have format: https://www.streamdown.ai/cdn/shiki/{version}/langs/uniquelang8.mjs
+    // Should have format: https://streamdown.ai/cdn/shiki/{version}/langs/uniquelang8.mjs
     expect(callUrl).toMatch(CDN_URL_PATTERN_UNIQUELANG8);
 
     fetchSpy.mockRestore();

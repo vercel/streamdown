@@ -85,7 +85,7 @@ async function loadSingleLanguageFromCDN(
 /**
  * Load a language grammar from CDN
  * @param language - Language identifier (e.g., 'rust', 'ruby', 'elixir')
- * @param cdnBaseUrl - Base URL for CDN (e.g., 'https://www.streamdown.ai/cdn'), or null to disable
+ * @param cdnBaseUrl - Base URL for CDN (e.g., 'https://streamdown.ai/cdn'), or null to disable
  * @param timeout - Request timeout in milliseconds (default: 5000)
  * @returns Language grammar array or null if loading fails
  */
@@ -184,7 +184,7 @@ export async function loadLanguageFromCDN(
 /**
  * Load a theme from CDN
  * @param theme - Theme identifier (e.g., 'dracula', 'nord', 'one-dark-pro')
- * @param cdnBaseUrl - Base URL for CDN (e.g., 'https://www.streamdown.ai/cdn'), or null to disable
+ * @param cdnBaseUrl - Base URL for CDN (e.g., 'https://streamdown.ai/cdn'), or null to disable
  * @param timeout - Request timeout in milliseconds (default: 5000)
  * @returns Theme registration or null if loading fails
  */

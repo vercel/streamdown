@@ -20,7 +20,7 @@ describe("Mermaid Component", () => {
     controls: true,
     isAnimating: false,
     mode: "streaming" as const,
-    cdnUrl: "https://www.streamdown.ai/cdn",
+    cdnUrl: "https://streamdown.ai/cdn",
   };
 
   const renderWithContext = (ui: React.ReactElement, contextOverrides = {}) => {
@@ -150,7 +150,7 @@ describe("Mermaid Component", () => {
     await waitFor(() => {
       expect(initializeMermaid).toHaveBeenCalledWith(
         config,
-        "https://www.streamdown.ai/cdn"
+        "https://streamdown.ai/cdn"
       );
     });
   });

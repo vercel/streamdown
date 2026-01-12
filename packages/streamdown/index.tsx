@@ -129,7 +129,7 @@ export interface StreamdownContextType {
   cdnUrl?: string | null;
 }
 
-const defaultCdnUrl = "https://www.streamdown.ai/cdn";
+const defaultCdnUrl = "https://streamdown.ai/cdn";
 
 const defaultStreamdownContext: StreamdownContextType = {
   shikiTheme: ["github-light" as BundledTheme, "github-dark" as BundledTheme],
