@@ -1,4 +1,3 @@
-import { CheckIcon, CopyIcon } from "../icons";
 import {
   type ComponentProps,
   useContext,
@@ -7,6 +6,7 @@ import {
   useState,
 } from "react";
 import { StreamdownContext } from "../../index";
+import { CheckIcon, CopyIcon } from "../icons";
 import { cn } from "../utils";
 import { useCodeBlockContext } from "./context";
 

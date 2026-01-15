@@ -66,7 +66,11 @@ export const CodeBlock = ({
       return;
     }
 
-    // Not cached, subscribe to updates
+    // Not cached - reset to raw tokens while waiting for highlighting
+    // This is critical for streaming: ensures we show current code, not stale tokens
+    setResult(raw);
+
+    // Subscribe to get highlighted tokens when ready
     getHighlightedTokens({
       code,
       language,
@@ -76,7 +80,7 @@ export const CodeBlock = ({
         setResult(highlightedResult);
       },
     });
-  }, [code, language, shikiTheme, cdnUrl]);
+  }, [code, language, shikiTheme, cdnUrl, raw]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>

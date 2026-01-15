@@ -1,6 +1,6 @@
-import { CheckIcon, CopyIcon } from "../icons";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
+import { CheckIcon, CopyIcon } from "../icons";
 import { cn } from "../utils";
 import {
   extractTableDataFromElement,
@@ -8,13 +8,13 @@ import {
   tableDataToTSV,
 } from "./utils";
 
-export type TableCopyDropdownProps = {
+export interface TableCopyDropdownProps {
   children?: React.ReactNode;
   className?: string;
   onCopy?: (format: "csv" | "tsv") => void;
   onError?: (error: Error) => void;
   timeout?: number;
-};
+}
 
 export const TableCopyDropdown = ({
   children,
@@ -73,10 +73,8 @@ export const TableCopyDropdown = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      const path = event.composedPath();
+      if (dropdownRef.current && !path.includes(dropdownRef.current)) {
         setIsOpen(false);
       }
     };

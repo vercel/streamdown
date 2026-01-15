@@ -27,12 +27,12 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Column } from "./column";
 
-type ChatProps = {
+interface ChatProps {
   models: {
     label: string;
     value: string;
   }[];
-};
+}
 
 export const Chat = ({ models }: ChatProps) => {
   const { messages, sendMessage, status, setMessages } = useChat({
@@ -240,7 +240,11 @@ export const Chat = ({ models }: ChatProps) => {
                     );
                   case "reasoning":
                     return (
-                      <Streamdown cdnUrl="http://localhost:3000/cdn" className="italic" key={key}>
+                      <Streamdown
+                        cdnUrl="http://localhost:3000/cdn"
+                        className="italic"
+                        key={key}
+                      >
                         {part.text}
                       </Streamdown>
                     );

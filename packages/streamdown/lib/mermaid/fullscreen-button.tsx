@@ -1,7 +1,7 @@
-import { Maximize2Icon, XIcon } from "../icons";
 import type { MermaidConfig } from "mermaid";
 import { type ComponentProps, useContext, useEffect, useState } from "react";
 import { StreamdownContext } from "../../index";
+import { Maximize2Icon, XIcon } from "../icons";
 import { cn } from "../utils";
 import { Mermaid } from ".";
 

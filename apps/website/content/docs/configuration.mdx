@@ -10,36 +10,35 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
 <TypeTable
   type={{
     children: {
-      description: 'The Markdown content to render',
-      type: 'string',
+      description: "The Markdown content to render",
+      type: "string",
     },
     parseIncompleteMarkdown: {
-      description: 'Enable remend preprocessor for unterminated Markdown blocks',
-      type: 'boolean',
-      default: 'true',
+      description:
+        "Enable remend preprocessor for unterminated Markdown blocks",
+      type: "boolean",
+      default: "true",
     },
     remend: {
-      description: 'Configure which Markdown completions remend should perform',
-      type: 'RemendOptions',
+      description: "Configure which Markdown completions remend should perform",
+      type: "RemendOptions",
     },
     isAnimating: {
-      description: 'Indicates if content is currently streaming (disables copy buttons)',
-      type: 'boolean',
-      default: 'false',
+      description:
+        "Indicates if content is currently streaming (disables copy buttons)",
+      type: "boolean",
+      default: "false",
     },
     className: {
-      description: 'CSS class for the container element',
-      type: 'string',
+      description: "CSS class for the container element",
+      type: "string",
     },
     mode: {
-      description: 'Mode of the Streamdown component',
+      description: "Mode of the Streamdown component",
       type: '"streaming" | "static"',
-      default: 'streaming',
-      options: [
-        'streaming',
-        'static',
-      ],
-    }
+      default: "streaming",
+      options: ["streaming", "static"],
+    },
   }}
 />
 
@@ -48,13 +47,14 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
 <TypeTable
   type={{
     shikiTheme: {
-      description: 'Light and dark themes for code syntax highlighting. Any Shiki theme name can be used - bundled themes (github-light, github-dark) load instantly, others load from CDN.',
-      type: '[string, string]',
+      description:
+        "Light and dark themes for code syntax highlighting. Any Shiki theme name can be used - bundled themes (github-light, github-dark) load instantly, others load from CDN.",
+      type: "[string, string]",
       default: "['github-light', 'github-dark']",
     },
     components: {
-      description: 'Custom component overrides for Markdown elements',
-      type: 'object',
+      description: "Custom component overrides for Markdown elements",
+      type: "object",
     },
   }}
 />
@@ -64,9 +64,10 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
 <TypeTable
   type={{
     cdnUrl: {
-      description: 'Base URL for loading Shiki languages/themes, Mermaid, and KaTeX CSS. Set to null to disable CDN loading (only bundled languages/themes will work, Mermaid will not load). See Offline Mode for self-hosting.',
-      type: 'string | null',
-      default: "'https://www.streamdown.ai/cdn'",
+      description:
+        "Base URL for loading Shiki languages/themes, Mermaid, and KaTeX CSS. Set to null to disable CDN loading (only bundled languages/themes will work, Mermaid will not load). See Self-Hosting CDN for self-hosting.",
+      type: "string | null",
+      default: "'https://streamdown.ai/cdn'",
     },
   }}
 />
@@ -76,24 +77,26 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
 <TypeTable
   type={{
     rehypePlugins: {
-      description: 'Rehype plugins for HTML processing',
-      type: 'Pluggable[]',
-      default: 'Object.values(defaultRehypePlugins)',
+      description: "Rehype plugins for HTML processing",
+      type: "Pluggable[]",
+      default: "Object.values(defaultRehypePlugins)",
     },
     remarkPlugins: {
-      description: 'Remark plugins for Markdown processing',
-      type: 'Pluggable[]',
-      default: 'Object.values(defaultRemarkPlugins)',
+      description: "Remark plugins for Markdown processing",
+      type: "Pluggable[]",
+      default: "Object.values(defaultRemarkPlugins)",
     },
   }}
 />
 
 **Default Rehype Plugins:**
+
 - `rehype-harden` - Security hardening (allows all image and link prefixes, data images enabled)
 - `rehype-raw` - HTML support
 - `rehype-katex` - Math rendering with KaTeX
 
 **Default Remark Plugins:**
+
 - `remark-gfm` - GitHub Flavored Markdown
 - `remark-math` - Math syntax support (single dollar text math disabled)
 - `remark-cjk-friendly` - CJK (Chinese, Japanese, Korean) text support
@@ -104,13 +107,13 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
 <TypeTable
   type={{
     mermaid: {
-      description: 'Mermaid diagram configuration and error handling',
-      type: 'MermaidOptions',
+      description: "Mermaid diagram configuration and error handling",
+      type: "MermaidOptions",
     },
     controls: {
-      description: 'Control visibility of interactive buttons',
-      type: 'ControlsConfig',
-      default: 'true',
+      description: "Control visibility of interactive buttons",
+      type: "ControlsConfig",
+      default: "true",
     },
   }}
 />
@@ -122,12 +125,13 @@ The `mermaid` prop accepts an object with the following properties:
 <TypeTable
   type={{
     config: {
-      description: 'Custom configuration for Mermaid diagrams',
-      type: 'MermaidConfig',
+      description: "Custom configuration for Mermaid diagrams",
+      type: "MermaidConfig",
     },
     errorComponent: {
-      description: 'Custom React component for handling Mermaid rendering errors',
-      type: 'React.ComponentType<MermaidErrorComponentProps>',
+      description:
+        "Custom React component for handling Mermaid rendering errors",
+      type: "React.ComponentType<MermaidErrorComponentProps>",
     },
   }}
 />
@@ -137,14 +141,15 @@ The `mermaid` prop accepts an object with the following properties:
 <TypeTable
   type={{
     BlockComponent: {
-      description: 'Custom block component for rendering individual markdown blocks',
-      type: 'React.ComponentType<BlockProps>',
-      default: 'Block',
+      description:
+        "Custom block component for rendering individual markdown blocks",
+      type: "React.ComponentType<BlockProps>",
+      default: "Block",
     },
     parseMarkdownIntoBlocksFn: {
-      description: 'Custom function to parse markdown into blocks',
-      type: '(markdown: string) => string[]',
-      default: 'parseMarkdownIntoBlocks',
+      description: "Custom function to parse markdown into blocks",
+      type: "(markdown: string) => string[]",
+      default: "parseMarkdownIntoBlocks",
     },
   }}
 />
@@ -154,14 +159,14 @@ The `controls` prop can be configured granularly:
 ```tsx title="app/page.tsx"
 <Streamdown
   controls={{
-    table: true,        // Show table download button
-    code: true,         // Show code copy button
+    table: true, // Show table download button
+    code: true, // Show code copy button
     mermaid: {
-      download: true,   // Show mermaid download button
-      copy: true,       // Show mermaid copy button
+      download: true, // Show mermaid download button
+      copy: true, // Show mermaid copy button
       fullscreen: true, // Show mermaid fullscreen button
-      panZoom: true     // Show mermaid pan/zoom controls
-    }
+      panZoom: true, // Show mermaid pan/zoom controls
+    },
   }}
 >
   {markdown}
@@ -175,49 +180,49 @@ The `remend` prop configures which Markdown completions are performed during str
 <TypeTable
   type={{
     links: {
-      description: 'Complete incomplete links',
-      type: 'boolean',
-      default: 'true',
+      description: "Complete incomplete links",
+      type: "boolean",
+      default: "true",
     },
     images: {
-      description: 'Complete incomplete images',
-      type: 'boolean',
-      default: 'true',
+      description: "Complete incomplete images",
+      type: "boolean",
+      default: "true",
     },
     bold: {
-      description: 'Complete bold formatting (**)',
-      type: 'boolean',
-      default: 'true',
+      description: "Complete bold formatting (**)",
+      type: "boolean",
+      default: "true",
     },
     italic: {
-      description: 'Complete italic formatting (* and _)',
-      type: 'boolean',
-      default: 'true',
+      description: "Complete italic formatting (* and _)",
+      type: "boolean",
+      default: "true",
     },
     boldItalic: {
-      description: 'Complete bold-italic formatting (***)',
-      type: 'boolean',
-      default: 'true',
+      description: "Complete bold-italic formatting (***)",
+      type: "boolean",
+      default: "true",
     },
     inlineCode: {
-      description: 'Complete inline code formatting (`)',
-      type: 'boolean',
-      default: 'true',
+      description: "Complete inline code formatting (`)",
+      type: "boolean",
+      default: "true",
     },
     strikethrough: {
-      description: 'Complete strikethrough formatting (~~)',
-      type: 'boolean',
-      default: 'true',
+      description: "Complete strikethrough formatting (~~)",
+      type: "boolean",
+      default: "true",
     },
     katex: {
-      description: 'Complete block KaTeX math ($$)',
-      type: 'boolean',
-      default: 'true',
+      description: "Complete block KaTeX math ($$)",
+      type: "boolean",
+      default: "true",
     },
     setextHeadings: {
-      description: 'Handle incomplete setext headings',
-      type: 'boolean',
-      default: 'true',
+      description: "Handle incomplete setext headings",
+      type: "boolean",
+      default: "true",
     },
   }}
 />
@@ -225,8 +230,8 @@ The `remend` prop configures which Markdown completions are performed during str
 ```tsx title="app/page.tsx"
 <Streamdown
   remend={{
-    links: false,    // Disable link completion
-    katex: false,    // Disable KaTeX completion
+    links: false, // Disable link completion
+    katex: false, // Disable KaTeX completion
   }}
 >
   {markdown}

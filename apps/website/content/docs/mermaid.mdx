@@ -5,7 +5,7 @@ description: Create interactive flowcharts, sequence diagrams, and more with Mer
 
 Streamdown includes built-in support for [Mermaid](https://mermaid.js.org/) diagrams, allowing you to create flowcharts, sequence diagrams, state diagrams, and more using simple text-based syntax. Each diagram includes interactive controls for fullscreen viewing, downloading, and copying.
 
-Mermaid is loaded on-demand from a CDN only when a diagram is rendered, keeping your initial bundle size small. By default, Mermaid loads from `https://www.streamdown.ai/cdn`. See [Offline Mode](/docs/offline-mode) for self-hosting options.
+Mermaid is loaded on-demand from a CDN only when a diagram is rendered, keeping your initial bundle size small. By default, Mermaid loads from `https://streamdown.ai/cdn`. See [Self-Hosting CDN](/docs/self-hosting-cdn) for self-hosting options.
 
 **Note:** Mermaid requires CDN access to function. If you set `cdnUrl={null}` to disable CDN loading, Mermaid diagrams will not render.
 
@@ -43,6 +43,7 @@ graph TD
 ````
 
 **Node Shapes:**
+
 - `[text]` - Rectangle
 - `(text)` - Rounded rectangle
 - `{text}` - Rhombus (decision)
@@ -50,6 +51,7 @@ graph TD
 - `[[text]]` - Subroutine shape
 
 **Direction:**
+
 - `graph TD` - Top to bottom
 - `graph LR` - Left to right
 - `graph BT` - Bottom to top
@@ -77,6 +79,7 @@ sequenceDiagram
 ````
 
 **Arrow Types:**
+
 - `->` - Solid line
 - `-->` - Dotted line
 - `->>` - Solid arrow
@@ -210,24 +213,24 @@ gitGraph
 Customize the Mermaid theme using the `mermaid.config` prop:
 
 ```tsx
-import { Streamdown } from 'streamdown';
-import type { MermaidConfig } from 'streamdown';
+import { Streamdown } from "streamdown";
+import type { MermaidConfig } from "streamdown";
 
 export default function Page() {
   return (
     <Streamdown
       mermaid={{
         config: {
-          theme: 'dark',
+          theme: "dark",
           themeVariables: {
-            primaryColor: '#ff6b6b',
-            primaryTextColor: '#fff',
-            primaryBorderColor: '#ff6b6b',
-            lineColor: '#f5f5f5',
-            secondaryColor: '#4ecdc4',
-            tertiaryColor: '#45b7d1'
-          }
-        }
+            primaryColor: "#ff6b6b",
+            primaryTextColor: "#fff",
+            primaryBorderColor: "#ff6b6b",
+            lineColor: "#f5f5f5",
+            secondaryColor: "#4ecdc4",
+            tertiaryColor: "#45b7d1",
+          },
+        },
       }}
     >
       {markdown}
@@ -249,9 +252,7 @@ Mermaid includes several built-in themes:
 Example:
 
 ```tsx
-<Streamdown mermaid={{ config: { theme: 'forest' } }}>
-  {markdown}
-</Streamdown>
+<Streamdown mermaid={{ config: { theme: "forest" } }}>{markdown}</Streamdown>
 ```
 
 ### Advanced Configuration
@@ -262,22 +263,22 @@ Customize specific diagram types:
 <Streamdown
   mermaid={{
     config: {
-      theme: 'base',
+      theme: "base",
       themeVariables: {
-        fontSize: '16px',
-        fontFamily: 'Inter, sans-serif',
+        fontSize: "16px",
+        fontFamily: "Inter, sans-serif",
       },
       flowchart: {
         nodeSpacing: 50,
         rankSpacing: 50,
-        curve: 'basis',
+        curve: "basis",
       },
       sequence: {
         actorMargin: 50,
         boxMargin: 10,
         boxTextMargin: 5,
       },
-    }
+    },
   }}
 >
   {markdown}
@@ -291,10 +292,14 @@ Customize specific diagram types:
 When Mermaid diagrams fail to render due to invalid syntax, you can provide a custom error component instead of displaying the default error message. This is especially useful for production environments where you want to control the user experience.
 
 ```tsx
-import { Streamdown } from 'streamdown';
-import type { MermaidErrorComponentProps } from 'streamdown';
+import { Streamdown } from "streamdown";
+import type { MermaidErrorComponentProps } from "streamdown";
 
-const CustomMermaidError = ({ error, chart, retry }: MermaidErrorComponentProps) => (
+const CustomMermaidError = ({
+  error,
+  chart,
+  retry,
+}: MermaidErrorComponentProps) => (
   <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
     <div className="flex items-center gap-2">
       <span className="text-xl">⚠️</span>
@@ -316,7 +321,7 @@ export default function Page() {
   return (
     <Streamdown
       mermaid={{
-        errorComponent: CustomMermaidError
+        errorComponent: CustomMermaidError,
       }}
     >
       {markdown}
@@ -341,10 +346,14 @@ The error component receives three props:
 ### Example: Logging Errors
 
 ```tsx
-const ErrorWithLogging = ({ error, chart, retry }: MermaidErrorComponentProps) => {
+const ErrorWithLogging = ({
+  error,
+  chart,
+  retry,
+}: MermaidErrorComponentProps) => {
   useEffect(() => {
     // Log to your error tracking service
-    console.error('Mermaid rendering failed:', error);
+    console.error("Mermaid rendering failed:", error);
     // Could also send to Sentry, LogRocket, etc.
   }, [error]);
 
@@ -386,7 +395,7 @@ You can customize which controls are shown:
       fullscreen: true,
       download: true,
       copy: true,
-    }
+    },
   }}
 >
   {markdown}
@@ -400,9 +409,9 @@ Or disable specific controls:
   controls={{
     mermaid: {
       fullscreen: true,
-      download: false,  // Hide download button
-      copy: false,      // Hide copy button
-    }
+      download: false, // Hide download button
+      copy: false, // Hide copy button
+    },
   }}
 >
   {markdown}
@@ -412,9 +421,7 @@ Or disable specific controls:
 Or disable all Mermaid controls:
 
 ```tsx
-<Streamdown controls={{ mermaid: false }}>
-  {markdown}
-</Streamdown>
+<Streamdown controls={{ mermaid: false }}>{markdown}</Streamdown>
 ```
 
 ## Streaming Considerations
@@ -428,9 +435,7 @@ When Mermaid diagrams are first streamed in, they appear as code blocks until th
 Use the `isAnimating` prop to disable interactive controls while content is streaming:
 
 ```tsx
-<Streamdown isAnimating={isStreaming}>
-  {markdown}
-</Streamdown>
+<Streamdown isAnimating={isStreaming}>{markdown}</Streamdown>
 ```
 
 This prevents users from interacting with incomplete diagrams.
@@ -445,6 +450,7 @@ Break complex diagrams into smaller, focused visualizations:
 ✅ Good: Multiple small diagrams
 
 ## User Authentication Flow
+
 ```mermaid
 graph LR
     A[Login] --> B{Valid?}
@@ -453,6 +459,7 @@ graph LR
 ```
 
 ## Data Fetching Flow
+
 ```mermaid
 graph LR
     A[Request] --> B[API]
@@ -488,6 +495,7 @@ Make your diagrams self-documenting:
 
 ````markdown
 ✅ Good: Clear labels
+
 ```mermaid
 graph TD
     A[User clicks 'Submit'] --> B{Form valid?}
@@ -496,6 +504,7 @@ graph TD
 ```
 
 ❌ Avoid: Cryptic labels
+
 ```mermaid
 graph TD
     A[Step 1] --> B{Check}
@@ -561,7 +570,7 @@ graph TD
 ### Diagram Not Rendering
 
 1. Verify the syntax is correct (check [Mermaid Live Editor](https://mermaid.live/))
-2. Ensure the code block uses `` ```mermaid ``
+2. Ensure the code block uses ` ```mermaid `
 3. Check browser console for JavaScript errors
 4. Verify Mermaid is not being blocked by CSP
 

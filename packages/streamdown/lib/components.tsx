@@ -31,12 +31,18 @@ const Mermaid = lazy(() =>
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
-type MarkdownPoint = { line?: number; column?: number };
-type MarkdownPosition = { start?: MarkdownPoint; end?: MarkdownPoint };
-type MarkdownNode = {
+interface MarkdownPoint {
+  line?: number;
+  column?: number;
+}
+interface MarkdownPosition {
+  start?: MarkdownPoint;
+  end?: MarkdownPoint;
+}
+interface MarkdownNode {
   position?: MarkdownPosition;
   properties?: { className?: string };
-};
+}
 
 type WithNode<T> = T & {
   node?: MarkdownNode;
@@ -542,8 +548,7 @@ const MemoSection = memo<SectionProps>(
 
       // Process children to filter out empty footnotes
       const processedChildren = Array.isArray(children)
-        ? // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex footnote filtering logic"
-          children.map((child) => {
+        ? children.map((child) => {
             if (!isValidElement(child)) {
               return child;
             }
@@ -610,7 +615,6 @@ const CodeComponent = ({
   children,
   ...props
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex code block logic"
   ExtraProps) => {
   const inline = node?.position?.start.line === node?.position?.end.line;
   const { mermaid: mermaidContext, controls: controlsConfig } =

@@ -16,7 +16,7 @@ export const DEFERRED_RENDER_ROOT_MARGIN = "300px";
  */
 export const DEFERRED_RENDER_IDLE_TIMEOUT = 500;
 
-export type UseDeferredRenderOptions = {
+export interface UseDeferredRenderOptions {
   /**
    * If true, render immediately without waiting for intersection
    * @default false
@@ -37,7 +37,7 @@ export type UseDeferredRenderOptions = {
    * @default DEFERRED_RENDER_IDLE_TIMEOUT
    */
   idleTimeout?: number;
-};
+}
 
 /**
  * Hook for deferred rendering components when they enter the viewport.

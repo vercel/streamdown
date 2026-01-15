@@ -62,9 +62,10 @@ async function loadSingleLanguageFromCDN(
 
   // Extract dependencies from import statements
   const dependencies: string[] = [];
-  let match: RegExpExecArray | null;
-  while ((match = importRegex.exec(moduleText)) !== null) {
+  let match = importRegex.exec(moduleText);
+  while (match !== null) {
     dependencies.push(match[1]);
+    match = importRegex.exec(moduleText);
   }
   // Reset regex lastIndex for next use
   importRegex.lastIndex = 0;
@@ -84,7 +85,7 @@ async function loadSingleLanguageFromCDN(
 /**
  * Load a language grammar from CDN
  * @param language - Language identifier (e.g., 'rust', 'ruby', 'elixir')
- * @param cdnBaseUrl - Base URL for CDN (e.g., 'https://www.streamdown.ai/cdn'), or null to disable
+ * @param cdnBaseUrl - Base URL for CDN (e.g., 'https://streamdown.ai/cdn'), or null to disable
  * @param timeout - Request timeout in milliseconds (default: 5000)
  * @returns Language grammar array or null if loading fails
  */
@@ -135,13 +136,18 @@ export async function loadLanguageFromCDN(
 
       // Skip if already cached
       if (cdnLanguageCache.has(depCacheKey)) {
-        const cached = cdnLanguageCache.get(depCacheKey) as LanguageRegistration[];
+        const cached = cdnLanguageCache.get(
+          depCacheKey
+        ) as LanguageRegistration[];
         allGrammars.push(...cached);
         continue;
       }
 
       // Skip if already loading (circular dep) or failed
-      if (loadingLanguages.has(depCacheKey) || failedLanguages.has(depCacheKey)) {
+      if (
+        loadingLanguages.has(depCacheKey) ||
+        failedLanguages.has(depCacheKey)
+      ) {
         continue;
       }
 
@@ -178,7 +184,7 @@ export async function loadLanguageFromCDN(
 /**
  * Load a theme from CDN
  * @param theme - Theme identifier (e.g., 'dracula', 'nord', 'one-dark-pro')
- * @param cdnBaseUrl - Base URL for CDN (e.g., 'https://www.streamdown.ai/cdn'), or null to disable
+ * @param cdnBaseUrl - Base URL for CDN (e.g., 'https://streamdown.ai/cdn'), or null to disable
  * @param timeout - Request timeout in milliseconds (default: 5000)
  * @returns Theme registration or null if loading fails
  */

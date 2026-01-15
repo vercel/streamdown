@@ -1,6 +1,6 @@
-import { DownloadIcon } from "../icons";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
+import { DownloadIcon } from "../icons";
 import { cn, save } from "../utils";
 import {
   extractTableDataFromElement,
@@ -8,14 +8,14 @@ import {
   tableDataToMarkdown,
 } from "./utils";
 
-export type TableDownloadButtonProps = {
+export interface TableDownloadButtonProps {
   children?: React.ReactNode;
   className?: string;
   onDownload?: () => void;
   onError?: (error: Error) => void;
   format?: "csv" | "markdown";
   filename?: string;
-};
+}
 
 export const TableDownloadButton = ({
   children,
@@ -95,12 +95,12 @@ export const TableDownloadButton = ({
   );
 };
 
-export type TableDownloadDropdownProps = {
+export interface TableDownloadDropdownProps {
   children?: React.ReactNode;
   className?: string;
   onDownload?: (format: "csv" | "markdown") => void;
   onError?: (error: Error) => void;
-};
+}
 
 export const TableDownloadDropdown = ({
   children,
@@ -145,10 +145,8 @@ export const TableDownloadDropdown = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      const path = event.composedPath();
+      if (dropdownRef.current && !path.includes(dropdownRef.current)) {
         setIsOpen(false);
       }
     };

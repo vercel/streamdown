@@ -63,16 +63,16 @@ export type ControlsConfig =
           };
     };
 
-export type MermaidErrorComponentProps = {
+export interface MermaidErrorComponentProps {
   error: string;
   chart: string;
   retry: () => void;
-};
+}
 
-export type MermaidOptions = {
+export interface MermaidOptions {
   config?: MermaidConfig;
   errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
-};
+}
 
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
@@ -124,16 +124,16 @@ const carets = {
 };
 
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
-export type StreamdownContextType = {
+export interface StreamdownContextType {
   shikiTheme: [BundledTheme, BundledTheme];
   controls: ControlsConfig;
   isAnimating: boolean;
   mode: "static" | "streaming";
   mermaid?: MermaidOptions;
   cdnUrl?: string | null;
-};
+}
 
-const defaultCdnUrl = "https://www.streamdown.ai/cdn";
+const defaultCdnUrl = "https://streamdown.ai/cdn";
 
 const defaultStreamdownContext: StreamdownContextType = {
   shikiTheme: ["github-light" as BundledTheme, "github-dark" as BundledTheme],
@@ -155,7 +155,13 @@ type BlockProps = Options & {
 };
 
 export const Block = memo(
-  ({ content, ...props }: BlockProps) => {
+  // Destructure shouldParseIncompleteMarkdown and index to prevent them from leaking to the DOM
+  ({
+    content,
+    shouldParseIncompleteMarkdown: _,
+    index: __,
+    ...props
+  }: BlockProps) => {
     // Note: remend is already applied to the entire markdown before parsing into blocks
     // in the Streamdown component, so we don't need to apply it again here
     return <Markdown {...props}>{content}</Markdown>;

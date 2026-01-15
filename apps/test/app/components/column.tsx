@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 
-type ColumnProps = {
+interface ColumnProps {
   title: string;
   children: ReactNode;
-};
+}
 
 export const Column = ({ title, children }: ColumnProps) => (
   <div className="flex h-full flex-col divide-y overflow-hidden">

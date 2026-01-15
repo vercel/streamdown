@@ -1,6 +1,6 @@
-import { DownloadIcon } from "../icons";
 import { type ComponentProps, useContext } from "react";
 import { StreamdownContext } from "../../index";
+import { DownloadIcon } from "../icons";
 import { cn, save } from "../utils";
 import { useCodeBlockContext } from "./context";
 

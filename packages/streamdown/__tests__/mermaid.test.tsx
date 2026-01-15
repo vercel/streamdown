@@ -28,7 +28,7 @@ vi.mock("../lib/mermaid/utils", async () => {
   );
   return {
     ...actual,
-    initializeMermaid: vi.fn().mockImplementation(async (config) => {
+    initializeMermaid: vi.fn().mockImplementation((config) => {
       // Simulate real initializeMermaid behavior - call initialize with merged config
       const defaultConfig = {
         startOnLoad: false,

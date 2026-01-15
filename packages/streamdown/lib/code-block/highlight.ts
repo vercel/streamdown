@@ -1,13 +1,10 @@
-import {
-  createHighlighterCore,
-  type HighlighterCore,
-} from "shiki/core";
 import type {
   BundledTheme,
   LanguageRegistration,
   SpecialLanguage,
   TokensResult,
 } from "shiki";
+import { createHighlighterCore, type HighlighterCore } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import {
   type BundledLanguageName,
@@ -53,10 +50,7 @@ const getTokensCacheKey = (
 /**
  * Load a theme - either from bundled themes or CDN
  */
-async function loadTheme(
-  themeName: string,
-  cdnUrl?: string | null
-) {
+async function loadTheme(themeName: string, cdnUrl?: string | null) {
   // Check if it's a bundled theme (instant load)
   if (isBundledTheme(themeName)) {
     return bundledThemes[themeName as BundledThemeName];
@@ -151,13 +145,13 @@ export const createShiki = (
   return highlighterPromise;
 };
 
-export type GetHighlightedTokensOptions = {
+export interface GetHighlightedTokensOptions {
   code: string;
   language: string;
   shikiTheme: [BundledTheme, BundledTheme];
   cdnUrl?: string | null;
   callback?: (result: TokensResult) => void;
-};
+}
 
 /**
  * Get cached tokens or trigger highlighting

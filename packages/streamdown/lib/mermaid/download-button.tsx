@@ -1,18 +1,18 @@
-import { DownloadIcon } from "../icons";
 import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
+import { DownloadIcon } from "../icons";
 import { cn, save } from "../utils";
 import { initializeMermaid, svgToPngBlob } from "./utils";
 
-type MermaidDownloadDropdownProps = {
+interface MermaidDownloadDropdownProps {
   chart: string;
   children?: React.ReactNode;
   className?: string;
   onDownload?: (format: "mmd" | "png" | "svg") => void;
   onError?: (error: Error) => void;
   config?: MermaidConfig;
-};
+}
 
 export const MermaidDownloadDropdown = ({
   chart,
@@ -79,10 +79,8 @@ export const MermaidDownloadDropdown = ({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      const path = event.composedPath();
+      if (dropdownRef.current && !path.includes(dropdownRef.current)) {
         setIsOpen(false);
       }
     };

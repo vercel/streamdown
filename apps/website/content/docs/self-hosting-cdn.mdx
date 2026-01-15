@@ -1,9 +1,9 @@
 ---
-title: Offline Mode
-description: Configure Streamdown for offline, on-premise, or air-gapped environments.
+title: Self-Hosting CDN
+description: Configure Streamdown to self-host the CDN for offline, on-premise, or air-gapped environments.
 ---
 
-Streamdown uses a hybrid approach for syntax highlighting: common languages and themes are bundled locally, while additional ones load on-demand from a CDN. By default, Streamdown loads assets from `https://www.streamdown.ai/cdn`. This guide shows you how to configure Streamdown for environments without internet access.
+Streamdown uses a hybrid approach for syntax highlighting: common languages and themes are bundled locally, while additional ones load on-demand from a CDN. By default, Streamdown loads assets from `https://streamdown.ai/cdn`. This guide shows you how to configure Streamdown for environments without internet access.
 
 ## How CDN Loading Works
 
@@ -32,11 +32,11 @@ For other themes (like `dracula`, `nord`, `one-dark-pro`), Streamdown loads them
 
 Mermaid is loaded entirely from a CDN when a diagram is rendered. If no mermaid diagrams are used, no mermaid code is downloaded.
 
-In offline environments, CDN loading fails and code blocks fall back to plain text (for languages) or the default GitHub themes (for themes). Mermaid diagrams will show an error if the library cannot be loaded.
+In environments where you can't connect to the Streamdown CDN, CDN loading fails and code blocks fall back to plain text (for languages) or the default GitHub themes (for themes). Mermaid diagrams will show an error if the library cannot be loaded.
 
 ## Configure Self-Hosted Assets
 
-To run Streamdown offline, you need to:
+To self-host the CDN, you need to:
 
 1. Host Shiki and Mermaid files locally
 2. Configure your application to serve them
@@ -51,6 +51,7 @@ npm install shiki mermaid
 ```
 
 The files you need to serve are located in:
+
 - `node_modules/shiki/dist/langs/` - Language grammar files
 - `node_modules/shiki/dist/themes/` - Theme definition files
 - `node_modules/mermaid/dist/mermaid.esm.min.mjs` - Mermaid library
@@ -64,22 +65,22 @@ Configure your framework to serve the Shiki and Mermaid files as static assets.
 Add rewrites to your `next.config.ts` to serve files from `node_modules`:
 
 ```tsx title="next.config.ts"
-import type { NextConfig } from 'next';
+import type { NextConfig } from "next";
 
 const config: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/cdn/shiki/:version/langs/:path*',
-        destination: '/node_modules/shiki/dist/langs/:path*',
+        source: "/cdn/shiki/:version/langs/:path*",
+        destination: "/node_modules/shiki/dist/langs/:path*",
       },
       {
-        source: '/cdn/shiki/:version/themes/:path*',
-        destination: '/node_modules/shiki/dist/themes/:path*',
+        source: "/cdn/shiki/:version/themes/:path*",
+        destination: "/node_modules/shiki/dist/themes/:path*",
       },
       {
-        source: '/cdn/mermaid/:version/:path*',
-        destination: '/node_modules/mermaid/dist/:path*',
+        source: "/cdn/mermaid/:version/:path*",
+        destination: "/node_modules/mermaid/dist/:path*",
       },
     ];
   },
@@ -91,39 +92,52 @@ export default config;
 Alternatively, copy the files to your `public` directory during build:
 
 ```tsx title="next.config.ts"
-import { copyFileSync, mkdirSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { copyFileSync, mkdirSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 
 const config: NextConfig = {
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Copy Shiki languages to public directory
-      const shikiLangsSource = join(process.cwd(), 'node_modules/shiki/dist/langs');
-      const shikiLangsDest = join(process.cwd(), 'public/shiki/langs');
+      const shikiLangsSource = join(
+        process.cwd(),
+        "node_modules/shiki/dist/langs"
+      );
+      const shikiLangsDest = join(process.cwd(), "public/shiki/langs");
       mkdirSync(shikiLangsDest, { recursive: true });
 
-      const langFiles = readdirSync(shikiLangsSource).filter(f => f.endsWith('.mjs'));
+      const langFiles = readdirSync(shikiLangsSource).filter((f) =>
+        f.endsWith(".mjs")
+      );
       for (const file of langFiles) {
         copyFileSync(join(shikiLangsSource, file), join(shikiLangsDest, file));
       }
 
       // Copy Shiki themes to public directory
-      const shikiThemesSource = join(process.cwd(), 'node_modules/shiki/dist/themes');
-      const shikiThemesDest = join(process.cwd(), 'public/shiki/themes');
+      const shikiThemesSource = join(
+        process.cwd(),
+        "node_modules/shiki/dist/themes"
+      );
+      const shikiThemesDest = join(process.cwd(), "public/shiki/themes");
       mkdirSync(shikiThemesDest, { recursive: true });
 
-      const themeFiles = readdirSync(shikiThemesSource).filter(f => f.endsWith('.mjs'));
+      const themeFiles = readdirSync(shikiThemesSource).filter((f) =>
+        f.endsWith(".mjs")
+      );
       for (const file of themeFiles) {
-        copyFileSync(join(shikiThemesSource, file), join(shikiThemesDest, file));
+        copyFileSync(
+          join(shikiThemesSource, file),
+          join(shikiThemesDest, file)
+        );
       }
 
       // Copy Mermaid to public directory
-      const mermaidSource = join(process.cwd(), 'node_modules/mermaid/dist');
-      const mermaidDest = join(process.cwd(), 'public/mermaid');
+      const mermaidSource = join(process.cwd(), "node_modules/mermaid/dist");
+      const mermaidDest = join(process.cwd(), "public/mermaid");
       mkdirSync(mermaidDest, { recursive: true });
       copyFileSync(
-        join(mermaidSource, 'mermaid.esm.min.mjs'),
-        join(mermaidDest, 'mermaid.esm.min.mjs')
+        join(mermaidSource, "mermaid.esm.min.mjs"),
+        join(mermaidDest, "mermaid.esm.min.mjs")
       );
     }
     return config;
@@ -136,14 +150,10 @@ export default config;
 Then use the `cdnUrl` prop to point to the local files:
 
 ```tsx title="app/page.tsx"
-import { Streamdown } from 'streamdown';
+import { Streamdown } from "streamdown";
 
 export default function Page() {
-  return (
-    <Streamdown cdnUrl="/cdn">
-      {markdown}
-    </Streamdown>
-  );
+  return <Streamdown cdnUrl="/cdn">{markdown}</Streamdown>;
 }
 ```
 
@@ -152,14 +162,10 @@ export default function Page() {
 Copy the Shiki files to your `public` directory and use the `cdnUrl` prop:
 
 ```tsx title="app/routes/_index.tsx"
-import { Streamdown } from 'streamdown';
+import { Streamdown } from "streamdown";
 
 export default function Index() {
-  return (
-    <Streamdown cdnUrl="/cdn">
-      {markdown}
-    </Streamdown>
-  );
+  return <Streamdown cdnUrl="/cdn">{markdown}</Streamdown>;
 }
 ```
 
@@ -168,27 +174,27 @@ export default function Index() {
 Serve the Shiki and Mermaid files as static assets:
 
 ```javascript title="server.js"
-const express = require('express');
-const path = require('path');
+const express = require("express");
+const path = require("path");
 
 const app = express();
 
 // Serve Shiki language files from node_modules
 app.use(
-  '/cdn/shiki/:version/langs',
-  express.static(path.join(__dirname, 'node_modules/shiki/dist/langs'))
+  "/cdn/shiki/:version/langs",
+  express.static(path.join(__dirname, "node_modules/shiki/dist/langs"))
 );
 
 // Serve Shiki theme files from node_modules
 app.use(
-  '/cdn/shiki/:version/themes',
-  express.static(path.join(__dirname, 'node_modules/shiki/dist/themes'))
+  "/cdn/shiki/:version/themes",
+  express.static(path.join(__dirname, "node_modules/shiki/dist/themes"))
 );
 
 // Serve Mermaid files from node_modules
 app.use(
-  '/cdn/mermaid/:version',
-  express.static(path.join(__dirname, 'node_modules/mermaid/dist'))
+  "/cdn/mermaid/:version",
+  express.static(path.join(__dirname, "node_modules/mermaid/dist"))
 );
 
 app.listen(3000);
@@ -199,7 +205,7 @@ app.listen(3000);
 Pass the `cdnUrl` prop to the Streamdown component to specify the base path for all CDN assets:
 
 ```tsx title="app/page.tsx"
-import { Streamdown } from 'streamdown';
+import { Streamdown } from "streamdown";
 
 const markdown = `
 \`\`\`rust
@@ -210,15 +216,12 @@ fn main() {
 `;
 
 export default function Page() {
-  return (
-    <Streamdown cdnUrl="/cdn">
-      {markdown}
-    </Streamdown>
-  );
+  return <Streamdown cdnUrl="/cdn">{markdown}</Streamdown>;
 }
 ```
 
 The `cdnUrl` prop sets the base path. Streamdown will automatically construct full paths:
+
 - Shiki languages: `{cdnUrl}/shiki/{version}/langs/{language}.mjs`
 - Shiki themes: `{cdnUrl}/shiki/{version}/themes/{theme}.mjs`
 - Mermaid: `{cdnUrl}/mermaid/{version}/mermaid.esm.min.mjs`
@@ -245,20 +248,20 @@ const config: NextConfig = {
   async rewrites() {
     return [
       {
-        source: '/cdn/shiki/:version/langs/:path*',
-        destination: '/node_modules/shiki/dist/langs/:path*',
+        source: "/cdn/shiki/:version/langs/:path*",
+        destination: "/node_modules/shiki/dist/langs/:path*",
       },
       {
-        source: '/cdn/shiki/:version/themes/:path*',
-        destination: '/node_modules/shiki/dist/themes/:path*',
+        source: "/cdn/shiki/:version/themes/:path*",
+        destination: "/node_modules/shiki/dist/themes/:path*",
       },
       {
-        source: '/cdn/katex/:version/:path*',
-        destination: '/node_modules/katex/dist/:path*',
+        source: "/cdn/katex/:version/:path*",
+        destination: "/node_modules/katex/dist/:path*",
       },
       {
-        source: '/cdn/mermaid/:version/:path*',
-        destination: '/node_modules/mermaid/dist/:path*',
+        source: "/cdn/mermaid/:version/:path*",
+        destination: "/node_modules/mermaid/dist/:path*",
       },
     ];
   },
@@ -279,18 +282,15 @@ cp node_modules/katex/dist/katex.min.css public/cdn/katex/0.16.22/katex.min.css
 To completely disable CDN loading and only use bundled languages, pass `cdnUrl={null}`:
 
 ```tsx title="app/page.tsx"
-import { Streamdown } from 'streamdown';
+import { Streamdown } from "streamdown";
 
 export default function Page() {
-  return (
-    <Streamdown cdnUrl={null}>
-      {markdown}
-    </Streamdown>
-  );
+  return <Streamdown cdnUrl={null}>{markdown}</Streamdown>;
 }
 ```
 
 With this configuration:
+
 - Only the 15 bundled languages will work (others fall back to plain text)
 - Only the 2 bundled themes will work (`github-light`, `github-dark`)
 - Mermaid diagrams will not render (Mermaid requires CDN loading)
@@ -298,7 +298,7 @@ With this configuration:
 
 ## Verify Configuration
 
-To verify your offline configuration works:
+To verify your self-hosted CDN configuration works:
 
 1. Disconnect from the internet
 2. Render a code block with a non-bundled language (like Rust or Ruby)
@@ -308,7 +308,7 @@ To verify your offline configuration works:
 Example test code:
 
 ```tsx title="app/page.tsx"
-import { Streamdown } from 'streamdown';
+import { Streamdown } from "streamdown";
 
 const markdown = `
 \`\`\`rust
@@ -369,11 +369,13 @@ These warnings indicate which languages need to be self-hosted for your use case
 Some servers don't recognize `.mjs` files. Configure your server to serve them as JavaScript:
 
 **Express:**
+
 ```javascript
-express.static.mime.define({'application/javascript': ['mjs']});
+express.static.mime.define({ "application/javascript": ["mjs"] });
 ```
 
 **Nginx:**
+
 ```nginx
 types {
     application/javascript mjs;
@@ -382,11 +384,11 @@ types {
 
 ### Cached Failed Requests
 
-If you previously tried loading a language before configuring offline mode, clear the cache:
+If you previously tried loading a language before setting up self-hosting, clear the cache:
 
 ```tsx
-// Reload the page after configuring CDN
-if (typeof window !== 'undefined') {
+// Reload the page after setting up self-hosting
+if (typeof window !== "undefined") {
   window.location.reload();
 }
 ```

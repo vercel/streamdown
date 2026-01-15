@@ -6,13 +6,13 @@ import { cn } from "../utils";
 import { PanZoom } from "./pan-zoom";
 import { initializeMermaid } from "./utils";
 
-type MermaidProps = {
+interface MermaidProps {
   chart: string;
   className?: string;
   config?: MermaidConfig;
   fullscreen?: boolean;
   showControls?: boolean;
-};
+}
 
 export const Mermaid = ({
   chart,
