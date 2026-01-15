@@ -712,6 +712,7 @@ const CodeComponent = ({
         className={cn("overflow-x-auto border-border border-t", className)}
         code={code}
         language={language}
+        extraCodeHeader={props.extraCodeHeader ?? <></>}
       >
         {showCodeControls ? (
           <>

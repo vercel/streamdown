@@ -1,6 +1,6 @@
 packages:
   - "apps/*"
-  - "packages/*"
+  - "packages/streamdown"
 
 onlyBuiltDependencies:
   - '@vercel/speed-insights'

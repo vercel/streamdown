@@ -5,6 +5,8 @@ import {
   type CSSProperties,
   createContext,
   memo,
+  ReactNode,
+  ComponentType,
   useEffect,
   useId,
   useMemo,
@@ -28,6 +30,7 @@ import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { remarkCjkAutolinkBoundary } from "./lib/remark/cjk-autolink";
 import { cn } from "./lib/utils";
 import packageJson from "./package.json";
+import { CodeBlock } from "./lib/code-block";
 
 // Regex patterns defined at top level for performance
 const MIDDLE_DOLLAR_PATTERN = /[^$]\$[^$]/;
@@ -84,6 +87,7 @@ export type StreamdownProps = Options & {
   caret?: keyof typeof carets;
   cdnUrl?: string | null;
   remend?: RemendOptions;
+  extraCodeHeader?: ReactNode;
 };
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
@@ -293,6 +297,7 @@ export const Streamdown = memo(
     caret,
     cdnUrl = defaultCdnUrl,
     remend: remendOptions,
+    extraCodeHeader,
     ...props
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
@@ -353,13 +358,20 @@ export const Streamdown = memo(
     );
 
     // Memoize merged components to avoid recreating on every render
-    const mergedComponents = useMemo(
-      () => ({
+    const mergedComponents = useMemo(() => {
+      if (!extraCodeHeader) {
+        return { ...defaultComponents, ...components };
+      }
+
+      const Code = defaultComponents?.code as ComponentType<any>;
+      return {
         ...defaultComponents,
+        code: (props: any) => (
+          <Code {...props} extraCodeHeader={extraCodeHeader} />
+        ),
         ...components,
-      }),
-      [components]
-    );
+      };
+    }, [components, extraCodeHeader]);
 
     // Only load KaTeX CSS when math syntax is detected in content
     useEffect(() => {
