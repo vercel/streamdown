@@ -1,7 +1,7 @@
 "use client";
 
 import type { MermaidConfig } from "mermaid";
-import mermaid from "mermaid";
+import mermaidLib from "mermaid";
 
 /**
  * Mermaid instance interface
@@ -57,15 +57,15 @@ export function createMermaidPlugin(
   const mermaidInstance: MermaidInstance = {
     initialize(config: MermaidConfig) {
       currentConfig = { ...defaultConfig, ...options.config, ...config };
-      mermaid.initialize(currentConfig);
+      mermaidLib.initialize(currentConfig);
       initialized = true;
     },
     async render(id: string, source: string) {
       if (!initialized) {
-        mermaid.initialize(currentConfig);
+        mermaidLib.initialize(currentConfig);
         initialized = true;
       }
-      return await mermaid.render(id, source);
+      return await mermaidLib.render(id, source);
     },
   };
 

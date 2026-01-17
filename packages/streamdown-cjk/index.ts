@@ -14,7 +14,18 @@ export interface CjkPlugin {
   name: "cjk";
   type: "cjk";
   /**
-   * Remark plugins for CJK text handling
+   * Remark plugins that must run BEFORE remarkGfm
+   * (e.g., remark-cjk-friendly which modifies emphasis handling)
+   */
+  remarkPluginsBefore: Pluggable[];
+  /**
+   * Remark plugins that must run AFTER remarkGfm
+   * (e.g., autolink boundary splitting, strikethrough enhancements)
+   */
+  remarkPluginsAfter: Pluggable[];
+  /**
+   * @deprecated Use remarkPluginsBefore and remarkPluginsAfter instead
+   * All remark plugins (for backwards compatibility)
    */
   remarkPlugins: Pluggable[];
 }
@@ -123,15 +134,29 @@ const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
  * Create a CJK plugin
  */
 export function createCjkPlugin(): CjkPlugin {
-  const remarkPlugins: Pluggable[] = [
+  // Plugins that must run BEFORE remarkGfm
+  // remark-cjk-friendly modifies emphasis handling and must come before GFM
+  const remarkPluginsBefore: Pluggable[] = [remarkCjkFriendly];
+
+  // Plugins that must run AFTER remarkGfm
+  // - remarkCjkAutolinkBoundary needs GFM autolinks to be created first
+  // - remarkCjkFriendlyGfmStrikethrough enhances GFM strikethrough
+  const remarkPluginsAfter: Pluggable[] = [
     remarkCjkAutolinkBoundary,
-    remarkCjkFriendly,
     remarkCjkFriendlyGfmStrikethrough,
+  ];
+
+  // Combined array for backwards compatibility
+  const remarkPlugins: Pluggable[] = [
+    ...remarkPluginsBefore,
+    ...remarkPluginsAfter,
   ];
 
   return {
     name: "cjk",
     type: "cjk",
+    remarkPluginsBefore,
+    remarkPluginsAfter,
     remarkPlugins,
   };
 }

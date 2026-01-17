@@ -14,12 +14,21 @@ describe("cjk", () => {
       expect(cjk.type).toBe("cjk");
     });
 
-    it("should have remarkPlugins array", () => {
-      expect(cjk.remarkPlugins).toBeDefined();
-      expect(Array.isArray(cjk.remarkPlugins)).toBe(true);
+    it("should have remarkPluginsBefore array", () => {
+      expect(cjk.remarkPluginsBefore).toBeDefined();
+      expect(Array.isArray(cjk.remarkPluginsBefore)).toBe(true);
+      expect(cjk.remarkPluginsBefore.length).toBe(1);
     });
 
-    it("should have 3 remark plugins", () => {
+    it("should have remarkPluginsAfter array", () => {
+      expect(cjk.remarkPluginsAfter).toBeDefined();
+      expect(Array.isArray(cjk.remarkPluginsAfter)).toBe(true);
+      expect(cjk.remarkPluginsAfter.length).toBe(2);
+    });
+
+    it("should have remarkPlugins array for backwards compatibility", () => {
+      expect(cjk.remarkPlugins).toBeDefined();
+      expect(Array.isArray(cjk.remarkPlugins)).toBe(true);
       expect(cjk.remarkPlugins.length).toBe(3);
     });
   });
@@ -30,8 +39,9 @@ describe("createCjkPlugin", () => {
     const plugin = createCjkPlugin();
     expect(plugin.name).toBe("cjk");
     expect(plugin.type).toBe("cjk");
+    expect(plugin.remarkPluginsBefore).toBeDefined();
+    expect(plugin.remarkPluginsAfter).toBeDefined();
     expect(plugin.remarkPlugins).toBeDefined();
-    expect(Array.isArray(plugin.remarkPlugins)).toBe(true);
   });
 
   it("should create independent plugin instances", () => {
@@ -39,13 +49,15 @@ describe("createCjkPlugin", () => {
     const plugin2 = createCjkPlugin();
 
     expect(plugin1).not.toBe(plugin2);
-    expect(plugin1.remarkPlugins).not.toBe(plugin2.remarkPlugins);
+    expect(plugin1.remarkPluginsBefore).not.toBe(plugin2.remarkPluginsBefore);
+    expect(plugin1.remarkPluginsAfter).not.toBe(plugin2.remarkPluginsAfter);
   });
 });
 
 describe("CJK autolink boundary splitting", () => {
   const processMarkdown = async (markdown: string) => {
-    const [autolinkBoundaryPlugin] = cjk.remarkPlugins;
+    // Autolink boundary plugin is in the "after" array (runs after remarkGfm)
+    const [autolinkBoundaryPlugin] = cjk.remarkPluginsAfter;
 
     const processor = unified()
       .use(remarkParse)
@@ -226,7 +238,8 @@ describe("CJK punctuation boundary characters", () => {
   ];
 
   it("should recognize all CJK punctuation characters", async () => {
-    const [autolinkBoundaryPlugin] = cjk.remarkPlugins;
+    // Autolink boundary plugin is in the "after" array (runs after remarkGfm)
+    const [autolinkBoundaryPlugin] = cjk.remarkPluginsAfter;
 
     for (const punct of CJK_PUNCTUATION) {
       const markdown = `https://example.com${punct}后`;

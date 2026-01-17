@@ -112,7 +112,18 @@ export interface CjkPlugin {
   name: "cjk";
   type: "cjk";
   /**
-   * Get remark plugins for CJK text handling
+   * Remark plugins that must run BEFORE remarkGfm
+   * (e.g., remark-cjk-friendly which modifies emphasis handling)
+   */
+  remarkPluginsBefore: Pluggable[];
+  /**
+   * Remark plugins that must run AFTER remarkGfm
+   * (e.g., autolink boundary splitting, strikethrough enhancements)
+   */
+  remarkPluginsAfter: Pluggable[];
+  /**
+   * @deprecated Use remarkPluginsBefore and remarkPluginsAfter instead
+   * All remark plugins (for backwards compatibility)
    */
   remarkPlugins: Pluggable[];
 }

@@ -284,13 +284,22 @@ export const Streamdown = memo(
     );
 
     // Merge plugin remark plugins (math, cjk)
+    // Order: CJK before -> default (remarkGfm) -> CJK after -> math
     const mergedRemarkPlugins = useMemo(() => {
-      let result = remarkPlugins;
+      let result: Pluggable[] = [];
+      // CJK plugins that must run BEFORE remarkGfm (e.g., remark-cjk-friendly)
+      if (plugins?.cjk) {
+        result = [...result, ...plugins.cjk.remarkPluginsBefore];
+      }
+      // Default plugins (includes remarkGfm)
+      result = [...result, ...remarkPlugins];
+      // CJK plugins that must run AFTER remarkGfm (e.g., autolink boundary)
+      if (plugins?.cjk) {
+        result = [...result, ...plugins.cjk.remarkPluginsAfter];
+      }
+      // Math plugins
       if (plugins?.math) {
         result = [...result, plugins.math.remarkPlugin];
-      }
-      if (plugins?.cjk) {
-        result = [...result, ...plugins.cjk.remarkPlugins];
       }
       return result;
     }, [remarkPlugins, plugins?.math, plugins?.cjk]);
