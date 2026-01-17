@@ -35,6 +35,18 @@ importers:
       '@radix-ui/react-use-controllable-state':
         specifier: ^1.2.2
         version: 1.2.2(@types/react@19.2.5)(react@19.2.3)
+      '@streamdown/cjk':
+        specifier: workspace:*
+        version: link:../../packages/streamdown-cjk
+      '@streamdown/code':
+        specifier: workspace:*
+        version: link:../../packages/streamdown-code
+      '@streamdown/math':
+        specifier: workspace:*
+        version: link:../../packages/streamdown-math
+      '@streamdown/mermaid':
+        specifier: workspace:*
+        version: link:../../packages/streamdown-mermaid
       ai:
         specifier: ^5.0.111
         version: 5.0.111(zod@4.1.13)

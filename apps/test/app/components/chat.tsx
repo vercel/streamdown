@@ -1,6 +1,10 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import { cjkPlugin } from "@streamdown/cjk";
+import { codePlugin } from "@streamdown/code";
+import { mathPlugin } from "@streamdown/math";
+import { mermaidPlugin } from "@streamdown/mermaid";
 import { DefaultChatTransport } from "ai";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -56,7 +60,7 @@ export const Chat = ({ models }: ChatProps) => {
 
   return (
     <div className="mx-auto flex h-screen flex-col divide-y overflow-hidden border-x">
-      <div className="grid h-full flex-1 grid-cols-4 divide-x overflow-hidden">
+      <div className="grid h-full flex-1 grid-cols-5 divide-x overflow-hidden">
         <Column title="Raw">
           {messages.map((message) => (
             <div key={message.id}>
@@ -213,6 +217,60 @@ export const Chat = ({ models }: ChatProps) => {
           ))}
         </Column>
 
+        <Column title="Streamdown without plugins">
+          {messages.map((message, messageIndex) => (
+            <div key={message.id}>
+              <span className="font-bold">
+                {message.role === "user" ? "User: " : "AI: "}
+              </span>
+              {message.parts.map((part, index) => {
+                const key = `${message.id}-${index}`;
+                switch (part.type) {
+                  case "text":
+                    return (
+                      <Streamdown
+                        caret={
+                          message.role === "assistant" &&
+                          messageIndex === messages.length - 1
+                            ? "block"
+                            : undefined
+                        }
+                        isAnimating={status === "streaming"}
+                        key={key}
+                      >
+                        {part.text}
+                      </Streamdown>
+                    );
+                  case "reasoning":
+                    return (
+                      <Streamdown className="italic" key={key}>
+                        {part.text}
+                      </Streamdown>
+                    );
+                  case "file":
+                    return (
+                      <div key={key}>
+                        {part.mediaType.startsWith("image") ? (
+                          <Image
+                            alt={part.filename ?? "An image attachment"}
+                            height={100}
+                            src={part.url}
+                            unoptimized
+                            width={100}
+                          />
+                        ) : (
+                          <div>File: {part.filename}</div>
+                        )}
+                      </div>
+                    );
+                  default:
+                    return null;
+                }
+              })}
+            </div>
+          ))}
+        </Column>
+
         <Column title="Streamdown">
           {messages.map((message, messageIndex) => (
             <div key={message.id}>
@@ -233,6 +291,12 @@ export const Chat = ({ models }: ChatProps) => {
                         }
                         isAnimating={status === "streaming"}
                         key={key}
+                        plugins={{
+                          code: codePlugin,
+                          mermaid: mermaidPlugin,
+                          math: mathPlugin,
+                          cjk: cjkPlugin,
+                        }}
                       >
                         {part.text}
                       </Streamdown>
