@@ -331,7 +331,7 @@ describe("Markdown Components", () => {
       // The pre component returns its children directly
       expect(container.textContent).toBe("plain text code");
     });
-    it("should render mermaid block with correct structure", async () => {
+    it("should render mermaid code as regular code block when plugin not provided", async () => {
       const Code = components.code;
       if (!Code) {
         throw new Error("Code component not found");
@@ -350,6 +350,66 @@ describe("Markdown Components", () => {
         >
           {"graph TD; A-->B;"}
         </Code>
+      );
+
+      // Wait for Suspense boundary to resolve
+      await waitFor(() => {
+        const codeBlock = container.querySelector(
+          '[data-streamdown="code-block"]'
+        );
+        expect(codeBlock).toBeTruthy();
+      });
+
+      // When no mermaid plugin is provided, should render as regular code block
+      const codeBlock = container.querySelector(
+        '[data-streamdown="code-block"]'
+      );
+      expect(codeBlock?.getAttribute("data-language")).toBe("mermaid");
+
+      // Should NOT render mermaid block
+      const mermaidBlock = container.querySelector(
+        '[data-streamdown="mermaid-block"]'
+      );
+      expect(mermaidBlock).toBeNull();
+    });
+
+    it("should render mermaid block with correct structure when plugin is provided", async () => {
+      const Code = components.code;
+      if (!Code) {
+        throw new Error("Code component not found");
+      }
+
+      // Import PluginContext to provide the mermaid plugin
+      const { PluginContext } = await import("../lib/plugin-context");
+      const { vi } = await import("vitest");
+
+      // Create a mock mermaid plugin
+      const mockMermaidPlugin = {
+        name: "mermaid" as const,
+        type: "diagram" as const,
+        language: "mermaid",
+        getMermaid: vi.fn().mockReturnValue({
+          initialize: vi.fn(),
+          render: vi.fn().mockResolvedValue({ svg: "<svg>Test</svg>" }),
+        }),
+      };
+
+      const { container } = render(
+        <PluginContext.Provider value={{ mermaid: mockMermaidPlugin }}>
+          <Code
+            className="language-mermaid"
+            node={
+              {
+                position: {
+                  start: { line: 1, column: 1 },
+                  end: { line: 2, column: 10 },
+                },
+              } as any
+            }
+          >
+            {"graph TD; A-->B;"}
+          </Code>
+        </PluginContext.Provider>
       );
 
       // Wait for Suspense boundary to resolve

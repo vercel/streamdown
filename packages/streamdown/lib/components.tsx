@@ -17,6 +17,7 @@ import { CodeBlockSkeleton } from "./code-block/skeleton";
 import { ImageComponent } from "./image";
 import type { ExtraProps, Options } from "./markdown";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
+import { useMermaidPlugin } from "./plugin-context";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
 import { Table } from "./table";
 import { cn } from "./utils";
@@ -619,6 +620,7 @@ const CodeComponent = ({
   const inline = node?.position?.start.line === node?.position?.end.line;
   const { mermaid: mermaidContext, controls: controlsConfig } =
     useContext(StreamdownContext);
+  const mermaidPlugin = useMermaidPlugin();
 
   if (inline) {
     return (
@@ -652,7 +654,7 @@ const CodeComponent = ({
     code = children;
   }
 
-  if (language === "mermaid") {
+  if (language === "mermaid" && mermaidPlugin) {
     const showMermaidControls = shouldShowControls(controlsConfig, "mermaid");
     const showDownload = shouldShowMermaidControl(controlsConfig, "download");
     const showCopy = shouldShowMermaidControl(controlsConfig, "copy");

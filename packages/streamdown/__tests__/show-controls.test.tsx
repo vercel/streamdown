@@ -128,8 +128,21 @@ graph TD
     });
 
     it("should hide only mermaid controls when mermaid is false", async () => {
+      const mockMermaidPlugin = {
+        name: "mermaid" as const,
+        type: "diagram" as const,
+        language: "mermaid",
+        getMermaid: () => ({
+          initialize: vi.fn(),
+          render: vi.fn().mockResolvedValue({ svg: "<svg>Test</svg>" }),
+        }),
+      };
+
       const { container } = render(
-        <Streamdown controls={{ mermaid: false }}>
+        <Streamdown
+          controls={{ mermaid: false }}
+          plugins={{ mermaid: mockMermaidPlugin }}
+        >
           {markdownWithMermaid}
         </Streamdown>
       );
@@ -202,6 +215,16 @@ ${markdownWithCode}
     });
 
     it("should hide mermaid pan-zoom controls when panZoom is false", async () => {
+      const mockMermaidPlugin = {
+        name: "mermaid" as const,
+        type: "diagram" as const,
+        language: "mermaid",
+        getMermaid: () => ({
+          initialize: vi.fn(),
+          render: vi.fn().mockResolvedValue({ svg: "<svg>Test</svg>" }),
+        }),
+      };
+
       const mermaidWithControls = `
 \`\`\`mermaid
 graph TD
@@ -210,7 +233,10 @@ graph TD
 `;
 
       const { container } = render(
-        <Streamdown controls={{ mermaid: { panZoom: false } }}>
+        <Streamdown
+          controls={{ mermaid: { panZoom: false } }}
+          plugins={{ mermaid: mockMermaidPlugin }}
+        >
           {mermaidWithControls}
         </Streamdown>
       );
