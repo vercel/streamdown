@@ -27,12 +27,8 @@ import { cn } from "./lib/utils";
 
 export type { MermaidConfig } from "mermaid";
 export type { RemendOptions } from "remend";
-export type { BundledLanguageName } from "./lib/code-block/bundled-languages";
 // biome-ignore lint/performance/noBarrelFile: "required"
-export {
-  bundledLanguages,
-  isBundledLanguage,
-} from "./lib/code-block/bundled-languages";
+export { bundledLanguages } from "shiki";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
   CjkPlugin,

@@ -231,7 +231,6 @@ export const Chat = ({ models }: ChatProps) => {
                             ? "block"
                             : undefined
                         }
-                        cdnUrl="http://localhost:3000/cdn"
                         isAnimating={status === "streaming"}
                         key={key}
                       >
@@ -240,11 +239,7 @@ export const Chat = ({ models }: ChatProps) => {
                     );
                   case "reasoning":
                     return (
-                      <Streamdown
-                        cdnUrl="http://localhost:3000/cdn"
-                        className="italic"
-                        key={key}
-                      >
+                      <Streamdown className="italic" key={key}>
                         {part.text}
                       </Streamdown>
                     );

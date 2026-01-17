@@ -1,21 +1,13 @@
 import type {
+  BundledLanguage,
   BundledTheme,
   LanguageRegistration,
   SpecialLanguage,
   TokensResult,
 } from "shiki";
+import { bundledLanguages, bundledThemes } from "shiki";
 import { createHighlighterCore, type HighlighterCore } from "shiki/core";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
-import {
-  type BundledLanguageName,
-  bundledLanguages,
-  isBundledLanguage,
-} from "./bundled-languages";
-import {
-  type BundledThemeName,
-  bundledThemes,
-  isBundledTheme,
-} from "./bundled-themes";
 
 const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
 
@@ -47,32 +39,36 @@ const getTokensCacheKey = (
 };
 
 /**
- * Load a theme from bundled themes only
+ * Load a theme from bundled themes
  */
-function loadTheme(themeName: string) {
-  // Check if it's a bundled theme (instant load)
-  if (isBundledTheme(themeName)) {
-    return bundledThemes[themeName as BundledThemeName];
+async function loadTheme(themeName: string) {
+  // Check if it's a bundled theme
+  if (themeName in bundledThemes) {
+    const loader = bundledThemes[themeName as BundledTheme];
+    return await loader();
   }
 
   // Fall back to github-light or github-dark if theme not found
   console.warn(
     `[Streamdown] Theme "${themeName}" not found. Falling back to ${themeName.includes("dark") ? "github-dark" : "github-light"}.`
   );
-  return themeName.includes("dark")
+  const fallbackTheme = themeName.includes("dark")
     ? bundledThemes["github-dark"]
     : bundledThemes["github-light"];
+  return await fallbackTheme();
 }
 
 /**
- * Load a language grammar from bundled languages only
+ * Load a language grammar from bundled languages
  */
-function loadLanguageGrammar(
+async function loadLanguageGrammar(
   language: string
-): LanguageRegistration | LanguageRegistration[] | null {
-  // Check if it's a bundled language (instant load)
-  if (isBundledLanguage(language)) {
-    return bundledLanguages[language as BundledLanguageName];
+): Promise<LanguageRegistration | LanguageRegistration[] | null> {
+  // Check if it's a bundled language
+  if (language in bundledLanguages) {
+    const loader = bundledLanguages[language as BundledLanguage];
+    const langModule = await loader();
+    return langModule?.default ?? langModule;
   }
 
   console.warn(
@@ -101,7 +97,7 @@ export const createShiki = (
   // Create new highlighter and cache it
   const highlighterPromise = (async () => {
     // Load the language grammar (bundled only)
-    const languageGrammar = loadLanguageGrammar(language);
+    const languageGrammar = await loadLanguageGrammar(language);
 
     // Fall back to 'text' if language couldn't be loaded
     const langs: (
@@ -111,7 +107,9 @@ export const createShiki = (
     )[] = languageGrammar ? [languageGrammar] : ["text"];
 
     // Load themes (bundled only)
-    const themeRegistrations = shikiTheme.map((theme) => loadTheme(theme));
+    const themeRegistrations = await Promise.all(
+      shikiTheme.map((theme) => loadTheme(theme))
+    );
 
     const highlighter = await createHighlighterCore({
       themes: themeRegistrations,
