@@ -7,7 +7,7 @@ import {
 } from "react";
 import type { TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
-import { useShikiPlugin } from "../plugin-context";
+import { useCodePlugin } from "../plugin-context";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContainer } from "./container";
 import { CodeBlockContext } from "./context";
@@ -26,7 +26,7 @@ export const CodeBlock = ({
   ...rest
 }: CodeBlockProps) => {
   const { shikiTheme } = useContext(StreamdownContext);
-  const shikiPlugin = useShikiPlugin();
+  const codePlugin = useCodePlugin();
 
   // Memoize the raw fallback tokens to avoid recomputing on every render
   const raw: TokensResult = useMemo(
@@ -51,13 +51,13 @@ export const CodeBlock = ({
 
   // Try to get cached result or subscribe to highlighting
   useEffect(() => {
-    // If no shiki plugin, just use raw tokens (plain text)
-    if (!shikiPlugin) {
+    // If no code plugin, just use raw tokens (plain text)
+    if (!codePlugin) {
       setResult(raw);
       return;
     }
 
-    const cachedResult = shikiPlugin.highlight(
+    const cachedResult = codePlugin.highlight(
       {
         code,
         language,
@@ -77,7 +77,7 @@ export const CodeBlock = ({
     // Not cached - reset to raw tokens while waiting for highlighting
     // This is critical for streaming: ensures we show current code, not stale tokens
     setResult(raw);
-  }, [code, language, shikiTheme, shikiPlugin, raw]);
+  }, [code, language, shikiTheme, codePlugin, raw]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>

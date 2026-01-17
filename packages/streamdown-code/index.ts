@@ -54,6 +54,17 @@ export interface CodeHighlighterPlugin {
   getThemes: () => [BundledTheme, BundledTheme];
 }
 
+/**
+ * Options for creating a code plugin
+ */
+export interface CodePluginOptions {
+  /**
+   * Default themes for syntax highlighting [light, dark]
+   * @default ["github-light", "github-dark"]
+   */
+  themes?: [BundledTheme, BundledTheme];
+}
+
 const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
 
 // Build language name set for quick lookup
@@ -140,84 +151,97 @@ const createHighlighter = (
 };
 
 /**
- * Code plugin for syntax highlighting
- * Supports all languages and themes from shiki
+ * Create a code plugin with optional configuration
  */
-export const codePlugin: CodeHighlighterPlugin = {
-  name: "shiki",
-  type: "code-highlighter",
+export function createCodePlugin(
+  options: CodePluginOptions = {}
+): CodeHighlighterPlugin {
+  const defaultThemes: [BundledTheme, BundledTheme] = options.themes ?? [
+    "github-light",
+    "github-dark",
+  ];
 
-  supportsLanguage(language: string): boolean {
-    return languageNames.has(language);
-  },
+  return {
+    name: "shiki",
+    type: "code-highlighter",
 
-  getSupportedLanguages(): string[] {
-    return Array.from(languageNames);
-  },
+    supportsLanguage(language: string): boolean {
+      return languageNames.has(language);
+    },
 
-  getThemes(): [BundledTheme, BundledTheme] {
-    return ["github-light", "github-dark"];
-  },
+    getSupportedLanguages(): string[] {
+      return Array.from(languageNames);
+    },
 
-  highlight(
-    { code, language, themes: themeNames }: HighlightOptions,
-    callback?: (result: HighlightResult) => void
-  ): HighlightResult | null {
-    const tokensCacheKey = getTokensCacheKey(
-      code,
-      language,
-      themeNames as [string, string]
-    );
+    getThemes(): [BundledTheme, BundledTheme] {
+      return defaultThemes;
+    },
 
-    // Return cached result if available
-    if (tokensCache.has(tokensCacheKey)) {
-      return tokensCache.get(tokensCacheKey) as TokensResult;
-    }
+    highlight(
+      { code, language, themes: themeNames }: HighlightOptions,
+      callback?: (result: HighlightResult) => void
+    ): HighlightResult | null {
+      const tokensCacheKey = getTokensCacheKey(
+        code,
+        language,
+        themeNames as [string, string]
+      );
 
-    // Subscribe callback if provided
-    if (callback) {
-      if (!subscribers.has(tokensCacheKey)) {
-        subscribers.set(tokensCacheKey, new Set());
+      // Return cached result if available
+      if (tokensCache.has(tokensCacheKey)) {
+        return tokensCache.get(tokensCacheKey) as TokensResult;
       }
-      const subs = subscribers.get(tokensCacheKey) as Set<
-        (result: TokensResult) => void
-      >;
-      subs.add(callback);
-    }
 
-    // Start highlighting in background
-    createHighlighter(language, themeNames as [string, string])
-      .then((highlighter) => {
-        const availableLangs = highlighter.getLoadedLanguages();
-        const langToUse = (
-          availableLangs.includes(language) ? language : "text"
-        ) as SpecialLanguage;
+      // Subscribe callback if provided
+      if (callback) {
+        if (!subscribers.has(tokensCacheKey)) {
+          subscribers.set(tokensCacheKey, new Set());
+        }
+        const subs = subscribers.get(tokensCacheKey) as Set<
+          (result: TokensResult) => void
+        >;
+        subs.add(callback);
+      }
 
-        const result = highlighter.codeToTokens(code, {
-          lang: langToUse,
-          themes: {
-            light: themeNames[0] as BundledTheme,
-            dark: themeNames[1] as BundledTheme,
-          },
+      // Start highlighting in background
+      createHighlighter(language, themeNames as [string, string])
+        .then((highlighter) => {
+          const availableLangs = highlighter.getLoadedLanguages();
+          const langToUse = (
+            availableLangs.includes(language) ? language : "text"
+          ) as SpecialLanguage;
+
+          const result = highlighter.codeToTokens(code, {
+            lang: langToUse,
+            themes: {
+              light: themeNames[0] as BundledTheme,
+              dark: themeNames[1] as BundledTheme,
+            },
+          });
+
+          // Cache the result
+          tokensCache.set(tokensCacheKey, result);
+
+          // Notify all subscribers
+          const subs = subscribers.get(tokensCacheKey);
+          if (subs) {
+            for (const sub of subs) {
+              sub(result);
+            }
+            subscribers.delete(tokensCacheKey);
+          }
+        })
+        .catch((error) => {
+          console.error("[Streamdown Code] Failed to highlight code:", error);
+          subscribers.delete(tokensCacheKey);
         });
 
-        // Cache the result
-        tokensCache.set(tokensCacheKey, result);
+      return null;
+    },
+  };
+}
 
-        // Notify all subscribers
-        const subs = subscribers.get(tokensCacheKey);
-        if (subs) {
-          for (const sub of subs) {
-            sub(result);
-          }
-          subscribers.delete(tokensCacheKey);
-        }
-      })
-      .catch((error) => {
-        console.error("[Streamdown Code] Failed to highlight code:", error);
-        subscribers.delete(tokensCacheKey);
-      });
-
-    return null;
-  },
-};
+/**
+ * Pre-configured code plugin with default settings
+ */
+export const codePlugin = createCodePlugin();
