@@ -49,8 +49,6 @@
     "@vitest/coverage-v8": "^4.0.15",
     "jsdom": "^27.3.0",
     "mermaid": "^11.12.2",
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1",
     "react-markdown": "^10.1.0",
     "tsup": "^8.5.1",
     "vitest": "^4.0.15"
