@@ -24,4 +24,10 @@ describe("bold formatting (**)", () => {
   it("should handle partial bold text at chunk boundary", () => {
     expect(remend("Here is some **bold tex")).toBe("Here is some **bold tex**");
   });
+
+  it("should complete bold with trailing single asterisk", () => {
+    expect(remend("**xxx*")).toBe("**xxx***");
+    expect(remend("**bold text*")).toBe("**bold text***");
+    expect(remend("Text with **bold*")).toBe("Text with **bold***");
+  });
 });

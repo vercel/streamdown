@@ -1,4 +1,4 @@
-export const boldPattern = /(\*\*)([^*]*?)$/;
+export const boldPattern = /(\*\*)([^*]*\*?)$/;
 export const italicPattern = /(__)([^_]*?)$/;
 export const boldItalicPattern = /(\*\*\*)([^*]*?)$/;
 export const singleAsteriskPattern = /(\*)([^*]*?)$/;
