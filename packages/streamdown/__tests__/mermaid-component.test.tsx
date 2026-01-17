@@ -1,9 +1,9 @@
 import { act, render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StreamdownContext } from "../index";
+import { Mermaid } from "../lib/mermaid/index";
 import { PluginContext } from "../lib/plugin-context";
 import type { DiagramPlugin, MermaidInstance } from "../lib/plugin-types";
-import { Mermaid } from "../lib/mermaid/index";
 
 // Create a mock mermaid plugin
 const createMockMermaidPlugin = (
@@ -39,8 +39,13 @@ describe("Mermaid Component", () => {
     contextOverrides = {},
     pluginOverrides?: { mermaid?: DiagramPlugin }
   ) => {
-    const streamdownContextValue = { ...defaultStreamdownContext, ...contextOverrides };
-    const pluginContextValue = pluginOverrides ?? { mermaid: createMockMermaidPlugin() };
+    const streamdownContextValue = {
+      ...defaultStreamdownContext,
+      ...contextOverrides,
+    };
+    const pluginContextValue = pluginOverrides ?? {
+      mermaid: createMockMermaidPlugin(),
+    };
 
     const result = render(
       <PluginContext.Provider value={pluginContextValue}>

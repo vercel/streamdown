@@ -1,9 +1,9 @@
 "use client";
 
+import type { Link, Root, Text } from "mdast";
 import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
 import type { Pluggable, Plugin } from "unified";
-import type { Link, Root, Text } from "mdast";
 import type { Parent } from "unist";
 import { visit } from "unist-util-visit";
 
@@ -45,9 +45,7 @@ const CJK_AUTOLINK_BOUNDARY_CHARS = new Set<string>([
 
 const AUTOLINK_PREFIX_PATTERN = /^(https?:\/\/|mailto:|www\.)/i;
 
-const isAutolinkLiteral = (
-  node: Link
-): node is Link & { children: [Text] } => {
+const isAutolinkLiteral = (node: Link): node is Link & { children: [Text] } => {
   if (node.children.length !== 1) {
     return false;
   }

@@ -38,13 +38,19 @@ describe("createMathPlugin", () => {
     const plugin = createMathPlugin({ singleDollarTextMath: true });
     expect(plugin.remarkPlugin).toBeDefined();
     expect(Array.isArray(plugin.remarkPlugin)).toBe(true);
-    const [, options] = plugin.remarkPlugin as [unknown, { singleDollarTextMath: boolean }];
+    const [, options] = plugin.remarkPlugin as [
+      unknown,
+      { singleDollarTextMath: boolean },
+    ];
     expect(options.singleDollarTextMath).toBe(true);
   });
 
   it("should create plugin with singleDollarTextMath false by default", () => {
     const plugin = createMathPlugin();
-    const [, options] = plugin.remarkPlugin as [unknown, { singleDollarTextMath: boolean }];
+    const [, options] = plugin.remarkPlugin as [
+      unknown,
+      { singleDollarTextMath: boolean },
+    ];
     expect(options.singleDollarTextMath).toBe(false);
   });
 
@@ -52,13 +58,19 @@ describe("createMathPlugin", () => {
     const plugin = createMathPlugin({ errorColor: "#ff0000" });
     expect(plugin.rehypePlugin).toBeDefined();
     expect(Array.isArray(plugin.rehypePlugin)).toBe(true);
-    const [, options] = plugin.rehypePlugin as [unknown, { errorColor: string }];
+    const [, options] = plugin.rehypePlugin as [
+      unknown,
+      { errorColor: string },
+    ];
     expect(options.errorColor).toBe("#ff0000");
   });
 
   it("should use default errorColor when not specified", () => {
     const plugin = createMathPlugin();
-    const [, options] = plugin.rehypePlugin as [unknown, { errorColor: string }];
+    const [, options] = plugin.rehypePlugin as [
+      unknown,
+      { errorColor: string },
+    ];
     expect(options.errorColor).toBe("var(--color-muted-foreground)");
   });
 
@@ -66,8 +78,14 @@ describe("createMathPlugin", () => {
     const plugin1 = createMathPlugin({ singleDollarTextMath: true });
     const plugin2 = createMathPlugin({ singleDollarTextMath: false });
 
-    const [, options1] = plugin1.remarkPlugin as [unknown, { singleDollarTextMath: boolean }];
-    const [, options2] = plugin2.remarkPlugin as [unknown, { singleDollarTextMath: boolean }];
+    const [, options1] = plugin1.remarkPlugin as [
+      unknown,
+      { singleDollarTextMath: boolean },
+    ];
+    const [, options2] = plugin2.remarkPlugin as [
+      unknown,
+      { singleDollarTextMath: boolean },
+    ];
 
     expect(options1.singleDollarTextMath).toBe(true);
     expect(options2.singleDollarTextMath).toBe(false);

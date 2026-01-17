@@ -1,14 +1,14 @@
 "use client";
 
+import { cjkPlugin } from "@streamdown/cjk";
+import { codePlugin } from "@streamdown/code";
+import { mathPlugin } from "@streamdown/math";
+import { mermaidPlugin } from "@streamdown/mermaid";
 import { RefreshCcwIcon } from "lucide-react";
 import { useInView } from "motion/react";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Streamdown, type StreamdownProps } from "streamdown";
-import { codePlugin } from "@streamdown/code";
-import { mermaidPlugin } from "@streamdown/mermaid";
-import { mathPlugin } from "@streamdown/math";
-import { cjkPlugin } from "@streamdown/cjk";
 import { Button } from "@/components/ui/button";
 
 const DEFAULT_SPEED = 100;
@@ -117,13 +117,13 @@ export const Section = ({
             </div>
             <div className="h-[400px] overflow-y-auto bg-background p-4">
               <Streamdown
+                isAnimating={isAnimating}
                 plugins={{
                   code: codePlugin,
                   mermaid: mermaidPlugin,
                   math: mathPlugin,
                   cjk: cjkPlugin,
                 }}
-                isAnimating={isAnimating}
                 {...streamdownProps}
               >
                 {content}

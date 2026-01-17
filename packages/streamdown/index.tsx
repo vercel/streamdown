@@ -28,14 +28,19 @@ import { cn } from "./lib/utils";
 export type { MermaidConfig } from "mermaid";
 export type { RemendOptions } from "remend";
 export type { BundledLanguageName } from "./lib/code-block/bundled-languages";
-export type { PluginConfig, CodeHighlighterPlugin, DiagramPlugin, MathPlugin, CjkPlugin } from "./lib/plugin-types";
-
 // biome-ignore lint/performance/noBarrelFile: "required"
 export {
   bundledLanguages,
   isBundledLanguage,
 } from "./lib/code-block/bundled-languages";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
+export type {
+  CjkPlugin,
+  CodeHighlighterPlugin,
+  DiagramPlugin,
+  MathPlugin,
+  PluginConfig,
+} from "./lib/plugin-types";
 
 export type ControlsConfig =
   | boolean
@@ -194,7 +199,6 @@ const defaultShikiTheme: [BundledTheme, BundledTheme] = [
   "github-light",
   "github-dark",
 ];
-
 
 export const Streamdown = memo(
   ({

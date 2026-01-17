@@ -95,7 +95,9 @@ describe("MermaidInstance", () => {
     const plugin = createMermaidPlugin();
     const instance = plugin.getMermaid();
 
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const consoleSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
 
     try {
       await instance.render("invalid-test", "not a valid diagram %%%");

@@ -1,7 +1,7 @@
 "use client";
 
-import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 import type { Pluggable } from "unified";
 
 /**

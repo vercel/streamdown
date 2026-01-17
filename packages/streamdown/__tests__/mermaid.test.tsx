@@ -2,11 +2,11 @@ import { render, waitFor } from "@testing-library/react";
 import type { MermaidConfig } from "mermaid";
 import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { PluginContext } from "../lib/plugin-context";
-import type { DiagramPlugin } from "../lib/plugin-types";
 import { Mermaid } from "../lib/mermaid";
 import { MermaidDownloadDropdown } from "../lib/mermaid/download-button";
 import { MermaidFullscreenButton } from "../lib/mermaid/fullscreen-button";
+import { PluginContext } from "../lib/plugin-context";
+import type { DiagramPlugin } from "../lib/plugin-types";
 
 const { saveMock, mockInitialize, mockRender, mockMermaid } = vi.hoisted(() => {
   const mockInitialize = vi.fn();
@@ -90,7 +90,9 @@ describe("Mermaid", () => {
       container = result.container;
     });
 
-    const mermaidContainer = container?.querySelector('[data-streamdown="mermaid"]') as HTMLElement;
+    const mermaidContainer = container?.querySelector(
+      '[data-streamdown="mermaid"]'
+    ) as HTMLElement;
     expect(mermaidContainer?.className).toContain("custom-class");
   });
 

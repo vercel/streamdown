@@ -1,8 +1,7 @@
-import { unlinkSync, statSync } from "node:fs";
-import { gzipSync } from "node:zlib";
+import { readFileSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { readFileSync } from "node:fs";
+import { gzipSync } from "node:zlib";
 import { build } from "esbuild";
 
 async function analyzeBundle(name, entryPoint, external) {
@@ -88,7 +87,9 @@ async function main() {
   ]);
   console.log(`   Minified: ${formatSize(withShiki.totalBytes)}`);
   console.log(`   Gzipped:  ${formatSize(withShiki.gzippedBytes)}`);
-  console.log(`   Cloudflare Workers limit: 1MB compressed (free) / 10MB (paid)`);
+  console.log(
+    "   Cloudflare Workers limit: 1MB compressed (free) / 10MB (paid)"
+  );
 
   // Top dependencies in full bundle
   console.log("\n4. TOP 15 LARGEST FILES (in full bundle):\n");

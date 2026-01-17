@@ -1,7 +1,6 @@
-import type { ComponentType } from "react";
 import type { MermaidConfig } from "mermaid";
-import type { Pluggable } from "unified";
 import type { BundledTheme, TokensResult } from "shiki";
+import type { Pluggable } from "unified";
 
 /**
  * Result from code highlighting
@@ -105,7 +104,11 @@ export interface CjkPlugin {
 /**
  * Union type for all plugins
  */
-export type StreamdownPlugin = CodeHighlighterPlugin | DiagramPlugin | MathPlugin | CjkPlugin;
+export type StreamdownPlugin =
+  | CodeHighlighterPlugin
+  | DiagramPlugin
+  | MathPlugin
+  | CjkPlugin;
 
 /**
  * Plugin configuration passed to Streamdown

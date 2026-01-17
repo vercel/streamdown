@@ -44,7 +44,9 @@ export const Mermaid = ({
 
     // If no mermaid plugin, show error
     if (!mermaidPlugin) {
-      setError("Mermaid plugin not available. Please add the mermaid plugin to enable diagram rendering.");
+      setError(
+        "Mermaid plugin not available. Please add the mermaid plugin to enable diagram rendering."
+      );
       return;
     }
 

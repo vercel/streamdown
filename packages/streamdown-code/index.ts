@@ -2,10 +2,10 @@
 
 import type {
   BundledTheme,
-  TokensResult,
   HighlighterCore,
-  SpecialLanguage,
   LanguageInput,
+  SpecialLanguage,
+  TokensResult,
 } from "shiki";
 import { bundledLanguages, bundledThemes } from "shiki";
 import { createHighlighterCore } from "shiki/core";

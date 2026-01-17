@@ -1,7 +1,7 @@
 "use client";
 
-import mermaid from "mermaid";
 import type { MermaidConfig } from "mermaid";
+import mermaid from "mermaid";
 
 /**
  * Mermaid instance interface
@@ -65,7 +65,7 @@ export function createMermaidPlugin(
         mermaid.initialize(currentConfig);
         initialized = true;
       }
-      return mermaid.render(id, source);
+      return await mermaid.render(id, source);
     },
   };
 

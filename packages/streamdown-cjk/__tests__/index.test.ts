@@ -1,11 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { unified } from "unified";
-import remarkParse from "remark-parse";
+import type { Link, Root, Text } from "mdast";
 import remarkGfm from "remark-gfm";
+import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
-import type { Link, Text, Root } from "mdast";
+import { unified } from "unified";
 import { visit } from "unist-util-visit";
-import { createCjkPlugin, cjkPlugin } from "../index";
+import { describe, expect, it } from "vitest";
+import { cjkPlugin, createCjkPlugin } from "../index";
 
 describe("cjkPlugin", () => {
   describe("plugin properties", () => {
@@ -135,9 +135,7 @@ describe("CJK autolink boundary splitting", () => {
     ];
 
     for (const [open, close] of brackets) {
-      const tree = await processMarkdown(
-        `${open}https://example.com${close}`
-      );
+      const tree = await processMarkdown(`${open}https://example.com${close}`);
       const links = getLinks(tree);
 
       expect(links.length).toBe(1);

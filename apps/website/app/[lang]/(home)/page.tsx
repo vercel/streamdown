@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import { Caret } from "./components/caret";
 import { CJKLanguageSupport } from "./components/cjk";
 import { CodeBlocks } from "./components/code-blocks";
-import { Caret } from "./components/caret";
 import { CallToAction } from "./components/cta";
 import { GitHubFlavoredMarkdown } from "./components/gfm";
 import { HardenedMarkdown } from "./components/hardened";
