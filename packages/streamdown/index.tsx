@@ -218,7 +218,6 @@ export const Streamdown = memo(
     // All hooks must be called before any conditional returns
     const generatedId = useId();
     const [_isPending, startTransition] = useTransition();
-    const [displayBlocks, setDisplayBlocks] = useState<string[]>([]);
 
     // Apply remend to fix incomplete markdown BEFORE parsing into blocks
     // This prevents partial list items from being interpreted as setext headings
@@ -235,6 +234,10 @@ export const Streamdown = memo(
       () => parseMarkdownIntoBlocksFn(processedChildren),
       [processedChildren, parseMarkdownIntoBlocksFn]
     );
+
+    // Initialize displayBlocks with blocks to avoid hydration mismatch
+    // Previously initialized as [] which caused content to flicker on hydration
+    const [displayBlocks, setDisplayBlocks] = useState<string[]>(blocks);
 
     // Use transition for block updates in streaming mode to avoid blocking UI
     useEffect(() => {
