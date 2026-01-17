@@ -139,4 +139,4 @@ export function createCjkPlugin(): CjkPlugin {
 /**
  * Pre-configured CJK plugin with default settings
  */
-export const cjkPlugin = createCjkPlugin();
+export const cjk = createCjkPlugin();

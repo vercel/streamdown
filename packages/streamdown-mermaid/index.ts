@@ -85,7 +85,7 @@ export function createMermaidPlugin(
 /**
  * Pre-configured Mermaid plugin with default settings
  */
-export const mermaidPlugin = createMermaidPlugin();
+export const mermaid = createMermaidPlugin();
 
 // Re-export MermaidConfig for convenience
 export type { MermaidConfig } from "mermaid";

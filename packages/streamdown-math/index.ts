@@ -71,4 +71,4 @@ export function createMathPlugin(options: MathPluginOptions = {}): MathPlugin {
 /**
  * Pre-configured math plugin with default settings
  */
-export const mathPlugin = createMathPlugin();
+export const math = createMathPlugin();

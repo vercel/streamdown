@@ -211,4 +211,4 @@ export function createCodePlugin(
 /**
  * Pre-configured code plugin with default settings
  */
-export const codePlugin = createCodePlugin();
+export const code = createCodePlugin();
