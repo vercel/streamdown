@@ -292,6 +292,45 @@ describe("Caret Feature", () => {
       expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ▋"');
     });
 
+    it("should render placeholder span for caret when content is empty", () => {
+      const { container } = render(
+        <Streamdown caret="block" isAnimating={true}>
+          {""}
+        </Streamdown>
+      );
+
+      const wrapper = container.firstElementChild;
+      expect(wrapper).toBeTruthy();
+
+      // Should have a span placeholder for the caret to attach to
+      const placeholder = wrapper?.querySelector("span");
+      expect(placeholder).toBeTruthy();
+    });
+
+    it("should not render placeholder span when not animating", () => {
+      const { container } = render(
+        <Streamdown caret="block" isAnimating={false}>
+          {""}
+        </Streamdown>
+      );
+
+      const wrapper = container.firstElementChild;
+      const placeholder = wrapper?.querySelector("span");
+      expect(placeholder).toBeFalsy();
+    });
+
+    it("should not render placeholder span when caret is not set", () => {
+      const { container } = render(
+        <Streamdown isAnimating={true}>
+          {""}
+        </Streamdown>
+      );
+
+      const wrapper = container.firstElementChild;
+      const placeholder = wrapper?.querySelector("span");
+      expect(placeholder).toBeFalsy();
+    });
+
     it("should work with markdown content", () => {
       const { container } = render(
         <Streamdown caret="block" isAnimating={true}>

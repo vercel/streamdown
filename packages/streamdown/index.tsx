@@ -348,6 +348,7 @@ export const Streamdown = memo(
             )}
             style={style}
           >
+            {blocksToRender.length === 0 && caret && isAnimating && <span />}
             {blocksToRender.map((block, index) => (
               <BlockComponent
                 components={mergedComponents}
