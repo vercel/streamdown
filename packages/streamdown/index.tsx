@@ -25,10 +25,8 @@ import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig } from "./lib/plugin-types";
 import { cn } from "./lib/utils";
 
-export type { MermaidConfig } from "mermaid";
-export type { RemendOptions } from "remend";
-// biome-ignore lint/performance/noBarrelFile: required for library exports
-export { type BundledTheme, bundledLanguages } from "shiki";
+export type { BundledTheme } from "shiki";
+// biome-ignore lint/performance/noBarrelFile: "required"
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
   CjkPlugin,

@@ -20,7 +20,7 @@ export type HighlightResult = TokensResult;
  */
 export interface HighlightOptions {
   code: string;
-  language: string;
+  language: BundledLanguage;
   themes: [string, string];
 }
 
@@ -42,11 +42,11 @@ export interface CodeHighlighterPlugin {
   /**
    * Check if language is supported
    */
-  supportsLanguage: (language: string) => boolean;
+  supportsLanguage: (language: BundledLanguage) => boolean;
   /**
    * Get list of supported languages
    */
-  getSupportedLanguages: () => string[];
+  getSupportedLanguages: () => BundledLanguage[];
   /**
    * Get the configured themes
    */
@@ -65,7 +65,9 @@ export interface CodePluginOptions {
 }
 
 // Build language name set for quick lookup
-const languageNames = new Set<string>(Object.keys(bundledLanguages));
+const languageNames = new Set<BundledLanguage>(
+  Object.keys(bundledLanguages) as BundledLanguage[]
+);
 
 // Singleton highlighter cache
 const highlighterCache = new Map<
@@ -80,7 +82,7 @@ const tokensCache = new Map<string, TokensResult>();
 const subscribers = new Map<string, Set<(result: TokensResult) => void>>();
 
 const getHighlighterCacheKey = (
-  language: string,
+  language: BundledLanguage,
   themeNames: [string, string]
 ) => `${language}-${themeNames[0]}-${themeNames[1]}`;
 
@@ -95,7 +97,7 @@ const getTokensCacheKey = (
 };
 
 const getHighlighter = (
-  language: string,
+  language: BundledLanguage,
   themeNames: [string, string]
 ): Promise<HighlighterGeneric<BundledLanguage, BundledTheme>> => {
   const cacheKey = getHighlighterCacheKey(language, themeNames);
@@ -106,12 +108,9 @@ const getHighlighter = (
     >;
   }
 
-  // Determine if it's a bundled language or fall back to text
-  const lang = language in bundledLanguages ? language : "text";
-
   const highlighterPromise = createHighlighter({
     themes: themeNames,
-    langs: [lang],
+    langs: [language],
   });
 
   highlighterCache.set(cacheKey, highlighterPromise);
@@ -133,11 +132,11 @@ export function createCodePlugin(
     name: "shiki",
     type: "code-highlighter",
 
-    supportsLanguage(language: string): boolean {
+    supportsLanguage(language: BundledLanguage): boolean {
       return languageNames.has(language);
     },
 
-    getSupportedLanguages(): string[] {
+    getSupportedLanguages(): BundledLanguage[] {
       return Array.from(languageNames);
     },
 
