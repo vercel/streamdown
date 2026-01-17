@@ -5,22 +5,22 @@ import remarkStringify from "remark-stringify";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
 import { describe, expect, it } from "vitest";
-import { cjkPlugin, createCjkPlugin } from "../index";
+import { cjk, createCjkPlugin } from "../index";
 
-describe("cjkPlugin", () => {
+describe("cjk", () => {
   describe("plugin properties", () => {
     it("should have correct name and type", () => {
-      expect(cjkPlugin.name).toBe("cjk");
-      expect(cjkPlugin.type).toBe("cjk");
+      expect(cjk.name).toBe("cjk");
+      expect(cjk.type).toBe("cjk");
     });
 
     it("should have remarkPlugins array", () => {
-      expect(cjkPlugin.remarkPlugins).toBeDefined();
-      expect(Array.isArray(cjkPlugin.remarkPlugins)).toBe(true);
+      expect(cjk.remarkPlugins).toBeDefined();
+      expect(Array.isArray(cjk.remarkPlugins)).toBe(true);
     });
 
     it("should have 3 remark plugins", () => {
-      expect(cjkPlugin.remarkPlugins.length).toBe(3);
+      expect(cjk.remarkPlugins.length).toBe(3);
     });
   });
 });
@@ -45,7 +45,7 @@ describe("createCjkPlugin", () => {
 
 describe("CJK autolink boundary splitting", () => {
   const processMarkdown = async (markdown: string) => {
-    const [autolinkBoundaryPlugin] = cjkPlugin.remarkPlugins;
+    const [autolinkBoundaryPlugin] = cjk.remarkPlugins;
 
     const processor = unified()
       .use(remarkParse)
@@ -226,7 +226,7 @@ describe("CJK punctuation boundary characters", () => {
   ];
 
   it("should recognize all CJK punctuation characters", async () => {
-    const [autolinkBoundaryPlugin] = cjkPlugin.remarkPlugins;
+    const [autolinkBoundaryPlugin] = cjk.remarkPlugins;
 
     for (const punct of CJK_PUNCTUATION) {
       const markdown = `https://example.com${punct}后`;

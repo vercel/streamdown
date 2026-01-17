@@ -33,10 +33,10 @@ Then import the plugins:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from 'streamdown';
-import { codePlugin } from '@streamdown/code';
-import { mermaidPlugin } from '@streamdown/mermaid';
-import { mathPlugin } from '@streamdown/math';
-import { cjkPlugin } from '@streamdown/cjk';
+import { code } from '@streamdown/code';
+import { mermaid } from '@streamdown/mermaid';
+import { math } from '@streamdown/math';
+import { cjk } from '@streamdown/cjk';
 
 // Import KaTeX styles for math rendering
 import 'katex/dist/katex.min.css';
@@ -65,10 +65,10 @@ And some math: $$E = mc^2$$
   return (
     <Streamdown
       plugins={{
-        code: codePlugin,
-        mermaid: mermaidPlugin,
-        math: mathPlugin,
-        cjk: cjkPlugin,
+        code: code,
+        mermaid: mermaid,
+        math: math,
+        cjk: cjk,
       }}
     >
       {markdown}
@@ -88,9 +88,9 @@ npm install @streamdown/code
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from 'streamdown';
-import { codePlugin } from '@streamdown/code';
+import { code } from '@streamdown/code';
 
-<Streamdown plugins={{ code: codePlugin }}>
+<Streamdown plugins={{ code: code }}>
   {markdown}
 </Streamdown>
 ```
@@ -102,9 +102,9 @@ npm install @streamdown/mermaid
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from 'streamdown';
-import { mermaidPlugin } from '@streamdown/mermaid';
+import { mermaid } from '@streamdown/mermaid';
 
-<Streamdown plugins={{ mermaid: mermaidPlugin }}>
+<Streamdown plugins={{ mermaid: mermaid }}>
   {markdown}
 </Streamdown>
 ```
@@ -116,10 +116,10 @@ npm install @streamdown/math
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from 'streamdown';
-import { mathPlugin } from '@streamdown/math';
+import { math } from '@streamdown/math';
 import 'katex/dist/katex.min.css';
 
-<Streamdown plugins={{ math: mathPlugin }}>
+<Streamdown plugins={{ math: math }}>
   {markdown}
 </Streamdown>
 ```
@@ -131,9 +131,9 @@ npm install @streamdown/cjk
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from 'streamdown';
-import { cjkPlugin } from '@streamdown/cjk';
+import { cjk } from '@streamdown/cjk';
 
-<Streamdown plugins={{ cjk: cjkPlugin }}>
+<Streamdown plugins={{ cjk: cjk }}>
   {markdown}
 </Streamdown>
 ```
@@ -147,8 +147,8 @@ Streamdown really shines when used with AI streaming. Here's an example using th
 
 import { useChat } from '@ai-sdk/react';
 import { Streamdown } from 'streamdown';
-import { codePlugin } from '@streamdown/code';
-import { mermaidPlugin } from '@streamdown/mermaid';
+import { code } from '@streamdown/code';
+import { mermaid } from '@streamdown/mermaid';
 
 export default function ChatPage() {
   const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
@@ -164,8 +164,8 @@ export default function ChatPage() {
             <div className="inline-block max-w-2xl">
               <Streamdown
                 plugins={{
-                  code: codePlugin,
-                  mermaid: mermaidPlugin,
+                  code: code,
+                  mermaid: mermaid,
                 }}
                 isAnimating={isLoading && message.role === 'assistant'}
               >
@@ -209,13 +209,13 @@ Enable static mode by setting the `mode` prop to `"static"`:
 
 ```tsx title="app/blog/[slug]/page.tsx"
 import { Streamdown } from 'streamdown';
-import { codePlugin } from '@streamdown/code';
+import { code } from '@streamdown/code';
 
 export default function BlogPost({ content }: { content: string }) {
   return (
     <Streamdown
       mode="static"
-      plugins={{ code: codePlugin }}
+      plugins={{ code: code }}
     >
       {content}
     </Streamdown>
@@ -245,8 +245,8 @@ All standard Streamdown props work in static mode, including:
 <Streamdown
   mode="static"
   plugins={{
-    code: codePlugin,
-    mermaid: mermaidPlugin,
+    code: code,
+    mermaid: mermaid,
   }}
   shikiTheme={['github-light', 'github-dark']}
   mermaid={{ config: { theme: 'neutral' } }}

@@ -179,7 +179,7 @@ import { code } from '@streamdown/code';
 ```tsx
 import { createCodePlugin } from '@streamdown/code';
 
-const codePlugin = createCodePlugin({
+const code = createCodePlugin({
   themes: ['github-light', 'github-dark'], // [light, dark]
 });
 ```
@@ -215,7 +215,7 @@ import { mermaid } from '@streamdown/mermaid';
 ```tsx
 import { createMermaidPlugin } from '@streamdown/mermaid';
 
-const mermaidPlugin = createMermaidPlugin({
+const mermaid = createMermaidPlugin({
   config: {
     theme: 'dark',
     fontFamily: 'monospace',
@@ -255,7 +255,7 @@ import 'katex/dist/katex.min.css';
 ```tsx
 import { createMathPlugin } from '@streamdown/math';
 
-const mathPlugin = createMathPlugin({
+const math = createMathPlugin({
   singleDollarTextMath: true, // Enable $...$ syntax
   errorColor: '#ff0000',
 });

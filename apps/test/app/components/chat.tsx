@@ -1,10 +1,10 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { cjkPlugin } from "@streamdown/cjk";
-import { codePlugin } from "@streamdown/code";
-import { mathPlugin } from "@streamdown/math";
-import { mermaidPlugin } from "@streamdown/mermaid";
+import { cjk } from "@streamdown/cjk";
+import { code } from "@streamdown/code";
+import { math } from "@streamdown/math";
+import { mermaid } from "@streamdown/mermaid";
 import { DefaultChatTransport } from "ai";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -291,12 +291,7 @@ export const Chat = ({ models }: ChatProps) => {
                         }
                         isAnimating={status === "streaming"}
                         key={key}
-                        plugins={{
-                          code: codePlugin,
-                          mermaid: mermaidPlugin,
-                          math: mathPlugin,
-                          cjk: cjkPlugin,
-                        }}
+                        plugins={{ code, mermaid, math, cjk }}
                       >
                         {part.text}
                       </Streamdown>

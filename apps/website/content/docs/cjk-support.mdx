@@ -126,11 +126,11 @@ Then import and pass the plugin to Streamdown:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
-import { cjkPlugin } from "@streamdown/cjk";
+import { cjk } from "@streamdown/cjk";
 
 export default function Page() {
   return (
-    <Streamdown plugins={{ cjk: cjkPlugin }}>
+    <Streamdown plugins={{ cjk: cjk }}>
       {markdown}
     </Streamdown>
   );

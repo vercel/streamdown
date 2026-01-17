@@ -1,42 +1,42 @@
 import { describe, expect, it, vi } from "vitest";
-import { codePlugin, createCodePlugin } from "../index";
+import { code, createCodePlugin } from "../index";
 
-describe("codePlugin", () => {
+describe("code", () => {
   describe("plugin properties", () => {
     it("should have correct name and type", () => {
-      expect(codePlugin.name).toBe("shiki");
-      expect(codePlugin.type).toBe("code-highlighter");
+      expect(code.name).toBe("shiki");
+      expect(code.type).toBe("code-highlighter");
     });
 
     it("should return default themes", () => {
-      const themes = codePlugin.getThemes();
+      const themes = code.getThemes();
       expect(themes).toEqual(["github-light", "github-dark"]);
     });
   });
 
   describe("supportsLanguage", () => {
     it("should return true for supported languages", () => {
-      expect(codePlugin.supportsLanguage("javascript")).toBe(true);
-      expect(codePlugin.supportsLanguage("typescript")).toBe(true);
-      expect(codePlugin.supportsLanguage("python")).toBe(true);
-      expect(codePlugin.supportsLanguage("rust")).toBe(true);
+      expect(code.supportsLanguage("javascript")).toBe(true);
+      expect(code.supportsLanguage("typescript")).toBe(true);
+      expect(code.supportsLanguage("python")).toBe(true);
+      expect(code.supportsLanguage("rust")).toBe(true);
     });
 
     it("should return false for unsupported languages", () => {
-      expect(codePlugin.supportsLanguage("not-a-real-language")).toBe(false);
-      expect(codePlugin.supportsLanguage("")).toBe(false);
+      expect(code.supportsLanguage("not-a-real-language")).toBe(false);
+      expect(code.supportsLanguage("")).toBe(false);
     });
   });
 
   describe("getSupportedLanguages", () => {
     it("should return array of languages", () => {
-      const languages = codePlugin.getSupportedLanguages();
+      const languages = code.getSupportedLanguages();
       expect(Array.isArray(languages)).toBe(true);
       expect(languages.length).toBeGreaterThan(0);
     });
 
     it("should include common languages", () => {
-      const languages = codePlugin.getSupportedLanguages();
+      const languages = code.getSupportedLanguages();
       expect(languages).toContain("javascript");
       expect(languages).toContain("typescript");
       expect(languages).toContain("python");
@@ -48,7 +48,7 @@ describe("codePlugin", () => {
   describe("highlight", () => {
     it("should return null initially and call callback when ready", async () => {
       const callback = vi.fn();
-      const result = codePlugin.highlight(
+      const result = code.highlight(
         {
           code: "const x = 1;",
           language: "javascript",
@@ -76,7 +76,7 @@ describe("codePlugin", () => {
       const callback1 = vi.fn();
       const callback2 = vi.fn();
 
-      codePlugin.highlight(
+      code.highlight(
         {
           code: "let y = 2;",
           language: "javascript",
@@ -92,7 +92,7 @@ describe("codePlugin", () => {
         { timeout: 5000 }
       );
 
-      const cachedResult = codePlugin.highlight(
+      const cachedResult = code.highlight(
         {
           code: "let y = 2;",
           language: "javascript",

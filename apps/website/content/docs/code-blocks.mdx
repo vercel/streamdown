@@ -31,11 +31,11 @@ Then import and pass the plugin to Streamdown:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
-import { codePlugin } from "@streamdown/code";
+import { code } from "@streamdown/code";
 
 export default function Page() {
   return (
-    <Streamdown plugins={{ code: codePlugin }}>
+    <Streamdown plugins={{ code: code }}>
       {markdown}
     </Streamdown>
   );
@@ -110,12 +110,12 @@ Streamdown uses dual themes for light and dark modes. You can customize the them
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
-import { codePlugin } from "@streamdown/code";
+import { code } from "@streamdown/code";
 
 export default function Page() {
   return (
     <Streamdown
-      plugins={{ code: codePlugin }}
+      plugins={{ code: code }}
       shikiTheme={["dracula", "dracula"]}
     >
       {markdown}

@@ -1,4 +1,4 @@
-import { mathPlugin } from "@streamdown/math";
+import { math } from "@streamdown/math";
 import { render } from "@testing-library/react";
 import remend from "remend";
 import { describe, expect, it } from "vitest";
@@ -34,7 +34,7 @@ $$`;
     }
 
     const { container } = render(
-      <Streamdown parseIncompleteMarkdown={true} plugins={{ math: mathPlugin }}>
+      <Streamdown parseIncompleteMarkdown={true} plugins={{ math }}>
         {content}
       </Streamdown>
     );
@@ -71,7 +71,7 @@ c
 \\end{bmatrix}`;
 
     const { container } = render(
-      <Streamdown parseIncompleteMarkdown={true} plugins={{ math: mathPlugin }}>
+      <Streamdown parseIncompleteMarkdown={true} plugins={{ math }}>
         {content}
       </Streamdown>
     );

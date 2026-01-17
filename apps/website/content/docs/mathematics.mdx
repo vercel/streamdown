@@ -17,12 +17,12 @@ Then import and pass the plugin to Streamdown:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
-import { mathPlugin } from "@streamdown/math";
+import { math } from "@streamdown/math";
 import "katex/dist/katex.min.css";
 
 export default function Page() {
   return (
-    <Streamdown plugins={{ math: mathPlugin }}>
+    <Streamdown plugins={{ math: math }}>
       {markdown}
     </Streamdown>
   );

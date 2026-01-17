@@ -1,26 +1,26 @@
 import { describe, expect, it } from "vitest";
-import { createMathPlugin, mathPlugin } from "../index";
+import { createMathPlugin, math } from "../index";
 
-describe("mathPlugin", () => {
+describe("math", () => {
   describe("plugin properties", () => {
     it("should have correct name and type", () => {
-      expect(mathPlugin.name).toBe("katex");
-      expect(mathPlugin.type).toBe("math");
+      expect(math.name).toBe("katex");
+      expect(math.type).toBe("math");
     });
 
     it("should have remarkPlugin", () => {
-      expect(mathPlugin.remarkPlugin).toBeDefined();
-      expect(Array.isArray(mathPlugin.remarkPlugin)).toBe(true);
+      expect(math.remarkPlugin).toBeDefined();
+      expect(Array.isArray(math.remarkPlugin)).toBe(true);
     });
 
     it("should have rehypePlugin", () => {
-      expect(mathPlugin.rehypePlugin).toBeDefined();
-      expect(Array.isArray(mathPlugin.rehypePlugin)).toBe(true);
+      expect(math.rehypePlugin).toBeDefined();
+      expect(Array.isArray(math.rehypePlugin)).toBe(true);
     });
 
     it("should have getStyles method", () => {
-      expect(typeof mathPlugin.getStyles).toBe("function");
-      expect(mathPlugin.getStyles?.()).toBe("katex/dist/katex.min.css");
+      expect(typeof math.getStyles).toBe("function");
+      expect(math.getStyles?.()).toBe("katex/dist/katex.min.css");
     });
   });
 });

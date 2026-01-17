@@ -17,11 +17,11 @@ Then import and pass the plugin to Streamdown:
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
-import { mermaidPlugin } from "@streamdown/mermaid";
+import { mermaid } from "@streamdown/mermaid";
 
 export default function Page() {
   return (
-    <Streamdown plugins={{ mermaid: mermaidPlugin }}>
+    <Streamdown plugins={{ mermaid: mermaid }}>
       {markdown}
     </Streamdown>
   );
@@ -235,13 +235,13 @@ Customize the Mermaid theme using the `mermaid.config` prop:
 
 ```tsx
 import { Streamdown } from "streamdown";
-import { mermaidPlugin } from "@streamdown/mermaid";
+import { mermaid } from "@streamdown/mermaid";
 import type { MermaidConfig } from "streamdown";
 
 export default function Page() {
   return (
     <Streamdown
-      plugins={{ mermaid: mermaidPlugin }}
+      plugins={{ mermaid: mermaid }}
       mermaid={{
         config: {
           theme: "dark",
@@ -276,7 +276,7 @@ Example:
 
 ```tsx
 <Streamdown
-  plugins={{ mermaid: mermaidPlugin }}
+  plugins={{ mermaid: mermaid }}
   mermaid={{ config: { theme: "forest" } }}
 >
   {markdown}
@@ -289,7 +289,7 @@ Customize specific diagram types:
 
 ```tsx
 <Streamdown
-  plugins={{ mermaid: mermaidPlugin }}
+  plugins={{ mermaid: mermaid }}
   mermaid={{
     config: {
       theme: "base",
@@ -322,7 +322,7 @@ When Mermaid diagrams fail to render due to invalid syntax, you can provide a cu
 
 ```tsx
 import { Streamdown } from "streamdown";
-import { mermaidPlugin } from "@streamdown/mermaid";
+import { mermaid } from "@streamdown/mermaid";
 import type { MermaidErrorComponentProps } from "streamdown";
 
 const CustomMermaidError = ({
@@ -350,7 +350,7 @@ const CustomMermaidError = ({
 export default function Page() {
   return (
     <Streamdown
-      plugins={{ mermaid: mermaidPlugin }}
+      plugins={{ mermaid: mermaid }}
       mermaid={{
         errorComponent: CustomMermaidError,
       }}
@@ -421,7 +421,7 @@ You can customize which controls are shown:
 
 ```tsx
 <Streamdown
-  plugins={{ mermaid: mermaidPlugin }}
+  plugins={{ mermaid: mermaid }}
   controls={{
     mermaid: {
       fullscreen: true,
@@ -438,7 +438,7 @@ Or disable specific controls:
 
 ```tsx
 <Streamdown
-  plugins={{ mermaid: mermaidPlugin }}
+  plugins={{ mermaid: mermaid }}
   controls={{
     mermaid: {
       fullscreen: true,
@@ -455,7 +455,7 @@ Or disable all Mermaid controls:
 
 ```tsx
 <Streamdown
-  plugins={{ mermaid: mermaidPlugin }}
+  plugins={{ mermaid: mermaid }}
   controls={{ mermaid: false }}
 >
   {markdown}
@@ -474,7 +474,7 @@ Use the `isAnimating` prop to disable interactive controls while content is stre
 
 ```tsx
 <Streamdown
-  plugins={{ mermaid: mermaidPlugin }}
+  plugins={{ mermaid: mermaid }}
   isAnimating={isStreaming}
 >
   {markdown}

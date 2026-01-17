@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 
 const exampleCode = `import { useChat } from "@ai-sdk/react";
 import { Streamdown } from "streamdown";
-import { codePlugin } from "@streamdown/code";
-import { mermaidPlugin } from "@streamdown/mermaid";
-import { mathPlugin } from "@streamdown/math";
-import { cjkPlugin } from "@streamdown/cjk";
+import { code } from "@streamdown/code";
+import { mermaid } from "@streamdown/mermaid";
+import { math } from "@streamdown/math";
+import { cjk } from "@streamdown/cjk";
 import "katex/dist/katex.min.css";
 
 export default function Chat() {
@@ -19,12 +19,7 @@ export default function Chat() {
       {messages.map((m) => (
         <Streamdown
           key={m.id}
-          plugins={{
-            code: codePlugin,
-            mermaid: mermaidPlugin,
-            math: mathPlugin,
-            cjk: cjkPlugin,
-          }}
+          plugins={{ code, mermaid, math, cjk }}
           isAnimating={isLoading}
         >
           {m.content}

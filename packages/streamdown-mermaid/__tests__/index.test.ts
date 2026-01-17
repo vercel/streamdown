@@ -1,32 +1,32 @@
 import { describe, expect, it, vi } from "vitest";
-import { createMermaidPlugin, mermaidPlugin } from "../index";
+import { createMermaidPlugin, mermaid } from "../index";
 
-describe("mermaidPlugin", () => {
+describe("mermaid", () => {
   describe("plugin properties", () => {
     it("should have correct name and type", () => {
-      expect(mermaidPlugin.name).toBe("mermaid");
-      expect(mermaidPlugin.type).toBe("diagram");
+      expect(mermaid.name).toBe("mermaid");
+      expect(mermaid.type).toBe("diagram");
     });
 
     it("should have correct language identifier", () => {
-      expect(mermaidPlugin.language).toBe("mermaid");
+      expect(mermaid.language).toBe("mermaid");
     });
 
     it("should have getMermaid method", () => {
-      expect(typeof mermaidPlugin.getMermaid).toBe("function");
+      expect(typeof mermaid.getMermaid).toBe("function");
     });
   });
 
   describe("getMermaid", () => {
     it("should return mermaid instance", () => {
-      const instance = mermaidPlugin.getMermaid();
+      const instance = mermaid.getMermaid();
       expect(instance).toBeDefined();
       expect(typeof instance.initialize).toBe("function");
       expect(typeof instance.render).toBe("function");
     });
 
     it("should accept config on getMermaid call", () => {
-      const instance = mermaidPlugin.getMermaid({ theme: "dark" });
+      const instance = mermaid.getMermaid({ theme: "dark" });
       expect(instance).toBeDefined();
     });
   });
