@@ -5,6 +5,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import type { BundledLanguage } from "shiki";
 import { StreamdownContext } from "../../index";
 import { useCodePlugin } from "../plugin-context";
 import type { HighlightResult } from "../plugin-types";
@@ -60,7 +61,7 @@ export const CodeBlock = ({
     const cachedResult = codePlugin.highlight(
       {
         code,
-        language,
+        language: language as BundledLanguage,
         themes: shikiTheme,
       },
       (highlightedResult) => {

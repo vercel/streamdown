@@ -1,5 +1,5 @@
 import type { MermaidConfig } from "mermaid";
-import type { BundledTheme } from "shiki";
+import type { BundledLanguage, BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 
 /**
@@ -28,7 +28,7 @@ export interface HighlightResult {
  */
 export interface HighlightOptions {
   code: string;
-  language: string;
+  language: BundledLanguage;
   themes: [string, string];
 }
 
@@ -50,11 +50,11 @@ export interface CodeHighlighterPlugin {
   /**
    * Check if language is supported
    */
-  supportsLanguage: (language: string) => boolean;
+  supportsLanguage: (language: BundledLanguage) => boolean;
   /**
    * Get list of supported languages
    */
-  getSupportedLanguages: () => string[];
+  getSupportedLanguages: () => BundledLanguage[];
   /**
    * Get the configured themes
    */

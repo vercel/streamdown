@@ -25,13 +25,14 @@ import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig } from "./lib/plugin-types";
 import { cn } from "./lib/utils";
 
-export type { BundledTheme } from "shiki";
+export type { BundledLanguage, BundledTheme } from "shiki";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
   CjkPlugin,
   CodeHighlighterPlugin,
   DiagramPlugin,
+  HighlightOptions,
   MathPlugin,
   PluginConfig,
 } from "./lib/plugin-types";
