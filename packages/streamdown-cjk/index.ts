@@ -86,7 +86,7 @@ const buildTrailingText = (value: string): Text => ({
  * so trailing text is not swallowed by the URL.
  */
 const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
-  visit(tree, "link", (node: Link, index: number | null, parent?: Parent) => {
+  visit(tree, "link", (node: Link, index: number | null | undefined, parent?: Parent) => {
     if (!parent || typeof index !== "number") {
       return;
     }
