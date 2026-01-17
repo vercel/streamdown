@@ -81,6 +81,81 @@ Available options:
 | `strikethrough` | Complete strikethrough formatting (`~~`) |
 | `katex` | Complete block KaTeX math (`$$`) |
 | `setextHeadings` | Handle incomplete setext headings |
+| `handlers` | Custom handlers to extend remend |
+
+### Custom Handlers
+
+You can extend remend with custom handlers to complete your own markers during streaming. This is useful for custom syntax like `<<<JOKE>>>` blocks or other domain-specific patterns.
+
+```typescript
+import remend, { type RemendHandler } from "remend";
+
+const jokeHandler: RemendHandler = {
+  name: "joke",
+  handle: (text) => {
+    // Complete <<<JOKE>>> marks that aren't closed
+    const match = text.match(/<<<JOKE>>>([^<]*)$/);
+    if (match && !text.endsWith("<<</JOKE>>>")) {
+      return `${text}<<</JOKE>>>`;
+    }
+    return text;
+  },
+  priority: 80, // Runs after most built-ins (0-70)
+};
+
+const result = remend(content, { handlers: [jokeHandler] });
+```
+
+#### Handler Interface
+
+```typescript
+interface RemendHandler {
+  name: string;                    // Unique identifier
+  handle: (text: string) => string; // Transform function
+  priority?: number;               // Lower runs first (default: 100)
+}
+```
+
+#### Built-in Priorities
+
+Built-in handlers use priorities 0-70. Custom handlers default to 100 (run after built-ins):
+
+| Handler | Priority |
+|---------|----------|
+| `setextHeadings` | 0 |
+| `links` | 10 |
+| `boldItalic` | 20 |
+| `bold` | 30 |
+| `italic` | 40-42 |
+| `inlineCode` | 50 |
+| `strikethrough` | 60 |
+| `katex` | 70 |
+| Custom (default) | 100 |
+
+#### Exported Utilities
+
+Remend exports utility functions for context detection in custom handlers:
+
+```typescript
+import {
+  isWithinCodeBlock,
+  isWithinMathBlock,
+  isWithinLinkOrImageUrl,
+  isWordChar,
+} from "remend";
+
+const handler: RemendHandler = {
+  name: "custom",
+  handle: (text) => {
+    // Skip if we're inside a code block
+    if (isWithinCodeBlock(text, text.length - 1)) {
+      return text;
+    }
+    // Your logic here
+    return text;
+  },
+};
+```
 
 ### Usage with Remark
 

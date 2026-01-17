@@ -146,6 +146,79 @@ const completed = remend(partialMarkdown);
 
 See the [remend package](https://www.npmjs.com/package/remend) for more details on standalone usage.
 
+### Custom Handlers
+
+You can extend remend with custom handlers to complete your own markers during streaming. This is useful for domain-specific syntax like custom tags or markers that your AI might output.
+
+```typescript
+import remend, { type RemendHandler } from 'remend';
+
+const jokeHandler: RemendHandler = {
+  name: 'joke',
+  handle: (text) => {
+    // Complete <<<JOKE>>> marks that aren't closed
+    const match = text.match(/<<<JOKE>>>([^<]*)$/);
+    if (match && !text.endsWith('<<</JOKE>>>')) {
+      return `${text}<<</JOKE>>>`;
+    }
+    return text;
+  },
+  priority: 80, // Runs after most built-ins (0-70)
+};
+
+const result = remend(content, { handlers: [jokeHandler] });
+```
+
+#### Handler Interface
+
+Each handler has three properties:
+
+- `name` - Unique identifier for the handler
+- `handle` - Transform function that receives text and returns modified text
+- `priority` - Optional execution order (lower runs first, default: 100)
+
+#### Execution Order
+
+Built-in handlers use priorities 0-70:
+
+| Handler | Priority |
+|---------|----------|
+| `setextHeadings` | 0 |
+| `links` | 10 |
+| `boldItalic` | 20 |
+| `bold` | 30 |
+| `italic` | 40-42 |
+| `inlineCode` | 50 |
+| `strikethrough` | 60 |
+| `katex` | 70 |
+
+Custom handlers default to priority 100, running after all built-ins. Set a lower priority to run before specific built-ins.
+
+#### Context Utilities
+
+Remend exports utilities to help custom handlers detect context:
+
+```typescript
+import {
+  isWithinCodeBlock,
+  isWithinMathBlock,
+  isWithinLinkOrImageUrl,
+  isWordChar,
+} from 'remend';
+
+const handler: RemendHandler = {
+  name: 'custom',
+  handle: (text) => {
+    // Skip processing inside code blocks
+    if (isWithinCodeBlock(text, text.length - 1)) {
+      return text;
+    }
+    // Your completion logic here
+    return text;
+  },
+};
+```
+
 ## Smart Behavior
 
 Remend includes intelligent rules to avoid false positives:

@@ -10,6 +10,24 @@ import { handleIncompleteBlockKatex } from "./katex-handler";
 import { handleIncompleteLinksAndImages } from "./link-image-handler";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
+export {
+  isWithinCodeBlock,
+  isWithinMathBlock,
+  isWithinLinkOrImageUrl,
+  isWordChar,
+} from "./utils";
+
+/**
+ * Handler function that transforms text during streaming.
+ */
+export interface RemendHandler {
+  /** Unique identifier for this handler */
+  name: string;
+  /** Handler function: takes text, returns modified text */
+  handle: (text: string) => string;
+  /** Priority (lower runs first). Built-in priorities: 0-100. Default: 100 */
+  priority?: number;
+}
 
 /**
  * Configuration options for the remend function.
@@ -35,10 +53,131 @@ export interface RemendOptions {
   katex?: boolean;
   /** Handle incomplete setext headings to prevent misinterpretation */
   setextHeadings?: boolean;
+  /** Custom handlers to extend remend */
+  handlers?: RemendHandler[];
 }
 
 // Helper to check if an option is enabled (defaults to true)
 const isEnabled = (option: boolean | undefined): boolean => option !== false;
+
+// Built-in handler priorities (0-100)
+const PRIORITY = {
+  SETEXT_HEADINGS: 0,
+  LINKS: 10,
+  BOLD_ITALIC: 20,
+  BOLD: 30,
+  ITALIC_DOUBLE_UNDERSCORE: 40,
+  ITALIC_SINGLE_ASTERISK: 41,
+  ITALIC_SINGLE_UNDERSCORE: 42,
+  INLINE_CODE: 50,
+  STRIKETHROUGH: 60,
+  KATEX: 70,
+  DEFAULT: 100,
+} as const;
+
+// Built-in handlers with their option keys and priorities
+const builtInHandlers: Array<{
+  handler: RemendHandler;
+  optionKey: keyof Omit<RemendOptions, "handlers">;
+  earlyReturn?: (result: string) => boolean;
+}> = [
+  {
+    handler: {
+      name: "setextHeadings",
+      handle: handleIncompleteSetextHeading,
+      priority: PRIORITY.SETEXT_HEADINGS,
+    },
+    optionKey: "setextHeadings",
+  },
+  {
+    handler: {
+      name: "links",
+      handle: handleIncompleteLinksAndImages,
+      priority: PRIORITY.LINKS,
+    },
+    optionKey: "links",
+    earlyReturn: (result) => result.endsWith("](streamdown:incomplete-link)"),
+  },
+  {
+    handler: {
+      name: "boldItalic",
+      handle: handleIncompleteBoldItalic,
+      priority: PRIORITY.BOLD_ITALIC,
+    },
+    optionKey: "boldItalic",
+  },
+  {
+    handler: {
+      name: "bold",
+      handle: handleIncompleteBold,
+      priority: PRIORITY.BOLD,
+    },
+    optionKey: "bold",
+  },
+  {
+    handler: {
+      name: "italicDoubleUnderscore",
+      handle: handleIncompleteDoubleUnderscoreItalic,
+      priority: PRIORITY.ITALIC_DOUBLE_UNDERSCORE,
+    },
+    optionKey: "italic",
+  },
+  {
+    handler: {
+      name: "italicSingleAsterisk",
+      handle: handleIncompleteSingleAsteriskItalic,
+      priority: PRIORITY.ITALIC_SINGLE_ASTERISK,
+    },
+    optionKey: "italic",
+  },
+  {
+    handler: {
+      name: "italicSingleUnderscore",
+      handle: handleIncompleteSingleUnderscoreItalic,
+      priority: PRIORITY.ITALIC_SINGLE_UNDERSCORE,
+    },
+    optionKey: "italic",
+  },
+  {
+    handler: {
+      name: "inlineCode",
+      handle: handleIncompleteInlineCode,
+      priority: PRIORITY.INLINE_CODE,
+    },
+    optionKey: "inlineCode",
+  },
+  {
+    handler: {
+      name: "strikethrough",
+      handle: handleIncompleteStrikethrough,
+      priority: PRIORITY.STRIKETHROUGH,
+    },
+    optionKey: "strikethrough",
+  },
+  {
+    handler: {
+      name: "katex",
+      handle: handleIncompleteBlockKatex,
+      priority: PRIORITY.KATEX,
+    },
+    optionKey: "katex",
+  },
+];
+
+// Also enable links handler when images option is enabled
+const getEnabledBuiltInHandlers = (
+  options?: RemendOptions
+): Array<{ handler: RemendHandler; earlyReturn?: (result: string) => boolean }> => {
+  return builtInHandlers
+    .filter(({ handler, optionKey }) => {
+      // Special case: links handler is enabled by either links or images option
+      if (handler.name === "links") {
+        return isEnabled(options?.links) || isEnabled(options?.images);
+      }
+      return isEnabled(options?.[optionKey]);
+    })
+    .map(({ handler, earlyReturn }) => ({ handler, earlyReturn }));
+};
 
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
 const remend = (text: string, options?: RemendOptions): string => {
@@ -50,51 +189,29 @@ const remend = (text: string, options?: RemendOptions): string => {
   let result =
     text.endsWith(" ") && !text.endsWith("  ") ? text.slice(0, -1) : text;
 
-  // Handle incomplete setext headings first (before other processing)
-  // This prevents partial list items (like "-") from being interpreted as heading underlines
-  if (isEnabled(options?.setextHeadings)) {
-    result = handleIncompleteSetextHeading(result);
-  }
+  // Get enabled built-in handlers
+  const enabledBuiltIns = getEnabledBuiltInHandlers(options);
 
-  // Handle incomplete links and images
-  // Note: links and images share the same handler
-  if (isEnabled(options?.links) || isEnabled(options?.images)) {
-    const processedResult = handleIncompleteLinksAndImages(result);
+  // Combine with custom handlers (default priority: 100)
+  const customHandlers = (options?.handlers ?? []).map((h) => ({
+    handler: { ...h, priority: h.priority ?? PRIORITY.DEFAULT },
+    earlyReturn: undefined,
+  }));
 
-    // If we added an incomplete link marker, don't process other formatting
-    // as the content inside the link should be preserved as-is
-    if (processedResult.endsWith("](streamdown:incomplete-link)")) {
-      return processedResult;
+  // Merge and sort by priority
+  const allHandlers = [...enabledBuiltIns, ...customHandlers].sort(
+    (a, b) => (a.handler.priority ?? PRIORITY.DEFAULT) - (b.handler.priority ?? PRIORITY.DEFAULT)
+  );
+
+  // Execute handlers in priority order
+  for (const { handler, earlyReturn } of allHandlers) {
+    result = handler.handle(result);
+
+    // Check for early return condition (e.g., incomplete link marker)
+    if (earlyReturn?.(result)) {
+      return result;
     }
-
-    result = processedResult;
   }
-
-  // Handle various formatting completions
-  // Handle triple asterisks first (most specific)
-  if (isEnabled(options?.boldItalic)) {
-    result = handleIncompleteBoldItalic(result);
-  }
-  if (isEnabled(options?.bold)) {
-    result = handleIncompleteBold(result);
-  }
-  if (isEnabled(options?.italic)) {
-    result = handleIncompleteDoubleUnderscoreItalic(result);
-    result = handleIncompleteSingleAsteriskItalic(result);
-    result = handleIncompleteSingleUnderscoreItalic(result);
-  }
-  if (isEnabled(options?.inlineCode)) {
-    result = handleIncompleteInlineCode(result);
-  }
-  if (isEnabled(options?.strikethrough)) {
-    result = handleIncompleteStrikethrough(result);
-  }
-
-  // Handle KaTeX formatting (only block math with $$)
-  if (isEnabled(options?.katex)) {
-    result = handleIncompleteBlockKatex(result);
-  }
-  // Note: We don't handle inline KaTeX with single $ as they're likely currency symbols
 
   return result;
 };
