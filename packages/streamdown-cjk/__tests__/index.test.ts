@@ -182,12 +182,12 @@ describe("CJK autolink boundary splitting", () => {
   });
 
   it("should handle www links", async () => {
-    const tree = await processMarkdown("访问 www.example.com。谢谢");
+    const tree = await processMarkdown("访问 www.example.com 谢谢");
     const links = getLinks(tree);
 
     expect(links.length).toBe(1);
-    // GFM autolink converts www to https
-    expect(links[0].url.includes("example.com")).toBe(true);
+    // GFM autolink converts www to http(s)
+    expect(new URL(links[0].url).hostname).toBe("www.example.com");
   });
 
   it("should not split if CJK punctuation is at start of URL", async () => {

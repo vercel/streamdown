@@ -86,33 +86,37 @@ const buildTrailingText = (value: string): Text => ({
  * so trailing text is not swallowed by the URL.
  */
 const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
-  visit(tree, "link", (node: Link, index: number | null | undefined, parent?: Parent) => {
-    if (!parent || typeof index !== "number") {
-      return;
+  visit(
+    tree,
+    "link",
+    (node: Link, index: number | null | undefined, parent?: Parent) => {
+      if (!parent || typeof index !== "number") {
+        return;
+      }
+
+      if (!isAutolinkLiteral(node)) {
+        return;
+      }
+
+      if (!AUTOLINK_PREFIX_PATTERN.test(node.url)) {
+        return;
+      }
+
+      const boundaryIndex = findCjkBoundaryIndex(node.url);
+      if (boundaryIndex === null || boundaryIndex === 0) {
+        return;
+      }
+
+      const trimmedUrl = node.url.slice(0, boundaryIndex);
+      const trailing = node.url.slice(boundaryIndex);
+
+      const trimmedLink = buildAutolink(trimmedUrl, node);
+      const trailingText = buildTrailingText(trailing);
+
+      parent.children.splice(index, 1, trimmedLink, trailingText);
+      return index + 1;
     }
-
-    if (!isAutolinkLiteral(node)) {
-      return;
-    }
-
-    if (!AUTOLINK_PREFIX_PATTERN.test(node.url)) {
-      return;
-    }
-
-    const boundaryIndex = findCjkBoundaryIndex(node.url);
-    if (boundaryIndex === null || boundaryIndex === 0) {
-      return;
-    }
-
-    const trimmedUrl = node.url.slice(0, boundaryIndex);
-    const trailing = node.url.slice(boundaryIndex);
-
-    const trimmedLink = buildAutolink(trimmedUrl, node);
-    const trailingText = buildTrailingText(trailing);
-
-    parent.children.splice(index, 1, trimmedLink, trailingText);
-    return index + 1;
-  });
+  );
 };
 
 /**
@@ -120,9 +124,9 @@ const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
  */
 export function createCjkPlugin(): CjkPlugin {
   const remarkPlugins: Pluggable[] = [
-    [remarkCjkAutolinkBoundary, {}],
-    [remarkCjkFriendly, {}],
-    [remarkCjkFriendlyGfmStrikethrough, {}],
+    remarkCjkAutolinkBoundary,
+    remarkCjkFriendly,
+    remarkCjkFriendlyGfmStrikethrough,
   ];
 
   return {
