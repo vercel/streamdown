@@ -338,7 +338,6 @@ const MemoTable = memo<TableProps>(
     return (
       <Table
         className={className}
-        data-streamdown="table-wrapper"
         showControls={showTableControls}
         {...props}
       >

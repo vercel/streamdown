@@ -1,6 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { components } from "../lib/components";
+import { Table } from "../lib/table";
 
 describe("Node Attribute Fix", () => {
   // Create a realistic HAST node object that would be passed by react-markdown
@@ -346,6 +347,75 @@ describe("Node Attribute Fix", () => {
       // Component should still work and not have node attribute
       expect(ul2?.getAttribute("node")).toBeNull();
       expect(ul2?.getAttribute("data-streamdown")).toBe("unordered-list");
+    });
+  });
+
+  describe("Table Component - Correct data-streamdown attributes", () => {
+    it("should have table-wrapper on div and table on table element", () => {
+      const { container } = render(
+        <Table>
+          <thead>
+            <tr>
+              <th>Header</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cell</td>
+            </tr>
+          </tbody>
+        </Table>
+      );
+
+      const wrapper = container.querySelector('[data-streamdown="table-wrapper"]');
+      expect(wrapper).toBeTruthy();
+      expect(wrapper?.tagName.toLowerCase()).toBe("div");
+
+      const table = container.querySelector('[data-streamdown="table"]');
+      expect(table).toBeTruthy();
+      expect(table?.tagName.toLowerCase()).toBe("table");
+    });
+
+    it("should NOT have table-wrapper attribute on table element", () => {
+      const { container } = render(
+        <Table>
+          <tbody>
+            <tr>
+              <td>Cell</td>
+            </tr>
+          </tbody>
+        </Table>
+      );
+
+      const table = container.querySelector("table");
+      expect(table).toBeTruthy();
+      expect(table?.getAttribute("data-streamdown")).toBe("table");
+      expect(table?.getAttribute("data-streamdown")).not.toBe("table-wrapper");
+    });
+
+    it("MemoTable should NOT pass table-wrapper to inner table element", () => {
+      const MemoTable = components.table;
+      if (!MemoTable) {
+        throw new Error("Table component not found");
+      }
+
+      const { container } = render(
+        <MemoTable node={mockHastNode as any}>
+          <tbody>
+            <tr>
+              <td>Cell</td>
+            </tr>
+          </tbody>
+        </MemoTable>
+      );
+
+      const wrapper = container.querySelector('[data-streamdown="table-wrapper"]');
+      expect(wrapper).toBeTruthy();
+      expect(wrapper?.tagName.toLowerCase()).toBe("div");
+
+      const table = container.querySelector("table");
+      expect(table).toBeTruthy();
+      expect(table?.getAttribute("data-streamdown")).toBe("table");
     });
   });
 });
