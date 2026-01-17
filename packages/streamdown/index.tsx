@@ -374,6 +374,7 @@ export const Streamdown = memo(
     prevProps.children === nextProps.children &&
     prevProps.shikiTheme === nextProps.shikiTheme &&
     prevProps.isAnimating === nextProps.isAnimating &&
-    prevProps.mode === nextProps.mode
+    prevProps.mode === nextProps.mode &&
+    prevProps.plugins === nextProps.plugins
 );
 Streamdown.displayName = "Streamdown";
