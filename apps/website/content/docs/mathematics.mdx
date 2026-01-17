@@ -5,6 +5,30 @@ description: Render beautiful LaTeX equations with KaTeX support in Streamdown.
 
 Streamdown provides built-in support for rendering mathematical expressions using LaTeX syntax, powered by [KaTeX](https://katex.org/). Write complex equations and formulas that render beautifully alongside your content.
 
+## Enabling Math
+
+Math rendering requires the math plugin. Install it:
+
+```package-install
+npm install @streamdown/math
+```
+
+Then import and pass the plugin to Streamdown:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from "streamdown";
+import { mathPlugin } from "@streamdown/math";
+import "katex/dist/katex.min.css";
+
+export default function Page() {
+  return (
+    <Streamdown plugins={{ math: mathPlugin }}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
 ## Syntax
 
 Streamdown uses double dollar signs (`$$`) to delimit mathematical expressions. Unlike traditional LaTeX, single dollar signs (`$`) are **not** used to avoid conflicts with currency symbols in regular text.

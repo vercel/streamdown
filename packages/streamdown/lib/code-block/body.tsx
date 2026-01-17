@@ -1,9 +1,9 @@
 import { type ComponentProps, memo, useMemo } from "react";
-import type { TokensResult } from "shiki";
+import type { HighlightResult } from "../plugin-types";
 import { cn } from "../utils";
 
 type CodeBlockBodyProps = ComponentProps<"pre"> & {
-  result: TokensResult;
+  result: HighlightResult;
   language: string;
 };
 

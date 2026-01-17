@@ -2,8 +2,9 @@ import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
 import { DownloadIcon } from "../icons";
+import { useMermaidPlugin } from "../plugin-context";
 import { cn, save } from "../utils";
-import { initializeMermaid, svgToPngBlob } from "./utils";
+import { svgToPngBlob } from "./utils";
 
 interface MermaidDownloadDropdownProps {
   chart: string;
@@ -25,6 +26,8 @@ export const MermaidDownloadDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { isAnimating } = useContext(StreamdownContext);
+  const mermaidPlugin = useMermaidPlugin();
+
   const downloadMermaid = async (format: "mmd" | "png" | "svg") => {
     try {
       if (format === "mmd") {
@@ -37,7 +40,12 @@ export const MermaidDownloadDropdown = ({
         return;
       }
 
-      const mermaid = await initializeMermaid(config);
+      if (!mermaidPlugin) {
+        onError?.(new Error("Mermaid plugin not available"));
+        return;
+      }
+
+      const mermaid = mermaidPlugin.getMermaid(config);
 
       // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
       const chartHash = chart.split("").reduce((acc, char) => {

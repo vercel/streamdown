@@ -114,32 +114,27 @@ Language models generate markdown naturally, often placing emphasis markers arou
   </dd>
 </dl>
 
-## Configuration
+## Enabling CJK Support
 
-CJK support is enabled by default with no configuration required. The plugins are included in the default remark plugin list:
+CJK support requires the CJK plugin. Install it:
 
-```tsx
-import { Streamdown } from "streamdown";
-
-export default function Page() {
-  return <Streamdown>{markdown}</Streamdown>;
-}
+```package-install
+npm install @streamdown/cjk
 ```
 
-### Disabling CJK Support
+Then import and pass the plugin to Streamdown:
 
-If you need to disable CJK support, you can override the default remark plugins:
-
-```tsx
+```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
+import { cjkPlugin } from "@streamdown/cjk";
 
 export default function Page() {
   return (
-    <Streamdown remarkPlugins={[remarkGfm, remarkMath]}>{markdown}</Streamdown>
+    <Streamdown plugins={{ cjk: cjkPlugin }}>
+      {markdown}
+    </Streamdown>
   );
 }
 ```
 
-Note: This removes all default remark plugins, so you'll need to add back any others you need.
+Without the CJK plugin, emphasis markers adjacent to ideographic punctuation may not render correctly.

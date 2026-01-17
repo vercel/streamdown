@@ -19,34 +19,44 @@ function greet(name) {
 
 Streamdown will automatically apply syntax highlighting based on the specified language.
 
+## Enabling Syntax Highlighting
+
+Syntax highlighting requires the code plugin. Install it:
+
+```package-install
+npm install @streamdown/code
+```
+
+Then import and pass the plugin to Streamdown:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from "streamdown";
+import { codePlugin } from "@streamdown/code";
+
+export default function Page() {
+  return (
+    <Streamdown plugins={{ code: codePlugin }}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+Without the code plugin, code blocks render as plain text with no highlighting.
+
 ## Supported Languages
 
-Streamdown supports 200+ programming languages through a hybrid loading approach:
+Streamdown supports 200+ programming languages through Shiki. All languages are lazy-loaded on demand, so only the grammars you use are downloaded.
 
-### Bundled Languages (Instant Loading)
-
-These 15 common languages are bundled with Streamdown for zero-latency syntax highlighting:
+### Common Languages
 
 - **Web**: JavaScript, TypeScript, JSX, TSX, HTML, CSS
 - **Data**: JSON, YAML, TOML
-- **Shell**: Bash, Shell Script
-- **Backend**: Python, Go
-- **Markup**: Markdown, SQL
-
-### On-Demand Languages (Loaded from CDN)
-
-All other languages are loaded on-demand from the CDN (default: `https://streamdown.ai/cdn`) when first used, including:
-
-- **Backend**: Java, Rust, C, C++, C#, PHP, Ruby, Kotlin, Swift, Scala
-- **Functional**: Haskell, Elixir, Clojure, F#, OCaml, Erlang
-- **Data**: XML, GraphQL, Prisma, Protocol Buffers
-- **Shell**: PowerShell, Zsh, Fish
-- **Markup**: LaTeX, MDX, AsciiDoc
+- **Shell**: Bash, Shell Script, PowerShell
+- **Backend**: Python, Go, Java, Rust, C, C++, C#, PHP, Ruby
+- **Functional**: Haskell, Elixir, Clojure, F#, OCaml
+- **Markup**: Markdown, LaTeX, MDX, XML
 - **And 180+ more languages**
-
-Languages are cached after the first load, so subsequent uses are instant.
-
-For offline or air-gapped environments, see [Self-Hosting CDN](/docs/self-hosting-cdn) to learn how to self-host language files.
 
 ### Language Examples
 
@@ -100,34 +110,31 @@ Streamdown uses dual themes for light and dark modes. You can customize the them
 
 ```tsx title="app/page.tsx"
 import { Streamdown } from "streamdown";
+import { codePlugin } from "@streamdown/code";
 
 export default function Page() {
   return (
-    <Streamdown shikiTheme={["dracula", "dracula"]}>{markdown}</Streamdown>
+    <Streamdown
+      plugins={{ code: codePlugin }}
+      shikiTheme={["dracula", "dracula"]}
+    >
+      {markdown}
+    </Streamdown>
   );
 }
 ```
 
-### Bundled Themes (Instant Loading)
+### Available Themes
 
-These themes are bundled with Streamdown for zero-latency loading:
+Streamdown supports all Shiki themes including:
 
 - `github-light` (default light theme)
 - `github-dark` (default dark theme)
-
-### On-Demand Themes (Loaded from CDN)
-
-All other Shiki themes are loaded on-demand from the CDN (default: `https://streamdown.ai/cdn`) when first used, including popular themes like:
-
 - `dracula`, `nord`, `one-dark-pro`, `monokai`
 - `catppuccin-latte`, `catppuccin-mocha`
 - `vitesse-light`, `vitesse-dark`
 - `tokyo-night`, `slack-dark`, `slack-ochin`
 - And [many more](https://shiki.style/themes)
-
-Themes are cached after the first load, so subsequent uses are instant.
-
-For offline or air-gapped environments, see [Self-Hosting CDN](/docs/self-hosting-cdn) to learn how to self-host theme files.
 
 ## Interactive Features
 

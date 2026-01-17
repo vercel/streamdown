@@ -46,3 +46,6 @@ package-lock.json
 
 # Benchmarks
 results.txt
+
+# Next.js
+next-env.d.ts

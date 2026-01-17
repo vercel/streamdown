@@ -1,5 +1,9 @@
 "use client";
 
+import { cjkPlugin } from "@streamdown/cjk";
+import { codePlugin } from "@streamdown/code";
+import { mathPlugin } from "@streamdown/math";
+import { mermaidPlugin } from "@streamdown/mermaid";
 import { RefreshCcwIcon } from "lucide-react";
 import { useInView } from "motion/react";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
@@ -113,8 +117,13 @@ export const Section = ({
             </div>
             <div className="h-[400px] overflow-y-auto bg-background p-4">
               <Streamdown
-                cdnUrl="/cdn"
                 isAnimating={isAnimating}
+                plugins={{
+                  code: codePlugin,
+                  mermaid: mermaidPlugin,
+                  math: mathPlugin,
+                  cjk: cjkPlugin,
+                }}
                 {...streamdownProps}
               >
                 {content}

@@ -1,3 +1,4 @@
+import { mathPlugin } from "@streamdown/math";
 import { render } from "@testing-library/react";
 import remend from "remend";
 import { describe, expect, it } from "vitest";
@@ -33,7 +34,9 @@ $$`;
     }
 
     const { container } = render(
-      <Streamdown parseIncompleteMarkdown={true}>{content}</Streamdown>
+      <Streamdown parseIncompleteMarkdown={true} plugins={{ math: mathPlugin }}>
+        {content}
+      </Streamdown>
     );
 
     // Check that the LaTeX is rendered correctly
@@ -68,7 +71,9 @@ c
 \\end{bmatrix}`;
 
     const { container } = render(
-      <Streamdown parseIncompleteMarkdown={true}>{content}</Streamdown>
+      <Streamdown parseIncompleteMarkdown={true} plugins={{ math: mathPlugin }}>
+        {content}
+      </Streamdown>
     );
 
     // Check for math rendering - either as KaTeX or as text content

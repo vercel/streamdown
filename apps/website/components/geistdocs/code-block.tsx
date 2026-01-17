@@ -100,11 +100,13 @@ export const CodeBlock = ({
   return (
     <Card className="not-prose mb-6 gap-0 overflow-hidden rounded-sm p-0 shadow-none">
       <CardHeader className="flex items-center gap-2 border-b bg-sidebar py-1.5! pr-1.5 pl-4 text-muted-foreground">
-        <div
-          className="size-3.5 shrink-0"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for icon prop."
-          dangerouslySetInnerHTML={{ __html: icon as unknown as TrustedHTML }}
-        />
+        {icon && (
+          <div
+            className="size-3.5 shrink-0"
+            // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for icon prop."
+            dangerouslySetInnerHTML={{ __html: icon as unknown as TrustedHTML }}
+          />
+        )}
         <CardTitle className="flex-1 font-mono font-normal text-sm tracking-tight">
           {title}
         </CardTitle>

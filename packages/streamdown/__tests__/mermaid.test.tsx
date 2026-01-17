@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Mermaid } from "../lib/mermaid";
 import { MermaidDownloadDropdown } from "../lib/mermaid/download-button";
 import { MermaidFullscreenButton } from "../lib/mermaid/fullscreen-button";
+import { PluginContext } from "../lib/plugin-context";
+import type { DiagramPlugin } from "../lib/plugin-types";
 
 const { saveMock, mockInitialize, mockRender, mockMermaid } = vi.hoisted(() => {
   const mockInitialize = vi.fn();
@@ -21,27 +23,30 @@ const { saveMock, mockInitialize, mockRender, mockMermaid } = vi.hoisted(() => {
   };
 });
 
-// Mock the initializeMermaid function to return our mock
-vi.mock("../lib/mermaid/utils", async () => {
-  const actual = await vi.importActual<typeof import("../lib/mermaid/utils")>(
-    "../lib/mermaid/utils"
-  );
-  return {
-    ...actual,
-    initializeMermaid: vi.fn().mockImplementation((config) => {
-      // Simulate real initializeMermaid behavior - call initialize with merged config
-      const defaultConfig = {
-        startOnLoad: false,
-        theme: "default",
-        securityLevel: "strict",
-        fontFamily: "monospace",
-        suppressErrorRendering: true,
-      };
-      mockInitialize({ ...defaultConfig, ...config });
-      return mockMermaid;
-    }),
-  };
+// Create a mock mermaid plugin
+const createMockMermaidPlugin = (): DiagramPlugin => ({
+  name: "mermaid",
+  type: "diagram",
+  language: "mermaid",
+  getMermaid: (config?: MermaidConfig) => {
+    const defaultConfig = {
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "strict",
+      fontFamily: "monospace",
+      suppressErrorRendering: true,
+    };
+    mockInitialize({ ...defaultConfig, ...config });
+    return mockMermaid;
+  },
 });
+
+// Wrapper component that provides plugin context
+const MermaidTestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <PluginContext.Provider value={{ mermaid: createMockMermaidPlugin() }}>
+    {children}
+  </PluginContext.Provider>
+);
 
 vi.mock("../lib/utils", async () => {
   const actual =
@@ -64,7 +69,11 @@ describe("Mermaid", () => {
   it("renders without crashing", async () => {
     let container: HTMLElement;
     await act(() => {
-      const result = render(<Mermaid chart="graph TD; A-->B" />);
+      const result = render(
+        <MermaidTestWrapper>
+          <Mermaid chart="graph TD; A-->B" />
+        </MermaidTestWrapper>
+      );
       container = result.container;
     });
     expect(container?.firstChild).toBeDefined();
@@ -74,13 +83,20 @@ describe("Mermaid", () => {
     let container: HTMLElement;
     await act(() => {
       const result = render(
-        <Mermaid chart="graph TD; A-->B" className="custom-class" />
+        <MermaidTestWrapper>
+          <Mermaid chart="graph TD; A-->B" className="custom-class" />
+        </MermaidTestWrapper>
       );
       container = result.container;
     });
 
-    const mermaidContainer = container?.firstChild as HTMLElement;
-    expect(mermaidContainer.className).toContain("custom-class");
+    await waitFor(() => {
+      const mermaidContainer = container?.querySelector(
+        '[data-streamdown="mermaid"]'
+      ) as HTMLElement;
+      expect(mermaidContainer).toBeTruthy();
+      expect(mermaidContainer?.className).toContain("custom-class");
+    });
   });
 
   it("initializes with custom config", async () => {
@@ -94,7 +110,11 @@ describe("Mermaid", () => {
     } as MermaidConfig;
 
     await act(() => {
-      render(<Mermaid chart="graph TD; A-->B" config={customConfig} />);
+      render(
+        <MermaidTestWrapper>
+          <Mermaid chart="graph TD; A-->B" config={customConfig} />
+        </MermaidTestWrapper>
+      );
     });
 
     // Wait for initialization
@@ -111,7 +131,11 @@ describe("Mermaid", () => {
 
   it("initializes with default config when none provided", async () => {
     await act(() => {
-      render(<Mermaid chart="graph TD; A-->B" />);
+      render(
+        <MermaidTestWrapper>
+          <Mermaid chart="graph TD; A-->B" />
+        </MermaidTestWrapper>
+      );
     });
 
     // Wait for initialization
@@ -134,7 +158,9 @@ describe("Mermaid", () => {
     let rerender: ReturnType<typeof render>["rerender"];
     await act(() => {
       const result = render(
-        <Mermaid chart="graph TD; A-->B" config={config1} />
+        <MermaidTestWrapper>
+          <Mermaid chart="graph TD; A-->B" config={config1} />
+        </MermaidTestWrapper>
       );
       rerender = result.rerender;
     });
@@ -149,7 +175,11 @@ describe("Mermaid", () => {
 
     // Should be able to rerender with different config
     await act(() => {
-      rerender?.(<Mermaid chart="graph TD; A-->B" config={config2} />);
+      rerender?.(
+        <MermaidTestWrapper>
+          <Mermaid chart="graph TD; A-->B" config={config2} />
+        </MermaidTestWrapper>
+      );
     });
 
     // Should still render without error
@@ -169,7 +199,9 @@ describe("Mermaid", () => {
     let container: HTMLElement;
     await act(() => {
       const result = render(
-        <Mermaid chart="graph TD; A-->B" config={config} />
+        <MermaidTestWrapper>
+          <Mermaid chart="graph TD; A-->B" config={config} />
+        </MermaidTestWrapper>
       );
       container = result.container;
     });
@@ -186,7 +218,9 @@ describe("Mermaid", () => {
     let rerender: ReturnType<typeof render>["rerender"];
     await act(() => {
       const result = render(
-        <Mermaid chart="graph TD; A-->B" config={config1} />
+        <MermaidTestWrapper>
+          <Mermaid chart="graph TD; A-->B" config={config1} />
+        </MermaidTestWrapper>
       );
       rerender = result.rerender;
     });
@@ -196,7 +230,11 @@ describe("Mermaid", () => {
 
     // Render second component with different config
     await act(() => {
-      rerender?.(<Mermaid chart="graph TD; X-->Y" config={config2} />);
+      rerender?.(
+        <MermaidTestWrapper>
+          <Mermaid chart="graph TD; X-->Y" config={config2} />
+        </MermaidTestWrapper>
+      );
     });
 
     await waitFor(() => expect(mockInitialize).toHaveBeenCalledTimes(2));
@@ -208,7 +246,9 @@ describe("Mermaid", () => {
       let container: HTMLElement;
       await act(() => {
         const result = render(
-          <MermaidFullscreenButton chart="graph TD; A-->B" />
+          <MermaidTestWrapper>
+            <MermaidFullscreenButton chart="graph TD; A-->B" />
+          </MermaidTestWrapper>
         );
         container = result.container;
       });
@@ -225,7 +265,9 @@ describe("Mermaid", () => {
       let container: HTMLElement;
       await act(() => {
         const result = render(
-          <MermaidFullscreenButton chart="graph TD; A-->B" />
+          <MermaidTestWrapper>
+            <MermaidFullscreenButton chart="graph TD; A-->B" />
+          </MermaidTestWrapper>
         );
         container = result.container;
       });
@@ -256,7 +298,9 @@ describe("Mermaid", () => {
       let container: HTMLElement;
       await act(() => {
         const result = render(
-          <MermaidFullscreenButton chart="graph TD; A-->B" />
+          <MermaidTestWrapper>
+            <MermaidFullscreenButton chart="graph TD; A-->B" />
+          </MermaidTestWrapper>
         );
         container = result.container;
       });
@@ -293,7 +337,9 @@ describe("Mermaid", () => {
       let container: HTMLElement;
       await act(() => {
         const result = render(
-          <MermaidFullscreenButton chart="graph TD; A-->B" />
+          <MermaidTestWrapper>
+            <MermaidFullscreenButton chart="graph TD; A-->B" />
+          </MermaidTestWrapper>
         );
         container = result.container;
       });
@@ -328,7 +374,9 @@ describe("Mermaid", () => {
       let container: HTMLElement;
       await act(() => {
         const result = render(
-          <MermaidFullscreenButton chart="graph TD; A-->B" />
+          <MermaidTestWrapper>
+            <MermaidFullscreenButton chart="graph TD; A-->B" />
+          </MermaidTestWrapper>
         );
         container = result.container;
       });
@@ -365,7 +413,9 @@ describe("Mermaid", () => {
       let container: HTMLElement;
       await act(() => {
         const result = render(
-          <MermaidFullscreenButton chart="graph TD; A-->B" />
+          <MermaidTestWrapper>
+            <MermaidFullscreenButton chart="graph TD; A-->B" />
+          </MermaidTestWrapper>
         );
         container = result.container;
       });
@@ -400,7 +450,9 @@ describe("Mermaid", () => {
       let container: HTMLElement;
       await act(() => {
         const result = render(
-          <MermaidFullscreenButton chart="graph TD; A-->B" />
+          <MermaidTestWrapper>
+            <MermaidFullscreenButton chart="graph TD; A-->B" />
+          </MermaidTestWrapper>
         );
         container = result.container;
       });
@@ -444,10 +496,12 @@ describe("Mermaid", () => {
       const handleDownload = vi.fn();
 
       const { getByTitle, getByRole, queryByRole } = render(
-        <MermaidDownloadDropdown
-          chart="graph TD; A-->B"
-          onDownload={handleDownload}
-        />
+        <MermaidTestWrapper>
+          <MermaidDownloadDropdown
+            chart="graph TD; A-->B"
+            onDownload={handleDownload}
+          />
+        </MermaidTestWrapper>
       );
 
       const toggleButton = getByTitle("Download diagram");
@@ -484,10 +538,12 @@ describe("Mermaid", () => {
       const handleDownload = vi.fn();
 
       const { getByTitle, getByRole } = render(
-        <MermaidDownloadDropdown
-          chart="graph TD; A-->B"
-          onDownload={handleDownload}
-        />
+        <MermaidTestWrapper>
+          <MermaidDownloadDropdown
+            chart="graph TD; A-->B"
+            onDownload={handleDownload}
+          />
+        </MermaidTestWrapper>
       );
 
       const toggleButton = getByTitle("Download diagram");
@@ -556,7 +612,9 @@ describe("Mermaid", () => {
 
       try {
         const { getByTitle, getByRole } = render(
-          <MermaidDownloadDropdown chart="graph TD; A-->B" />
+          <MermaidTestWrapper>
+            <MermaidDownloadDropdown chart="graph TD; A-->B" />
+          </MermaidTestWrapper>
         );
 
         const toggleButton = getByTitle("Download diagram");
@@ -595,7 +653,9 @@ describe("Mermaid", () => {
       mockRender.mockRejectedValueOnce(new Error("Render failed"));
 
       const { getByTitle, getByRole } = render(
-        <MermaidDownloadDropdown chart="graph TD; A-->B" onError={onError} />
+        <MermaidTestWrapper>
+          <MermaidDownloadDropdown chart="graph TD; A-->B" onError={onError} />
+        </MermaidTestWrapper>
       );
 
       const toggleButton = getByTitle("Download diagram");

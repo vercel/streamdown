@@ -5,13 +5,14 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { TokensResult } from "shiki";
+import type { BundledLanguage } from "shiki";
 import { StreamdownContext } from "../../index";
+import { useCodePlugin } from "../plugin-context";
+import type { HighlightResult } from "../plugin-types";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContainer } from "./container";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
-import { getHighlightedTokens } from "./highlight";
 
 type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
@@ -25,10 +26,11 @@ export const CodeBlock = ({
   children,
   ...rest
 }: CodeBlockProps) => {
-  const { shikiTheme, cdnUrl } = useContext(StreamdownContext);
+  const { shikiTheme } = useContext(StreamdownContext);
+  const codePlugin = useCodePlugin();
 
   // Memoize the raw fallback tokens to avoid recomputing on every render
-  const raw: TokensResult = useMemo(
+  const raw: HighlightResult = useMemo(
     () => ({
       bg: "transparent",
       fg: "inherit",
@@ -46,16 +48,26 @@ export const CodeBlock = ({
   );
 
   // Use raw as initial state
-  const [result, setResult] = useState<TokensResult>(raw);
+  const [result, setResult] = useState<HighlightResult>(raw);
 
   // Try to get cached result or subscribe to highlighting
   useEffect(() => {
-    const cachedResult = getHighlightedTokens({
-      code,
-      language,
-      shikiTheme,
-      cdnUrl,
-    });
+    // If no code plugin, just use raw tokens (plain text)
+    if (!codePlugin) {
+      setResult(raw);
+      return;
+    }
+
+    const cachedResult = codePlugin.highlight(
+      {
+        code,
+        language: language as BundledLanguage,
+        themes: shikiTheme,
+      },
+      (highlightedResult) => {
+        setResult(highlightedResult);
+      }
+    );
 
     if (cachedResult) {
       // Already cached, use it immediately
@@ -66,18 +78,7 @@ export const CodeBlock = ({
     // Not cached - reset to raw tokens while waiting for highlighting
     // This is critical for streaming: ensures we show current code, not stale tokens
     setResult(raw);
-
-    // Subscribe to get highlighted tokens when ready
-    getHighlightedTokens({
-      code,
-      language,
-      shikiTheme,
-      cdnUrl,
-      callback: (highlightedResult) => {
-        setResult(highlightedResult);
-      },
-    });
-  }, [code, language, shikiTheme, cdnUrl, raw]);
+  }, [code, language, shikiTheme, codePlugin, raw]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>

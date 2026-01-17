@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:packages": "pnpm build --filter streamdown --filter @streamdown/math --filter @streamdown/code --filter @streamdown/cjk --filter @streamdown/mermaid",
     "dev": "turbo run dev",
     "check": "ultracite check",
     "fix": "ultracite fix",

@@ -5,9 +5,30 @@ description: Create interactive flowcharts, sequence diagrams, and more with Mer
 
 Streamdown includes built-in support for [Mermaid](https://mermaid.js.org/) diagrams, allowing you to create flowcharts, sequence diagrams, state diagrams, and more using simple text-based syntax. Each diagram includes interactive controls for fullscreen viewing, downloading, and copying.
 
-Mermaid is loaded on-demand from a CDN only when a diagram is rendered, keeping your initial bundle size small. By default, Mermaid loads from `https://streamdown.ai/cdn`. See [Self-Hosting CDN](/docs/self-hosting-cdn) for self-hosting options.
+## Enabling Mermaid
 
-**Note:** Mermaid requires CDN access to function. If you set `cdnUrl={null}` to disable CDN loading, Mermaid diagrams will not render.
+Mermaid diagrams require the mermaid plugin. Install it:
+
+```package-install
+npm install @streamdown/mermaid
+```
+
+Then import and pass the plugin to Streamdown:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from "streamdown";
+import { mermaidPlugin } from "@streamdown/mermaid";
+
+export default function Page() {
+  return (
+    <Streamdown plugins={{ mermaid: mermaidPlugin }}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+Without the mermaid plugin, mermaid code blocks render as plain code instead of diagrams.
 
 ## Basic Usage
 
@@ -214,11 +235,13 @@ Customize the Mermaid theme using the `mermaid.config` prop:
 
 ```tsx
 import { Streamdown } from "streamdown";
+import { mermaidPlugin } from "@streamdown/mermaid";
 import type { MermaidConfig } from "streamdown";
 
 export default function Page() {
   return (
     <Streamdown
+      plugins={{ mermaid: mermaidPlugin }}
       mermaid={{
         config: {
           theme: "dark",
@@ -252,7 +275,12 @@ Mermaid includes several built-in themes:
 Example:
 
 ```tsx
-<Streamdown mermaid={{ config: { theme: "forest" } }}>{markdown}</Streamdown>
+<Streamdown
+  plugins={{ mermaid: mermaidPlugin }}
+  mermaid={{ config: { theme: "forest" } }}
+>
+  {markdown}
+</Streamdown>
 ```
 
 ### Advanced Configuration
@@ -261,6 +289,7 @@ Customize specific diagram types:
 
 ```tsx
 <Streamdown
+  plugins={{ mermaid: mermaidPlugin }}
   mermaid={{
     config: {
       theme: "base",
@@ -293,6 +322,7 @@ When Mermaid diagrams fail to render due to invalid syntax, you can provide a cu
 
 ```tsx
 import { Streamdown } from "streamdown";
+import { mermaidPlugin } from "@streamdown/mermaid";
 import type { MermaidErrorComponentProps } from "streamdown";
 
 const CustomMermaidError = ({
@@ -320,6 +350,7 @@ const CustomMermaidError = ({
 export default function Page() {
   return (
     <Streamdown
+      plugins={{ mermaid: mermaidPlugin }}
       mermaid={{
         errorComponent: CustomMermaidError,
       }}
@@ -390,6 +421,7 @@ You can customize which controls are shown:
 
 ```tsx
 <Streamdown
+  plugins={{ mermaid: mermaidPlugin }}
   controls={{
     mermaid: {
       fullscreen: true,
@@ -406,6 +438,7 @@ Or disable specific controls:
 
 ```tsx
 <Streamdown
+  plugins={{ mermaid: mermaidPlugin }}
   controls={{
     mermaid: {
       fullscreen: true,
@@ -421,7 +454,12 @@ Or disable specific controls:
 Or disable all Mermaid controls:
 
 ```tsx
-<Streamdown controls={{ mermaid: false }}>{markdown}</Streamdown>
+<Streamdown
+  plugins={{ mermaid: mermaidPlugin }}
+  controls={{ mermaid: false }}
+>
+  {markdown}
+</Streamdown>
 ```
 
 ## Streaming Considerations
@@ -435,7 +473,12 @@ When Mermaid diagrams are first streamed in, they appear as code blocks until th
 Use the `isAnimating` prop to disable interactive controls while content is streaming:
 
 ```tsx
-<Streamdown isAnimating={isStreaming}>{markdown}</Streamdown>
+<Streamdown
+  plugins={{ mermaid: mermaidPlugin }}
+  isAnimating={isStreaming}
+>
+  {markdown}
+</Streamdown>
 ```
 
 This prevents users from interacting with incomplete diagrams.
@@ -569,10 +612,10 @@ graph TD
 
 ### Diagram Not Rendering
 
-1. Verify the syntax is correct (check [Mermaid Live Editor](https://mermaid.live/))
-2. Ensure the code block uses ` ```mermaid `
-3. Check browser console for JavaScript errors
-4. Verify Mermaid is not being blocked by CSP
+1. Verify the Mermaid plugin is passed to Streamdown
+2. Verify the syntax is correct (check [Mermaid Live Editor](https://mermaid.live/))
+3. Ensure the code block uses ` ```mermaid `
+4. Check browser console for JavaScript errors
 
 ### Performance with Large Diagrams
 
@@ -585,7 +628,7 @@ Large diagrams may take time to render. Consider:
 
 ### Theme Not Applying
 
-1. Verify `mermaidConfig` is properly passed
+1. Verify `mermaid.config` is properly passed
 2. Check that theme name is spelled correctly
 3. Ensure custom theme variables are valid
 
