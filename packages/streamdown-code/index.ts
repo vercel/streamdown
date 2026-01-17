@@ -1,10 +1,12 @@
 "use client";
 
 import {
+  type BundledLanguage,
   type BundledTheme,
   bundledLanguages,
   createHighlighter,
   type HighlighterGeneric,
+  type SpecialLanguage,
   type TokensResult,
 } from "shiki";
 
@@ -68,7 +70,7 @@ const languageNames = new Set<string>(Object.keys(bundledLanguages));
 // Singleton highlighter cache
 const highlighterCache = new Map<
   string,
-  Promise<HighlighterGeneric<string, string>>
+  Promise<HighlighterGeneric<BundledLanguage, BundledTheme>>
 >();
 
 // Token cache
@@ -95,12 +97,12 @@ const getTokensCacheKey = (
 const getHighlighter = (
   language: string,
   themeNames: [string, string]
-): Promise<HighlighterGeneric<string, string>> => {
+): Promise<HighlighterGeneric<BundledLanguage, BundledTheme>> => {
   const cacheKey = getHighlighterCacheKey(language, themeNames);
 
   if (highlighterCache.has(cacheKey)) {
     return highlighterCache.get(cacheKey) as Promise<
-      HighlighterGeneric<string, string>
+      HighlighterGeneric<BundledLanguage, BundledTheme>
     >;
   }
 
@@ -173,9 +175,9 @@ export function createCodePlugin(
       getHighlighter(language, themeNames as [string, string])
         .then((highlighter) => {
           const availableLangs = highlighter.getLoadedLanguages();
-          const langToUse = availableLangs.includes(language)
-            ? language
-            : "text";
+          const langToUse = (
+            availableLangs.includes(language) ? language : "text"
+          ) as BundledLanguage | SpecialLanguage;
 
           const result = highlighter.codeToTokens(code, {
             lang: langToUse,
