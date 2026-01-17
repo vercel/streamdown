@@ -10,10 +10,12 @@ import { handleIncompleteBlockKatex } from "./katex-handler";
 import { handleIncompleteLinksAndImages } from "./link-image-handler";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
+
+// biome-ignore lint/performance/noBarrelFile: "Re-exports utility functions for public API convenience"
 export {
   isWithinCodeBlock,
-  isWithinMathBlock,
   isWithinLinkOrImageUrl,
+  isWithinMathBlock,
   isWordChar,
 } from "./utils";
 
@@ -167,7 +169,10 @@ const builtInHandlers: Array<{
 // Also enable links handler when images option is enabled
 const getEnabledBuiltInHandlers = (
   options?: RemendOptions
-): Array<{ handler: RemendHandler; earlyReturn?: (result: string) => boolean }> => {
+): Array<{
+  handler: RemendHandler;
+  earlyReturn?: (result: string) => boolean;
+}> => {
   return builtInHandlers
     .filter(({ handler, optionKey }) => {
       // Special case: links handler is enabled by either links or images option
@@ -200,7 +205,9 @@ const remend = (text: string, options?: RemendOptions): string => {
 
   // Merge and sort by priority
   const allHandlers = [...enabledBuiltIns, ...customHandlers].sort(
-    (a, b) => (a.handler.priority ?? PRIORITY.DEFAULT) - (b.handler.priority ?? PRIORITY.DEFAULT)
+    (a, b) =>
+      (a.handler.priority ?? PRIORITY.DEFAULT) -
+      (b.handler.priority ?? PRIORITY.DEFAULT)
   );
 
   // Execute handlers in priority order

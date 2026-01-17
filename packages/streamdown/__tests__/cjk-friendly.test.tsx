@@ -414,20 +414,14 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
     it("handles streaming scenario with CJK text", () => {
       const streamingContent1 = "**ストリーミング";
       const { container, rerender } = render(
-        <Streamdown plugins={{ cjk }}>
-          {streamingContent1}
-        </Streamdown>
+        <Streamdown plugins={{ cjk }}>{streamingContent1}</Streamdown>
       );
 
       expect(container.textContent).toBeTruthy();
 
       // Simulate streaming more content
       const streamingContent2 = "**ストリーミング中（処理中）**";
-      rerender(
-        <Streamdown plugins={{ cjk }}>
-          {streamingContent2}
-        </Streamdown>
-      );
+      rerender(<Streamdown plugins={{ cjk }}>{streamingContent2}</Streamdown>);
       expect(container.textContent).toContain("ストリーミング");
       expect(container.textContent).toContain("処理中");
     });

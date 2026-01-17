@@ -321,9 +321,7 @@ describe("Caret Feature", () => {
 
     it("should not render placeholder span when caret is not set", () => {
       const { container } = render(
-        <Streamdown isAnimating={true}>
-          {""}
-        </Streamdown>
+        <Streamdown isAnimating={true}>{""}</Streamdown>
       );
 
       const wrapper = container.firstElementChild;

@@ -17,8 +17,8 @@ import { CodeBlockSkeleton } from "./code-block/skeleton";
 import { ImageComponent } from "./image";
 import type { ExtraProps, Options } from "./markdown";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
-import { useMermaidPlugin } from "./plugin-context";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
+import { useMermaidPlugin } from "./plugin-context";
 import { Table } from "./table";
 import { cn } from "./utils";
 
@@ -616,6 +616,7 @@ const CodeComponent = ({
   children,
   ...props
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Code component handles multiple rendering paths for inline code, code blocks, and mermaid diagrams"
   ExtraProps) => {
   const inline = node?.position?.start.line === node?.position?.end.line;
   const { mermaid: mermaidContext, controls: controlsConfig } =

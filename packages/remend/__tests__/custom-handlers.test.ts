@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import remend, {
-  type RemendHandler,
   isWithinCodeBlock,
-  isWithinMathBlock,
   isWithinLinkOrImageUrl,
+  isWithinMathBlock,
   isWordChar,
+  type RemendHandler,
 } from "../src";
+
+// Regex pattern for joke marker matching (moved to top level for performance)
+const JOKE_MARKER_PATTERN = /<<<JOKE>>>([^<]*)$/;
 
 describe("custom handlers", () => {
   it("should execute custom handlers", () => {
@@ -208,7 +211,7 @@ describe("custom handler example: joke marker", () => {
       priority: 80,
       handle: (text) => {
         // Complete <<<JOKE>>> marks
-        const match = text.match(/<<<JOKE>>>([^<]*)$/);
+        const match = text.match(JOKE_MARKER_PATTERN);
         if (match && !text.endsWith("<<</JOKE>>>")) {
           return `${text}<<</JOKE>>>`;
         }
@@ -226,7 +229,7 @@ describe("custom handler example: joke marker", () => {
       name: "joke",
       priority: 80,
       handle: (text) => {
-        const match = text.match(/<<<JOKE>>>([^<]*)$/);
+        const match = text.match(JOKE_MARKER_PATTERN);
         if (match && !text.endsWith("<<</JOKE>>>")) {
           return `${text}<<</JOKE>>>`;
         }

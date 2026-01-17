@@ -55,7 +55,8 @@ $$`;
       text.includes("bmatrix") || // LaTeX command
       text.includes("begin"); // LaTeX environment start
 
-    const hasMathContent = hasMatrixNumbers && hasVariables && hasMatrixIndicator;
+    const hasMathContent =
+      hasMatrixNumbers && hasVariables && hasMatrixIndicator;
 
     // The math content should be rendered (even if not as full KaTeX in test environment)
     expect(hasMathContent).toBe(true);
