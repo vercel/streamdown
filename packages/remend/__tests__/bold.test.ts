@@ -25,9 +25,12 @@ describe("bold formatting (**)", () => {
     expect(remend("Here is some **bold tex")).toBe("Here is some **bold tex**");
   });
 
-  it("should complete bold with trailing single asterisk", () => {
-    expect(remend("**xxx*")).toBe("**xxx***");
-    expect(remend("**bold text*")).toBe("**bold text***");
-    expect(remend("Text with **bold*")).toBe("Text with **bold***");
+  it("should complete half-complete bold closing marker (#313)", () => {
+    // When streaming **bold**, the closing marker arrives char by char
+    // **bold text* is a half-complete closing marker, not bold+asterisk
+    expect(remend("**xxx*")).toBe("**xxx**");
+    expect(remend("**bold text*")).toBe("**bold text**");
+    expect(remend("Text with **bold*")).toBe("Text with **bold**");
+    expect(remend("This is **bold text*")).toBe("This is **bold text**");
   });
 });

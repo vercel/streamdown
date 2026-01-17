@@ -20,6 +20,16 @@ export const handleIncompleteStrikethrough = (text: string): string => {
     if (tildePairs % 2 === 1) {
       return `${text}~~`;
     }
+  } else {
+    // Check for half-complete closing marker: ~~content~ should become ~~content~~
+    // The pattern /(~~)([^~]*?)$/ won't match ~~content~ because it ends with ~
+    const halfCompleteMatch = text.match(/(~~)([^~]+)~$/);
+    if (halfCompleteMatch) {
+      const tildePairs = (text.match(/~~/g) || []).length;
+      if (tildePairs % 2 === 1) {
+        return `${text}~`;
+      }
+    }
   }
 
   return text;

@@ -15,6 +15,15 @@ describe("italic formatting with underscores (__)", () => {
   it("should handle odd number of double underscore pairs", () => {
     expect(remend("__first__ and __second")).toBe("__first__ and __second__");
   });
+
+  it("should complete half-complete __ closing marker (#313)", () => {
+    // When streaming __bold__, the closing marker arrives char by char
+    // __bold text_ is a half-complete closing marker
+    expect(remend("__xxx_")).toBe("__xxx__");
+    expect(remend("__bold text_")).toBe("__bold text__");
+    expect(remend("Text with __bold_")).toBe("Text with __bold__");
+    expect(remend("This is __bold text_")).toBe("This is __bold text__");
+  });
 });
 
 describe("italic formatting with asterisks (*)", () => {

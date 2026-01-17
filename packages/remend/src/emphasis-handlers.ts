@@ -253,6 +253,11 @@ export const handleIncompleteBold = (text: string): string => {
 
   const asteriskPairs = (text.match(/\*\*/g) || []).length;
   if (asteriskPairs % 2 === 1) {
+    // Check for half-complete closing marker: **content* should become **content**
+    // The trailing * is the first char of the closing ** being streamed
+    if (contentAfterMarker.endsWith("*")) {
+      return `${text}*`;
+    }
     return `${text}**`;
   }
 
@@ -295,6 +300,19 @@ export const handleIncompleteDoubleUnderscoreItalic = (
 ): string => {
   const italicMatch = text.match(italicPattern);
   if (!italicMatch) {
+    // Check for half-complete closing marker: __content_ should become __content__
+    // The pattern /(__)([^_]*?)$/ won't match __content_ because it ends with _
+    // So we need a separate check for this case
+    const halfCompleteMatch = text.match(/(__)([^_]+)_$/);
+    if (halfCompleteMatch) {
+      const markerIndex = text.lastIndexOf(halfCompleteMatch[1]);
+      if (!isWithinCodeBlock(text, markerIndex)) {
+        const underscorePairs = (text.match(/__/g) || []).length;
+        if (underscorePairs % 2 === 1) {
+          return `${text}_`;
+        }
+      }
+    }
     return text;
   }
 
