@@ -1,15 +1,12 @@
 "use client";
 
-import type {
-  BundledTheme,
-  HighlighterCore,
-  LanguageInput,
-  SpecialLanguage,
-  TokensResult,
+import {
+  type BundledTheme,
+  bundledLanguages,
+  createHighlighter,
+  type HighlighterGeneric,
+  type TokensResult,
 } from "shiki";
-import { bundledLanguages, bundledThemes } from "shiki";
-import { createHighlighterCore } from "shiki/core";
-import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
 /**
  * Result from code highlighting
@@ -65,13 +62,14 @@ export interface CodePluginOptions {
   themes?: [BundledTheme, BundledTheme];
 }
 
-const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
-
 // Build language name set for quick lookup
 const languageNames = new Set<string>(Object.keys(bundledLanguages));
 
 // Singleton highlighter cache
-const highlighterCache = new Map<string, Promise<HighlighterCore>>();
+const highlighterCache = new Map<
+  string,
+  Promise<HighlighterGeneric<string, string>>
+>();
 
 // Token cache
 const tokensCache = new Map<string, TokensResult>();
@@ -94,57 +92,25 @@ const getTokensCacheKey = (
   return `${language}:${themeNames[0]}:${themeNames[1]}:${code.length}:${start}:${end}`;
 };
 
-const createHighlighter = (
+const getHighlighter = (
   language: string,
   themeNames: [string, string]
-): Promise<HighlighterCore> => {
+): Promise<HighlighterGeneric<string, string>> => {
   const cacheKey = getHighlighterCacheKey(language, themeNames);
 
   if (highlighterCache.has(cacheKey)) {
-    return highlighterCache.get(cacheKey) as Promise<HighlighterCore>;
+    return highlighterCache.get(cacheKey) as Promise<
+      HighlighterGeneric<string, string>
+    >;
   }
 
-  const highlighterPromise = (async () => {
-    // Get language grammar (lazy-loaded from shiki)
-    const langLoader =
-      bundledLanguages[language as keyof typeof bundledLanguages];
+  // Determine if it's a bundled language or fall back to text
+  const lang = language in bundledLanguages ? language : "text";
 
-    // Build langs array - either load the language or fall back to "text"
-    let langs: LanguageInput[];
-    if (langLoader) {
-      const langModule = await langLoader();
-      // The loader returns a module with default export containing the language registration
-      const langRegistration = langModule?.default ?? langModule;
-      langs = [langRegistration as LanguageInput];
-    } else {
-      langs = ["text" as unknown as LanguageInput];
-    }
-
-    // Get theme registrations (lazy-loaded from shiki)
-    const themeRegistrations = await Promise.all(
-      themeNames.map(async (name) => {
-        const themeLoader = bundledThemes[name as keyof typeof bundledThemes];
-        if (!themeLoader) {
-          console.warn(
-            `[Streamdown Code] Theme "${name}" not found. Using github-${name.includes("dark") ? "dark" : "light"}.`
-          );
-          const fallbackLoader = name.includes("dark")
-            ? bundledThemes["github-dark"]
-            : bundledThemes["github-light"];
-          return await fallbackLoader();
-        }
-        return await themeLoader();
-      })
-    );
-
-    const highlighter = await createHighlighterCore({
-      themes: themeRegistrations,
-      langs,
-      engine: jsEngine,
-    });
-
-    return highlighter;
-  })();
+  const highlighterPromise = createHighlighter({
+    themes: themeNames,
+    langs: [lang],
+  });
 
   highlighterCache.set(cacheKey, highlighterPromise);
   return highlighterPromise;
@@ -204,18 +170,18 @@ export function createCodePlugin(
       }
 
       // Start highlighting in background
-      createHighlighter(language, themeNames as [string, string])
+      getHighlighter(language, themeNames as [string, string])
         .then((highlighter) => {
           const availableLangs = highlighter.getLoadedLanguages();
-          const langToUse = (
-            availableLangs.includes(language) ? language : "text"
-          ) as SpecialLanguage;
+          const langToUse = availableLangs.includes(language)
+            ? language
+            : "text";
 
           const result = highlighter.codeToTokens(code, {
             lang: langToUse,
             themes: {
-              light: themeNames[0] as BundledTheme,
-              dark: themeNames[1] as BundledTheme,
+              light: themeNames[0],
+              dark: themeNames[1],
             },
           });
 

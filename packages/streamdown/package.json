@@ -36,6 +36,7 @@
   "license": "Apache-2.0",
   "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
   "devDependencies": {
+    "shiki": "^3.19.0",
     "@streamdown/cjk": "workspace:*",
     "@streamdown/math": "workspace:*",
     "@streamdown/mermaid": "workspace:*",
@@ -58,7 +59,6 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "shiki": "^3.19.0",
     "clsx": "^2.1.1",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "html-url-attributes": "^3.0.1",

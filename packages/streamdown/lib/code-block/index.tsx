@@ -5,9 +5,9 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { TokensResult } from "shiki";
 import { StreamdownContext } from "../../index";
 import { useCodePlugin } from "../plugin-context";
+import type { HighlightResult } from "../plugin-types";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContainer } from "./container";
 import { CodeBlockContext } from "./context";
@@ -29,7 +29,7 @@ export const CodeBlock = ({
   const codePlugin = useCodePlugin();
 
   // Memoize the raw fallback tokens to avoid recomputing on every render
-  const raw: TokensResult = useMemo(
+  const raw: HighlightResult = useMemo(
     () => ({
       bg: "transparent",
       fg: "inherit",
@@ -47,7 +47,7 @@ export const CodeBlock = ({
   );
 
   // Use raw as initial state
-  const [result, setResult] = useState<TokensResult>(raw);
+  const [result, setResult] = useState<HighlightResult>(raw);
 
   // Try to get cached result or subscribe to highlighting
   useEffect(() => {

@@ -1,11 +1,27 @@
 import type { MermaidConfig } from "mermaid";
-import type { BundledTheme, TokensResult } from "shiki";
+import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 
 /**
- * Result from code highlighting
+ * A single token in a highlighted line
  */
-export type HighlightResult = TokensResult;
+export interface HighlightToken {
+  content: string;
+  color?: string;
+  bgColor?: string;
+  htmlStyle?: Record<string, string>;
+  htmlAttrs?: Record<string, string>;
+  offset?: number;
+}
+
+/**
+ * Result from code highlighting (compatible with shiki's TokensResult)
+ */
+export interface HighlightResult {
+  tokens: HighlightToken[][];
+  fg?: string;
+  bg?: string;
+}
 
 /**
  * Options for highlighting code

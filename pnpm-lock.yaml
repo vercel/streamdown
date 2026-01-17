@@ -503,9 +503,6 @@ importers:
       remend:
         specifier: workspace:*
         version: link:../remend
-      shiki:
-        specifier: ^3.19.0
-        version: 3.19.0
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
@@ -561,6 +558,9 @@ importers:
       react-markdown:
         specifier: ^10.1.0
         version: 10.1.0(@types/react@19.2.7)(react@19.2.1)
+      shiki:
+        specifier: ^3.19.0
+        version: 3.19.0
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.20.6)(typescript@5.9.3)

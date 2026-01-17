@@ -27,8 +27,8 @@ import { cn } from "./lib/utils";
 
 export type { MermaidConfig } from "mermaid";
 export type { RemendOptions } from "remend";
-// biome-ignore lint/performance/noBarrelFile: "required"
-export { bundledLanguages } from "shiki";
+// biome-ignore lint/performance/noBarrelFile: required for library exports
+export { type BundledTheme, bundledLanguages } from "shiki";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
   CjkPlugin,
@@ -117,7 +117,7 @@ export interface StreamdownContextType {
 }
 
 const defaultStreamdownContext: StreamdownContextType = {
-  shikiTheme: ["github-light" as BundledTheme, "github-dark" as BundledTheme],
+  shikiTheme: ["github-light", "github-dark"],
   controls: true,
   isAnimating: false,
   mode: "streaming",
