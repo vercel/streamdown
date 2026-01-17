@@ -1,3 +1,4 @@
+import { mathPlugin } from "@streamdown/math";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
@@ -8,7 +9,9 @@ describe("KaTeX classes preservation", () => {
 L = \\frac{1}{2} \\rho v^2 S C_L
 $$`;
 
-    const { container } = render(<Streamdown>{content}</Streamdown>);
+    const { container } = render(
+      <Streamdown plugins={{ math: mathPlugin }}>{content}</Streamdown>
+    );
 
     // Check that KaTeX classes are present
     const katexElements = container.querySelectorAll(".katex");
@@ -37,7 +40,9 @@ $$`;
 x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}
 $$`;
 
-    const { container } = render(<Streamdown>{content}</Streamdown>);
+    const { container } = render(
+      <Streamdown plugins={{ math: mathPlugin }}>{content}</Streamdown>
+    );
 
     // Check for fraction-specific classes
     const mfrac = container.querySelector(".mfrac");
@@ -53,7 +58,9 @@ $$`;
 L = \\frac{1}{2} \\rho v^2 S C_L
 $$`;
 
-    const { container } = render(<Streamdown>{content}</Streamdown>);
+    const { container } = render(
+      <Streamdown plugins={{ math: mathPlugin }}>{content}</Streamdown>
+    );
 
     // Check that inline styles are preserved (KaTeX uses inline styles for positioning)
     const strut = container.querySelector(".strut");

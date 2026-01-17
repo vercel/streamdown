@@ -150,7 +150,11 @@ export const Mermaid = ({
   const displaySvg = svgContent || lastValidSvg;
 
   return (
-    <div className="size-full" ref={containerRef}>
+    <div
+      className={cn("size-full", className)}
+      data-streamdown="mermaid"
+      ref={containerRef}
+    >
       <PanZoom
         className={cn(
           fullscreen ? "size-full overflow-hidden" : "my-4 overflow-hidden",

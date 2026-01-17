@@ -1,3 +1,4 @@
+import { cjkPlugin } from "@streamdown/cjk";
 import { render } from "@testing-library/react";
 import remarkGfm from "remark-gfm";
 import { describe, expect, it } from "vitest";
@@ -8,7 +9,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
     it("renders bold text with Japanese parentheses correctly", () => {
       const japaneseContent =
         "**この文は太字になります（This sentence will be bolded）。**この文が後に続いても大丈夫です（This sentence can be followed without issue）。";
-      const { container } = render(<Streamdown>{japaneseContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{japaneseContent}</Streamdown>
+      );
 
       // The content should be rendered and processed
       expect(container.textContent).toContain("この文は太字になります");
@@ -26,7 +29,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
       ];
 
       for (const content of punctuationTests) {
-        const { container } = render(<Streamdown>{content}</Streamdown>);
+        const { container } = render(
+          <Streamdown plugins={{ cjk: cjkPlugin }}>{content}</Streamdown>
+        );
         expect(container.textContent).toBeTruthy();
         expect(container.textContent).not.toContain("**");
       }
@@ -35,7 +40,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
     it("renders italic text with Japanese punctuation", () => {
       const japaneseItalic =
         "*これは斜体のテキストです（括弧付き）。*この文が後に続いても大丈夫です。";
-      const { container } = render(<Streamdown>{japaneseItalic}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{japaneseItalic}</Streamdown>
+      );
 
       expect(container.textContent).toContain("これは斜体のテキストです");
       expect(container.textContent).toContain("括弧付き");
@@ -45,7 +52,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 
     it("renders combined bold and italic with Japanese text", () => {
       const combined = "***重要な情報（詳細）***続き";
-      const { container } = render(<Streamdown>{combined}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{combined}</Streamdown>
+      );
 
       expect(container.textContent).toContain("重要な情報");
       expect(container.textContent).toContain("詳細");
@@ -63,7 +72,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 普通のテキストと**太字（強調）**を混ぜる。
       `;
 
-      const { container } = render(<Streamdown>{complexContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{complexContent}</Streamdown>
+      );
       expect(container.textContent).toContain("見出し");
       expect(container.textContent).toContain("太字のテキスト");
       expect(container.textContent).toContain("斜体のテキスト");
@@ -76,7 +87,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
   describe("Chinese text with emphasis", () => {
     it("renders bold text with Chinese parentheses correctly", () => {
       const chineseContent = "**这是粗体文字（带括号）。**";
-      const { container } = render(<Streamdown>{chineseContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{chineseContent}</Streamdown>
+      );
 
       expect(container.textContent).toContain("这是粗体文字");
       expect(container.textContent).toContain("带括号");
@@ -94,21 +107,27 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
       ];
 
       for (const content of punctuationTests) {
-        const { container } = render(<Streamdown>{content}</Streamdown>);
+        const { container } = render(
+          <Streamdown plugins={{ cjk: cjkPlugin }}>{content}</Streamdown>
+        );
         expect(container.textContent).toBeTruthy();
       }
     });
 
     it("renders italic text with Chinese punctuation", () => {
       const chineseItalic = "*这是斜体文字（带括号）。*";
-      const { container } = render(<Streamdown>{chineseItalic}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{chineseItalic}</Streamdown>
+      );
 
       expect(container.textContent).toContain("这是斜体文字");
     });
 
     it("handles mixed Chinese and English with emphasis", () => {
       const mixed = "**重要提示（Important Notice）：请注意。**";
-      const { container } = render(<Streamdown>{mixed}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{mixed}</Streamdown>
+      );
 
       expect(container.textContent).toContain("重要提示");
       expect(container.textContent).toContain("Important Notice");
@@ -126,7 +145,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 混合普通文字和**粗体（强调）**内容。
       `;
 
-      const { container } = render(<Streamdown>{complexContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{complexContent}</Streamdown>
+      );
       expect(container.textContent).toContain("标题");
       expect(container.textContent).toContain("粗体文字");
       expect(container.textContent).toContain("斜体文字");
@@ -136,14 +157,18 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
   describe("Korean text with emphasis", () => {
     it("renders bold text with Korean punctuation correctly", () => {
       const koreanContent = "**이것은 굵은 텍스트입니다（괄호 포함）。**";
-      const { container } = render(<Streamdown>{koreanContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{koreanContent}</Streamdown>
+      );
 
       expect(container.textContent).toContain("이것은 굵은 텍스트입니다");
     });
 
     it("renders italic text with Korean punctuation", () => {
       const koreanItalic = "*기울임 텍스트（괄호 포함）。*";
-      const { container } = render(<Streamdown>{koreanItalic}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{koreanItalic}</Streamdown>
+      );
 
       expect(container.textContent).toContain("기울임 텍스트");
     });
@@ -157,7 +182,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 *기울임 글씨【주석】。*
       `;
 
-      const { container } = render(<Streamdown>{complexContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{complexContent}</Streamdown>
+      );
       expect(container.textContent).toContain("제목");
       expect(container.textContent).toContain("굵은 글씨");
     });
@@ -166,28 +193,36 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
   describe("Strikethrough with CJK text", () => {
     it("renders strikethrough text with Japanese punctuation", () => {
       const strikethrough = "~~削除されたテキスト（括弧付き）。~~";
-      const { container } = render(<Streamdown>{strikethrough}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{strikethrough}</Streamdown>
+      );
 
       expect(container.textContent).toContain("削除されたテキスト");
     });
 
     it("renders strikethrough text with Chinese punctuation", () => {
       const strikethrough = "~~删除的文字（带括号）。~~";
-      const { container } = render(<Streamdown>{strikethrough}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{strikethrough}</Streamdown>
+      );
 
       expect(container.textContent).toContain("删除的文字");
     });
 
     it("renders strikethrough text with Korean punctuation", () => {
       const strikethrough = "~~취소선 텍스트（괄호）。~~";
-      const { container } = render(<Streamdown>{strikethrough}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{strikethrough}</Streamdown>
+      );
 
       expect(container.textContent).toContain("취소선 텍스트");
     });
 
     it("handles mixed strikethrough and bold in CJK text", () => {
       const mixed = "**重要な**~~削除された（古い）~~**新しい情報。**";
-      const { container } = render(<Streamdown>{mixed}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{mixed}</Streamdown>
+      );
 
       expect(container.textContent).toContain("重要な");
       expect(container.textContent).toContain("削除された");
@@ -203,7 +238,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 - **한국어 항목（괄호）。**
       `;
 
-      const { container } = render(<Streamdown>{listContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{listContent}</Streamdown>
+      );
       const listItems = container.querySelectorAll(
         '[data-streamdown="list-item"]'
       );
@@ -220,7 +257,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 3. **第三項目「引用」。**
       `;
 
-      const { container } = render(<Streamdown>{listContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{listContent}</Streamdown>
+      );
       expect(container.textContent).toContain("第一項目");
       expect(container.textContent).toContain("第二項目");
       expect(container.textContent).toContain("第三項目");
@@ -230,7 +269,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
   describe("Links and inline code with CJK text", () => {
     it("renders links with CJK emphasis in text", () => {
       const linkContent = "[**日本語のリンク（説明）**](https://example.com)";
-      const { container } = render(<Streamdown>{linkContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{linkContent}</Streamdown>
+      );
 
       const link = container.querySelector('[data-streamdown="link"]');
       expect(link?.textContent).toContain("日本語のリンク");
@@ -238,7 +279,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 
     it("splits autolinks at CJK punctuation", () => {
       const autolinkContent = "请访问 https://example.com。谢谢";
-      const { container } = render(<Streamdown>{autolinkContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{autolinkContent}</Streamdown>
+      );
 
       const link = container.querySelector('[data-streamdown="link"]');
       expect(link?.textContent).toBe("https://example.com");
@@ -260,7 +303,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
     it("renders inline code near CJK emphasis", () => {
       const inlineContent =
         "**日本語のコード**：`console.log('こんにちは（挨拶）')`";
-      const { container } = render(<Streamdown>{inlineContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{inlineContent}</Streamdown>
+      );
 
       expect(container.textContent).toContain("日本語のコード");
       expect(container.textContent).toContain("console.log");
@@ -276,7 +321,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 | *詳細【補足】* | *详细【补充】* | *세부사항【주석】* |
       `;
 
-      const { container } = render(<Streamdown>{tableContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{tableContent}</Streamdown>
+      );
       expect(container.textContent).toContain("項目");
       expect(container.textContent).toContain("项目");
       expect(container.textContent).toContain("항목");
@@ -291,7 +338,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 > **重要引用（注意）。**
       `;
 
-      const { container } = render(<Streamdown>{quoteContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{quoteContent}</Streamdown>
+      );
       const blockquote = container.querySelector(
         '[data-streamdown="blockquote"]'
       );
@@ -304,14 +353,18 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
   describe("Edge cases and special scenarios", () => {
     it("handles emphasis with only punctuation", () => {
       const punctuationOnly = "**（）【】「」**";
-      const { container } = render(<Streamdown>{punctuationOnly}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{punctuationOnly}</Streamdown>
+      );
 
       expect(container.textContent).toBeTruthy();
     });
 
     it("handles nested emphasis with CJK punctuation", () => {
       const nested = "**外側（*内側【ネスト】*）。**";
-      const { container } = render(<Streamdown>{nested}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{nested}</Streamdown>
+      );
 
       expect(container.textContent).toContain("外側");
       expect(container.textContent).toContain("内側");
@@ -319,7 +372,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 
     it("handles multiple emphasis markers in CJK text", () => {
       const multiple = "**太字（説明）**と*斜体【補足】*と~~削除「古い」~~。";
-      const { container } = render(<Streamdown>{multiple}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{multiple}</Streamdown>
+      );
 
       expect(container.textContent).toContain("太字");
       expect(container.textContent).toContain("斜体");
@@ -328,7 +383,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 
     it("handles emphasis immediately followed by CJK punctuation", () => {
       const immediate = "**テキスト**（説明）";
-      const { container } = render(<Streamdown>{immediate}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{immediate}</Streamdown>
+      );
 
       expect(container.textContent).toContain("テキスト");
       expect(container.textContent).toContain("説明");
@@ -336,7 +393,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 
     it("handles emphasis with mixed LTR and CJK text with punctuation", () => {
       const mixed = "**This is English（これは日本語）mixed content。**";
-      const { container } = render(<Streamdown>{mixed}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{mixed}</Streamdown>
+      );
 
       expect(container.textContent).toContain("This is English");
       expect(container.textContent).toContain("これは日本語");
@@ -344,7 +403,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 
     it("handles incomplete emphasis with CJK punctuation when parseIncompleteMarkdown is enabled", () => {
       const incomplete = "**未完了のテキスト（括弧付き";
-      const { container } = render(<Streamdown>{incomplete}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{incomplete}</Streamdown>
+      );
 
       // With parseIncompleteMarkdown enabled (default), should complete the emphasis
       expect(container.textContent).toBeTruthy();
@@ -353,14 +414,20 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
     it("handles streaming scenario with CJK text", () => {
       const streamingContent1 = "**ストリーミング";
       const { container, rerender } = render(
-        <Streamdown>{streamingContent1}</Streamdown>
+        <Streamdown plugins={{ cjk: cjkPlugin }}>
+          {streamingContent1}
+        </Streamdown>
       );
 
       expect(container.textContent).toBeTruthy();
 
       // Simulate streaming more content
       const streamingContent2 = "**ストリーミング中（処理中）**";
-      rerender(<Streamdown>{streamingContent2}</Streamdown>);
+      rerender(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>
+          {streamingContent2}
+        </Streamdown>
+      );
       expect(container.textContent).toContain("ストリーミング");
       expect(container.textContent).toContain("処理中");
     });
@@ -380,7 +447,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 これらの手順を**慎重に（carefully）**実行してください。
       `;
 
-      const { container } = render(<Streamdown>{llmContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{llmContent}</Streamdown>
+      );
       expect(container.textContent).toContain("回答");
       expect(container.textContent).toContain("重要なポイント");
       expect(container.textContent).toContain("データベースの設定");
@@ -400,7 +469,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
 请**仔细（carefully）**执行这些步骤。
       `;
 
-      const { container } = render(<Streamdown>{llmContent}</Streamdown>);
+      const { container } = render(
+        <Streamdown plugins={{ cjk: cjkPlugin }}>{llmContent}</Streamdown>
+      );
       expect(container.textContent).toContain("答案");
       expect(container.textContent).toContain("重要要点");
       expect(container.textContent).toContain("数据库配置");

@@ -222,10 +222,16 @@ graph TD
     });
 
     it("should show mermaid pan-zoom controls by default", async () => {
-      const utils = await import("../lib/mermaid/utils");
-      vi.spyOn(utils, "initializeMermaid").mockResolvedValue({
-        render: vi.fn().mockResolvedValue({ svg: "<svg></svg>" }),
-      } as any);
+      const mockMermaidPlugin = {
+        name: "mermaid" as const,
+        type: "diagram" as const,
+        language: "mermaid",
+        getMermaid: () => ({
+          initialize: vi.fn(),
+          render: vi.fn().mockResolvedValue({ svg: "<svg>Test</svg>" }),
+        }),
+      };
+
       const mermaidContent = `
 \`\`\`mermaid
 graph TD
@@ -234,7 +240,12 @@ graph TD
 `;
 
       const { container } = render(
-        <Streamdown controls={{ mermaid: {} }}>{mermaidContent}</Streamdown>
+        <Streamdown
+          controls={{ mermaid: {} }}
+          plugins={{ mermaid: mockMermaidPlugin }}
+        >
+          {mermaidContent}
+        </Streamdown>
       );
 
       await waitFor(() => {

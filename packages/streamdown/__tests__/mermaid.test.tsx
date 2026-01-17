@@ -90,10 +90,13 @@ describe("Mermaid", () => {
       container = result.container;
     });
 
-    const mermaidContainer = container?.querySelector(
-      '[data-streamdown="mermaid"]'
-    ) as HTMLElement;
-    expect(mermaidContainer?.className).toContain("custom-class");
+    await waitFor(() => {
+      const mermaidContainer = container?.querySelector(
+        '[data-streamdown="mermaid"]'
+      ) as HTMLElement;
+      expect(mermaidContainer).toBeTruthy();
+      expect(mermaidContainer?.className).toContain("custom-class");
+    });
   });
 
   it("initializes with custom config", async () => {
