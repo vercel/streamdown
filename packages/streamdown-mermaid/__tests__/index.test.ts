@@ -78,6 +78,39 @@ describe("MermaidInstance", () => {
     }).not.toThrow();
   });
 
+  it("should auto-initialize when render is called without explicit initialization", async () => {
+    // Create a fresh plugin that has never been initialized
+    const plugin = createMermaidPlugin();
+    const instance = plugin.getMermaid();
+
+    // Call render directly without calling initialize first
+    const diagram = `graph TD
+      A[Test] --> B[Auto Init]`;
+
+    const result = await instance.render("auto-init-test", diagram);
+    expect(result).toHaveProperty("svg");
+    expect(typeof result.svg).toBe("string");
+    expect(result.svg).toContain("svg");
+  });
+
+  it("should skip auto-initialization when already initialized", async () => {
+    // Create a fresh plugin and explicitly initialize
+    const plugin = createMermaidPlugin();
+    const instance = plugin.getMermaid();
+
+    // Explicitly initialize first
+    instance.initialize({ theme: "default" });
+
+    // Now render - should skip the auto-initialization branch
+    const diagram = `graph TD
+      A[Already] --> B[Initialized]`;
+
+    const result = await instance.render("pre-init-test", diagram);
+    expect(result).toHaveProperty("svg");
+    expect(typeof result.svg).toBe("string");
+    expect(result.svg).toContain("svg");
+  });
+
   it("should render diagram", async () => {
     const plugin = createMermaidPlugin();
     const instance = plugin.getMermaid();

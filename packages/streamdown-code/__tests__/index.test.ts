@@ -107,6 +107,41 @@ describe("code", () => {
   });
 });
 
+describe("highlight error handling", () => {
+  it("should handle highlighting errors gracefully", async () => {
+    const consoleSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    // Create a fresh plugin to avoid cache
+    const freshPlugin = createCodePlugin({
+      themes: ["invalid-theme-that-does-not-exist", "another-invalid-theme"],
+    });
+
+    const callback = vi.fn();
+
+    freshPlugin.highlight(
+      {
+        code: "const x = 1;",
+        language: "javascript",
+        themes: [
+          "invalid-theme-that-does-not-exist",
+          "another-invalid-theme",
+        ],
+      },
+      callback
+    );
+
+    // Wait for the async operation to complete
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // The callback should not be called due to error
+    // and console.error should be called
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+});
+
 describe("createCodePlugin", () => {
   it("should create plugin with default themes", () => {
     const plugin = createCodePlugin();

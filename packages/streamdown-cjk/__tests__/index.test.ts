@@ -213,6 +213,58 @@ describe("CJK autolink boundary splitting", () => {
   });
 });
 
+describe("CJK autolink edge cases", () => {
+  const processMarkdown = async (markdown: string) => {
+    const [autolinkBoundaryPlugin] = cjk.remarkPluginsAfter;
+
+    const processor = unified()
+      .use(remarkParse)
+      .use(remarkGfm)
+      .use(autolinkBoundaryPlugin)
+      .use(remarkStringify);
+
+    const result = await processor.run(processor.parse(markdown));
+    return result as Root;
+  };
+
+  const getLinks = (tree: Root): Link[] => {
+    const links: Link[] = [];
+    visit(tree, "link", (node: Link) => links.push(node));
+    return links;
+  };
+
+  it("should not split links with multiple children (non-autolinks)", async () => {
+    // Markdown links like [text **bold**](url) have multiple children
+    const tree = await processMarkdown(
+      "[Visit **here**](https://example.com。test)"
+    );
+    const links = getLinks(tree);
+
+    expect(links.length).toBe(1);
+    // Link with multiple children should not be treated as autolink
+    expect(links[0].url).toBe("https://example.com。test");
+  });
+
+  it("should not split links where text differs from URL", async () => {
+    // [custom text](url) is not an autolink literal
+    const tree = await processMarkdown(
+      "[Click me](https://example.com。something)"
+    );
+    const links = getLinks(tree);
+
+    expect(links.length).toBe(1);
+    expect(links[0].url).toBe("https://example.com。something");
+  });
+
+  it("should not split non-http/mailto/www URLs", async () => {
+    // ftp:// and other protocols should not be split
+    const tree = await processMarkdown("ftp://example.com。test");
+    // This won't be an autolink (GFM only autolinks http/https/mailto/www)
+    const links = getLinks(tree);
+    expect(links.length).toBe(0);
+  });
+});
+
 describe("CJK punctuation boundary characters", () => {
   const CJK_PUNCTUATION = [
     "。", // Ideographic full stop
