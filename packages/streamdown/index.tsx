@@ -52,6 +52,19 @@ export type ControlsConfig =
           };
     };
 
+export type LinkSafetyModalProps = {
+  url: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+};
+
+export type LinkSafetyConfig = {
+  enabled: boolean;
+  onLinkCheck?: (url: string) => Promise<boolean> | boolean;
+  renderModal?: (props: LinkSafetyModalProps) => React.ReactNode;
+};
+
 export interface MermaidErrorComponentProps {
   error: string;
   chart: string;
@@ -76,6 +89,7 @@ export type StreamdownProps = Options & {
   caret?: keyof typeof carets;
   plugins?: PluginConfig;
   remend?: RemendOptions;
+  linkSafety?: LinkSafetyConfig;
 };
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
@@ -113,6 +127,7 @@ export interface StreamdownContextType {
   isAnimating: boolean;
   mode: "static" | "streaming";
   mermaid?: MermaidOptions;
+  linkSafety?: LinkSafetyConfig;
 }
 
 const defaultStreamdownContext: StreamdownContextType = {
@@ -121,6 +136,7 @@ const defaultStreamdownContext: StreamdownContextType = {
   isAnimating: false,
   mode: "streaming",
   mermaid: undefined,
+  linkSafety: { enabled: true },
 };
 
 export const StreamdownContext = createContext<StreamdownContextType>(
@@ -213,6 +229,9 @@ export const Streamdown = memo(
     caret,
     plugins,
     remend: remendOptions,
+    linkSafety = {
+      enabled: true,
+    },
     ...props
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
@@ -270,8 +289,17 @@ export const Streamdown = memo(
         isAnimating,
         mode,
         mermaid,
+        linkSafety,
       }),
-      [shikiTheme, controls, isAnimating, mode, mermaid, plugins?.code]
+      [
+        shikiTheme,
+        controls,
+        isAnimating,
+        mode,
+        mermaid,
+        linkSafety,
+        plugins?.code,
+      ]
     );
 
     // Memoize merged components to avoid recreating on every render
@@ -384,6 +412,7 @@ export const Streamdown = memo(
     prevProps.isAnimating === nextProps.isAnimating &&
     prevProps.mode === nextProps.mode &&
     prevProps.plugins === nextProps.plugins &&
-    prevProps.className === nextProps.className
+    prevProps.className === nextProps.className &&
+    prevProps.linkSafety === nextProps.linkSafety
 );
 Streamdown.displayName = "Streamdown";

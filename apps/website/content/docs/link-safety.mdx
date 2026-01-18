@@ -1,0 +1,200 @@
+---
+title: Link Safety
+description: Configurable confirmation modal for external links to protect users from malicious URLs.
+---
+
+When rendering AI-generated or user-generated content, links can pose security risks. The link safety feature adds a confirmation modal before opening external links, similar to ChatGPT's implementation.
+
+## Default Behavior
+
+Link safety is **enabled by default**. When a user clicks any link, a confirmation modal appears with:
+
+- The full URL being opened
+- A "Copy link" button
+- An "Open link" button
+- Close via backdrop click or Escape key
+
+## Disabling Link Safety
+
+To disable the confirmation modal and allow links to open directly:
+
+```tsx
+import { Streamdown } from 'streamdown';
+
+export default function Chat({ content }) {
+  return (
+    <Streamdown linkSafety={{ enabled: false }}>
+      {content}
+    </Streamdown>
+  );
+}
+```
+
+## Safelist with onLinkCheck
+
+Use the `onLinkCheck` callback to allow trusted domains without showing the modal:
+
+```tsx
+<Streamdown
+  linkSafety={{
+    enabled: true,
+    onLinkCheck: (url) => {
+      // Return true to allow without modal (safelist)
+      // Return false to show confirmation modal
+      return url.startsWith('https://your-app.com') ||
+             url.startsWith('https://github.com');
+    }
+  }}
+>
+  {content}
+</Streamdown>
+```
+
+The callback receives the URL and can return:
+- `true` - Open the link directly without modal
+- `false` - Show the confirmation modal
+- `Promise<boolean>` - Async checks are supported
+
+### Async Safelist Check
+
+For server-side safelist validation:
+
+```tsx
+<Streamdown
+  linkSafety={{
+    enabled: true,
+    onLinkCheck: async (url) => {
+      const response = await fetch('/api/check-url', {
+        method: 'POST',
+        body: JSON.stringify({ url }),
+      });
+      const { isSafe } = await response.json();
+      return isSafe;
+    }
+  }}
+>
+  {content}
+</Streamdown>
+```
+
+## Custom Modal
+
+Replace the default modal with your own component using `renderModal`:
+
+```tsx
+import { Streamdown, type LinkSafetyModalProps } from 'streamdown';
+
+function CustomLinkModal({ url, isOpen, onClose, onConfirm }: LinkSafetyModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h2>External Link</h2>
+        <p>You're about to visit:</p>
+        <code>{url}</code>
+        <div className="actions">
+          <button onClick={onClose}>Cancel</button>
+          <button onClick={onConfirm}>Continue</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Chat({ content }) {
+  return (
+    <Streamdown
+      linkSafety={{
+        enabled: true,
+        renderModal: (props) => <CustomLinkModal {...props} />,
+      }}
+    >
+      {content}
+    </Streamdown>
+  );
+}
+```
+
+### Modal Props
+
+The `renderModal` function receives:
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `url` | `string` | The URL being opened |
+| `isOpen` | `boolean` | Whether the modal is visible |
+| `onClose` | `() => void` | Call to close the modal |
+| `onConfirm` | `() => void` | Call to open the link and close the modal |
+
+## Combining with Security Features
+
+Link safety works alongside [content hardening](/docs/security). Use both for comprehensive protection:
+
+```tsx
+import { Streamdown, defaultRehypePlugins } from 'streamdown';
+import { harden } from 'rehype-harden';
+
+export default function SecureChat({ content }) {
+  return (
+    <Streamdown
+      linkSafety={{
+        enabled: true,
+        onLinkCheck: (url) => url.startsWith('https://trusted.com'),
+      }}
+      rehypePlugins={[
+        defaultRehypePlugins.raw,
+        [
+          harden,
+          {
+            allowedLinkPrefixes: [
+              'https://trusted.com',
+              'https://github.com',
+            ],
+            allowedProtocols: ['https', 'mailto'],
+          },
+        ],
+      ]}
+    >
+      {content}
+    </Streamdown>
+  );
+}
+```
+
+This provides two layers of protection:
+1. **Content hardening** - Blocks or rewrites disallowed URLs at render time
+2. **Link safety modal** - Requires user confirmation before navigation
+
+## TypeScript
+
+Import the types for custom modal implementations:
+
+```tsx
+import type { LinkSafetyConfig, LinkSafetyModalProps } from 'streamdown';
+
+const config: LinkSafetyConfig = {
+  enabled: true,
+  onLinkCheck: (url) => url.startsWith('https://safe.com'),
+  renderModal: (props: LinkSafetyModalProps) => <CustomModal {...props} />,
+};
+```
+
+## API Reference
+
+### LinkSafetyConfig
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `enabled` | `boolean` | `true` | Enable link interception and modal |
+| `onLinkCheck` | `(url: string) => boolean \| Promise<boolean>` | - | Optional safelist callback |
+| `renderModal` | `(props: LinkSafetyModalProps) => ReactNode` | - | Optional custom modal component |
+
+### LinkSafetyModalProps
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `url` | `string` | The URL to be opened |
+| `isOpen` | `boolean` | Modal visibility state |
+| `onClose` | `() => void` | Close the modal without navigation |
+| `onConfirm` | `() => void` | Confirm and open the link |

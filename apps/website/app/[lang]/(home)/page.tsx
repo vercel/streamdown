@@ -6,6 +6,7 @@ import { CallToAction } from "./components/cta";
 import { GitHubFlavoredMarkdown } from "./components/gfm";
 import { HardenedMarkdown } from "./components/hardened";
 import { Hero } from "./components/hero";
+import { LinkSafety } from "./components/link-safety";
 import { Logos } from "./components/logos";
 import { Mathematics } from "./components/mathematics";
 import { MermaidDemo } from "./components/mermaid";
@@ -34,6 +35,7 @@ const Home = () => (
       <MermaidDemo />
       <TerminatorParser />
       <HardenedMarkdown />
+      <LinkSafety />
       <CallToAction />
     </div>
   </div>

@@ -5,9 +5,12 @@ import {
   isValidElement,
   type JSX,
   lazy,
+  type MouseEvent,
   memo,
   Suspense,
+  useCallback,
   useContext,
+  useState,
 } from "react";
 // BundledLanguage type removed - we now support any language string
 import { StreamdownContext } from "../index";
@@ -15,6 +18,7 @@ import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
 import { CodeBlockSkeleton } from "./code-block/skeleton";
 import { ImageComponent } from "./image";
+import { LinkSafetyModal } from "./link-modal";
 import type { ExtraProps, Options } from "./markdown";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
@@ -216,27 +220,101 @@ const MemoStrong = memo<StrongProps>(
 MemoStrong.displayName = "MarkdownStrong";
 
 type AProps = WithNode<JSX.IntrinsicElements["a"]> & { href?: string };
-const MemoA = memo<AProps>(
-  ({ children, className, href, node, ...props }: AProps) => {
-    const isIncomplete = href === "streamdown:incomplete-link";
 
+const LinkComponent = ({
+  children,
+  className,
+  href,
+  node,
+  ...props
+}: AProps) => {
+  const { linkSafety } = useContext(StreamdownContext);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const isIncomplete = href === "streamdown:incomplete-link";
+
+  const handleClick = useCallback(
+    async (e: MouseEvent<HTMLButtonElement>) => {
+      if (!(linkSafety?.enabled && href) || isIncomplete) {
+        return;
+      }
+
+      e.preventDefault();
+
+      if (linkSafety.onLinkCheck) {
+        const isAllowed = await linkSafety.onLinkCheck(href);
+        if (isAllowed) {
+          window.open(href, "_blank", "noreferrer");
+          return;
+        }
+      }
+
+      setIsModalOpen(true);
+    },
+    [linkSafety, href, isIncomplete]
+  );
+
+  const handleConfirm = useCallback(() => {
+    if (href) {
+      window.open(href, "_blank", "noreferrer");
+    }
+  }, [href]);
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
+
+  const modalProps = {
+    url: href ?? "",
+    isOpen: isModalOpen,
+    onClose: handleCloseModal,
+    onConfirm: handleConfirm,
+  };
+
+  if (linkSafety?.enabled && href) {
     return (
-      <a
-        className={cn(
-          "wrap-anywhere font-medium text-primary underline",
-          className
+      // return here
+      <>
+        <button
+          className={cn(
+            "wrap-anywhere appearance-none text-left font-medium text-primary underline",
+            className
+          )}
+          data-incomplete={isIncomplete}
+          data-streamdown="link"
+          onClick={handleClick}
+          type="button"
+        >
+          {children}
+        </button>
+        {linkSafety.renderModal ? (
+          linkSafety.renderModal(modalProps)
+        ) : (
+          <LinkSafetyModal {...modalProps} />
         )}
-        data-incomplete={isIncomplete}
-        data-streamdown="link"
-        href={href}
-        rel="noreferrer"
-        target="_blank"
-        {...props}
-      >
-        {children}
-      </a>
+      </>
     );
-  },
+  }
+
+  return (
+    <a
+      className={cn(
+        "wrap-anywhere font-medium text-primary underline",
+        className
+      )}
+      data-incomplete={isIncomplete}
+      data-streamdown="link"
+      href={href}
+      rel="noreferrer"
+      target="_blank"
+      {...props}
+    >
+      {children}
+    </a>
+  );
+};
+
+const MemoA = memo<AProps>(
+  LinkComponent,
   (p, n) => sameClassAndNode(p, n) && p.href === n.href
 );
 MemoA.displayName = "MarkdownA";
@@ -336,11 +414,7 @@ const MemoTable = memo<TableProps>(
     const showTableControls = shouldShowControls(controlsConfig, "table");
 
     return (
-      <Table
-        className={className}
-        showControls={showTableControls}
-        {...props}
-      >
+      <Table className={className} showControls={showTableControls} {...props}>
         {children}
       </Table>
     );
