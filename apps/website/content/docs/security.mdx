@@ -46,8 +46,7 @@ export default function Page() {
     <Streamdown
       rehypePlugins={[
         defaultRehypePlugins.raw,
-        defaultRehypePlugins.katex,
-        [
+                [
           harden,
           {
             allowedProtocols: [
@@ -96,8 +95,7 @@ export default function Page() {
     <Streamdown
       rehypePlugins={[
         defaultRehypePlugins.raw,
-        defaultRehypePlugins.katex,
-        [
+                [
           harden,
           {
             defaultOrigin: 'https://streamdown.ai',
@@ -139,8 +137,7 @@ Similarly, restrict which domains can serve images:
 <Streamdown
   rehypePlugins={[
     defaultRehypePlugins.raw,
-    defaultRehypePlugins.katex,
-    [
+        [
       harden,
       {
         allowedImagePrefixes: [
@@ -205,8 +202,7 @@ export default function ChatMessage({ content, isAIGenerated }) {
     <Streamdown
       rehypePlugins={[
         defaultRehypePlugins.raw,
-        defaultRehypePlugins.katex,
-        [harden, securityConfig],
+                [harden, securityConfig],
       ]}
     >
       {content}
@@ -227,8 +223,7 @@ export default function Page() {
     <Streamdown
       rehypePlugins={[
         // Omit defaultRehypePlugins.raw
-        defaultRehypePlugins.katex,
-        defaultRehypePlugins.harden,
+                defaultRehypePlugins.harden,
       ]}
     >
       {markdown}

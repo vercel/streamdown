@@ -34,7 +34,6 @@ export const HardenedMarkdown = () => (
     streamdownProps={{
       rehypePlugins: [
         defaultRehypePlugins.raw,
-        defaultRehypePlugins.katex,
         [
           harden,
           {
