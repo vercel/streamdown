@@ -833,14 +833,26 @@ const MemoParagraph = memo<ParagraphProps>(
       (child) => child !== null && child !== undefined && child !== ""
     );
 
-    // Check if there's exactly one child and it's an img element
-    if (
-      validChildren.length === 1 &&
-      isValidElement(validChildren[0]) &&
-      (validChildren[0].props as { node?: MarkdownNode }).node?.tagName ===
-        "img"
-    ) {
-      return <>{children}</>;
+    // Check if there's exactly one child and it's a block-level element
+    // (image or block code) to avoid wrapping in <p> which causes hydration errors
+    if (validChildren.length === 1 && isValidElement(validChildren[0])) {
+      const node = (validChildren[0].props as { node?: MarkdownNode }).node;
+      const tagName = node?.tagName;
+
+      // Image: renders as <div>, cannot be nested in <p>
+      if (tagName === "img") {
+        return <>{children}</>;
+      }
+
+      // Block code: renders as <div>, cannot be nested in <p>
+      // Check if it's block code (multi-line) vs inline code (single line)
+      if (tagName === "code") {
+        const isBlockCode =
+          node?.position?.start.line !== node?.position?.end.line;
+        if (isBlockCode) {
+          return <>{children}</>;
+        }
+      }
     }
 
     return (
