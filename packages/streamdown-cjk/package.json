@@ -17,7 +17,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage run"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@types/mdast": "^4.0.4",
+    "@vitest/coverage-v8": "^4.0.15",
     "@types/unist": "^3.0.3",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",

@@ -17,7 +17,8 @@
   ],
   "scripts": {
     "build": "tsup",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage run"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
@@ -26,6 +27,7 @@
     "mermaid": "^11.12.2"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.15",
     "jsdom": "^27.3.0",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
