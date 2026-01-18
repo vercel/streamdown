@@ -1,5 +1,4 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
-import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { StreamdownContext, type StreamdownContextType } from "../index";
 import { components as importedComponents } from "../lib/components";
@@ -48,20 +47,20 @@ describe("Link Safety Modal", () => {
     }
 
     const { container } = render(
-      <StreamdownContext.Provider
-        value={createContextValue({ enabled: true })}
-      >
+      <StreamdownContext.Provider value={createContextValue({ enabled: true })}>
         <A href="https://example.com" node={null as any}>
           Link text
         </A>
       </StreamdownContext.Provider>
     );
 
-    const link = container.querySelector("a");
+    const link = container.querySelector('button[data-streamdown="link"]');
     expect(link).toBeTruthy();
 
     // Click the link
-    fireEvent.click(link!);
+    if (link) {
+      fireEvent.click(link);
+    }
 
     // Modal should appear
     await waitFor(() => {
@@ -99,8 +98,10 @@ describe("Link Safety Modal", () => {
       </StreamdownContext.Provider>
     );
 
-    const link = container.querySelector("a");
-    fireEvent.click(link!);
+    const link = container.querySelector('button[data-streamdown="link"]');
+    if (link) {
+      fireEvent.click(link);
+    }
 
     await waitFor(() => {
       expect(onLinkCheck).toHaveBeenCalledWith("https://trusted.com");
@@ -140,8 +141,10 @@ describe("Link Safety Modal", () => {
       </StreamdownContext.Provider>
     );
 
-    const link = container.querySelector("a");
-    fireEvent.click(link!);
+    const link = container.querySelector('button[data-streamdown="link"]');
+    if (link) {
+      fireEvent.click(link);
+    }
 
     await waitFor(() => {
       expect(onLinkCheck).toHaveBeenCalledWith("https://untrusted.com");
@@ -167,17 +170,17 @@ describe("Link Safety Modal", () => {
       .mockImplementation(() => null);
 
     const { container } = render(
-      <StreamdownContext.Provider
-        value={createContextValue({ enabled: true })}
-      >
+      <StreamdownContext.Provider value={createContextValue({ enabled: true })}>
         <A href="https://example.com" node={null as any}>
           Link text
         </A>
       </StreamdownContext.Provider>
     );
 
-    const link = container.querySelector("a");
-    fireEvent.click(link!);
+    const link = container.querySelector('button[data-streamdown="link"]');
+    if (link) {
+      fireEvent.click(link);
+    }
 
     await waitFor(() => {
       const modal = document.querySelector(
@@ -194,7 +197,9 @@ describe("Link Safety Modal", () => {
       btn.textContent?.includes("Open link")
     );
     expect(openButton).toBeTruthy();
-    fireEvent.click(openButton!);
+    if (openButton) {
+      fireEvent.click(openButton);
+    }
 
     expect(windowOpenSpy).toHaveBeenCalledWith(
       "https://example.com",
@@ -219,17 +224,17 @@ describe("Link Safety Modal", () => {
     });
 
     const { container } = render(
-      <StreamdownContext.Provider
-        value={createContextValue({ enabled: true })}
-      >
+      <StreamdownContext.Provider value={createContextValue({ enabled: true })}>
         <A href="https://example.com" node={null as any}>
           Link text
         </A>
       </StreamdownContext.Provider>
     );
 
-    const link = container.querySelector("a");
-    fireEvent.click(link!);
+    const link = container.querySelector('button[data-streamdown="link"]');
+    if (link) {
+      fireEvent.click(link);
+    }
 
     await waitFor(() => {
       const modal = document.querySelector(
@@ -247,7 +252,9 @@ describe("Link Safety Modal", () => {
       btn.textContent?.includes("Copy link")
     );
     expect(copyButton).toBeTruthy();
-    fireEvent.click(copyButton!);
+    if (copyButton) {
+      fireEvent.click(copyButton);
+    }
 
     await waitFor(() => {
       expect(writeTextMock).toHaveBeenCalledWith("https://example.com");
@@ -261,17 +268,17 @@ describe("Link Safety Modal", () => {
     }
 
     const { container } = render(
-      <StreamdownContext.Provider
-        value={createContextValue({ enabled: true })}
-      >
+      <StreamdownContext.Provider value={createContextValue({ enabled: true })}>
         <A href="https://example.com" node={null as any}>
           Link text
         </A>
       </StreamdownContext.Provider>
     );
 
-    const link = container.querySelector("a");
-    fireEvent.click(link!);
+    const link = container.querySelector('button[data-streamdown="link"]');
+    if (link) {
+      fireEvent.click(link);
+    }
 
     await waitFor(() => {
       const modal = document.querySelector(
@@ -284,7 +291,9 @@ describe("Link Safety Modal", () => {
     const backdrop = document.querySelector(
       '[data-streamdown="link-safety-modal"]'
     );
-    fireEvent.click(backdrop!);
+    if (backdrop) {
+      fireEvent.click(backdrop);
+    }
 
     await waitFor(() => {
       const modal = document.querySelector(
@@ -301,17 +310,17 @@ describe("Link Safety Modal", () => {
     }
 
     const { container } = render(
-      <StreamdownContext.Provider
-        value={createContextValue({ enabled: true })}
-      >
+      <StreamdownContext.Provider value={createContextValue({ enabled: true })}>
         <A href="https://example.com" node={null as any}>
           Link text
         </A>
       </StreamdownContext.Provider>
     );
 
-    const link = container.querySelector("a");
-    fireEvent.click(link!);
+    const link = container.querySelector('button[data-streamdown="link"]');
+    if (link) {
+      fireEvent.click(link);
+    }
 
     await waitFor(() => {
       const modal = document.querySelector(
@@ -331,24 +340,24 @@ describe("Link Safety Modal", () => {
     });
   });
 
-  it("should not show modal for incomplete links", async () => {
+  it("should not show modal for incomplete links", () => {
     const A = components.a;
     if (!A) {
       throw new Error("A component not found");
     }
 
     const { container } = render(
-      <StreamdownContext.Provider
-        value={createContextValue({ enabled: true })}
-      >
+      <StreamdownContext.Provider value={createContextValue({ enabled: true })}>
         <A href="streamdown:incomplete-link" node={null as any}>
           Link text
         </A>
       </StreamdownContext.Provider>
     );
 
-    const link = container.querySelector("a");
-    fireEvent.click(link!);
+    const link = container.querySelector('button[data-streamdown="link"]');
+    if (link) {
+      fireEvent.click(link);
+    }
 
     // Modal should NOT appear for incomplete links
     const modal = document.querySelector(
@@ -380,8 +389,10 @@ describe("Link Safety Modal", () => {
       </StreamdownContext.Provider>
     );
 
-    const link = container.querySelector("a");
-    fireEvent.click(link!);
+    const link = container.querySelector('button[data-streamdown="link"]');
+    if (link) {
+      fireEvent.click(link);
+    }
 
     await waitFor(() => {
       expect(onLinkCheck).toHaveBeenCalled();
@@ -404,7 +415,9 @@ describe("Link Safety Modal", () => {
       }
 
       const CustomModal = vi.fn(({ url, isOpen, onClose, onConfirm }) => {
-        if (!isOpen) return null;
+        if (!isOpen) {
+          return null;
+        }
         return (
           <div data-testid="custom-modal">
             <span data-testid="custom-url">{url}</span>
@@ -435,8 +448,10 @@ describe("Link Safety Modal", () => {
         </StreamdownContext.Provider>
       );
 
-      const link = container.querySelector("a");
-      fireEvent.click(link!);
+      const link = container.querySelector('button[data-streamdown="link"]');
+      if (link) {
+        fireEvent.click(link);
+      }
 
       // Custom modal should appear
       await waitFor(() => {
@@ -478,7 +493,9 @@ describe("Link Safety Modal", () => {
         .mockImplementation(() => null);
 
       const CustomModal = ({ url, isOpen, onConfirm }: any) => {
-        if (!isOpen) return null;
+        if (!isOpen) {
+          return null;
+        }
         return (
           <button
             data-testid="custom-confirm"
@@ -503,8 +520,10 @@ describe("Link Safety Modal", () => {
         </StreamdownContext.Provider>
       );
 
-      const link = container.querySelector("a");
-      fireEvent.click(link!);
+      const link = container.querySelector('button[data-streamdown="link"]');
+      if (link) {
+        fireEvent.click(link);
+      }
 
       await waitFor(() => {
         const confirmButton = document.querySelector(
@@ -516,7 +535,9 @@ describe("Link Safety Modal", () => {
       const confirmButton = document.querySelector(
         '[data-testid="custom-confirm"]'
       );
-      fireEvent.click(confirmButton!);
+      if (confirmButton) {
+        fireEvent.click(confirmButton);
+      }
 
       expect(windowOpenSpy).toHaveBeenCalledWith(
         "https://example.com",
@@ -534,7 +555,9 @@ describe("Link Safety Modal", () => {
       }
 
       const CustomModal = ({ isOpen, onClose }: any) => {
-        if (!isOpen) return null;
+        if (!isOpen) {
+          return null;
+        }
         return (
           <button data-testid="custom-close" onClick={onClose} type="button">
             Close
@@ -555,8 +578,10 @@ describe("Link Safety Modal", () => {
         </StreamdownContext.Provider>
       );
 
-      const link = container.querySelector("a");
-      fireEvent.click(link!);
+      const link = container.querySelector('button[data-streamdown="link"]');
+      if (link) {
+        fireEvent.click(link);
+      }
 
       await waitFor(() => {
         const closeButton = document.querySelector(
@@ -568,7 +593,9 @@ describe("Link Safety Modal", () => {
       const closeButton = document.querySelector(
         '[data-testid="custom-close"]'
       );
-      fireEvent.click(closeButton!);
+      if (closeButton) {
+        fireEvent.click(closeButton);
+      }
 
       // Modal should close (custom modal returns null when not open)
       await waitFor(() => {

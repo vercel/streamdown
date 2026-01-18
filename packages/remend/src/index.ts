@@ -14,6 +14,7 @@ import {
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
 
+export type { LinkMode } from "./link-image-handler";
 // biome-ignore lint/performance/noBarrelFile: "Re-exports utility functions for public API convenience"
 export {
   isWithinCodeBlock,
@@ -21,8 +22,6 @@ export {
   isWithinMathBlock,
   isWordChar,
 } from "./utils";
-
-export type { LinkMode } from "./link-image-handler";
 
 /**
  * Handler function that transforms text during streaming.
@@ -200,7 +199,8 @@ const getEnabledBuiltInHandlers = (
         return {
           handler: {
             ...handler,
-            handle: (text: string) => handleIncompleteLinksAndImages(text, linkMode),
+            handle: (text: string) =>
+              handleIncompleteLinksAndImages(text, linkMode),
           },
           // Only use early return for protocol mode (text-only won't end with the marker)
           earlyReturn: linkMode === "protocol" ? earlyReturn : undefined,

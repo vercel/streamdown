@@ -104,7 +104,9 @@ Mixed paragraph: Hello مرحبا World عالم.
   it("renders links with RTL text", () => {
     const rtlLink = "[نص الرابط العربي](https://example.com)";
 
-    const { container } = render(<Streamdown>{rtlLink}</Streamdown>);
+    const { container } = render(
+      <Streamdown linkSafety={{ enabled: false }}>{rtlLink}</Streamdown>
+    );
     const link = container.querySelector('[data-streamdown="link"]');
 
     expect(link?.textContent).toBe("نص الرابط العربي");

@@ -1,7 +1,19 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { StreamdownContext, type StreamdownContextType } from "../index";
 import { components } from "../lib/components";
 import { Table } from "../lib/table";
+
+const createContextValue = (
+  linkSafety?: StreamdownContextType["linkSafety"]
+): StreamdownContextType => ({
+  shikiTheme: ["github-light", "github-dark"],
+  controls: true,
+  isAnimating: false,
+  mode: "streaming",
+  mermaid: undefined,
+  linkSafety,
+});
 
 describe("Node Attribute Fix", () => {
   // Create a realistic HAST node object that would be passed by react-markdown
@@ -168,9 +180,11 @@ describe("Node Attribute Fix", () => {
         throw new Error("A component not found");
       }
       const { container } = render(
-        <A href="https://example.com" node={mockHastNode as any}>
-          Link text
-        </A>
+        <StreamdownContext.Provider value={createContextValue()}>
+          <A href="https://example.com" node={mockHastNode as any}>
+            Link text
+          </A>
+        </StreamdownContext.Provider>
       );
 
       const a = container.querySelector("a");
@@ -289,10 +303,22 @@ describe("Node Attribute Fix", () => {
 
       for (const { name, component, element, props = {} } of testComponents) {
         const Component = component;
+        const children =
+          element !== "img" && element !== "hr" ? "Test content" : null;
+
+        // Wrap link component in context to disable linkSafety (which renders button instead of a)
         const { container } = render(
-          <Component node={mockHastNode as any} {...props}>
-            {element !== "img" && element !== "hr" ? "Test content" : null}
-          </Component>
+          name === "a" ? (
+            <StreamdownContext.Provider value={createContextValue()}>
+              <Component node={mockHastNode as any} {...props}>
+                {children}
+              </Component>
+            </StreamdownContext.Provider>
+          ) : (
+            <Component node={mockHastNode as any} {...props}>
+              {children}
+            </Component>
+          )
         );
 
         const domElement = container.querySelector(element);
@@ -367,7 +393,9 @@ describe("Node Attribute Fix", () => {
         </Table>
       );
 
-      const wrapper = container.querySelector('[data-streamdown="table-wrapper"]');
+      const wrapper = container.querySelector(
+        '[data-streamdown="table-wrapper"]'
+      );
       expect(wrapper).toBeTruthy();
       expect(wrapper?.tagName.toLowerCase()).toBe("div");
 
@@ -409,7 +437,9 @@ describe("Node Attribute Fix", () => {
         </MemoTable>
       );
 
-      const wrapper = container.querySelector('[data-streamdown="table-wrapper"]');
+      const wrapper = container.querySelector(
+        '[data-streamdown="table-wrapper"]'
+      );
       expect(wrapper).toBeTruthy();
       expect(wrapper?.tagName.toLowerCase()).toBe("div");
 

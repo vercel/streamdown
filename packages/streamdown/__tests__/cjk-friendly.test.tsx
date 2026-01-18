@@ -280,7 +280,9 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
     it("splits autolinks at CJK punctuation", () => {
       const autolinkContent = "请访问 https://example.com。谢谢";
       const { container } = render(
-        <Streamdown plugins={{ cjk }}>{autolinkContent}</Streamdown>
+        <Streamdown linkSafety={{ enabled: false }} plugins={{ cjk }}>
+          {autolinkContent}
+        </Streamdown>
       );
 
       const link = container.querySelector('[data-streamdown="link"]');

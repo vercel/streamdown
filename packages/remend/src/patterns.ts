@@ -12,3 +12,7 @@ export const inlineTripleBacktickPattern = /^```[^`\n]*```?$/;
 export const fourOrMoreAsterisksPattern = /^\*{4,}$/;
 export const linkImagePattern = /(!?\[)([^\]]*?)$/;
 export const incompleteLinkUrlPattern = /(!?)\[([^\]]+)\](\([^)]+)$/;
+export const halfCompleteUnderscorePattern = /(__)([^_]+)_$/;
+export const halfCompleteTildePattern = /(~~)([^~]+)~$/;
+export const doubleUnderscoreGlobalPattern = /__/g;
+export const doubleTildeGlobalPattern = /~~/g;

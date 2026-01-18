@@ -1,4 +1,9 @@
-import { strikethroughPattern, whitespaceOrMarkersPattern } from "./patterns";
+import {
+  doubleTildeGlobalPattern,
+  halfCompleteTildePattern,
+  strikethroughPattern,
+  whitespaceOrMarkersPattern,
+} from "./patterns";
 
 // Completes incomplete strikethrough formatting (~~)
 export const handleIncompleteStrikethrough = (text: string): string => {
@@ -16,16 +21,16 @@ export const handleIncompleteStrikethrough = (text: string): string => {
       return text;
     }
 
-    const tildePairs = (text.match(/~~/g) || []).length;
+    const tildePairs = (text.match(doubleTildeGlobalPattern) || []).length;
     if (tildePairs % 2 === 1) {
       return `${text}~~`;
     }
   } else {
     // Check for half-complete closing marker: ~~content~ should become ~~content~~
     // The pattern /(~~)([^~]*?)$/ won't match ~~content~ because it ends with ~
-    const halfCompleteMatch = text.match(/(~~)([^~]+)~$/);
+    const halfCompleteMatch = text.match(halfCompleteTildePattern);
     if (halfCompleteMatch) {
-      const tildePairs = (text.match(/~~/g) || []).length;
+      const tildePairs = (text.match(doubleTildeGlobalPattern) || []).length;
       if (tildePairs % 2 === 1) {
         return `${text}~`;
       }

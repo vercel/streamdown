@@ -124,10 +124,7 @@ describe("highlight error handling", () => {
       {
         code: "const x = 1;",
         language: "javascript",
-        themes: [
-          "invalid-theme-that-does-not-exist",
-          "another-invalid-theme",
-        ],
+        themes: ["invalid-theme-that-does-not-exist", "another-invalid-theme"],
       },
       callback
     );

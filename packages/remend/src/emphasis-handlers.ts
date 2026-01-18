@@ -1,7 +1,9 @@
 import {
   boldItalicPattern,
   boldPattern,
+  doubleUnderscoreGlobalPattern,
   fourOrMoreAsterisksPattern,
+  halfCompleteUnderscorePattern,
   italicPattern,
   listItemPattern,
   singleAsteriskPattern,
@@ -303,11 +305,13 @@ export const handleIncompleteDoubleUnderscoreItalic = (
     // Check for half-complete closing marker: __content_ should become __content__
     // The pattern /(__)([^_]*?)$/ won't match __content_ because it ends with _
     // So we need a separate check for this case
-    const halfCompleteMatch = text.match(/(__)([^_]+)_$/);
+    const halfCompleteMatch = text.match(halfCompleteUnderscorePattern);
     if (halfCompleteMatch) {
       const markerIndex = text.lastIndexOf(halfCompleteMatch[1]);
       if (!isWithinCodeBlock(text, markerIndex)) {
-        const underscorePairs = (text.match(/__/g) || []).length;
+        const underscorePairs = (
+          text.match(doubleUnderscoreGlobalPattern) || []
+        ).length;
         if (underscorePairs % 2 === 1) {
           return `${text}_`;
         }

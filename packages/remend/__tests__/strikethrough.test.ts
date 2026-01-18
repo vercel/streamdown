@@ -27,6 +27,8 @@ describe("strikethrough formatting (~~)", () => {
     expect(remend("~~xxx~")).toBe("~~xxx~~");
     expect(remend("~~strike text~")).toBe("~~strike text~~");
     expect(remend("Text with ~~strike~")).toBe("Text with ~~strike~~");
-    expect(remend("This is ~~strikethrough~")).toBe("This is ~~strikethrough~~");
+    expect(remend("This is ~~strikethrough~")).toBe(
+      "This is ~~strikethrough~~"
+    );
   });
 });

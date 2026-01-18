@@ -52,18 +52,18 @@ export type ControlsConfig =
           };
     };
 
-export type LinkSafetyModalProps = {
+export interface LinkSafetyModalProps {
   url: string;
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-};
+}
 
-export type LinkSafetyConfig = {
+export interface LinkSafetyConfig {
   enabled: boolean;
   onLinkCheck?: (url: string) => Promise<boolean> | boolean;
   renderModal?: (props: LinkSafetyModalProps) => React.ReactNode;
-};
+}
 
 export interface MermaidErrorComponentProps {
   error: string;

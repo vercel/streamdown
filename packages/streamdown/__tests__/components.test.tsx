@@ -1,8 +1,20 @@
 import { render, waitFor } from "@testing-library/react";
 import React from "react";
 import { describe, expect, it } from "vitest";
+import { StreamdownContext, type StreamdownContextType } from "../index";
 import { components as importedComponents } from "../lib/components";
 import type { Options } from "../lib/markdown";
+
+const createContextValue = (
+  linkSafety?: StreamdownContextType["linkSafety"]
+): StreamdownContextType => ({
+  shikiTheme: ["github-light", "github-dark"],
+  controls: true,
+  isAnimating: false,
+  mode: "streaming",
+  mermaid: undefined,
+  linkSafety,
+});
 
 // Type assertion: we know all components are defined in our implementation
 type RequiredComponents = Required<NonNullable<Options["components"]>>;
@@ -151,9 +163,11 @@ describe("Markdown Components", () => {
         throw new Error("A component not found");
       }
       const { container } = render(
-        <A href="https://example.com" node={null as any}>
-          Link text
-        </A>
+        <StreamdownContext.Provider value={createContextValue()}>
+          <A href="https://example.com" node={null as any}>
+            Link text
+          </A>
+        </StreamdownContext.Provider>
       );
       const link = container.querySelector("a");
       expect(link).toBeTruthy();
@@ -171,9 +185,11 @@ describe("Markdown Components", () => {
         throw new Error("A component not found");
       }
       const { container } = render(
-        <A href="streamdown:incomplete-link" node={null as any}>
-          Incomplete link text
-        </A>
+        <StreamdownContext.Provider value={createContextValue()}>
+          <A href="streamdown:incomplete-link" node={null as any}>
+            Incomplete link text
+          </A>
+        </StreamdownContext.Provider>
       );
       // Should render a normal anchor with data-incomplete attribute
       const link = container.querySelector('a[data-streamdown="link"]');
