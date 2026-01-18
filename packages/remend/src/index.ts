@@ -91,7 +91,7 @@ const PRIORITY = {
 // Built-in handlers with their option keys and priorities
 const builtInHandlers: Array<{
   handler: RemendHandler;
-  optionKey: keyof Omit<RemendOptions, "handlers">;
+  optionKey: keyof Omit<RemendOptions, "handlers" | "linkMode">;
   earlyReturn?: (result: string) => boolean;
 }> = [
   {
