@@ -4,10 +4,13 @@ import {
   findMatchingOpeningBracket,
 } from "./utils";
 
+export type LinkMode = "protocol" | "text-only";
+
 // Helper function to handle incomplete URLs in links/images
 const handleIncompleteUrl = (
   text: string,
-  lastParenIndex: number
+  lastParenIndex: number,
+  linkMode: LinkMode
 ): string | null => {
   const afterParen = text.substring(lastParenIndex + 2);
   if (afterParen.includes(")")) {
@@ -34,13 +37,47 @@ const handleIncompleteUrl = (
     return beforeLink;
   }
 
-  // For links with incomplete URLs, replace the URL with placeholder and close it
+  // For links with incomplete URLs, handle based on linkMode
   const linkText = text.substring(openBracketIndex + 1, lastParenIndex);
+  if (linkMode === "text-only") {
+    return `${beforeLink}${linkText}`;
+  }
   return `${beforeLink}[${linkText}](streamdown:incomplete-link)`;
 };
 
+// Helper to find the first incomplete [ (for text-only mode)
+const findFirstIncompleteBracket = (text: string, maxPos: number): number => {
+  for (let j = 0; j <= maxPos; j++) {
+    if (text[j] === "[" && !isInsideCodeBlock(text, j)) {
+      // Skip if it's an image
+      if (j > 0 && text[j - 1] === "!") {
+        continue;
+      }
+      // Check if this [ has a matching ]
+      const closingIdx = findMatchingClosingBracket(text, j);
+      if (closingIdx === -1) {
+        // This is an incomplete [
+        return j;
+      }
+      // This [ is complete, check if it's a full link [text](url)
+      if (closingIdx + 1 < text.length && text[closingIdx + 1] === "(") {
+        const urlEnd = text.indexOf(")", closingIdx + 2);
+        if (urlEnd !== -1) {
+          // Skip past this complete link
+          j = urlEnd;
+        }
+      }
+    }
+  }
+  return -1;
+};
+
 // Helper function to handle incomplete link text (unclosed brackets)
-const handleIncompleteText = (text: string, i: number): string | null => {
+const handleIncompleteText = (
+  text: string,
+  i: number,
+  linkMode: LinkMode
+): string | null => {
   // Check if there's a ! before it
   const isImage = i > 0 && text[i - 1] === "!";
   const openIndex = isImage ? i - 1 : i;
@@ -56,8 +93,19 @@ const handleIncompleteText = (text: string, i: number): string | null => {
       return beforeLink;
     }
 
-    // For links, preserve the text and close the link with a
-    // special placeholder URL that indicates it's incomplete
+    // For links, handle based on linkMode
+    if (linkMode === "text-only") {
+      // Find the first incomplete [ and strip just that bracket
+      const firstIncomplete = findFirstIncompleteBracket(text, i);
+      if (firstIncomplete !== -1) {
+        return (
+          text.substring(0, firstIncomplete) +
+          text.substring(firstIncomplete + 1)
+        );
+      }
+      return `${beforeLink}${afterOpen}`;
+    }
+    // Preserve the text and close the link with a placeholder URL
     return `${text}](streamdown:incomplete-link)`;
   }
 
@@ -72,6 +120,18 @@ const handleIncompleteText = (text: string, i: number): string | null => {
       return beforeLink;
     }
 
+    if (linkMode === "text-only") {
+      // Find the first incomplete [ and strip just that bracket
+      const firstIncomplete = findFirstIncompleteBracket(text, i);
+      if (firstIncomplete !== -1) {
+        return (
+          text.substring(0, firstIncomplete) +
+          text.substring(firstIncomplete + 1)
+        );
+      }
+      const linkText = text.substring(i + 1);
+      return `${beforeLink}${linkText}`;
+    }
     return `${text}](streamdown:incomplete-link)`;
   }
 
@@ -79,14 +139,17 @@ const handleIncompleteText = (text: string, i: number): string | null => {
 };
 
 // Handles incomplete links and images by preserving them with a special marker
-export const handleIncompleteLinksAndImages = (text: string): string => {
+export const handleIncompleteLinksAndImages = (
+  text: string,
+  linkMode: LinkMode = "protocol"
+): string => {
   // Look for patterns like [text]( or ![text]( at the end of text
   // We need to handle nested brackets in the link text
 
   // Start from the end and look for ]( pattern
   const lastParenIndex = text.lastIndexOf("](");
   if (lastParenIndex !== -1 && !isInsideCodeBlock(text, lastParenIndex)) {
-    const result = handleIncompleteUrl(text, lastParenIndex);
+    const result = handleIncompleteUrl(text, lastParenIndex, linkMode);
     if (result !== null) {
       return result;
     }
@@ -96,7 +159,7 @@ export const handleIncompleteLinksAndImages = (text: string): string => {
   // Search backwards for an opening bracket that doesn't have a matching closing bracket
   for (let i = text.length - 1; i >= 0; i -= 1) {
     if (text[i] === "[" && !isInsideCodeBlock(text, i)) {
-      const result = handleIncompleteText(text, i);
+      const result = handleIncompleteText(text, i, linkMode);
       if (result !== null) {
         return result;
       }

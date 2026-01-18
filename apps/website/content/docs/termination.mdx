@@ -91,6 +91,69 @@ Completes to: `[Click here](streamdown:incomplete-link)`
 
 The special `streamdown:incomplete-link` URL ensures the link renders visually but doesn't navigate anywhere.
 
+**Text-only mode:**
+
+If you prefer to display just the link text without any link markup during streaming (for better compatibility with other markdown renderers like `react-markdown`), use the `linkMode` option:
+
+```tsx
+<Streamdown remend={{ linkMode: 'text-only' }}>
+  {markdown}
+</Streamdown>
+```
+
+With `linkMode: 'text-only'`:
+- `[Click here` → `Click here` (plain text)
+- `[Click here](https://exampl` → `Click here` (plain text)
+
+The link renders as a proper link once complete.
+
+**Custom component override:**
+
+For full control over how incomplete links render, you can override the `a` component. This approach lets you customize styling, add loading indicators, or implement custom behavior:
+
+```tsx
+<Streamdown
+  components={{
+    a: ({ href, children, ...props }) => {
+      const isIncomplete = href === 'streamdown:incomplete-link';
+
+      if (isIncomplete) {
+        // Render as plain text with custom styling
+        return <span className="text-muted-foreground">{children}</span>;
+      }
+
+      return (
+        <a href={href} target="_blank" rel="noreferrer" {...props}>
+          {children}
+        </a>
+      );
+    },
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+For `react-markdown` users consuming the `remend` package directly:
+
+```tsx
+import ReactMarkdown from 'react-markdown';
+import remend from 'remend';
+
+<ReactMarkdown
+  components={{
+    a: ({ href, children, ...props }) => {
+      if (href === 'streamdown:incomplete-link') {
+        return <>{children}</>;
+      }
+      return <a href={href} {...props}>{children}</a>;
+    },
+  }}
+>
+  {remend(streamingText)}
+</ReactMarkdown>
+```
+
 #### Images
 
 For incomplete images, Streamdown removes them entirely rather than showing broken image placeholders:
@@ -142,6 +205,20 @@ import remend from 'remend';
 const partialMarkdown = "This is **incomplete bold";
 const completed = remend(partialMarkdown);
 // Result: "This is **incomplete bold**"
+```
+
+For links, you can use the `linkMode` option to control how incomplete links are handled:
+
+```typescript
+import remend from 'remend';
+
+// Default behavior: use placeholder URL
+remend("[Click here](http://exampl");
+// Result: "[Click here](streamdown:incomplete-link)"
+
+// Text-only mode: display plain text
+remend("[Click here](http://exampl", { linkMode: 'text-only' });
+// Result: "Click here"
 ```
 
 See the [remend package](https://www.npmjs.com/package/remend) for more details on standalone usage.
@@ -291,9 +368,18 @@ As content streams in:
 
 ### Link Streaming
 
+With default `linkMode: 'protocol'`:
+
 1. `[Cli` → Renders nothing
 2. `[Click here` → Renders as [Click here](streamdown:incomplete-link)
 3. `[Click here](https://` → Renders as [Click here](streamdown:incomplete-link)
+4. `[Click here](https://example.com)` → Renders as [Click here](https://example.com)
+
+With `linkMode: 'text-only'`:
+
+1. `[Cli` → Renders nothing
+2. `[Click here` → Renders as plain text: Click here
+3. `[Click here](https://` → Renders as plain text: Click here
 4. `[Click here](https://example.com)` → Renders as [Click here](https://example.com)
 
 ### Code Streaming

@@ -70,3 +70,67 @@ describe("link handling", () => {
     );
   });
 });
+
+describe("link handling with linkMode: text-only", () => {
+  const textOnlyOptions = { linkMode: "text-only" as const };
+
+  it("should show plain text for incomplete links", () => {
+    expect(remend("Text with [incomplete link", textOnlyOptions)).toBe(
+      "Text with incomplete link"
+    );
+    expect(remend("Text [partial", textOnlyOptions)).toBe("Text partial");
+  });
+
+  it("should keep complete links unchanged", () => {
+    const text = "Text with [complete link](url)";
+    expect(remend(text, textOnlyOptions)).toBe(text);
+  });
+
+  it("should handle multiple complete links", () => {
+    const text = "[link1](url1) and [link2](url2)";
+    expect(remend(text, textOnlyOptions)).toBe(text);
+  });
+
+  it("should handle nested brackets in incomplete links", () => {
+    expect(remend("[outer [nested] text](incomplete", textOnlyOptions)).toBe(
+      "outer [nested] text"
+    );
+
+    expect(
+      remend("[link with [inner] content](http://incomplete", textOnlyOptions)
+    ).toBe("link with [inner] content");
+
+    expect(remend("Text [foo [bar] baz](", textOnlyOptions)).toBe(
+      "Text foo [bar] baz"
+    );
+  });
+
+  it("should handle partial link at chunk boundary", () => {
+    expect(remend("Check out [this lin", textOnlyOptions)).toBe(
+      "Check out this lin"
+    );
+    expect(remend("Visit [our site](https://exa", textOnlyOptions)).toBe(
+      "Visit our site"
+    );
+  });
+
+  it("should handle nested brackets without matching closing bracket", () => {
+    expect(remend("Text [outer [inner", textOnlyOptions)).toBe(
+      "Text outer [inner"
+    );
+    expect(remend("[foo [bar [baz", textOnlyOptions)).toBe("foo [bar [baz");
+    expect(remend("Text [outer [inner]", textOnlyOptions)).toBe(
+      "Text outer [inner]"
+    );
+    expect(remend("[link [nested] text", textOnlyOptions)).toBe(
+      "link [nested] text"
+    );
+  });
+
+  it("should still remove incomplete images", () => {
+    // Images should still be removed entirely, regardless of linkMode
+    // Note: the space before the image is preserved
+    expect(remend("Text ![incomplete image", textOnlyOptions)).toBe("Text ");
+    expect(remend("Text ![alt](http://partial", textOnlyOptions)).toBe("Text ");
+  });
+});

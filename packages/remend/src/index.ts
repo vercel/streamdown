@@ -7,7 +7,10 @@ import {
 } from "./emphasis-handlers";
 import { handleIncompleteInlineCode } from "./inline-code-handler";
 import { handleIncompleteBlockKatex } from "./katex-handler";
-import { handleIncompleteLinksAndImages } from "./link-image-handler";
+import {
+  handleIncompleteLinksAndImages,
+  type LinkMode,
+} from "./link-image-handler";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
 
@@ -18,6 +21,8 @@ export {
   isWithinMathBlock,
   isWordChar,
 } from "./utils";
+
+export type { LinkMode } from "./link-image-handler";
 
 /**
  * Handler function that transforms text during streaming.
@@ -41,6 +46,12 @@ export interface RemendOptions {
   links?: boolean;
   /** Complete images (e.g., `![alt](url` → removed) */
   images?: boolean;
+  /**
+   * How to handle incomplete links:
+   * - `'protocol'`: Use `streamdown:incomplete-link` placeholder URL (default)
+   * - `'text-only'`: Display only the link text without any link markup
+   */
+  linkMode?: "protocol" | "text-only";
   /** Complete bold formatting (e.g., `**text` → `**text**`) */
   bold?: boolean;
   /** Complete italic formatting (e.g., `*text` → `*text*` or `_text` → `_text_`) */
@@ -173,6 +184,8 @@ const getEnabledBuiltInHandlers = (
   handler: RemendHandler;
   earlyReturn?: (result: string) => boolean;
 }> => {
+  const linkMode: LinkMode = options?.linkMode ?? "protocol";
+
   return builtInHandlers
     .filter(({ handler, optionKey }) => {
       // Special case: links handler is enabled by either links or images option
@@ -181,7 +194,20 @@ const getEnabledBuiltInHandlers = (
       }
       return isEnabled(options?.[optionKey]);
     })
-    .map(({ handler, earlyReturn }) => ({ handler, earlyReturn }));
+    .map(({ handler, earlyReturn }) => {
+      // Special case: wrap links handler to pass linkMode option
+      if (handler.name === "links") {
+        return {
+          handler: {
+            ...handler,
+            handle: (text: string) => handleIncompleteLinksAndImages(text, linkMode),
+          },
+          // Only use early return for protocol mode (text-only won't end with the marker)
+          earlyReturn: linkMode === "protocol" ? earlyReturn : undefined,
+        };
+      }
+      return { handler, earlyReturn };
+    });
 };
 
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
