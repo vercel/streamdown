@@ -276,8 +276,11 @@ describe("ImageComponent", () => {
     });
   });
 
-  it("should handle fetch errors gracefully", async () => {
-    (global.fetch as any).mockRejectedValueOnce(new Error("Network error"));
+  it("should fallback to window.open when fetch fails (e.g., CORS error)", async () => {
+    const mockWindowOpen = vi.fn();
+    global.window.open = mockWindowOpen;
+
+    (global.fetch as any).mockRejectedValueOnce(new Error("CORS error"));
 
     const { container } = render(
       <ImageComponent
@@ -294,9 +297,9 @@ describe("ImageComponent", () => {
     }
 
     await waitFor(() => {
-      expect(console.error).toHaveBeenCalledWith(
-        "Failed to download image:",
-        expect.any(Error)
+      expect(mockWindowOpen).toHaveBeenCalledWith(
+        "https://example.com/image.png",
+        "_blank"
       );
     });
   });

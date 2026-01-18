@@ -63,8 +63,9 @@ export const ImageComponent = ({
       }
 
       save(filename, blob, blob.type);
-    } catch (error) {
-      console.error("Failed to download image:", error);
+    } catch {
+      // CORS fallback: open image in new tab for manual save
+      window.open(src, "_blank");
     }
   };
 
