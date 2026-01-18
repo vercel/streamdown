@@ -138,3 +138,62 @@ export default function Page() {
 ```
 
 Without the CJK plugin, emphasis markers adjacent to ideographic punctuation may not render correctly.
+
+## Autolink Boundary Handling
+
+The CJK plugin also prevents autolinks from swallowing trailing CJK punctuation. When a URL ends with CJK punctuation characters, the plugin splits the link so the punctuation appears as regular text.
+
+**Example:**
+
+```markdown
+Check out https://example.com。这是一个链接。
+```
+
+Without CJK support, the trailing `。` would be included in the URL. With the plugin, the link ends at `https://example.com` and the period is rendered as text.
+
+**Supported boundary characters:**
+
+`。．，、？！：；（）【】「」『』〈〉《》`
+
+## Plugin Configuration
+
+### Using the Factory Function
+
+For advanced configuration, use `createCjkPlugin`:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from "streamdown";
+import { createCjkPlugin } from "@streamdown/cjk";
+
+const cjk = createCjkPlugin();
+
+export default function Page() {
+  return (
+    <Streamdown plugins={{ cjk }}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+### Plugin API
+
+The CJK plugin provides remark plugins in a specific order for proper integration:
+
+```tsx
+interface CjkPlugin {
+  // Plugins that run BEFORE remarkGfm (e.g., remark-cjk-friendly)
+  remarkPluginsBefore: Pluggable[];
+
+  // Plugins that run AFTER remarkGfm (e.g., autolink boundary, strikethrough)
+  remarkPluginsAfter: Pluggable[];
+
+  // @deprecated - Use remarkPluginsBefore and remarkPluginsAfter instead
+  remarkPlugins: Pluggable[];
+}
+```
+
+Streamdown automatically handles the plugin ordering. If integrating manually, ensure:
+
+1. `remarkPluginsBefore` runs before `remarkGfm` (modifies emphasis handling)
+2. `remarkPluginsAfter` runs after `remarkGfm` (enhances autolinks and strikethrough)

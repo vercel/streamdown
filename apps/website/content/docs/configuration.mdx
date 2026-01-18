@@ -91,16 +91,15 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
 
 **Default Rehype Plugins:**
 
-- `rehype-harden` - Security hardening (allows all image and link prefixes, data images enabled)
 - `rehype-raw` - HTML support
-- `rehype-katex` - Math rendering with KaTeX
+- `rehype-sanitize` - XSS protection and safe HTML rendering
+- `rehype-harden` - Security hardening (allows all image and link prefixes, data images enabled)
 
 **Default Remark Plugins:**
 
 - `remark-gfm` - GitHub Flavored Markdown
-- `remark-math` - Math syntax support (single dollar text math disabled)
-- `remark-cjk-friendly` - CJK (Chinese, Japanese, Korean) text support
-- `remark-cjk-friendly-gfm-strikethrough` - CJK-friendly GFM strikethrough support
+
+Math rendering and CJK support require installing separate plugins. See [Mathematics](/docs/mathematics) and [CJK Language Support](/docs/cjk-support).
 
 ## Feature-Specific Props
 
@@ -223,6 +222,15 @@ The `remend` prop configures which Markdown completions are performed during str
       description: "Handle incomplete setext headings",
       type: "boolean",
       default: "true",
+    },
+    linkMode: {
+      description: "How to handle incomplete links: 'protocol' uses a placeholder URL, 'text-only' displays plain text",
+      type: '"protocol" | "text-only"',
+      default: '"protocol"',
+    },
+    handlers: {
+      description: "Custom handlers to extend remend with your own completion logic",
+      type: "RemendHandler[]",
     },
   }}
 />

@@ -271,6 +271,36 @@ Built-in handlers use priorities 0-70:
 
 Custom handlers default to priority 100, running after all built-ins. Set a lower priority to run before specific built-ins.
 
+**Example: Running Before Bold Handling**
+
+To process content before bold formatting is completed (priority 30), set a lower priority:
+
+```typescript
+const preprocessHandler: RemendHandler = {
+  name: 'preprocess',
+  handle: (text) => {
+    // Transform content before bold is completed
+    return text.replace(/\{\{highlight\}\}/g, '**');
+  },
+  priority: 25, // Runs before bold (30) and after links (10)
+};
+```
+
+**Example: Running After All Built-ins**
+
+For post-processing, use the default priority or higher:
+
+```typescript
+const postprocessHandler: RemendHandler = {
+  name: 'postprocess',
+  handle: (text) => {
+    // Clean up after all built-in handlers
+    return text.trim();
+  },
+  priority: 150, // Runs after all built-ins
+};
+```
+
 #### Context Utilities
 
 Remend exports utilities to help custom handlers detect context:

@@ -240,19 +240,41 @@ Derivative: $$\frac{dy}{dx}$$, Partial: $$\frac{\partial f}{\partial x}$$, Gradi
 
 ### Custom Error Color
 
-Customize how errors are displayed:
+Customize how errors are displayed using `createMathPlugin`:
 
 ```tsx
 import { Streamdown } from 'streamdown';
-import rehypeKatex from 'rehype-katex';
+import { createMathPlugin } from '@streamdown/math';
+import 'katex/dist/katex.min.css';
+
+const math = createMathPlugin({
+  errorColor: '#dc2626',
+});
 
 export default function Page() {
   return (
-    <Streamdown
-      rehypePlugins={[
-        [rehypeKatex, { errorColor: '#dc2626' }]
-      ]}
-    >
+    <Streamdown plugins={{ math }}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+### Complete Configuration Example
+
+```tsx
+import { Streamdown } from 'streamdown';
+import { createMathPlugin } from '@streamdown/math';
+import 'katex/dist/katex.min.css';
+
+const math = createMathPlugin({
+  singleDollarTextMath: true, // Enable $...$ syntax (default: false)
+  errorColor: '#dc2626',      // Custom error color (default: "var(--color-muted-foreground)")
+});
+
+export default function Page() {
+  return (
+    <Streamdown plugins={{ math }}>
       {markdown}
     </Streamdown>
   );
@@ -370,6 +392,29 @@ Better spacing: $$\int f(x) \, dx$$
 - [KaTeX Documentation](https://katex.org/docs/supported.html) - Complete list of supported functions
 - [KaTeX Support Table](https://katex.org/docs/support_table.html) - Feature compatibility
 - [LaTeX Math Symbols](https://www.overleaf.com/learn/latex/List_of_Greek_letters_and_math_symbols) - Symbol reference
+
+## Plugin Interface
+
+The Math plugin implements the `MathPlugin` interface:
+
+```tsx
+interface MathPlugin {
+  name: "katex";
+  type: "math";
+  remarkPlugin: Pluggable;  // remark-math for parsing
+  rehypePlugin: Pluggable;  // rehype-katex for rendering
+  getStyles?: () => string; // Returns "katex/dist/katex.min.css"
+}
+```
+
+Use `getStyles()` to get the CSS path programmatically:
+
+```tsx
+import { math } from '@streamdown/math';
+
+const cssPath = math.getStyles?.();
+// "katex/dist/katex.min.css"
+```
 
 ## Best Practices
 

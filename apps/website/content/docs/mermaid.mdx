@@ -229,6 +229,16 @@ gitGraph
 
 ## Configuration
 
+### Default Settings
+
+The Mermaid plugin uses these defaults:
+
+- `startOnLoad: false` - Diagrams render on demand
+- `theme: "default"` - Mermaid's default theme
+- `securityLevel: "strict"` - Secure rendering
+- `fontFamily: "monospace"` - Consistent code-like typography
+- `suppressErrorRendering: true` - Prevents partial renders on errors
+
 ### Theme Customization
 
 Customize the Mermaid theme using the `mermaid.config` prop:
@@ -236,7 +246,7 @@ Customize the Mermaid theme using the `mermaid.config` prop:
 ```tsx
 import { Streamdown } from "streamdown";
 import { mermaid } from "@streamdown/mermaid";
-import type { MermaidConfig } from "streamdown";
+import type { MermaidConfig } from "@streamdown/mermaid";
 
 export default function Page() {
   return (
@@ -631,6 +641,21 @@ Large diagrams may take time to render. Consider:
 1. Verify `mermaid.config` is properly passed
 2. Check that theme name is spelled correctly
 3. Ensure custom theme variables are valid
+
+## Plugin Interface
+
+The Mermaid plugin implements the `DiagramPlugin` interface:
+
+```tsx
+interface DiagramPlugin {
+  name: "mermaid";
+  type: "diagram";
+  language: string; // "mermaid"
+  getMermaid: (config?: MermaidConfig) => MermaidInstance;
+}
+```
+
+The `language` property indicates which code block language triggers diagram rendering.
 
 ## Resources
 

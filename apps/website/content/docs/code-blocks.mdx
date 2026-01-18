@@ -213,3 +213,57 @@ Use the `isAnimating` prop to disable copy buttons while streaming:
 ```
 
 This prevents users from copying incomplete code.
+
+## Plugin Interface
+
+The Code plugin implements the `CodeHighlighterPlugin` interface:
+
+```tsx
+interface CodeHighlighterPlugin {
+  name: "shiki";
+  type: "code-highlighter";
+  highlight: (options: HighlightOptions, callback?: (result: HighlightResult) => void) => HighlightResult | null;
+  supportsLanguage: (language: BundledLanguage) => boolean;
+  getSupportedLanguages: () => BundledLanguage[];
+  getThemes: () => [BundledTheme, BundledTheme];
+}
+```
+
+### Exported Types
+
+```tsx
+import type {
+  CodeHighlighterPlugin,
+  HighlightOptions,
+  HighlightResult,
+} from '@streamdown/code';
+
+// HighlightOptions - parameters for highlighting
+interface HighlightOptions {
+  code: string;
+  language: BundledLanguage;
+  themes: [string, string];
+}
+
+// HighlightResult - Shiki's TokensResult type
+type HighlightResult = TokensResult;
+```
+
+### Programmatic Highlighting
+
+Use the plugin directly for custom highlighting:
+
+```tsx
+import { code } from '@streamdown/code';
+
+// Check language support
+if (code.supportsLanguage('typescript')) {
+  code.highlight(
+    { code: 'const x = 1;', language: 'typescript', themes: ['github-light', 'github-dark'] },
+    (result) => {
+      // Handle highlighted tokens
+      console.log(result.tokens);
+    }
+  );
+}
+```

@@ -261,15 +261,22 @@ const math = createMathPlugin({
 });
 ```
 
+**Getting CSS path:**
+
+```tsx
+const cssPath = math.getStyles();
+// Returns: "katex/dist/katex.min.css"
+```
+
 See [Mathematics](/docs/mathematics) for details.
 
 ### @streamdown/cjk
 
-Improves handling of CJK (Chinese, Japanese, Korean) text with proper spacing, line breaks, and autolink boundaries.
+Improves handling of CJK (Chinese, Japanese, Korean) text with proper emphasis formatting and autolink handling.
 
-- Proper spacing between CJK and Latin characters
-- Correct line breaking behavior for CJK text
-- Fixes autolink boundaries at CJK punctuation
+- Correct emphasis formatting near ideographic punctuation (bold, italic, strikethrough)
+- Splits autolinks at CJK punctuation boundaries to prevent URLs from swallowing trailing punctuation
+- Uses `remark-cjk-friendly` and `remark-cjk-friendly-gfm-strikethrough` for proper parsing
 
 **Install:**
 
