@@ -38,15 +38,40 @@ Make sure the path matches the location of the `node_modules` folder in your pro
 
 ## Usage
 
-You can use Streamdown in your React application like this:
+Here's how you can use Streamdown in your React application with the AI SDK:
 
 ```tsx
+import { useChat } from "@ai-sdk/react";
 import { Streamdown } from "streamdown";
+import { code } from "@streamdown/code";
+import { mermaid } from "@streamdown/mermaid";
+import { math } from "@streamdown/math";
+import { cjk } from "@streamdown/cjk";
+import "katex/dist/katex.min.css";
 
-export default function Page() {
-  const markdown = "# Hello World\n\nThis is **streaming** markdown!";
+export default function Chat() {
+  const { messages, status } = useChat();
 
-  return <Streamdown>{markdown}</Streamdown>;
+  return (
+    <div>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, index) =>
+            part.type === 'text' ? (
+              <Streamdown
+                key={index}
+                plugins={{ code, mermaid, math, cjk }}
+                isAnimating={status === 'streaming'}
+              >
+                {part.text}
+              </Streamdown>
+            ) : null,
+          )}
+        </div>
+      ))}
+    </div>
+  );
 }
 ```
 

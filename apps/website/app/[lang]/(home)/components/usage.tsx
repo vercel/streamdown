@@ -12,18 +12,25 @@ import { cjk } from "@streamdown/cjk";
 import "katex/dist/katex.min.css";
 
 export default function Chat() {
-  const { messages, isLoading } = useChat();
+  const { messages, status } = useChat();
 
   return (
     <div>
-      {messages.map((m) => (
-        <Streamdown
-          key={m.id}
-          plugins={{ code, mermaid, math, cjk }}
-          isAnimating={isLoading}
-        >
-          {m.content}
-        </Streamdown>
+      {messages.map(message => (
+        <div key={message.id}>
+          {message.role === 'user' ? 'User: ' : 'AI: '}
+          {message.parts.map((part, index) =>
+            part.type === 'text' ? (
+              <Streamdown
+                key={index}
+                plugins={{ code, mermaid, math, cjk }}
+                isAnimating={status === 'streaming'}
+              >
+                {part.text}
+              </Streamdown>
+            ) : null,
+          )}
+        </div>
       ))}
     </div>
   );
