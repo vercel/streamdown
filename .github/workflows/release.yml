@@ -52,8 +52,11 @@ jobs:
       - name: Install Dependencies
         run: pnpm i
 
-      - name: Build Apps and Packages
-        run: pnpm build
+      - name: Build Packages
+        run: pnpm build:packages
+
+      - name: Build Website
+        run: pnpm build --filter website
 
       - name: Run Tests
         run: pnpm test
