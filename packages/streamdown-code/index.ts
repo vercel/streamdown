@@ -4,6 +4,7 @@ import {
   type BundledLanguage,
   type BundledTheme,
   bundledLanguages,
+  bundledLanguagesInfo,
   createHighlighter,
   type HighlighterGeneric,
   type SpecialLanguage,
@@ -64,15 +65,11 @@ export interface CodePluginOptions {
   themes?: [BundledTheme, BundledTheme];
 }
 
-const languageAliases: Record<string, BundledLanguage> = {
-  js: "javascript",
-  cjs: "javascript",
-  mjs: "javascript",
-  ts: "typescript",
-  cts: "typescript",
-  mts: "typescript",
-  zsh: "shellscript",
-};
+const languageAliases = Object.fromEntries(
+  bundledLanguagesInfo.flatMap((info) =>
+    (info.aliases ?? []).map((alias) => [alias, info.id as BundledLanguage])
+  )
+) as Record<string, BundledLanguage>;
 
 // Build language name set for quick lookup
 const languageNames = new Set<BundledLanguage>(
