@@ -13,9 +13,9 @@ describe("allowedTags prop", () => {
 
     const { container } = render(
       <Streamdown
-        mode="static"
         allowedTags={{ custom: [] }}
         components={{ custom: CustomTag }}
+        mode="static"
       >
         {"Hello <custom>world</custom>"}
       </Streamdown>
@@ -28,16 +28,16 @@ describe("allowedTags prop", () => {
 
   it("should preserve allowed attributes on custom tags", () => {
     const RefTag = (props: CustomComponentProps) => (
-      <span data-testid="ref-tag" data-note-id={props.note_id as string}>
+      <span data-note-id={props.note_id as string} data-testid="ref-tag">
         {props.children as React.ReactNode}
       </span>
     );
 
     const { container } = render(
       <Streamdown
-        mode="static"
         allowedTags={{ ref: ["note_id"] }}
         components={{ ref: RefTag }}
+        mode="static"
       >
         {'Check <ref note_id="123">this note</ref>'}
       </Streamdown>
@@ -52,9 +52,9 @@ describe("allowedTags prop", () => {
   it("should strip attributes not in allowedTags", () => {
     const CustomTag = (props: CustomComponentProps) => (
       <span
-        data-testid="custom-tag"
         data-allowed={props.allowed as string}
         data-blocked={props.blocked as string}
+        data-testid="custom-tag"
       >
         {props.children as React.ReactNode}
       </span>
@@ -62,9 +62,9 @@ describe("allowedTags prop", () => {
 
     const { container } = render(
       <Streamdown
-        mode="static"
         allowedTags={{ custom: ["allowed"] }}
         components={{ custom: CustomTag }}
+        mode="static"
       >
         {'<custom allowed="yes" blocked="no">content</custom>'}
       </Streamdown>
@@ -83,7 +83,7 @@ describe("allowedTags prop", () => {
     );
 
     const { container } = render(
-      <Streamdown mode="static" components={{ custom: CustomTag }}>
+      <Streamdown components={{ custom: CustomTag }} mode="static">
         {"Hello <custom>world</custom>"}
       </Streamdown>
     );
@@ -106,10 +106,10 @@ describe("allowedTags prop", () => {
 
     const { container } = render(
       <Streamdown
-        mode="static"
-        rehypePlugins={[customPlugin]}
         allowedTags={{ custom: [] }}
         components={{ custom: CustomTag }}
+        mode="static"
+        rehypePlugins={[customPlugin]}
       >
         {"Hello <custom>world</custom>"}
       </Streamdown>
@@ -127,9 +127,9 @@ describe("allowedTags prop", () => {
 
     const { container } = render(
       <Streamdown
-        mode="streaming"
         allowedTags={{ ref: ["note_id"] }}
         components={{ ref: RefTag }}
+        mode="streaming"
       >
         {'Hello <ref note_id="456">note</ref>'}
       </Streamdown>
@@ -150,9 +150,9 @@ describe("allowedTags prop", () => {
 
     const { container } = render(
       <Streamdown
-        mode="static"
         allowedTags={{ tag1: [], tag2: ["attr"] }}
         components={{ tag1: Tag1, tag2: Tag2 }}
+        mode="static"
       >
         {'<tag1>first</tag1> and <tag2 attr="val">second</tag2>'}
       </Streamdown>
@@ -168,7 +168,7 @@ describe("allowedTags prop", () => {
 
   it("should handle empty allowedTags object", () => {
     const { container } = render(
-      <Streamdown mode="static" allowedTags={{}}>
+      <Streamdown allowedTags={{}} mode="static">
         {"Hello world"}
       </Streamdown>
     );
