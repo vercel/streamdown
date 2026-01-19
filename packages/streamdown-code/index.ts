@@ -64,10 +64,33 @@ export interface CodePluginOptions {
   themes?: [BundledTheme, BundledTheme];
 }
 
+const languageAliases: Record<string, BundledLanguage> = {
+  js: "javascript",
+  cjs: "javascript",
+  mjs: "javascript",
+  ts: "typescript",
+  cts: "typescript",
+  mts: "typescript",
+  zsh: "shellscript",
+};
+
 // Build language name set for quick lookup
 const languageNames = new Set<BundledLanguage>(
   Object.keys(bundledLanguages) as BundledLanguage[]
 );
+
+const normalizeLanguage = (language: string): string => {
+  const trimmed = language.trim();
+  const lower = trimmed.toLowerCase();
+  const alias = languageAliases[lower];
+  if (alias) {
+    return alias;
+  }
+  if (languageNames.has(lower as BundledLanguage)) {
+    return lower;
+  }
+  return trimmed;
+};
 
 // Singleton highlighter cache
 const highlighterCache = new Map<
@@ -133,7 +156,8 @@ export function createCodePlugin(
     type: "code-highlighter",
 
     supportsLanguage(language: BundledLanguage): boolean {
-      return languageNames.has(language);
+      const resolvedLanguage = normalizeLanguage(language);
+      return languageNames.has(resolvedLanguage as BundledLanguage);
     },
 
     getSupportedLanguages(): BundledLanguage[] {
@@ -148,9 +172,10 @@ export function createCodePlugin(
       { code, language, themes: themeNames }: HighlightOptions,
       callback?: (result: HighlightResult) => void
     ): HighlightResult | null {
+      const resolvedLanguage = normalizeLanguage(language);
       const tokensCacheKey = getTokensCacheKey(
         code,
-        language,
+        resolvedLanguage,
         themeNames as [string, string]
       );
 
@@ -171,11 +196,16 @@ export function createCodePlugin(
       }
 
       // Start highlighting in background
-      getHighlighter(language, themeNames as [string, string])
+      getHighlighter(
+        resolvedLanguage as BundledLanguage,
+        themeNames as [string, string]
+      )
         .then((highlighter) => {
           const availableLangs = highlighter.getLoadedLanguages();
           const langToUse = (
-            availableLangs.includes(language) ? language : "text"
+            availableLangs.includes(resolvedLanguage as BundledLanguage)
+              ? (resolvedLanguage as BundledLanguage)
+              : "text"
           ) as BundledLanguage | SpecialLanguage;
 
           const result = highlighter.codeToTokens(code, {
