@@ -144,7 +144,7 @@ Pass custom components using the `components` prop:
 
 ### Available Components
 
-You can override any of the following components:
+You can override any of the following standard HTML components:
 
 - **Headings**: `h1`, `h2`, `h3`, `h4`, `h5`, `h6`
 - **Text**: `p`, `strong`, `em`
@@ -155,6 +155,46 @@ You can override any of the following components:
 - **Tables**: `table`, `thead`, `tbody`, `tr`, `th`, `td`
 - **Media**: `img`
 - **Other**: `hr`, `sup`, `sub`, `section`
+
+### Custom Tags
+
+You can also render custom HTML tags (like `<ref>`, `<mention>`, etc.) by using the `allowedTags` prop alongside the `components` prop. This is useful when your Markdown contains custom elements that need special rendering.
+
+The `allowedTags` prop tells Streamdown which custom tags to allow through sanitization and which attributes to preserve on those tags:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  allowedTags={{
+    ref: ["note_id"],           // Allow <ref> tag with note_id attribute
+    mention: ["user_id", "type"], // Allow <mention> tag with user_id and type attributes
+  }}
+  components={{
+    ref: ({ note_id, children }) => (
+      <NoteBadge noteId={note_id as string}>{children}</NoteBadge>
+    ),
+    mention: ({ user_id, children }) => (
+      <UserMention userId={user_id as string}>{children}</UserMention>
+    ),
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+With this configuration, Markdown containing custom tags will render correctly:
+
+```markdown
+Check out <ref note_id="abc123">this note</ref> and ping <mention user_id="user1">@john</mention>.
+```
+
+<Callout type="info">
+  The `allowedTags` prop only works with the default rehype plugins. If you provide custom `rehypePlugins`, you'll need to configure sanitization yourself.
+</Callout>
+
+**Important notes:**
+- Without `allowedTags`, custom tags are stripped by the sanitizer (content is preserved, tags are removed)
+- Only attributes listed in `allowedTags` are preserved; unlisted attributes are stripped
+- Use `data*` in the attributes array to allow all `data-*` attributes on a tag
 
 ### Component Props
 
