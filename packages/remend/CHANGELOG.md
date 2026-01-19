@@ -1,5 +1,17 @@
 # remend
 
+## 1.1.0
+
+### Minor Changes
+
+- 3376255: Allow for custom handlers
+
+### Patch Changes
+
+- add8eda: Make incomplete link protocol customizable
+- 19dae64: handle half-complete markdown formatting markers
+- 1d4a3c7: Fix bold completion
+
 ## 1.0.2
 
 ### Patch Changes

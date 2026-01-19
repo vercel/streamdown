@@ -1,5 +1,26 @@
 # streamdown
 
+## 2.1.0
+
+### Minor Changes
+
+- 0b80aed: Plugins
+- 5a06a01: Add built-in link safety
+
+### Patch Changes
+
+- 32bcb5d: Fix: className styles not applied during active streaming
+- e45f2a2: fix: table element receives incorrect data-streamdown attribute (table-wrapper instead of table)
+- 8e24a9e: Add fallback for downloading images CORS issue
+- e7e5390: Improve caret rendering
+- 900d726: Code blocks render inside <p> tags causing hydration errors
+- f0641f4: fix: initialize displayBlocks with blocks value
+- Updated dependencies [3376255]
+- Updated dependencies [add8eda]
+- Updated dependencies [19dae64]
+- Updated dependencies [1d4a3c7]
+  - remend@1.1.0
+
 ## 2.0.1
 
 ### Patch Changes
