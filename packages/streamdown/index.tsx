@@ -339,7 +339,7 @@ export const Streamdown = memo(
     const mergedRehypePlugins = useMemo(() => {
       let result = rehypePlugins;
 
-      // Extend sanitization schema with allowedTags (only works with default plugins)
+      // extend sanitization schema with allowedTags. only works with default plugins. if user provides a custom sanitize plugin, they can pass in the custom allowed tags via the plugins object.
       if (
         allowedTags &&
         Object.keys(allowedTags).length > 0 &&
