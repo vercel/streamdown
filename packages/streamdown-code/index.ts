@@ -86,7 +86,7 @@ const normalizeLanguage = (language: string): string => {
   if (languageNames.has(lower as BundledLanguage)) {
     return lower;
   }
-  return trimmed;
+  return lower;
 };
 
 // Singleton highlighter cache
