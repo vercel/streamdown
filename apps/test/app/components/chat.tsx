@@ -217,7 +217,7 @@ export const Chat = ({ models }: ChatProps) => {
           ))}
         </Column>
 
-        <Column title="Streamdown without plugins">
+        <Column title="Streamdown">
           {messages.map((message, messageIndex) => (
             <div key={message.id}>
               <span className="font-bold">
@@ -271,7 +271,7 @@ export const Chat = ({ models }: ChatProps) => {
           ))}
         </Column>
 
-        <Column title="Streamdown">
+        <Column title="Streamdown with plugins">
           {messages.map((message, messageIndex) => (
             <div key={message.id}>
               <span className="font-bold">
