@@ -112,116 +112,7 @@ Streamdown components primarily use these CSS variables:
 
 ## Custom Components
 
-The most powerful way to customize Streamdown's appearance is by providing custom component overrides. This allows you to replace any Markdown element with your own React component while maintaining all of Streamdown's functionality.
-
-### Basic Usage
-
-Pass custom components using the `components` prop:
-
-```tsx title="app/page.tsx"
-<Streamdown
-  components={{
-    h1: ({ children }) => (
-      <h1 className="text-4xl font-bold text-blue-600">
-        {children}
-      </h1>
-    ),
-    h2: ({ children }) => (
-      <h2 className="text-3xl font-semibold text-blue-500">
-        {children}
-      </h2>
-    ),
-    p: ({ children }) => (
-      <p className="text-gray-700 leading-relaxed">
-        {children}
-      </p>
-    ),
-  }}
->
-  {markdown}
-</Streamdown>
-```
-
-### Available Components
-
-You can override any of the following standard HTML components:
-
-- **Headings**: `h1`, `h2`, `h3`, `h4`, `h5`, `h6`
-- **Text**: `p`, `strong`, `em`
-- **Lists**: `ul`, `ol`, `li`
-- **Links**: `a`
-- **Code**: `code`, `pre`
-- **Quotes**: `blockquote`
-- **Tables**: `table`, `thead`, `tbody`, `tr`, `th`, `td`
-- **Media**: `img`
-- **Other**: `hr`, `sup`, `sub`, `section`
-
-### Custom Tags
-
-You can also render custom HTML tags (like `<ref>`, `<mention>`, etc.) by using the `allowedTags` prop alongside the `components` prop. This is useful when your Markdown contains custom elements that need special rendering.
-
-The `allowedTags` prop tells Streamdown which custom tags to allow through sanitization and which attributes to preserve on those tags:
-
-```tsx title="app/page.tsx"
-<Streamdown
-  allowedTags={{
-    ref: ["note_id"],           // Allow <ref> tag with note_id attribute
-    mention: ["user_id", "type"], // Allow <mention> tag with user_id and type attributes
-  }}
-  components={{
-    ref: ({ note_id, children }) => (
-      <NoteBadge noteId={note_id as string}>{children}</NoteBadge>
-    ),
-    mention: ({ user_id, children }) => (
-      <UserMention userId={user_id as string}>{children}</UserMention>
-    ),
-  }}
->
-  {markdown}
-</Streamdown>
-```
-
-With this configuration, Markdown containing custom tags will render correctly:
-
-```markdown
-Check out <ref note_id="abc123">this note</ref> and ping <mention user_id="user1">@john</mention>.
-```
-
-<Callout type="info">
-  The `allowedTags` prop only works with the default rehype plugins. If you provide custom `rehypePlugins`, you'll need to configure sanitization yourself.
-</Callout>
-
-**Important notes:**
-- Without `allowedTags`, custom tags are stripped by the sanitizer (content is preserved, tags are removed)
-- Only attributes listed in `allowedTags` are preserved; unlisted attributes are stripped
-- Use `data*` in the attributes array to allow all `data-*` attributes on a tag
-
-### Component Props
-
-Custom components receive all the props that the default components would receive, including:
-
-- `children` - The content to render
-- `className` - CSS class names (if applicable)
-- `node` - The Markdown AST node (for advanced use cases)
-- Element-specific props (e.g., `href` for links, `src` for images)
-
-```tsx title="app/page.tsx"
-<Streamdown
-  components={{
-    a: ({ href, children, ...props }) => (
-      <a
-        href={href}
-        className="text-purple-600 hover:text-purple-800 underline"
-        {...props}
-      >
-        {children} 🔗
-      </a>
-    ),
-  }}
->
-  {markdown}
-</Streamdown>
-```
+For structural changes like replacing Markdown elements with custom React components, see the [Components](/docs/components) documentation.
 
 ## Global CSS Targeting
 
@@ -416,7 +307,7 @@ When customizing Streamdown styles, consider these best practices:
 
 2. **Use `data-streamdown` Selectors for Specific Elements** - When you need to target individual elements without affecting the entire theme, use the `data-streamdown` attribute selectors.
 
-3. **Use Custom Components for Structural Changes** - When you need to change the HTML structure or add wrapper elements, use the `components` prop.
+3. **Use Custom Components for Structural Changes** - When you need to change the HTML structure or add wrapper elements, use the `components` prop. See the [Components](/docs/components) documentation for details.
 
 4. **Maintain Accessibility** - Ensure your custom styles maintain proper color contrast, focus states, and semantic HTML structure.
 

@@ -1,0 +1,182 @@
+---
+title: Components
+description: Learn how to customize and extend Streamdown with custom component overrides.
+---
+
+Streamdown allows you to replace any Markdown element with your own React component while maintaining all of Streamdown's functionality.
+
+## Basic Usage
+
+Pass custom components using the `components` prop:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  components={{
+    h1: ({ children }) => (
+      <h1 className="text-4xl font-bold text-blue-600">
+        {children}
+      </h1>
+    ),
+    h2: ({ children }) => (
+      <h2 className="text-3xl font-semibold text-blue-500">
+        {children}
+      </h2>
+    ),
+    p: ({ children }) => (
+      <p className="text-gray-700 leading-relaxed">
+        {children}
+      </p>
+    ),
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+## Available Components
+
+You can override any of the following standard HTML components:
+
+- **Headings**: `h1`, `h2`, `h3`, `h4`, `h5`, `h6`
+- **Text**: `p`, `strong`, `em`
+- **Lists**: `ul`, `ol`, `li`
+- **Links**: `a`
+- **Code**: `code`, `pre`
+- **Quotes**: `blockquote`
+- **Tables**: `table`, `thead`, `tbody`, `tr`, `th`, `td`
+- **Media**: `img`
+- **Other**: `hr`, `sup`, `sub`, `section`
+
+## Component Props
+
+Custom components receive all the props that the default components would receive, including:
+
+- `children` - The content to render
+- `className` - CSS class names (if applicable)
+- `node` - The Markdown AST node (for advanced use cases)
+- Element-specific props (e.g., `href` for links, `src` for images)
+
+```tsx title="app/page.tsx"
+<Streamdown
+  components={{
+    a: ({ href, children, ...props }) => (
+      <a
+        href={href}
+        className="text-purple-600 hover:text-purple-800 underline"
+        {...props}
+      >
+        {children}
+      </a>
+    ),
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+## Custom HTML Tags
+
+You can render custom HTML tags from AI responses (like `<source>`, `<mention>`, etc.) using the `allowedTags` prop alongside `components`. This is useful when you instruct the AI to output structured data that renders as interactive components.
+
+For example, you might add a system prompt:
+
+```
+When referencing a source, use: <source id="123">Source Title</source>
+```
+
+The AI then outputs markdown containing:
+
+```markdown
+According to the documentation <source id="abc">Getting Started Guide</source>, you should...
+```
+
+### Setup
+
+Use the `allowedTags` prop to specify which custom tags and attributes to allow through sanitization, then map them to React components:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  allowedTags={{
+    source: ["id"],  // Allow <source> tag with id attribute
+  }}
+  components={{
+    source: ({ id, children }) => (
+      <button
+        onClick={() => console.log(`Navigate to source: ${id}`)}
+        className="text-blue-600 underline cursor-pointer"
+      >
+        {children}
+      </button>
+    ),
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+### Multiple Custom Tags
+
+You can allow multiple custom tags:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  allowedTags={{
+    source: ["id"],
+    mention: ["user_id", "type"],
+    action: ["name", "payload"],
+  }}
+  components={{
+    source: ({ id, children }) => (
+      <SourceBadge sourceId={id as string}>{children}</SourceBadge>
+    ),
+    mention: ({ user_id, children }) => (
+      <UserMention userId={user_id as string}>{children}</UserMention>
+    ),
+    action: ({ name, payload, children }) => (
+      <ActionButton name={name as string} payload={payload as string}>
+        {children}
+      </ActionButton>
+    ),
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+### Data Attributes
+
+Use `data*` in the attributes array to allow all `data-*` attributes on a tag:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  allowedTags={{
+    widget: ["data*"],  // Allow all data-* attributes
+  }}
+  components={{
+    widget: (props) => <Widget {...props} />,
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+### Important Notes
+
+- Without `allowedTags`, custom tags are stripped by the sanitizer (content is preserved, tags are removed)
+- Only attributes listed in `allowedTags` are preserved; unlisted attributes are stripped
+- The `allowedTags` prop only works with the default rehype plugins
+
+<Callout type="info">
+  If you provide custom `rehypePlugins`, you'll need to configure `rehype-sanitize` yourself to allow custom tags. See the [Security](/docs/security) documentation for details.
+</Callout>
+
+### Security Considerations
+
+When allowing custom HTML tags:
+
+- Only whitelist tags you explicitly need
+- Only whitelist attributes you explicitly need
+- Validate attribute values in your component before using them
+- Never allow `script`, `style`, or event handler attributes (`onclick`, etc.)
+
+See the [Security](/docs/security) documentation for more details on HTML handling.
