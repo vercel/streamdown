@@ -56,6 +56,11 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
       description: "Custom component overrides for Markdown elements",
       type: "object",
     },
+    allowedTags: {
+      description:
+        "Custom HTML tags to allow through sanitization, with their permitted attributes. Use with 'components' to render custom tags like <ref> or <mention>. Only works with default rehype plugins.",
+      type: "Record<string, string[]>",
+    },
   }}
 />
 

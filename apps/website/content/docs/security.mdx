@@ -211,6 +211,31 @@ export default function ChatMessage({ content, isAIGenerated }) {
 }
 ```
 
+## Custom HTML Tags
+
+By default, Streamdown's sanitizer strips unknown HTML tags (while preserving their content). If you need to render custom tags like `<ref>` or `<mention>`, use the `allowedTags` prop:
+
+```tsx
+<Streamdown
+  allowedTags={{
+    ref: ["note_id"],      // Allow <ref> with note_id attribute
+    mention: ["user_id"],  // Allow <mention> with user_id attribute
+  }}
+  components={{
+    ref: (props) => <NoteBadge noteId={props.note_id} />,
+    mention: (props) => <UserMention userId={props.user_id} />,
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+Only attributes explicitly listed in `allowedTags` are preserved—all other attributes are stripped for security. See the [Styling documentation](/docs/styling#custom-tags) for more details.
+
+<Callout type="warning">
+  The `allowedTags` prop only works with the default rehype plugins. If you provide custom `rehypePlugins`, you must configure sanitization yourself.
+</Callout>
+
 ## HTML Content
 
 Streamdown supports raw HTML through `rehype-raw`. To disable HTML entirely:

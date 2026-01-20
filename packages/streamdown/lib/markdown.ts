@@ -16,6 +16,11 @@ export type Components = {
   [Key in keyof JSX.IntrinsicElements]?:
     | ComponentType<JSX.IntrinsicElements[Key] & ExtraProps>
     | keyof JSX.IntrinsicElements;
+} & {
+  [key: string]:
+    | ComponentType<Record<string, unknown> & ExtraProps>
+    | keyof JSX.IntrinsicElements
+    | undefined;
 };
 
 export interface Options {

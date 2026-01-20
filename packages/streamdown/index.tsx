@@ -13,7 +13,7 @@ import {
 } from "react";
 import { harden } from "rehype-harden";
 import rehypeRaw from "rehype-raw";
-import rehypeSanitize from "rehype-sanitize";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
 import type { BundledTheme } from "shiki";
@@ -76,6 +76,8 @@ export interface MermaidOptions {
   errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
 }
 
+export type AllowedTags = Record<string, string[]>;
+
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
   BlockComponent?: React.ComponentType<BlockProps>;
@@ -90,6 +92,8 @@ export type StreamdownProps = Options & {
   plugins?: PluginConfig;
   remend?: RemendOptions;
   linkSafety?: LinkSafetyConfig;
+  /** Custom tags to allow through sanitization with their permitted attributes */
+  allowedTags?: AllowedTags;
 };
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
@@ -182,7 +186,6 @@ export const Block = memo(
       }
       if (
         prevKeys.some(
-          // @ts-expect-error - key is a string
           (key) => prevProps.components?.[key] !== nextProps.components?.[key]
         )
       ) {
@@ -232,6 +235,7 @@ export const Streamdown = memo(
     linkSafety = {
       enabled: true,
     },
+    allowedTags,
     ...props
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
@@ -333,11 +337,39 @@ export const Streamdown = memo(
     }, [remarkPlugins, plugins?.math, plugins?.cjk]);
 
     const mergedRehypePlugins = useMemo(() => {
-      if (!plugins?.math) {
-        return rehypePlugins;
+      let result = rehypePlugins;
+
+      // extend sanitization schema with allowedTags. only works with default plugins. if user provides a custom sanitize plugin, they can pass in the custom allowed tags via the plugins object.
+      if (
+        allowedTags &&
+        Object.keys(allowedTags).length > 0 &&
+        rehypePlugins === defaultRehypePluginsArray
+      ) {
+        const extendedSchema = {
+          ...defaultSchema,
+          tagNames: [
+            ...(defaultSchema.tagNames ?? []),
+            ...Object.keys(allowedTags),
+          ],
+          attributes: {
+            ...defaultSchema.attributes,
+            ...allowedTags,
+          },
+        };
+
+        result = [
+          defaultRehypePlugins.raw,
+          [rehypeSanitize, extendedSchema],
+          defaultRehypePlugins.harden,
+        ];
       }
-      return [...rehypePlugins, plugins.math.rehypePlugin];
-    }, [rehypePlugins, plugins?.math]);
+
+      if (plugins?.math) {
+        result = [...result, plugins.math.rehypePlugin];
+      }
+
+      return result;
+    }, [rehypePlugins, plugins?.math, allowedTags]);
 
     const style = useMemo(
       () =>
