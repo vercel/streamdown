@@ -2,11 +2,13 @@ import type { Element, Nodes } from "hast";
 import { toJsxRuntime } from "hast-util-to-jsx-runtime";
 import type { ComponentType, JSX, ReactElement } from "react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
+import rehypeRaw from "rehype-raw";
 import remarkParse from "remark-parse";
 import type { Options as RemarkRehypeOptions } from "remark-rehype";
 import remarkRehype from "remark-rehype";
 import type { PluggableList } from "unified";
 import { unified } from "unified";
+import { remarkEscapeHtml } from "./remark/escape-html";
 
 export interface ExtraProps {
   node?: Element | undefined;
@@ -182,16 +184,28 @@ const getCachedProcessor = (options: Readonly<Options>) => {
   return processor;
 };
 
+const hasRehypeRaw = (plugins: PluggableList): boolean =>
+  plugins.some((plugin) =>
+    Array.isArray(plugin) ? plugin[0] === rehypeRaw : plugin === rehypeRaw
+  );
+
 const createProcessor = (options: Readonly<Options>) => {
   const rehypePlugins = options.rehypePlugins || EMPTY_PLUGINS;
   const remarkPlugins = options.remarkPlugins || EMPTY_PLUGINS;
+
+  // When rehype-raw is NOT present, escape HTML to display it as text
+  // When rehype-raw IS present, HTML is processed normally
+  const finalRemarkPlugins = hasRehypeRaw(rehypePlugins)
+    ? remarkPlugins
+    : [...remarkPlugins, remarkEscapeHtml];
+
   const remarkRehypeOptions = options.remarkRehypeOptions
     ? { ...DEFAULT_REMARK_REHYPE_OPTIONS, ...options.remarkRehypeOptions }
     : DEFAULT_REMARK_REHYPE_OPTIONS;
 
   return unified()
     .use(remarkParse)
-    .use(remarkPlugins)
+    .use(finalRemarkPlugins)
     .use(remarkRehype, remarkRehypeOptions)
     .use(rehypePlugins);
 };
