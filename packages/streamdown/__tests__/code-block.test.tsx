@@ -198,6 +198,71 @@ describe("CodeBlockCopyButton", () => {
   });
 });
 
+describe("CodeBlock trailing newline handling", () => {
+  it("should not render trailing empty lines for code ending with newline", async () => {
+    const codeWithTrailingNewline = "const x = 1;\nconst y = 2;\n";
+
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
+        <CodeBlock code={codeWithTrailingNewline} language="javascript" />
+      </StreamdownContext.Provider>
+    );
+
+    await waitFor(
+      () => {
+        const codeElement = container.querySelector("code");
+        expect(codeElement).toBeTruthy();
+
+        // Count the number of line spans (each line is wrapped in a span with line number classes)
+        const lineSpans = codeElement?.querySelectorAll(
+          ":scope > span.block"
+        );
+        // Should have exactly 2 lines, not 3 (no trailing empty line)
+        expect(lineSpans?.length).toBe(2);
+      },
+      { timeout: 5000 }
+    );
+  });
+
+  it("should not render trailing empty lines for code with multiple trailing newlines", async () => {
+    const codeWithMultipleTrailingNewlines = "line1\nline2\n\n\n";
+
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming" as const,
+        }}
+      >
+        <CodeBlock code={codeWithMultipleTrailingNewlines} language="text" />
+      </StreamdownContext.Provider>
+    );
+
+    await waitFor(
+      () => {
+        const codeElement = container.querySelector("code");
+        expect(codeElement).toBeTruthy();
+
+        const lineSpans = codeElement?.querySelectorAll(
+          ":scope > span.block"
+        );
+        // Should have exactly 2 lines
+        expect(lineSpans?.length).toBe(2);
+      },
+      { timeout: 5000 }
+    );
+  });
+});
+
 describe("CodeBlock with multiple languages", () => {
   it("should render multiple code blocks with different languages simultaneously", async () => {
     const pythonCode = "print('hello world!')";

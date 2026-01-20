@@ -29,12 +29,15 @@ export const CodeBlock = ({
   const { shikiTheme } = useContext(StreamdownContext);
   const codePlugin = useCodePlugin();
 
+  // Remove trailing newlines to prevent empty line at end of code blocks
+  const trimmedCode = useMemo(() => code.replace(/\n+$/, ""), [code]);
+
   // Memoize the raw fallback tokens to avoid recomputing on every render
   const raw: HighlightResult = useMemo(
     () => ({
       bg: "transparent",
       fg: "inherit",
-      tokens: code.split("\n").map((line) => [
+      tokens: trimmedCode.split("\n").map((line) => [
         {
           content: line,
           color: "inherit",
@@ -44,7 +47,7 @@ export const CodeBlock = ({
         },
       ]),
     }),
-    [code]
+    [trimmedCode]
   );
 
   // Use raw as initial state
@@ -60,7 +63,7 @@ export const CodeBlock = ({
 
     const cachedResult = codePlugin.highlight(
       {
-        code,
+        code: trimmedCode,
         language: language as BundledLanguage,
         themes: shikiTheme,
       },
@@ -78,7 +81,7 @@ export const CodeBlock = ({
     // Not cached - reset to raw tokens while waiting for highlighting
     // This is critical for streaming: ensures we show current code, not stale tokens
     setResult(raw);
-  }, [code, language, shikiTheme, codePlugin, raw]);
+  }, [trimmedCode, language, shikiTheme, codePlugin, raw]);
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
