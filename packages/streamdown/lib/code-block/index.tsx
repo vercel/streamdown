@@ -14,6 +14,8 @@ import { CodeBlockContainer } from "./container";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
 
+const TRAILING_NEWLINES_REGEX = /\n+$/;
+
 type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
   language: string;
@@ -30,7 +32,10 @@ export const CodeBlock = ({
   const codePlugin = useCodePlugin();
 
   // Remove trailing newlines to prevent empty line at end of code blocks
-  const trimmedCode = useMemo(() => code.replace(/\n+$/, ""), [code]);
+  const trimmedCode = useMemo(
+    () => code.replace(TRAILING_NEWLINES_REGEX, ""),
+    [code]
+  );
 
   // Memoize the raw fallback tokens to avoid recomputing on every render
   const raw: HighlightResult = useMemo(

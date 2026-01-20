@@ -23,6 +23,11 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./"),
+      "@streamdown/math": path.resolve(
+        __dirname,
+        "../streamdown-math/index.ts"
+      ),
+      "@streamdown/cjk": path.resolve(__dirname, "../streamdown-cjk/index.ts"),
     },
   },
 });

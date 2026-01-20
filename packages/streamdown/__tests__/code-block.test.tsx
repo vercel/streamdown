@@ -221,9 +221,7 @@ describe("CodeBlock trailing newline handling", () => {
         expect(codeElement).toBeTruthy();
 
         // Count the number of line spans (each line is wrapped in a span with line number classes)
-        const lineSpans = codeElement?.querySelectorAll(
-          ":scope > span.block"
-        );
+        const lineSpans = codeElement?.querySelectorAll(":scope > span.block");
         // Should have exactly 2 lines, not 3 (no trailing empty line)
         expect(lineSpans?.length).toBe(2);
       },
@@ -252,9 +250,7 @@ describe("CodeBlock trailing newline handling", () => {
         const codeElement = container.querySelector("code");
         expect(codeElement).toBeTruthy();
 
-        const lineSpans = codeElement?.querySelectorAll(
-          ":scope > span.block"
-        );
+        const lineSpans = codeElement?.querySelectorAll(":scope > span.block");
         // Should have exactly 2 lines
         expect(lineSpans?.length).toBe(2);
       },
