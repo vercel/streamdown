@@ -20,7 +20,7 @@ export const Table = ({
         <TableDownloadDropdown />
       </div>
     ) : null}
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto overscroll-y-auto">
       <table
         className={cn("w-full border-collapse border border-border", className)}
         data-streamdown="table"
