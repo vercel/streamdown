@@ -1,3 +1,4 @@
+import type { BundledLanguage } from "shiki";
 import { describe, expect, it, vi } from "vitest";
 import { code, createCodePlugin } from "../index";
 
@@ -18,6 +19,13 @@ describe("code", () => {
     it("should return true for supported languages", () => {
       expect(code.supportsLanguage("javascript")).toBe(true);
       expect(code.supportsLanguage("typescript")).toBe(true);
+      expect(code.supportsLanguage("js" as BundledLanguage)).toBe(true);
+      expect(code.supportsLanguage("ts" as BundledLanguage)).toBe(true);
+      expect(code.supportsLanguage("cjs" as BundledLanguage)).toBe(true);
+      expect(code.supportsLanguage("mjs" as BundledLanguage)).toBe(true);
+      expect(code.supportsLanguage("cts" as BundledLanguage)).toBe(true);
+      expect(code.supportsLanguage("mts" as BundledLanguage)).toBe(true);
+      expect(code.supportsLanguage("zsh" as BundledLanguage)).toBe(true);
       expect(code.supportsLanguage("python")).toBe(true);
       expect(code.supportsLanguage("rust")).toBe(true);
     });
@@ -103,6 +111,30 @@ describe("code", () => {
 
       expect(cachedResult).not.toBe(null);
       expect(cachedResult).toHaveProperty("tokens");
+    });
+
+    it("should highlight language aliases using bundled grammars", async () => {
+      const callback = vi.fn();
+      const result = code.highlight(
+        {
+          code: "const x = 1;",
+          language: "js" as BundledLanguage,
+          themes: ["github-light", "github-dark"],
+        },
+        callback
+      );
+
+      if (result) {
+        expect(result).toHaveProperty("tokens");
+        return;
+      }
+
+      await vi.waitFor(
+        () => {
+          expect(callback).toHaveBeenCalled();
+        },
+        { timeout: 5000 }
+      );
     });
   });
 });
