@@ -76,4 +76,21 @@ Content in nested structure.
     // The paragraph should be inside the details element
     expect(details?.contains(paragraph as Node)).toBe(true);
   });
+
+  it("should handle img tag as self-closing HTML element", () => {
+    const content = `<p>Before image</p>
+<img src="https://example.com/image.jpg" alt="Test Image" width="100" height="100">
+<p>After image</p>`;
+
+    const { container } = render(<Streamdown>{content}</Streamdown>);
+    const img = container.querySelector("img");
+    const paragraphs = container.querySelectorAll("p");
+
+    expect(img).toBeTruthy();
+    expect(img?.getAttribute("src")).toBe("https://example.com/image.jpg");
+    expect(img?.getAttribute("alt")).toBe("Test Image");
+    expect(img?.getAttribute("width")).toBe("100");
+    expect(img?.getAttribute("height")).toBe("100");
+    expect(paragraphs.length).toBe(2);
+  });
 });
