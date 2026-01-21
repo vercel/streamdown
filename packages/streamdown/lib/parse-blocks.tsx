@@ -6,6 +6,12 @@ const footnoteDefinitionPattern = /\[\^[^\]\s]{1,200}\]:/;
 const closingTagPattern = /<\/(\w+)>/;
 const openingTagPattern = /<(\w+)[\s>]/;
 
+// HTML void elements (self-closing tags) that don't need closing tags
+const voidElements = new Set([
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+  'link', 'meta', 'param', 'source', 'track', 'wbr'
+]);
+
 // Helper function to check if string starts with $$
 const startsWithDoubleDollar = (str: string): boolean => {
   let i = 0;
@@ -95,7 +101,8 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
         const tagName = openingTagMatch[1];
         // Check if this is a self-closing tag or if there's a closing tag in the same block
         const hasClosingTag = currentBlock.includes(`</${tagName}>`);
-        if (!hasClosingTag) {
+        // Void elements don't need to be pushed to the stack as they don't have closing tags
+        if (!hasClosingTag && !voidElements.has(tagName.toLowerCase())) {
           // This is an opening tag without a closing tag in the same block
           htmlStack.push(tagName);
         }
