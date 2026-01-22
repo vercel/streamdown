@@ -64,6 +64,7 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   // Post-process to merge consecutive blocks that belong together
   const mergedBlocks: string[] = [];
   const htmlStack: string[] = []; // Track opening HTML tags
+  let previousTokenWasCode = false; // Track if previous non-space token was a code block
 
   for (const token of tokens) {
     const currentBlock = token.raw;
@@ -105,9 +106,14 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
     // Optimize trim operations by checking characters directly
     const trimmedBlock = currentBlock.trim();
 
-    // Math block merging logic (existing)
+    // Math block merging logic
+    // Skip math merging if previous block was a code block (code blocks can contain $$ as shell syntax)
     // Check if this is a standalone $$ that might be a closing delimiter
-    if (trimmedBlock === "$$" && mergedBlocksLen > 0) {
+    if (
+      trimmedBlock === "$$" &&
+      mergedBlocksLen > 0 &&
+      !previousTokenWasCode
+    ) {
       const previousBlock = mergedBlocks[mergedBlocksLen - 1];
 
       // Check if the previous block starts with $$ but doesn't end with $$
@@ -122,7 +128,12 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
     }
 
     // Check if current block ends with $$ and previous block started with $$ but didn't close
-    if (mergedBlocksLen > 0 && endsWithDoubleDollar(currentBlock)) {
+    // Skip if previous block was a code block
+    if (
+      mergedBlocksLen > 0 &&
+      endsWithDoubleDollar(currentBlock) &&
+      !previousTokenWasCode
+    ) {
       const previousBlock = mergedBlocks[mergedBlocksLen - 1];
 
       const prevStartsWith$$ = startsWithDoubleDollar(previousBlock);
@@ -143,6 +154,12 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
     }
 
     mergedBlocks.push(currentBlock);
+
+    // Track if this token was a code block (for next iteration)
+    // Ignore space tokens when tracking
+    if (token.type !== "space") {
+      previousTokenWasCode = token.type === "code";
+    }
   }
 
   return mergedBlocks;
