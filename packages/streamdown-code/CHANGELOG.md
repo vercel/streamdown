@@ -1,5 +1,11 @@
 # @streamdown/code
 
+## 1.0.2
+
+### Patch Changes
+
+- c995fb7: Add bundled-language aliases for common JavaScript, TypeScript, and shell code fence labels.
+
 ## 1.0.1
 
 ### Patch Changes
