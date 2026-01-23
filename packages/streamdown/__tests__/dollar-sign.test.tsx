@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Streamdown } from "../index";
+import { parseMarkdownIntoBlocks, Streamdown } from "../index";
 
 describe("Dollar sign handling", () => {
   it("should not render dollar amounts as math", () => {
@@ -89,5 +89,74 @@ describe("Dollar sign handling", () => {
     expect(
       text.includes("x2") || text.includes("x^2") || text.includes("x²")
     ).toBe(true);
+  });
+});
+
+describe("Dollar sign in code blocks (parseMarkdownIntoBlocks)", () => {
+  it("should not treat $$ inside code blocks as math delimiters", () => {
+    const markdown = `\`\`\`bash
+# Process tree
+pstree -p $$
+echo $$
+\`\`\`
+
+Some text after.`;
+
+    const blocks = parseMarkdownIntoBlocks(markdown);
+
+    // Should have multiple blocks (code block, space, paragraph)
+    expect(blocks.length).toBeGreaterThan(1);
+
+    // Code block should contain $$ intact
+    const codeBlock = blocks.find((b) => b.includes("```"));
+    expect(codeBlock).toBeTruthy();
+    expect(codeBlock).toContain("pstree -p $$");
+    expect(codeBlock).toContain("echo $$");
+
+    // There should NOT be a standalone $$ block
+    const dollarBlock = blocks.find((b) => b.trim() === "$$");
+    expect(dollarBlock).toBeUndefined();
+  });
+
+  it("should still merge math blocks correctly", () => {
+    const markdown = `Some text.
+
+$$
+x = y + z
+$$
+
+More text.`;
+
+    const blocks = parseMarkdownIntoBlocks(markdown);
+
+    // The math block should be merged into one
+    const mathBlock = blocks.find((b) => b.includes("$$") && b.includes("x = y"));
+    expect(mathBlock).toBeTruthy();
+    // Should contain both opening and closing $$
+    expect((mathBlock?.match(/\$\$/g) || []).length).toBe(2);
+  });
+
+  it("should handle code block followed by math block", () => {
+    const markdown = `\`\`\`bash
+echo $$
+\`\`\`
+
+$$
+math here
+$$`;
+
+    const blocks = parseMarkdownIntoBlocks(markdown);
+
+    // Code block should be separate
+    const codeBlock = blocks.find(
+      (b) => b.includes("```") && b.includes("echo $$")
+    );
+    expect(codeBlock).toBeTruthy();
+
+    // Math block should be merged correctly
+    const mathBlock = blocks.find(
+      (b) => b.trim().startsWith("$$") && b.includes("math here")
+    );
+    expect(mathBlock).toBeTruthy();
   });
 });
