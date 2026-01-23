@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Streamdown } from "../index";
+import { parseMarkdownIntoBlocks, Streamdown } from "../index";
 
 describe("Footnotes", () => {
   it("should render footnote references and definitions correctly", () => {
@@ -167,5 +167,108 @@ GFM extends standard Markdown with powerful features[^1]. Here's a comprehensive
     );
     expect(footnoteItems?.length).toBe(1);
     expect(container.innerHTML).toContain("This is the content");
+  });
+});
+
+describe("Footnote detection (parseMarkdownIntoBlocks)", () => {
+  it("should not treat regex negated character classes as footnotes", () => {
+    // This markdown contains [^\s...] which looks like [^...] but is actually
+    // a regex negated character class inside a code block
+    const markdown = `# Regex Examples
+
+Here are some useful regex patterns.
+
+\`\`\`perl
+# Match URLs
+https?://[^\\s<>"{}|\\\\^\`\\[\\]]+
+
+# Match IP addresses
+\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}
+\`\`\`
+
+More text after the code block.
+`;
+
+    const blocks = parseMarkdownIntoBlocks(markdown);
+
+    // Should NOT return 1 block (the whole document treated as having footnotes)
+    // Should return multiple blocks since there are no actual footnotes
+    expect(blocks.length).toBeGreaterThan(1);
+  });
+
+  it("should not match [^>] or similar short patterns as footnotes", () => {
+    const markdown = `# Parser Code
+
+Some explanation.
+
+\`\`\`js
+const regex = /[^>]+/;
+const other = /[^)]/;
+const brackets = /[^{]/;
+\`\`\`
+
+End of document.
+`;
+
+    const blocks = parseMarkdownIntoBlocks(markdown);
+    expect(blocks.length).toBeGreaterThan(1);
+  });
+
+  it("should still detect real footnotes with numeric identifiers", () => {
+    const markdown = `Here is a footnote[^1].
+
+[^1]: This is the footnote content.
+`;
+
+    const blocks = parseMarkdownIntoBlocks(markdown);
+    // Real footnotes should trigger single-block behavior
+    expect(blocks.length).toBe(1);
+  });
+
+  it("should still detect real footnotes with alphanumeric identifiers", () => {
+    const markdown = `Here is a footnote[^note1].
+
+[^note1]: This is the footnote content.
+`;
+
+    const blocks = parseMarkdownIntoBlocks(markdown);
+    expect(blocks.length).toBe(1);
+  });
+
+  it("should still detect real footnotes with hyphenated identifiers", () => {
+    const markdown = `Here is a footnote[^my-note].
+
+[^my-note]: This is the footnote content.
+`;
+
+    const blocks = parseMarkdownIntoBlocks(markdown);
+    expect(blocks.length).toBe(1);
+  });
+
+  it("should still detect real footnotes with underscored identifiers", () => {
+    const markdown = `Here is a footnote[^my_note].
+
+[^my_note]: This is the footnote content.
+`;
+
+    const blocks = parseMarkdownIntoBlocks(markdown);
+    expect(blocks.length).toBe(1);
+  });
+
+  it("should handle markdown with tables containing inline code with special chars", () => {
+    // Tables with inline code containing regex-like patterns
+    const markdown = `# Reference
+
+| Pattern | Description |
+|---------|-------------|
+| \`[^\\s]\` | Non-whitespace |
+| \`[^>]\` | Not greater than |
+
+Some text after.
+`;
+
+    const blocks = parseMarkdownIntoBlocks(markdown);
+    // No real footnotes, should parse into multiple blocks
+    expect(blocks.length).toBeGreaterThan(1);
   });
 });

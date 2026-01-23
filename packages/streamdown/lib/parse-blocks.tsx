@@ -1,8 +1,10 @@
 import { Lexer } from "marked";
 
 // Regex patterns moved to top level for performance
-const footnoteReferencePattern = /\[\^[^\]\s]{1,200}\](?!:)/;
-const footnoteDefinitionPattern = /\[\^[^\]\s]{1,200}\]:/;
+// Footnote identifiers must be alphanumeric, underscore, or hyphen (e.g., [^1], [^note], [^my-note])
+// Previously used [^\]\s] which incorrectly matched regex character classes like [^\s...]
+const footnoteReferencePattern = /\[\^[\w-]{1,200}\](?!:)/;
+const footnoteDefinitionPattern = /\[\^[\w-]{1,200}\]:/;
 const closingTagPattern = /<\/(\w+)>/;
 const openingTagPattern = /<(\w+)[\s>]/;
 
