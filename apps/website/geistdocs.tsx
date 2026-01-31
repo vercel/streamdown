@@ -10,18 +10,14 @@ export const Logo = () => (
 );
 
 export const github = {
-  owner: undefined as string | undefined,
-  repo: undefined as string | undefined,
+  owner: "vercel",
+  repo: "streamdown",
 };
 
 export const nav = [
   {
     label: "Docs",
     href: "/docs",
-  },
-  {
-    label: "Source",
-    href: "https://github.com/vercel/streamdown",
   },
   {
     label: "AI Elements",
