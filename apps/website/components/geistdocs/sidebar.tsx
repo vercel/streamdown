@@ -11,7 +11,8 @@ import {
 } from "fumadocs-ui/components/sidebar/base";
 import type { SidebarPageTreeComponents } from "fumadocs-ui/components/sidebar/page-tree";
 import { useTreeContext, useTreePath } from "fumadocs-ui/contexts/tree";
-import { Fragment } from "react";
+import { usePathname } from "next/navigation";
+import { Fragment, useEffect, useRef } from "react";
 import {
   Sheet,
   SheetContent,
@@ -25,6 +26,15 @@ import { SearchButton } from "./search";
 export const Sidebar = () => {
   const { root } = useTreeContext();
   const { isOpen, setIsOpen } = useSidebarContext();
+  const pathname = usePathname();
+  const previousPathname = useRef(pathname);
+
+  useEffect(() => {
+    if (pathname !== previousPathname.current) {
+      setIsOpen(false);
+      previousPathname.current = pathname;
+    }
+  }, [pathname, setIsOpen]);
 
   const renderSidebarList = (items: Node[]) =>
     items.map((item) => {
@@ -49,7 +59,7 @@ export const Sidebar = () => {
       className="pointer-events-none sticky top-(--fd-docs-row-1) z-20 h-[calc(var(--fd-docs-height)-var(--fd-docs-row-1))] [grid-area:sidebar] *:pointer-events-auto max-md:hidden md:layout:[--fd-sidebar-width:268px]"
       data-sidebar-placeholder
     >
-      <div className="px-4 pt-12 pb-4 h-full overflow-y-auto">
+      <div className="h-full overflow-y-auto px-4 pt-12 pb-4">
         <Fragment key={root.$id}>{renderSidebarList(root.children)}</Fragment>
       </div>
       <Sheet onOpenChange={setIsOpen} open={isOpen}>
@@ -61,7 +71,9 @@ export const Sidebar = () => {
             </SheetDescription>
             <SearchButton onClick={() => setIsOpen(false)} />
           </SheetHeader>
-          <div className="px-4">{renderSidebarList(root.children)}</div>
+          <div className="flex-1 overflow-y-auto px-4 pb-4">
+            {renderSidebarList(root.children)}
+          </div>
         </SheetContent>
       </Sheet>
     </div>

@@ -22,7 +22,6 @@ export const getMDXComponents = (
   components?: MDXComponents
 ): MDXComponents => ({
   ...defaultMdxComponents,
-  ...components,
 
   pre: CodeBlock,
 
@@ -56,4 +55,7 @@ export const getMDXComponents = (
   Mermaid,
 
   Video,
+
+  // User components last to allow overwriting defaults
+  ...components,
 });
