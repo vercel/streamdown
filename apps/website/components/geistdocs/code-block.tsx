@@ -85,12 +85,11 @@ export const CodeBlock = ({
   if (!title) {
     return (
       <div className="relative mb-6">
-        <CodeBlockComponent className={cn(lineNumbers ? "line-numbers" : "")} />
+        <CodeBlockComponent
+          className={cn(lineNumbers ? "line-numbers" : "", className)}
+        />
         <Button
-          className={cn(
-            "absolute top-[5px] right-[5px] bg-background/80 backdrop-blur-sm",
-            className
-          )}
+          className="absolute top-[5px] right-[5px] bg-background/80 backdrop-blur-sm"
           onClick={copyToClipboard}
           size="icon"
           variant="ghost"
@@ -124,6 +123,7 @@ export const CodeBlock = ({
       <CardContent className="p-0">
         <CodeBlockComponent
           className={cn(
+            className,
             "rounded-none border-none",
             lineNumbers ? "line-numbers" : ""
           )}
