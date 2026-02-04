@@ -6,7 +6,7 @@ import { hasIncompleteCodeFence } from "../lib/incomplete-code-utils";
 import type { ExtraProps } from "../lib/markdown";
 
 describe("hasIncompleteCodeFence utility", () => {
-  it("should return true for incomplete code fence (odd number of ```)", () => {
+  it("should return true for incomplete backtick code fence", () => {
     expect(hasIncompleteCodeFence("```javascript\nconst x = 1;")).toBe(true);
     expect(hasIncompleteCodeFence("```\ncode here")).toBe(true);
     expect(hasIncompleteCodeFence("Some text\n```python\ndef hello():")).toBe(
@@ -14,7 +14,15 @@ describe("hasIncompleteCodeFence utility", () => {
     );
   });
 
-  it("should return false for complete code fence (even number of ```)", () => {
+  it("should return true for incomplete tilde code fence", () => {
+    expect(hasIncompleteCodeFence("~~~javascript\nconst x = 1;")).toBe(true);
+    expect(hasIncompleteCodeFence("~~~\ncode here")).toBe(true);
+    expect(hasIncompleteCodeFence("Some text\n~~~python\ndef hello():")).toBe(
+      true
+    );
+  });
+
+  it("should return false for complete backtick code fence", () => {
     expect(hasIncompleteCodeFence("```javascript\nconst x = 1;\n```")).toBe(
       false
     );
@@ -22,14 +30,36 @@ describe("hasIncompleteCodeFence utility", () => {
     expect(hasIncompleteCodeFence("No code fence here")).toBe(false);
   });
 
+  it("should return false for complete tilde code fence", () => {
+    expect(hasIncompleteCodeFence("~~~javascript\nconst x = 1;\n~~~")).toBe(
+      false
+    );
+    expect(hasIncompleteCodeFence("~~~\ncode\n~~~")).toBe(false);
+  });
+
   it("should return false for multiple complete code blocks", () => {
     const markdown = "```js\ncode1\n```\n\n```python\ncode2\n```";
+    expect(hasIncompleteCodeFence(markdown)).toBe(false);
+  });
+
+  it("should return false for multiple complete tilde code blocks", () => {
+    const markdown = "~~~js\ncode1\n~~~\n\n~~~python\ncode2\n~~~";
     expect(hasIncompleteCodeFence(markdown)).toBe(false);
   });
 
   it("should return true for one complete and one incomplete code block", () => {
     const markdown = "```js\ncode1\n```\n\n```python\ncode2";
     expect(hasIncompleteCodeFence(markdown)).toBe(true);
+  });
+
+  it("should return true for mixed fences with incomplete tilde", () => {
+    const markdown = "```js\ncode1\n```\n\n~~~python\ncode2";
+    expect(hasIncompleteCodeFence(markdown)).toBe(true);
+  });
+
+  it("should handle mixed complete fences", () => {
+    const markdown = "```js\ncode1\n```\n\n~~~python\ncode2\n~~~";
+    expect(hasIncompleteCodeFence(markdown)).toBe(false);
   });
 });
 
