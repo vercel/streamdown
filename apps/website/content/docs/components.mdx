@@ -56,6 +56,47 @@ Custom components receive all the props that the default components would receiv
 - `node` - The Markdown AST node (for advanced use cases)
 - Element-specific props (e.g., `href` for links, `src` for images)
 
+## Streaming State
+
+When streaming markdown, custom components can detect if their block is still being streamed using the `useIsBlockIncomplete` hook. This is useful for expensive-to-render components where you want to show a loading state until the block is complete.
+
+```tsx title="app/page.tsx"
+import { Streamdown, useIsBlockIncomplete } from "streamdown";
+
+const MyCodeBlock = ({ children }) => {
+  const isBlockIncomplete = useIsBlockIncomplete();
+
+  if (isBlockIncomplete) {
+    return <div className="animate-pulse bg-muted h-24 rounded" />;
+  }
+
+  return <pre><code>{children}</code></pre>;
+};
+
+export default function Page() {
+  return (
+    <Streamdown
+      components={{ code: MyCodeBlock }}
+      isAnimating={isStreaming}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+The hook returns `true` when all of the following are true:
+
+- `isAnimating={true}` (streaming mode is active)
+- The component is in the last block being streamed
+- That block has an unclosed code fence (` ``` ` without a closing ` ``` `)
+
+Once the code fence closes, the hook returns `false` and your component can render normally—even while the rest of the markdown continues streaming.
+
+<Callout type="info">
+  This is particularly useful for Mermaid diagrams and syntax highlighters where continuous re-rendering during streaming would cause performance issues.
+</Callout>
+
 ```tsx title="app/page.tsx"
 <Streamdown
   components={{
