@@ -14,6 +14,7 @@ import {
 } from "react";
 // BundledLanguage type removed - we now support any language string
 import { StreamdownContext } from "../index";
+import { useIsBlockIncomplete } from "./block-position-context";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
 import { CodeBlockSkeleton } from "./code-block/skeleton";
@@ -695,6 +696,7 @@ const CodeComponent = ({
   const { mermaid: mermaidContext, controls: controlsConfig } =
     useContext(StreamdownContext);
   const mermaidPlugin = useMermaidPlugin();
+  const isBlockIncomplete = useIsBlockIncomplete();
 
   if (inline) {
     return (
@@ -787,6 +789,7 @@ const CodeComponent = ({
       <CodeBlock
         className={cn("overflow-x-auto border-border border-t", className)}
         code={code}
+        isIncomplete={isBlockIncomplete}
         language={language}
       >
         {showCodeControls ? (

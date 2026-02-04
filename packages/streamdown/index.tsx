@@ -18,7 +18,9 @@ import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
+import { BlockIncompleteContext } from "./lib/block-position-context";
 import { components as defaultComponents } from "./lib/components";
+import { hasIncompleteCodeFence } from "./lib/incomplete-code-utils";
 import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
@@ -26,7 +28,8 @@ import type { PluginConfig } from "./lib/plugin-types";
 import { cn } from "./lib/utils";
 
 export type { BundledLanguage, BundledTheme } from "shiki";
-// biome-ignore lint/performance/noBarrelFile: "required"
+// biome-ignore lint/performance/noBarrelFile: "required for public API"
+export { useIsBlockIncomplete } from "./lib/block-position-context";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
   CjkPlugin,
@@ -147,23 +150,30 @@ export const StreamdownContext = createContext<StreamdownContextType>(
   defaultStreamdownContext
 );
 
-type BlockProps = Options & {
+export type BlockProps = Options & {
   content: string;
   shouldParseIncompleteMarkdown: boolean;
   index: number;
+  /** Whether this block is incomplete (still being streamed) */
+  isIncomplete: boolean;
 };
 
 export const Block = memo(
-  // Destructure shouldParseIncompleteMarkdown and index to prevent them from leaking to the DOM
+  // Destructure internal props to prevent them from leaking to the DOM
   ({
     content,
     shouldParseIncompleteMarkdown: _,
-    index: __,
+    index: _index,
+    isIncomplete,
     ...props
   }: BlockProps) => {
     // Note: remend is already applied to the entire markdown before parsing into blocks
     // in the Streamdown component, so we don't need to apply it again here
-    return <Markdown {...props}>{content}</Markdown>;
+    return (
+      <BlockIncompleteContext.Provider value={isIncomplete}>
+        <Markdown {...props}>{content}</Markdown>
+      </BlockIncompleteContext.Provider>
+    );
   },
   (prevProps, nextProps) => {
     // Deep comparison for better memoization
@@ -172,6 +182,10 @@ export const Block = memo(
     }
 
     if (prevProps.index !== nextProps.index) {
+      return false;
+    }
+
+    if (prevProps.isIncomplete !== nextProps.isIncomplete) {
       return false;
     }
 
@@ -421,18 +435,24 @@ export const Streamdown = memo(
             style={style}
           >
             {blocksToRender.length === 0 && caret && isAnimating && <span />}
-            {blocksToRender.map((block, index) => (
-              <BlockComponent
-                components={mergedComponents}
-                content={block}
-                index={index}
-                key={blockKeys[index]}
-                rehypePlugins={mergedRehypePlugins}
-                remarkPlugins={mergedRemarkPlugins}
-                shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-                {...props}
-              />
-            ))}
+            {blocksToRender.map((block, index) => {
+              const isLastBlock = index === blocksToRender.length - 1;
+              const isIncomplete =
+                isAnimating && isLastBlock && hasIncompleteCodeFence(block);
+              return (
+                <BlockComponent
+                  components={mergedComponents}
+                  content={block}
+                  index={index}
+                  isIncomplete={isIncomplete}
+                  key={blockKeys[index]}
+                  rehypePlugins={mergedRehypePlugins}
+                  remarkPlugins={mergedRemarkPlugins}
+                  shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
+                  {...props}
+                />
+              );
+            })}
           </div>
         </StreamdownContext.Provider>
       </PluginContext.Provider>
