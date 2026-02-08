@@ -1,5 +1,13 @@
 # remend
 
+## 1.1.1
+
+### Patch Changes
+
+- c347b53: Fix whitespace-bound asterisks
+- 6b42a85: Remove CJS builds
+- 4fffb9f: Repair comparison operators in list items
+
 ## 1.1.0
 
 ### Minor Changes
