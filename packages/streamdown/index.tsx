@@ -414,7 +414,7 @@ export const Streamdown = memo(
             className={cn(
               "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
               caret
-                ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-(--streamdown-caret)"
+                ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-[var(--streamdown-caret)]"
                 : null,
               className
             )}

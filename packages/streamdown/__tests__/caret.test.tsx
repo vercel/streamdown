@@ -58,7 +58,7 @@ describe("Caret Feature", () => {
       const className = wrapper?.className || "";
       expect(className).toContain("*:last:after:inline");
       expect(className).toContain("*:last:after:align-baseline");
-      expect(className).toContain("*:last:after:content-(--streamdown-caret)");
+      expect(className).toContain("*:last:after:content-[var(--streamdown-caret)]");
 
       // Check that the CSS custom property is set
       const style = (wrapper as HTMLElement)?.style;
@@ -79,7 +79,7 @@ describe("Caret Feature", () => {
       const className = wrapper?.className || "";
       expect(className).toContain("*:last:after:inline");
       expect(className).toContain("*:last:after:align-baseline");
-      expect(className).toContain("*:last:after:content-(--streamdown-caret)");
+      expect(className).toContain("*:last:after:content-[var(--streamdown-caret)]");
 
       // Check that the CSS custom property is set
       const style = (wrapper as HTMLElement)?.style;
@@ -99,7 +99,7 @@ describe("Caret Feature", () => {
       expect(className).not.toContain("*:last:after:inline");
       expect(className).not.toContain("*:last:after:align-baseline");
       expect(className).not.toContain(
-        "*:last:after:content-(--streamdown-caret)"
+        "*:last:after:content-[var(--streamdown-caret)]"
       );
 
       // Check that the style is not set
@@ -441,7 +441,7 @@ const x = 1;
       // Verify all three caret-related classes are present
       expect(className).toContain("*:last:after:inline");
       expect(className).toContain("*:last:after:align-baseline");
-      expect(className).toContain("*:last:after:content-(--streamdown-caret)");
+      expect(className).toContain("*:last:after:content-[var(--streamdown-caret)]");
     });
 
     it("should not apply caret CSS classes when caret is disabled", () => {
@@ -456,7 +456,7 @@ const x = 1;
       expect(className).not.toContain("*:last:after:inline");
       expect(className).not.toContain("*:last:after:align-baseline");
       expect(className).not.toContain(
-        "*:last:after:content-(--streamdown-caret)"
+        "*:last:after:content-[var(--streamdown-caret)]"
       );
     });
 
