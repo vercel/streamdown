@@ -1,5 +1,6 @@
 import "../global.css";
 import "katex/dist/katex.css";
+import "streamdown/styles.css";
 import { Footer } from "@/components/geistdocs/footer";
 import { Navbar } from "@/components/geistdocs/navbar";
 import { GeistdocsProvider } from "@/components/geistdocs/provider";

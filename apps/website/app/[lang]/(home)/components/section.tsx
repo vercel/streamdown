@@ -119,6 +119,8 @@ export const Section = ({
               <Streamdown
                 isAnimating={isAnimating}
                 plugins={{ code, mermaid, math, cjk }}
+                animated
+                
                 {...streamdownProps}
               >
                 {content}
