@@ -5,6 +5,7 @@ import {
   handleIncompleteSingleAsteriskItalic,
   handleIncompleteSingleUnderscoreItalic,
 } from "./emphasis-handlers";
+import { handleComparisonOperators } from "./comparison-operator-handler";
 import { handleIncompleteInlineCode } from "./inline-code-handler";
 import { handleIncompleteBlockKatex } from "./katex-handler";
 import {
@@ -65,6 +66,8 @@ export interface RemendOptions {
   katex?: boolean;
   /** Handle incomplete setext headings to prevent misinterpretation */
   setextHeadings?: boolean;
+  /** Escape > as comparison operators in list items (e.g., `- > 25` → `- \> 25`) */
+  comparisonOperators?: boolean;
   /** Custom handlers to extend remend */
   handlers?: RemendHandler[];
 }
@@ -74,6 +77,7 @@ const isEnabled = (option: boolean | undefined): boolean => option !== false;
 
 // Built-in handler priorities (0-100)
 const PRIORITY = {
+  COMPARISON_OPERATORS: -10,
   SETEXT_HEADINGS: 0,
   LINKS: 10,
   BOLD_ITALIC: 20,
@@ -93,6 +97,14 @@ const builtInHandlers: Array<{
   optionKey: keyof Omit<RemendOptions, "handlers" | "linkMode">;
   earlyReturn?: (result: string) => boolean;
 }> = [
+  {
+    handler: {
+      name: "comparisonOperators",
+      handle: handleComparisonOperators,
+      priority: PRIORITY.COMPARISON_OPERATORS,
+    },
+    optionKey: "comparisonOperators",
+  },
   {
     handler: {
       name: "setextHeadings",
