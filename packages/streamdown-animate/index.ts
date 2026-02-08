@@ -1,4 +1,4 @@
-import type { Element, Node, Root, Text } from "hast";
+import type { Element, Node, Parent, Root, Text } from "hast";
 import type { Pluggable } from "unified";
 import { SKIP, visitParents } from "unist-util-visit-parents";
 
@@ -102,8 +102,8 @@ const processTextNode = (
   ancestors: Node[],
   config: AnimateConfig
 ): number | typeof SKIP | undefined => {
-  const parent = ancestors.at(-1);
-  if (!(parent && "children" in parent)) {
+  const ancestor = ancestors.at(-1);
+  if (!(ancestor && "children" in ancestor)) {
     return;
   }
 
@@ -111,6 +111,7 @@ const processTextNode = (
     return SKIP;
   }
 
+  const parent = ancestor as Parent;
   const index = parent.children.indexOf(node);
   if (index === -1) {
     return;
