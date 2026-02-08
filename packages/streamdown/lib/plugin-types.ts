@@ -130,23 +130,13 @@ export interface CjkPlugin {
 }
 
 /**
- * Plugin for text animation during streaming
- */
-export interface AnimatePlugin {
-  name: "animate";
-  type: "animate";
-  rehypePlugin: Pluggable;
-}
-
-/**
  * Union type for all plugins
  */
 export type StreamdownPlugin =
   | CodeHighlighterPlugin
   | DiagramPlugin
   | MathPlugin
-  | CjkPlugin
-  | AnimatePlugin;
+  | CjkPlugin;
 
 /**
  * Plugin configuration passed to Streamdown
@@ -156,5 +146,4 @@ export interface PluginConfig {
   mermaid?: DiagramPlugin;
   math?: MathPlugin;
   cjk?: CjkPlugin;
-  animate?: AnimatePlugin;
 }

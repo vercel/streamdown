@@ -1,6 +1,5 @@
 ---
-"@streamdown/animate": major
 "streamdown": minor
 ---
 
-Create new animate plugin
+Bake animate into streamdown as built-in `animated` prop

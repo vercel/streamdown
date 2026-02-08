@@ -2,7 +2,7 @@ import rehypeParse from "rehype-parse";
 import rehypeStringify from "rehype-stringify";
 import { unified } from "unified";
 import { describe, expect, it } from "vitest";
-import { animate, createAnimatePlugin } from "../index";
+import { animate, createAnimatePlugin } from "../lib/animate";
 
 const SPAN_GAP_RE = /<\/span>\s+<span/;
 const CODE_CONTENT_RE = /<code>([^<]*)<\/code>/;

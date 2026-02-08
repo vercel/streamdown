@@ -45,10 +45,3 @@ export const useCjkPlugin = () => {
   return plugins?.cjk ?? null;
 };
 
-/**
- * Hook to access the animate plugin
- */
-export const useAnimatePlugin = () => {
-  const plugins = usePlugins();
-  return plugins?.animate ?? null;
-};

@@ -68,6 +68,7 @@ import { mermaid } from "@streamdown/mermaid";
 import { math } from "@streamdown/math";
 import { cjk } from "@streamdown/cjk";
 import "katex/dist/katex.min.css";
+import "streamdown/styles.css";
 
 export default function Chat() {
   const { messages, status } = useChat();
@@ -81,6 +82,7 @@ export default function Chat() {
             part.type === 'text' ? (
               <Streamdown
                 key={index}
+                animated
                 plugins={{ code, mermaid, math, cjk }}
                 isAnimating={status === 'streaming'}
               >

@@ -11,7 +11,6 @@
     "@ai-sdk/gateway": "^2.0.20",
     "@ai-sdk/react": "^2.0.113",
     "@radix-ui/react-use-controllable-state": "^1.2.2",
-    "@streamdown/animate": "workspace:*",
     "@streamdown/cjk": "workspace:*",
     "@streamdown/code": "workspace:*",
     "@streamdown/math": "workspace:*",

@@ -1,8 +1,6 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { animate } from "@streamdown/animate";
-import "@streamdown/animate/styles.css";
 import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
@@ -19,6 +17,7 @@ import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethr
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { Streamdown } from "streamdown";
+import "streamdown/styles.css";
 import { Button } from "@/components/ui/button";
 import {
   Combobox,
@@ -293,7 +292,8 @@ export const Chat = ({ models }: ChatProps) => {
                         }
                         isAnimating={status === "streaming"}
                         key={key}
-                        plugins={{ animate, code, mermaid, math, cjk }}
+                        animated
+                        plugins={{ code, mermaid, math, cjk }}
                       >
                         {part.text}
                       </Streamdown>

@@ -18,6 +18,7 @@ import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
+import { type AnimateOptions, createAnimatePlugin } from "./lib/animate";
 import { components as defaultComponents } from "./lib/components";
 import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
@@ -35,8 +36,9 @@ export type {
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { defaultUrlTransform } from "./lib/markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
+export type { AnimateOptions } from "./lib/animate";
+export { createAnimatePlugin } from "./lib/animate";
 export type {
-  AnimatePlugin,
   CjkPlugin,
   CodeHighlighterPlugin,
   DiagramPlugin,
@@ -96,6 +98,7 @@ export type StreamdownProps = Options & {
   mermaid?: MermaidOptions;
   controls?: ControlsConfig;
   isAnimating?: boolean;
+  animated?: boolean | AnimateOptions;
   caret?: keyof typeof carets;
   plugins?: PluginConfig;
   remend?: RemendOptions;
@@ -243,6 +246,7 @@ export const Streamdown = memo(
     mermaid,
     controls = true,
     isAnimating = false,
+    animated,
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     caret,
@@ -300,6 +304,12 @@ export const Streamdown = memo(
       () => blocksToRender.map((_block, idx) => `${generatedId}-${idx}`),
       [blocksToRender.length, generatedId]
     );
+
+    const animatePlugin = useMemo(() => {
+      if (!animated) return null;
+      if (animated === true) return createAnimatePlugin();
+      return createAnimatePlugin(animated);
+    }, [animated]);
 
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
@@ -384,15 +394,15 @@ export const Streamdown = memo(
         result = [...result, plugins.math.rehypePlugin];
       }
 
-      if (plugins?.animate && isAnimating) {
-        result = [...result, plugins.animate.rehypePlugin];
+      if (animatePlugin && isAnimating) {
+        result = [...result, animatePlugin.rehypePlugin];
       }
 
       return result;
     }, [
       rehypePlugins,
       plugins?.math,
-      plugins?.animate,
+      animatePlugin,
       isAnimating,
       allowedTags,
     ]);
@@ -468,6 +478,7 @@ export const Streamdown = memo(
     prevProps.children === nextProps.children &&
     prevProps.shikiTheme === nextProps.shikiTheme &&
     prevProps.isAnimating === nextProps.isAnimating &&
+    prevProps.animated === nextProps.animated &&
     prevProps.mode === nextProps.mode &&
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&

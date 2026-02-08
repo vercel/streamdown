@@ -9,10 +9,12 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./styles.css": "./styles.css"
   },
   "files": [
     "dist",
+    "styles.css",
     "README.md"
   ],
   "homepage": "https://streamdown.ai",
@@ -35,7 +37,6 @@
   "license": "Apache-2.0",
   "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
   "devDependencies": {
-    "shiki": "^3.19.0",
     "@streamdown/cjk": "workspace:*",
     "@streamdown/math": "workspace:*",
     "@streamdown/mermaid": "workspace:*",
@@ -49,6 +50,9 @@
     "jsdom": "^27.3.0",
     "mermaid": "^11.12.2",
     "react-markdown": "^10.1.0",
+    "rehype-parse": "^9.0.1",
+    "rehype-stringify": "^10.0.1",
+    "shiki": "^3.19.0",
     "tsup": "^8.5.1",
     "vitest": "^4.0.15"
   },
@@ -69,6 +73,7 @@
     "remend": "workspace:*",
     "tailwind-merge": "^3.4.0",
     "unified": "^11.0.5",
-    "unist-util-visit": "^5.0.0"
+    "unist-util-visit": "^5.0.0",
+    "unist-util-visit-parents": "^6.0.0"
   }
 }
