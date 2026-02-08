@@ -6,6 +6,7 @@ import {
   handleIncompleteSingleAsteriskItalic,
   handleIncompleteSingleUnderscoreItalic,
 } from "./emphasis-handlers";
+import { handleIncompleteHtmlTag } from "./html-tag-handler";
 import { handleIncompleteInlineCode } from "./inline-code-handler";
 import { handleIncompleteBlockKatex } from "./katex-handler";
 import {
@@ -68,6 +69,8 @@ export interface RemendOptions {
   setextHeadings?: boolean;
   /** Escape > as comparison operators in list items (e.g., `- > 25` → `- \> 25`) */
   comparisonOperators?: boolean;
+  /** Strip incomplete HTML tags at end of streaming text (e.g., `text <custom` → `text`) */
+  htmlTags?: boolean;
   /** Custom handlers to extend remend */
   handlers?: RemendHandler[];
 }
@@ -78,6 +81,7 @@ const isEnabled = (option: boolean | undefined): boolean => option !== false;
 // Built-in handler priorities (0-100)
 const PRIORITY = {
   COMPARISON_OPERATORS: -10,
+  HTML_TAGS: -5,
   SETEXT_HEADINGS: 0,
   LINKS: 10,
   BOLD_ITALIC: 20,
@@ -104,6 +108,14 @@ const builtInHandlers: Array<{
       priority: PRIORITY.COMPARISON_OPERATORS,
     },
     optionKey: "comparisonOperators",
+  },
+  {
+    handler: {
+      name: "htmlTags",
+      handle: handleIncompleteHtmlTag,
+      priority: PRIORITY.HTML_TAGS,
+    },
+    optionKey: "htmlTags",
   },
   {
     handler: {
