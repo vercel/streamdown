@@ -130,7 +130,9 @@ More text.`;
     const blocks = parseMarkdownIntoBlocks(markdown);
 
     // The math block should be merged into one
-    const mathBlock = blocks.find((b) => b.includes("$$") && b.includes("x = y"));
+    const mathBlock = blocks.find(
+      (b) => b.includes("$$") && b.includes("x = y")
+    );
     expect(mathBlock).toBeTruthy();
     // Should contain both opening and closing $$
     expect((mathBlock?.match(/\$\$/g) || []).length).toBe(2);

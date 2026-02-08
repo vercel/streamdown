@@ -10,8 +10,20 @@ const openingTagPattern = /<(\w+)[\s>]/;
 
 // HTML void elements (self-closing tags) that don't need closing tags
 const voidElements = new Set([
-  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
-  'link', 'meta', 'param', 'source', 'track', 'wbr'
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
 ]);
 
 // Helper function to check if string starts with $$
@@ -105,7 +117,7 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
         // Check if this is a self-closing tag or if there's a closing tag in the same block
         const hasClosingTag = currentBlock.includes(`</${tagName}>`);
         // Void elements don't need to be pushed to the stack as they don't have closing tags
-        if (!hasClosingTag && !voidElements.has(tagName.toLowerCase())) {
+        if (!(hasClosingTag || voidElements.has(tagName.toLowerCase()))) {
           // This is an opening tag without a closing tag in the same block
           htmlStack.push(tagName);
         }
@@ -118,11 +130,7 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
     // Math block merging logic
     // Skip math merging if previous block was a code block (code blocks can contain $$ as shell syntax)
     // Check if this is a standalone $$ that might be a closing delimiter
-    if (
-      trimmedBlock === "$$" &&
-      mergedBlocksLen > 0 &&
-      !previousTokenWasCode
-    ) {
+    if (trimmedBlock === "$$" && mergedBlocksLen > 0 && !previousTokenWasCode) {
       const previousBlock = mergedBlocks[mergedBlocksLen - 1];
 
       // Check if the previous block starts with $$ but doesn't end with $$

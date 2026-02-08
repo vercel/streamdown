@@ -434,7 +434,7 @@ describe("CodeBlock with multiple languages", () => {
 
   it("should handle heavy streaming appropriately", async () => {
     const fixturePath = path.join(
-      __dirname,
+      import.meta.dirname,
       "__fixtures__",
       "code-block-big-html.html"
     );
