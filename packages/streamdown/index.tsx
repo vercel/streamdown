@@ -27,17 +27,17 @@ import type { PluginConfig } from "./lib/plugin-types";
 import { cn } from "./lib/utils";
 
 export type { BundledLanguage, BundledTheme } from "shiki";
+export type { AnimateOptions } from "./lib/animate";
+// biome-ignore lint/performance/noBarrelFile: "required"
+export { createAnimatePlugin } from "./lib/animate";
 export type {
   AllowElement,
   Components,
   ExtraProps,
   UrlTransform,
 } from "./lib/markdown";
-// biome-ignore lint/performance/noBarrelFile: "required"
 export { defaultUrlTransform } from "./lib/markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
-export type { AnimateOptions } from "./lib/animate";
-export { createAnimatePlugin } from "./lib/animate";
 export type {
   CjkPlugin,
   CodeHighlighterPlugin,
@@ -306,8 +306,12 @@ export const Streamdown = memo(
     );
 
     const animatePlugin = useMemo(() => {
-      if (!animated) return null;
-      if (animated === true) return createAnimatePlugin();
+      if (!animated) {
+        return null;
+      }
+      if (animated === true) {
+        return createAnimatePlugin();
+      }
       return createAnimatePlugin(animated);
     }, [animated]);
 
@@ -399,13 +403,7 @@ export const Streamdown = memo(
       }
 
       return result;
-    }, [
-      rehypePlugins,
-      plugins?.math,
-      animatePlugin,
-      isAnimating,
-      allowedTags,
-    ]);
+    }, [rehypePlugins, plugins?.math, animatePlugin, isAnimating, allowedTags]);
 
     const style = useMemo(
       () =>

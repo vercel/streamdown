@@ -44,4 +44,3 @@ export const useCjkPlugin = () => {
   const plugins = usePlugins();
   return plugins?.cjk ?? null;
 };
-

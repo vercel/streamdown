@@ -284,6 +284,7 @@ export const Chat = ({ models }: ChatProps) => {
                   case "text":
                     return (
                       <Streamdown
+                        animated
                         caret={
                           message.role === "assistant" &&
                           messageIndex === messages.length - 1
@@ -292,7 +293,6 @@ export const Chat = ({ models }: ChatProps) => {
                         }
                         isAnimating={status === "streaming"}
                         key={key}
-                        animated
                         plugins={{ code, mermaid, math, cjk }}
                       >
                         {part.text}
