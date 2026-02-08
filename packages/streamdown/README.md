@@ -28,13 +28,33 @@ Streamdown powers the [AI Elements Message](https://ai-sdk.dev/elements/componen
 npm i streamdown
 ```
 
-Then, update your Tailwind `globals.css` to include the following.
+Then, update your Tailwind `globals.css` to include the following so that Tailwind can detect the utility classes used by Streamdown.
 
 ```css
 @source "../node_modules/streamdown/dist/*.js";
 ```
 
-Make sure the path matches the location of the `node_modules` folder in your project. This will ensure that the Streamdown styles are applied to your project.
+The path must be relative from your CSS file to the `node_modules` folder containing `streamdown`. In a standard Next.js project where `globals.css` lives in `app/`, the default path above should work.
+
+### Monorepo setup
+
+In a monorepo (npm workspaces, Turbo, pnpm, etc.), dependencies are typically hoisted to the root `node_modules`. You need to adjust the relative path to point there:
+
+```
+monorepo/
+├── node_modules/streamdown/  ← hoisted here
+├── apps/
+│   └── web/
+│       └── app/
+│           └── globals.css   ← your CSS file
+```
+
+```css
+/* apps/web/app/globals.css → 3 levels up to reach root node_modules */
+@source "../../../node_modules/streamdown/dist/*.js";
+```
+
+Adjust the number of `../` segments based on where your CSS file lives relative to the root `node_modules`.
 
 ## Usage
 
