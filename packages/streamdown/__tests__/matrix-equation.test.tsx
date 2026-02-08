@@ -62,6 +62,83 @@ $$`;
     expect(hasMathContent).toBe(true);
   });
 
+  it("should keep math block intact when preceded by text (#194)", () => {
+    const content = `For example:
+$$
+A \\vec{v} =
+\\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}
+\\begin{pmatrix} 5 \\\\ 6 \\end{pmatrix}
+=
+\\begin{pmatrix} 1 \\times 5 + 2 \\times 6 \\\\ 3 \\times 5 + 4 \\times 6 \\end{pmatrix}
+=
+\\begin{pmatrix} 17 \\\\ 39 \\end{pmatrix}
+$$`;
+
+    // The = on its own line causes marked to split this into multiple tokens.
+    // The merge logic should reassemble them into a single block.
+    const blocks = parseMarkdownIntoBlocks(content);
+
+    // Should be a single block (text + math together)
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0]).toContain("$$");
+    expect(blocks[0]).toContain("pmatrix");
+  });
+
+  it("should keep multiple math blocks intact when preceded by text (#194)", () => {
+    const content = `### 3. **Matrix-Vector Multiplication**
+
+For example:
+$$
+A \\vec{v} =
+\\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}
+\\begin{pmatrix} 5 \\\\ 6 \\end{pmatrix}
+=
+\\begin{pmatrix} 1 \\times 5 + 2 \\times 6 \\\\ 3 \\times 5 + 4 \\times 6 \\end{pmatrix}
+=
+\\begin{pmatrix} 17 \\\\ 39 \\end{pmatrix}
+$$
+
+---
+
+### 4. **System of Linear Equations**
+
+Example:
+$$
+\\begin{cases}
+2x + y = 5 \\\\
+x + 3y = 7
+\\end{cases}
+$$
+
+In matrix form:
+$$
+\\begin{pmatrix}
+2 & 1 \\\\
+1 & 3
+\\end{pmatrix}
+\\begin{pmatrix}
+x \\\\
+y
+\\end{pmatrix}
+=
+\\begin{pmatrix}
+5 \\\\
+7
+\\end{pmatrix}
+$$
+
+---`;
+
+    const blocks = parseMarkdownIntoBlocks(content);
+
+    // Each math block should contain both opening and closing $$
+    const mathBlocks = blocks.filter((b) => b.includes("$$"));
+    for (const block of mathBlocks) {
+      const dollarCount = (block.match(/\$\$/g) || []).length;
+      expect(dollarCount % 2).toBe(0);
+    }
+  });
+
   it("should handle matrix equation without closing $$", () => {
     const content = `$$
 \\begin{bmatrix}

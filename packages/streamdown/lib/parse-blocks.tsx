@@ -26,32 +26,6 @@ const voidElements = new Set([
   "wbr",
 ]);
 
-// Helper function to check if string starts with $$
-const startsWithDoubleDollar = (str: string): boolean => {
-  let i = 0;
-  // Skip leading whitespace
-  while (
-    i < str.length &&
-    (str[i] === " " || str[i] === "\t" || str[i] === "\n" || str[i] === "\r")
-  ) {
-    i += 1;
-  }
-  return i + 1 < str.length && str[i] === "$" && str[i + 1] === "$";
-};
-
-// Helper function to check if string ends with $$
-const endsWithDoubleDollar = (str: string): boolean => {
-  let i = str.length - 1;
-  // Skip trailing whitespace
-  while (
-    i >= 0 &&
-    (str[i] === " " || str[i] === "\t" || str[i] === "\n" || str[i] === "\r")
-  ) {
-    i -= 1;
-  }
-  return i >= 1 && str[i] === "$" && str[i - 1] === "$";
-};
-
 // Helper function to count $$ occurrences
 const countDoubleDollars = (str: string): number => {
   let count = 0;
@@ -128,43 +102,15 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
     const trimmedBlock = currentBlock.trim();
 
     // Math block merging logic
-    // Skip math merging if previous block was a code block (code blocks can contain $$ as shell syntax)
-    // Check if this is a standalone $$ that might be a closing delimiter
-    if (trimmedBlock === "$$" && mergedBlocksLen > 0 && !previousTokenWasCode) {
+    // If previous block has unclosed math (odd number of $$), merge current block into it.
+    // This handles cases where marked's Lexer splits math blocks (e.g. = on its own line
+    // is interpreted as a setext heading), regardless of whether $$ is at the start of the block.
+    // Skip if previous block was a code block (code blocks can contain $$ as shell syntax)
+    if (mergedBlocksLen > 0 && !previousTokenWasCode) {
       const previousBlock = mergedBlocks[mergedBlocksLen - 1];
-
-      // Check if the previous block starts with $$ but doesn't end with $$
-      const prevStartsWith$$ = startsWithDoubleDollar(previousBlock);
       const prevDollarCount = countDoubleDollars(previousBlock);
 
-      // If previous block has odd number of $$ and starts with $$, merge them
-      if (prevStartsWith$$ && prevDollarCount % 2 === 1) {
-        mergedBlocks[mergedBlocksLen - 1] = previousBlock + currentBlock;
-        continue;
-      }
-    }
-
-    // Check if current block ends with $$ and previous block started with $$ but didn't close
-    // Skip if previous block was a code block
-    if (
-      mergedBlocksLen > 0 &&
-      endsWithDoubleDollar(currentBlock) &&
-      !previousTokenWasCode
-    ) {
-      const previousBlock = mergedBlocks[mergedBlocksLen - 1];
-
-      const prevStartsWith$$ = startsWithDoubleDollar(previousBlock);
-      const prevDollarCount = countDoubleDollars(previousBlock);
-      const currDollarCount = countDoubleDollars(currentBlock);
-
-      // If previous block has unclosed math (odd $$) and current block ends with $$
-      // AND current block doesn't start with $$, it's likely a continuation
-      if (
-        prevStartsWith$$ &&
-        prevDollarCount % 2 === 1 &&
-        !startsWithDoubleDollar(currentBlock) &&
-        currDollarCount === 1
-      ) {
+      if (prevDollarCount % 2 === 1) {
         mergedBlocks[mergedBlocksLen - 1] = previousBlock + currentBlock;
         continue;
       }
