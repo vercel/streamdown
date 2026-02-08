@@ -382,7 +382,13 @@ export const Streamdown = memo(
       }
 
       return result;
-    }, [rehypePlugins, plugins?.math, plugins?.animate, isAnimating, allowedTags]);
+    }, [
+      rehypePlugins,
+      plugins?.math,
+      plugins?.animate,
+      isAnimating,
+      allowedTags,
+    ]);
 
     const style = useMemo(
       () =>

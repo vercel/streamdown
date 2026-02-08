@@ -1,10 +1,11 @@
-import type { Element, Root, Text } from "hast";
 import rehypeParse from "rehype-parse";
 import rehypeStringify from "rehype-stringify";
 import { unified } from "unified";
-import { visit } from "unist-util-visit";
 import { describe, expect, it } from "vitest";
 import { animate, createAnimatePlugin } from "../index";
+
+const SPAN_GAP_RE = /<\/span>\s+<span/;
+const CODE_CONTENT_RE = /<code>([^<]*)<\/code>/;
 
 const processHtml = async (html: string, plugin = animate) => {
   const processor = unified()
@@ -14,18 +15,6 @@ const processHtml = async (html: string, plugin = animate) => {
 
   const result = await processor.process(html);
   return String(result);
-};
-
-const getAnimatedSpans = (html: string): Element[] => {
-  const processor = unified().use(rehypeParse, { fragment: true });
-  const tree = processor.parse(html) as Root;
-  const spans: Element[] = [];
-  visit(tree, "element", (node: Element) => {
-    if (node.properties?.["dataSdAnimate"] !== undefined) {
-      spans.push(node);
-    }
-  });
-  return spans;
 };
 
 describe("animate plugin", () => {
@@ -78,7 +67,7 @@ describe("animate plugin", () => {
     it("should preserve whitespace as text nodes", async () => {
       const result = await processHtml("<p>Hello world</p>");
       // Whitespace should not be wrapped in a span
-      expect(result).toMatch(/<\/span>\s+<span/);
+      expect(result).toMatch(SPAN_GAP_RE);
     });
 
     it("should handle single word", async () => {
@@ -116,20 +105,16 @@ describe("animate plugin", () => {
     });
 
     it("should not animate text inside svg elements", async () => {
-      const result = await processHtml(
-        '<svg><text>label</text></svg>'
-      );
+      const result = await processHtml("<svg><text>label</text></svg>");
       expect(result).not.toContain("data-sd-animate");
     });
 
     it("should animate text outside code but not inside", async () => {
-      const result = await processHtml(
-        "<p>Hello <code>world</code> foo</p>"
-      );
+      const result = await processHtml("<p>Hello <code>world</code> foo</p>");
       // "Hello" and "foo" should be animated
       expect(result).toContain("data-sd-animate");
       // "world" inside code should NOT be animated
-      const codeMatch = result.match(/<code>([^<]*)<\/code>/);
+      const codeMatch = result.match(CODE_CONTENT_RE);
       expect(codeMatch?.[1]).toBe("world");
     });
   });

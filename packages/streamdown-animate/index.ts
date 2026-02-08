@@ -15,6 +15,8 @@ export interface AnimateOptions {
   sep?: "word" | "char";
 }
 
+const WHITESPACE_RE = /\s/;
+const WHITESPACE_ONLY_RE = /^\s+$/;
 const SKIP_TAGS = new Set(["code", "pre", "svg", "math", "annotation"]);
 
 const isElement = (node: unknown): node is Element =>
@@ -34,7 +36,7 @@ const splitByWord = (text: string): string[] => {
   let inWhitespace = false;
 
   for (const char of text) {
-    const isWs = /\s/.test(char);
+    const isWs = WHITESPACE_RE.test(char);
     if (isWs !== inWhitespace && current) {
       parts.push(current);
       current = "";
@@ -55,7 +57,7 @@ const splitByChar = (text: string): string[] => {
   let wsBuffer = "";
 
   for (const char of text) {
-    if (/\s/.test(char)) {
+    if (WHITESPACE_RE.test(char)) {
       wsBuffer += char;
     } else {
       if (wsBuffer) {
@@ -88,46 +90,61 @@ const makeSpan = (
   children: [{ type: "text", value: word }],
 });
 
+interface AnimateConfig {
+  animation: string;
+  duration: number;
+  easing: string;
+  sep: "word" | "char";
+}
+
+const processTextNode = (
+  node: Text,
+  ancestors: Node[],
+  config: AnimateConfig
+): number | typeof SKIP | undefined => {
+  const parent = ancestors.at(-1);
+  if (!(parent && "children" in parent)) {
+    return;
+  }
+
+  if (hasSkipAncestor(ancestors)) {
+    return SKIP;
+  }
+
+  const index = parent.children.indexOf(node);
+  if (index === -1) {
+    return;
+  }
+
+  const text = node.value;
+  if (!text.trim()) {
+    return;
+  }
+
+  const parts = config.sep === "char" ? splitByChar(text) : splitByWord(text);
+
+  const nodes: (Element | Text)[] = parts.map((part) =>
+    WHITESPACE_ONLY_RE.test(part)
+      ? ({ type: "text", value: part } as Text)
+      : makeSpan(part, config.animation, config.duration, config.easing)
+  );
+
+  parent.children.splice(index, 1, ...nodes);
+  return index + nodes.length;
+};
+
 export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
-  const animation = options?.animation ?? "fadeIn";
-  const duration = options?.duration ?? 150;
-  const easing = options?.easing ?? "ease";
-  const sep = options?.sep ?? "word";
+  const config: AnimateConfig = {
+    animation: options?.animation ?? "fadeIn",
+    duration: options?.duration ?? 150,
+    easing: options?.easing ?? "ease",
+    sep: options?.sep ?? "word",
+  };
 
   const rehypeAnimate = () => (tree: Root) => {
-    visitParents(tree, "text", (node: Text, ancestors) => {
-      const parent = ancestors[ancestors.length - 1];
-      if (!parent || !("children" in parent)) {
-        return;
-      }
-
-      // Skip text inside code, pre, svg, math, annotation
-      if (hasSkipAncestor(ancestors)) {
-        return SKIP;
-      }
-
-      const index = parent.children.indexOf(node);
-      if (index === -1) {
-        return;
-      }
-
-      const text = node.value;
-      if (!text.trim()) {
-        return;
-      }
-
-      const parts = sep === "char" ? splitByChar(text) : splitByWord(text);
-
-      const nodes: (Element | Text)[] = parts.map((part) => {
-        if (/^\s+$/.test(part)) {
-          return { type: "text", value: part } as Text;
-        }
-        return makeSpan(part, animation, duration, easing);
-      });
-
-      parent.children.splice(index, 1, ...nodes);
-      return index + nodes.length;
-    });
+    visitParents(tree, "text", (node: Text, ancestors) =>
+      processTextNode(node, ancestors, config)
+    );
   };
 
   return {
