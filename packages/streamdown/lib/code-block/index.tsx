@@ -19,6 +19,8 @@ const TRAILING_NEWLINES_REGEX = /\n+$/;
 type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
   language: string;
+  /** Whether the code block is still being streamed (incomplete) */
+  isIncomplete?: boolean;
 };
 
 export const CodeBlock = ({
@@ -26,6 +28,7 @@ export const CodeBlock = ({
   language,
   className,
   children,
+  isIncomplete = false,
   ...rest
 }: CodeBlockProps) => {
   const { shikiTheme } = useContext(StreamdownContext);
@@ -90,7 +93,7 @@ export const CodeBlock = ({
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
-      <CodeBlockContainer language={language}>
+      <CodeBlockContainer isIncomplete={isIncomplete} language={language}>
         <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
         <CodeBlockBody
           className={className}

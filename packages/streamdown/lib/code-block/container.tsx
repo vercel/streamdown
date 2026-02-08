@@ -3,12 +3,15 @@ import { cn } from "../utils";
 
 type CodeBlockContainerProps = ComponentProps<"div"> & {
   language: string;
+  /** Whether the code block is still being streamed (incomplete) */
+  isIncomplete?: boolean;
 };
 
 export const CodeBlockContainer = ({
   className,
   language,
   style,
+  isIncomplete,
   ...props
 }: CodeBlockContainerProps) => (
   <div
@@ -16,6 +19,7 @@ export const CodeBlockContainer = ({
       "my-4 w-full overflow-hidden rounded-xl border border-border",
       className
     )}
+    data-incomplete={isIncomplete || undefined}
     data-language={language}
     data-streamdown="code-block"
     style={{
