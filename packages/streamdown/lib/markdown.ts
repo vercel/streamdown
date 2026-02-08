@@ -1,5 +1,6 @@
-import type { Element, Nodes } from "hast";
+import type { Element, Nodes, Parents, Root } from "hast";
 import { toJsxRuntime } from "hast-util-to-jsx-runtime";
+import { urlAttributes } from "html-url-attributes";
 import type { ComponentType, JSX, ReactElement } from "react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import rehypeRaw from "rehype-raw";
@@ -8,11 +9,24 @@ import type { Options as RemarkRehypeOptions } from "remark-rehype";
 import remarkRehype from "remark-rehype";
 import type { PluggableList } from "unified";
 import { unified } from "unified";
+import { visit } from "unist-util-visit";
 import { remarkEscapeHtml } from "./remark/escape-html";
 
 export interface ExtraProps {
   node?: Element | undefined;
 }
+
+export type AllowElement = (
+  element: Readonly<Element>,
+  index: number,
+  parent: Readonly<Parents> | undefined
+) => boolean | null | undefined;
+
+export type UrlTransform = (
+  url: string,
+  key: string,
+  node: Readonly<Element>
+) => string | null | undefined;
 
 export type Components = {
   [Key in keyof JSX.IntrinsicElements]?:
@@ -26,11 +40,17 @@ export type Components = {
 };
 
 export interface Options {
+  allowElement?: AllowElement;
+  allowedElements?: ReadonlyArray<string>;
   children?: string;
   components?: Components;
+  disallowedElements?: ReadonlyArray<string>;
   rehypePlugins?: PluggableList;
   remarkPlugins?: PluggableList;
   remarkRehypeOptions?: Readonly<RemarkRehypeOptions>;
+  skipHtml?: boolean;
+  unwrapDisallowed?: boolean;
+  urlTransform?: UrlTransform;
 }
 
 // Stable references for common cases
@@ -210,8 +230,76 @@ const createProcessor = (options: Readonly<Options>) => {
     .use(rehypePlugins);
 };
 
-const post = (tree: Nodes, options: Readonly<Options>): ReactElement =>
-  toJsxRuntime(tree, {
+export const defaultUrlTransform: UrlTransform = (value) => value;
+
+const post = (tree: Nodes, options: Readonly<Options>): ReactElement => {
+  const {
+    allowElement,
+    allowedElements,
+    disallowedElements,
+    skipHtml,
+    unwrapDisallowed,
+    urlTransform,
+  } = options;
+
+  const hasFiltering =
+    allowElement ||
+    allowedElements ||
+    disallowedElements ||
+    skipHtml ||
+    urlTransform;
+
+  if (hasFiltering) {
+    const transform = urlTransform || defaultUrlTransform;
+
+    visit(tree as Root, (node, index, parent) => {
+      if (node.type === "raw" && parent && typeof index === "number") {
+        if (skipHtml) {
+          parent.children.splice(index, 1);
+        } else {
+          parent.children[index] = { type: "text", value: node.value };
+        }
+        return index;
+      }
+
+      if (node.type === "element") {
+        for (const key in urlAttributes) {
+          if (
+            Object.hasOwn(urlAttributes, key) &&
+            Object.hasOwn(node.properties, key)
+          ) {
+            const value = node.properties[key];
+            const test = urlAttributes[key];
+            if (test === null || test.includes(node.tagName)) {
+              node.properties[key] =
+                transform(String(value || ""), key, node) ?? undefined;
+            }
+          }
+        }
+
+        let remove = allowedElements
+          ? !allowedElements.includes(node.tagName)
+          : disallowedElements
+            ? disallowedElements.includes(node.tagName)
+            : false;
+
+        if (!remove && allowElement && typeof index === "number") {
+          remove = !allowElement(node, index, parent);
+        }
+
+        if (remove && parent && typeof index === "number") {
+          if (unwrapDisallowed && node.children) {
+            parent.children.splice(index, 1, ...node.children);
+          } else {
+            parent.children.splice(index, 1);
+          }
+          return index;
+        }
+      }
+    });
+  }
+
+  return toJsxRuntime(tree, {
     Fragment,
     components: options.components,
     ignoreInvalidStyle: true,
@@ -220,3 +308,4 @@ const post = (tree: Nodes, options: Readonly<Options>): ReactElement =>
     passKeys: true,
     passNode: true,
   });
+};

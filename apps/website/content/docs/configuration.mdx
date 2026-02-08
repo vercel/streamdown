@@ -140,6 +140,95 @@ The `mermaid` prop accepts an object with the following properties:
   }}
 />
 
+## Element Filtering Props
+
+These props match the [react-markdown](https://github.com/remarkjs/react-markdown) API, making Streamdown a drop-in replacement.
+
+<TypeTable
+  type={{
+    allowedElements: {
+      description:
+        "Tag names to allow (all others are removed). Cannot combine with disallowedElements.",
+      type: "string[]",
+    },
+    disallowedElements: {
+      description:
+        "Tag names to disallow (all others are kept). Cannot combine with allowedElements.",
+      type: "string[]",
+      default: "[]",
+    },
+    allowElement: {
+      description:
+        "Custom filter function called for each element. Return false to remove. Applied after allowedElements/disallowedElements.",
+      type: "(element: Element, index: number, parent: Parent | undefined) => boolean",
+    },
+    unwrapDisallowed: {
+      description:
+        "When true, disallowed elements are replaced by their children instead of being removed entirely.",
+      type: "boolean",
+      default: "false",
+    },
+    skipHtml: {
+      description:
+        "Ignore raw HTML in Markdown completely (removes raw HTML nodes from the tree).",
+      type: "boolean",
+      default: "false",
+    },
+    urlTransform: {
+      description:
+        "Transform all URLs in the Markdown (links, images, etc). Return an empty string to remove the URL. Defaults to defaultUrlTransform (passthrough). URL security is handled by rehype-sanitize and rehype-harden.",
+      type: "(url: string, key: string, node: Element) => string | null | undefined",
+      default: "defaultUrlTransform",
+    },
+  }}
+/>
+
+### Element filtering example
+
+```tsx title="app/page.tsx"
+// Only allow paragraphs, links, and emphasis
+<Streamdown allowedElements={["p", "a", "em"]}>
+  {markdown}
+</Streamdown>
+
+// Remove images but keep everything else
+<Streamdown disallowedElements={["img"]}>
+  {markdown}
+</Streamdown>
+
+// Remove images but keep their alt text
+<Streamdown disallowedElements={["img"]} unwrapDisallowed>
+  {markdown}
+</Streamdown>
+
+// Custom filter: remove all h3+ headings
+<Streamdown
+  allowElement={(element) =>
+    !["h3", "h4", "h5", "h6"].includes(element.tagName)
+  }
+>
+  {markdown}
+</Streamdown>
+```
+
+### URL transform example
+
+```tsx title="app/page.tsx"
+import { Streamdown, defaultUrlTransform } from 'streamdown';
+
+// Proxy all image URLs through your CDN
+<Streamdown
+  urlTransform={(url, key, node) => {
+    if (key === 'src') {
+      return `https://your-cdn.com/proxy?url=${encodeURIComponent(url)}`;
+    }
+    return defaultUrlTransform(url, key, node);
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
 ## Advanced Props
 
 <TypeTable

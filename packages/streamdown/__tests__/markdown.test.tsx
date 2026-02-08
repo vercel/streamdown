@@ -3,7 +3,7 @@ import type { Element } from "hast";
 import type { ComponentType } from "react";
 import { describe, expect, it } from "vitest";
 import type { Components, Options } from "../lib/markdown";
-import { Markdown } from "../lib/markdown";
+import { Markdown, defaultUrlTransform } from "../lib/markdown";
 
 describe("Markdown Component", () => {
   describe("Basic Rendering", () => {
@@ -793,6 +793,154 @@ Let me know which you prefer!`;
       expect(container.querySelector("ul")).toBeTruthy();
       const items = container.querySelectorAll("li");
       expect(items.length).toBe(2);
+    });
+  });
+
+  describe("allowedElements", () => {
+    it("should only render allowed elements", () => {
+      const content = "# Heading\n\n**bold** and *italic*";
+      const { container } = render(
+        <Markdown children={content} allowedElements={["p", "em"]} />
+      );
+      expect(container.querySelector("h1")).toBeFalsy();
+      expect(container.querySelector("strong")).toBeFalsy();
+      expect(container.querySelector("em")).toBeTruthy();
+    });
+
+    it("should drop children of disallowed elements by default", () => {
+      const content = "**bold text**";
+      const { container } = render(
+        <Markdown children={content} allowedElements={["p"]} />
+      );
+      expect(container.querySelector("strong")).toBeFalsy();
+      expect(container.textContent).not.toContain("bold text");
+    });
+  });
+
+  describe("disallowedElements", () => {
+    it("should remove disallowed elements", () => {
+      const content = "# Heading\n\nParagraph";
+      const { container } = render(
+        <Markdown children={content} disallowedElements={["h1"]} />
+      );
+      expect(container.querySelector("h1")).toBeFalsy();
+      expect(container.querySelector("p")).toBeTruthy();
+    });
+
+    it("should keep everything except disallowed", () => {
+      const content = "**bold** and *italic*";
+      const { container } = render(
+        <Markdown children={content} disallowedElements={["strong"]} />
+      );
+      expect(container.querySelector("strong")).toBeFalsy();
+      expect(container.querySelector("em")).toBeTruthy();
+    });
+  });
+
+  describe("allowElement", () => {
+    it("should filter elements with a callback", () => {
+      const content = "# Keep\n\n## Remove";
+      const { container } = render(
+        <Markdown
+          children={content}
+          allowElement={(element) => element.tagName !== "h2"}
+        />
+      );
+      expect(container.querySelector("h1")).toBeTruthy();
+      expect(container.querySelector("h2")).toBeFalsy();
+    });
+
+    it("should work alongside allowedElements", () => {
+      const content = "# H1\n\n## H2\n\nParagraph";
+      const { container } = render(
+        <Markdown
+          children={content}
+          allowedElements={["h1", "h2", "p"]}
+          allowElement={(element) => element.tagName !== "h2"}
+        />
+      );
+      expect(container.querySelector("h1")).toBeTruthy();
+      expect(container.querySelector("h2")).toBeFalsy();
+      expect(container.querySelector("p")).toBeTruthy();
+    });
+  });
+
+  describe("unwrapDisallowed", () => {
+    it("should unwrap disallowed elements keeping children", () => {
+      const content = "**bold text**";
+      const { container } = render(
+        <Markdown
+          children={content}
+          disallowedElements={["strong"]}
+          unwrapDisallowed
+        />
+      );
+      expect(container.querySelector("strong")).toBeFalsy();
+      expect(container.textContent).toContain("bold text");
+    });
+
+    it("should unwrap with allowedElements", () => {
+      const content = "*italic* and **bold**";
+      const { container } = render(
+        <Markdown
+          children={content}
+          allowedElements={["p", "em"]}
+          unwrapDisallowed
+        />
+      );
+      expect(container.querySelector("strong")).toBeFalsy();
+      expect(container.textContent).toContain("bold");
+      expect(container.querySelector("em")).toBeTruthy();
+    });
+  });
+
+  describe("skipHtml", () => {
+    it("should strip raw HTML when skipHtml is true", () => {
+      const content = "Text <strong>raw html</strong> more";
+      const { container } = render(
+        <Markdown children={content} skipHtml rehypePlugins={[]} />
+      );
+      // With skipHtml + no rehype-raw, raw HTML nodes are removed entirely
+      expect(container.innerHTML).not.toContain("<strong>");
+    });
+  });
+
+  describe("urlTransform", () => {
+    it("should transform URLs via urlTransform callback", () => {
+      const content = "[link](http://example.com)";
+      const { container } = render(
+        <Markdown
+          children={content}
+          urlTransform={(url) => url.replace("http://", "https://")}
+        />
+      );
+      const anchor = container.querySelector("a");
+      expect(anchor?.getAttribute("href")).toBe("https://example.com");
+    });
+
+    it("should remove URLs when urlTransform returns empty string", () => {
+      const content = "[link](javascript:alert(1))";
+      const { container } = render(
+        <Markdown children={content} urlTransform={() => ""} />
+      );
+      const anchor = container.querySelector("a");
+      expect(anchor?.getAttribute("href")).toBe("");
+    });
+  });
+
+  describe("defaultUrlTransform", () => {
+    it("should pass through URLs unchanged", () => {
+      expect(defaultUrlTransform("http://example.com", "href", {} as Element)).toBe(
+        "http://example.com"
+      );
+      expect(defaultUrlTransform("https://example.com", "href", {} as Element)).toBe(
+        "https://example.com"
+      );
+      expect(defaultUrlTransform("/path/to/page", "href", {} as Element)).toBe(
+        "/path/to/page"
+      );
+      expect(defaultUrlTransform("#section", "href", {} as Element)).toBe("#section");
+      expect(defaultUrlTransform("?query=1", "href", {} as Element)).toBe("?query=1");
     });
   });
 });

@@ -107,6 +107,12 @@ export default function Chat() {
 | `linkSafety` | `LinkSafetyConfig` | `{ enabled: true }` | Link confirmation modal |
 | `shikiTheme` | `[light, dark]` | `['github-light', 'github-dark']` | Code themes |
 | `className` | `string` | — | Container class |
+| `allowedElements` | `string[]` | all | Tag names to allow |
+| `disallowedElements` | `string[]` | `[]` | Tag names to disallow |
+| `allowElement` | `AllowElement` | — | Custom element filter |
+| `unwrapDisallowed` | `boolean` | `false` | Keep children of disallowed elements |
+| `skipHtml` | `boolean` | `false` | Ignore raw HTML |
+| `urlTransform` | `UrlTransform` | `defaultUrlTransform` | Transform/sanitize URLs |
 
 For full API reference, see [references/api.md](references/api.md).
 

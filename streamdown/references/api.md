@@ -32,6 +32,14 @@ interface StreamdownProps {
   rehypePlugins?: Pluggable[]; // default: [rehype-raw, rehype-sanitize, rehype-harden]
   remarkPlugins?: Pluggable[]; // default: [remark-gfm]
 
+  // Element Filtering (react-markdown compatible)
+  allowedElements?: string[]; // Tag names to allow (cannot combine with disallowedElements)
+  disallowedElements?: string[]; // Tag names to disallow (cannot combine with allowedElements)
+  allowElement?: AllowElement; // Custom filter callback
+  unwrapDisallowed?: boolean; // default: false — replace disallowed with children
+  skipHtml?: boolean; // default: false — ignore raw HTML
+  urlTransform?: UrlTransform; // default: defaultUrlTransform — transform/sanitize URLs
+
   // Features
   caret?: "block" | "circle";
   controls?: ControlsConfig; // default: true
@@ -183,13 +191,49 @@ interface MermaidErrorComponentProps {
 }
 ```
 
+## Element Filtering Types
+
+```tsx
+type AllowElement = (
+  element: Readonly<Element>,
+  index: number,
+  parent: Readonly<Parents> | undefined
+) => boolean | null | undefined;
+
+type UrlTransform = (
+  url: string,
+  key: string,
+  node: Readonly<Element>
+) => string | null | undefined;
+```
+
+### defaultUrlTransform
+
+Passthrough function that returns URLs unchanged. URL security is handled by `rehype-sanitize` and `rehype-harden` instead. Use `urlTransform` when you need custom URL rewriting.
+
+```tsx
+import { defaultUrlTransform } from 'streamdown';
+
+defaultUrlTransform('https://example.com', 'href', node); // 'https://example.com'
+defaultUrlTransform('/relative/path', 'href', node);      // '/relative/path'
+```
+
 ## Default Exports
 
 ```tsx
 import {
   Streamdown,
+  defaultUrlTransform,    // URL passthrough (security handled by rehype plugins)
   defaultRemarkPlugins,   // { gfm: [remarkGfm, {}] }
   defaultRehypePlugins,   // { raw: rehypeRaw, sanitize: [rehypeSanitize, {}], harden: [harden, {...}] }
+} from 'streamdown';
+
+// Types
+import type {
+  AllowElement,
+  Components,
+  ExtraProps,
+  UrlTransform,
 } from 'streamdown';
 ```
 

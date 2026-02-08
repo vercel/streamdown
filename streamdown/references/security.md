@@ -123,6 +123,34 @@ Whitelist specific tags and attributes for AI-generated custom elements:
 
 **Important:** `allowedTags` only works with default rehype plugins. Custom `rehypePlugins` require custom sanitization.
 
+## URL Transform
+
+Use the `urlTransform` prop for custom URL rewriting. The default `defaultUrlTransform` is a passthrough — URL security is handled by `rehype-sanitize` and `rehype-harden`.
+
+```tsx
+import { Streamdown, defaultUrlTransform } from 'streamdown';
+
+// Proxy images through your CDN
+<Streamdown
+  urlTransform={(url, key, node) => {
+    if (key === 'src') {
+      return `https://your-cdn.com/proxy?url=${encodeURIComponent(url)}`;
+    }
+    return defaultUrlTransform(url, key, node);
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+## Skipping HTML
+
+Completely ignore raw HTML in Markdown with `skipHtml`:
+
+```tsx
+<Streamdown skipHtml>{markdown}</Streamdown>
+```
+
 ## Disabling HTML
 
 Remove `rehype-raw` to block all raw HTML:

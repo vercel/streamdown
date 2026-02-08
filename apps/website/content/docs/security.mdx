@@ -291,6 +291,38 @@ Relative URLs will be resolved against this origin:
 
 Becomes: `https://your-app.com/docs/guide`
 
+## URL Transform
+
+For URL-level control without writing a rehype plugin, use the `urlTransform` prop. This runs on every URL in the rendered Markdown (links, images, etc.) and matches the react-markdown API.
+
+By default, `defaultUrlTransform` is a passthrough — URL security is already handled by `rehype-sanitize` and `rehype-harden`. Use `urlTransform` when you need custom URL rewriting beyond what those plugins provide.
+
+```tsx title="app/page.tsx"
+import { Streamdown, defaultUrlTransform } from 'streamdown';
+
+// Proxy images through your CDN
+<Streamdown
+  urlTransform={(url, key, node) => {
+    if (key === 'src') {
+      return `https://your-cdn.com/proxy?url=${encodeURIComponent(url)}`;
+    }
+    return defaultUrlTransform(url, key, node);
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+## Skipping HTML
+
+To completely ignore raw HTML in Markdown (rather than escaping it), use the `skipHtml` prop:
+
+```tsx title="app/page.tsx"
+<Streamdown skipHtml>
+  {markdown}
+</Streamdown>
+```
+
 ## Advanced URL Handling
 
-For advanced URL handling beyond what `rehype-harden` provides, you can create a custom rehype plugin. This gives you full control over URL transformation and validation in your markdown content.
+For advanced URL handling beyond what `urlTransform` and `rehype-harden` provide, you can create a custom rehype plugin. This gives you full control over URL transformation and validation in your markdown content.

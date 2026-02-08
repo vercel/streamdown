@@ -19,7 +19,11 @@ import remend, { type RemendOptions } from "remend";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { components as defaultComponents } from "./lib/components";
-import { Markdown, type Options } from "./lib/markdown";
+import {
+  Markdown,
+  type Options,
+  defaultUrlTransform,
+} from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig } from "./lib/plugin-types";
@@ -28,6 +32,13 @@ import { cn } from "./lib/utils";
 export type { BundledLanguage, BundledTheme } from "shiki";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
+export { defaultUrlTransform } from "./lib/markdown";
+export type {
+  AllowElement,
+  Components,
+  ExtraProps,
+  UrlTransform,
+} from "./lib/markdown";
 export type {
   AnimatePlugin,
   CjkPlugin,
