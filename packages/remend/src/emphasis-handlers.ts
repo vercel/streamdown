@@ -90,8 +90,10 @@ const shouldSkipAsterisk = (
   }
 
   // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter per CommonMark)
-  const prevIsWhitespace = !prevChar || prevChar === " " || prevChar === "\t" || prevChar === "\n";
-  const nextIsWhitespace = !nextChar || nextChar === " " || nextChar === "\t" || nextChar === "\n";
+  const prevIsWhitespace =
+    !prevChar || prevChar === " " || prevChar === "\t" || prevChar === "\n";
+  const nextIsWhitespace =
+    !nextChar || nextChar === " " || nextChar === "\t" || nextChar === "\n";
   if (prevIsWhitespace && nextIsWhitespace) {
     return true;
   }
@@ -361,8 +363,10 @@ const findFirstSingleAsteriskIndex = (text: string): number => {
       const nextChar = i < text.length - 1 ? text[i + 1] : "";
 
       // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter)
-      const prevIsWs = !prevChar || prevChar === " " || prevChar === "\t" || prevChar === "\n";
-      const nextIsWs = !nextChar || nextChar === " " || nextChar === "\t" || nextChar === "\n";
+      const prevIsWs =
+        !prevChar || prevChar === " " || prevChar === "\t" || prevChar === "\n";
+      const nextIsWs =
+        !nextChar || nextChar === " " || nextChar === "\t" || nextChar === "\n";
       if (prevIsWs && nextIsWs) {
         continue;
       }

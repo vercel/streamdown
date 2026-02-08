@@ -223,9 +223,7 @@ describe("Markdown Components", () => {
         throw new Error("Code component not found");
       }
       // Inline code: no data-block prop (not inside a <pre>)
-      const { container } = render(
-        <Code node={null as any}>code</Code>
-      );
+      const { container } = render(<Code node={null as any}>code</Code>);
       const code = container.querySelector("code");
       expect(code).toBeTruthy();
       expect(code?.className).toContain("rounded");
@@ -244,7 +242,7 @@ describe("Markdown Components", () => {
       }
       // Block code: data-block prop set by the pre component
       const { container } = render(
-        <Code node={null as any} data-block="true">
+        <Code data-block="true" node={null as any}>
           code
         </Code>
       );
@@ -290,8 +288,8 @@ describe("Markdown Components", () => {
       const { container } = render(
         <Code
           className="language-javascript"
-          node={null as any}
           data-block="true"
+          node={null as any}
         >
           const x = 1;
         </Code>
@@ -329,11 +327,7 @@ describe("Markdown Components", () => {
         throw new Error("Code component not found");
       }
       const { container } = render(
-        <Code
-          className="language-mermaid"
-          node={null as any}
-          data-block="true"
-        >
+        <Code className="language-mermaid" data-block="true" node={null as any}>
           {"graph TD; A-->B;"}
         </Code>
       );
@@ -384,8 +378,8 @@ describe("Markdown Components", () => {
         <PluginContext.Provider value={{ mermaid: mockMermaidPlugin }}>
           <Code
             className="language-mermaid"
-            node={null as any}
             data-block="true"
+            node={null as any}
           >
             {"graph TD; A-->B;"}
           </Code>

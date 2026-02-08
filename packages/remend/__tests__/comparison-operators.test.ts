@@ -49,15 +49,11 @@ describe("comparison operators in list items (#376)", () => {
   });
 
   it("should handle multiple comparison operators in a list", () => {
-    const input = [
-      "- > 5: expensive",
-      "- > 25: very expensive",
-    ].join("\n");
+    const input = ["- > 5: expensive", "- > 25: very expensive"].join("\n");
 
-    const expected = [
-      "- \\> 5: expensive",
-      "- \\> 25: very expensive",
-    ].join("\n");
+    const expected = ["- \\> 5: expensive", "- \\> 25: very expensive"].join(
+      "\n"
+    );
 
     expect(remend(input)).toBe(expected);
   });
@@ -69,9 +65,7 @@ describe("comparison operators in list items (#376)", () => {
 
   it("should not escape > when followed by non-digit text", () => {
     expect(remend("- > Some quoted text")).toBe("- > Some quoted text");
-    expect(remend("- > Read more about this")).toBe(
-      "- > Read more about this"
-    );
+    expect(remend("- > Read more about this")).toBe("- > Read more about this");
   });
 
   it("should not escape > without a space before digit (no list marker)", () => {

@@ -1,3 +1,4 @@
+import { handleComparisonOperators } from "./comparison-operator-handler";
 import {
   handleIncompleteBold,
   handleIncompleteBoldItalic,
@@ -5,7 +6,6 @@ import {
   handleIncompleteSingleAsteriskItalic,
   handleIncompleteSingleUnderscoreItalic,
 } from "./emphasis-handlers";
-import { handleComparisonOperators } from "./comparison-operator-handler";
 import { handleIncompleteInlineCode } from "./inline-code-handler";
 import { handleIncompleteBlockKatex } from "./katex-handler";
 import {

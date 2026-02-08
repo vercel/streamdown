@@ -211,12 +211,12 @@ export const ZoomInIcon = (props: IconProps) => (
 
 export const ZoomOutIcon = (props: IconProps) => (
   <svg
-      color="currentColor"
-      height={16}
-      strokeLinejoin="round"
-      viewBox="0 0 16 16"
-      width={16}
-      {...props}
+    color="currentColor"
+    height={16}
+    strokeLinejoin="round"
+    viewBox="0 0 16 16"
+    width={16}
+    {...props}
   >
     <path
       clipRule="evenodd"
