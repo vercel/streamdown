@@ -1,6 +1,8 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import { animate } from "@streamdown/animate";
+import "@streamdown/animate/styles.css";
 import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
@@ -291,7 +293,7 @@ export const Chat = ({ models }: ChatProps) => {
                         }
                         isAnimating={status === "streaming"}
                         key={key}
-                        plugins={{ code, mermaid, math, cjk }}
+                        plugins={{ animate, code, mermaid, math, cjk }}
                       >
                         {part.text}
                       </Streamdown>

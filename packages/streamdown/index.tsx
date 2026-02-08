@@ -29,6 +29,7 @@ export type { BundledLanguage, BundledTheme } from "shiki";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
+  AnimatePlugin,
   CjkPlugin,
   CodeHighlighterPlugin,
   DiagramPlugin,
@@ -376,8 +377,12 @@ export const Streamdown = memo(
         result = [...result, plugins.math.rehypePlugin];
       }
 
+      if (plugins?.animate && isAnimating) {
+        result = [...result, plugins.animate.rehypePlugin];
+      }
+
       return result;
-    }, [rehypePlugins, plugins?.math, allowedTags]);
+    }, [rehypePlugins, plugins?.math, plugins?.animate, isAnimating, allowedTags]);
 
     const style = useMemo(
       () =>

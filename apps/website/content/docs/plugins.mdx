@@ -126,10 +126,10 @@ import {
 
 ## Streamdown plugins
 
-Streamdown plugins provide advanced rendering features for code blocks, diagrams, math, and CJK text. Each plugin is a standalone package with dependencies bundled. Install only what you need:
+Streamdown plugins provide advanced rendering features for code blocks, diagrams, math, CJK text, and streaming animation. Each plugin is a standalone package with dependencies bundled. Install only what you need:
 
 ```package-install
-npm install @streamdown/code @streamdown/mermaid @streamdown/math @streamdown/cjk
+npm install @streamdown/code @streamdown/mermaid @streamdown/math @streamdown/cjk @streamdown/animate
 ```
 
 Then import the plugins:
@@ -140,11 +140,14 @@ import { code } from '@streamdown/code';
 import { mermaid } from '@streamdown/mermaid';
 import { math } from '@streamdown/math';
 import { cjk } from '@streamdown/cjk';
+import { animate } from '@streamdown/animate';
 
 // KaTeX requires CSS
 import 'katex/dist/katex.min.css';
+// Animation requires CSS
+import '@streamdown/animate/styles.css';
 
-<Streamdown plugins={{ code, mermaid, math, cjk }}>
+<Streamdown plugins={{ code, mermaid, math, cjk, animate }} isAnimating={status === "streaming"}>
   {markdown}
 </Streamdown>
 ```
@@ -296,6 +299,47 @@ import { cjk } from '@streamdown/cjk';
 
 See [CJK Language Support](/docs/cjk-support) for details.
 
+### @streamdown/animate
+
+Adds per-word streaming animation during AI content generation. Words fade in as they mount, creating a smooth text-reveal effect.
+
+- Three built-in animations: fadeIn, blurIn, slideUp
+- Word or character-level splitting
+- Automatically skips code, math, and SVG elements
+- Zero DOM overhead when not streaming (`isAnimating={false}`)
+
+**Install:**
+
+```package-install
+npm install @streamdown/animate
+```
+
+**Usage:**
+
+```tsx
+import { animate } from '@streamdown/animate';
+import '@streamdown/animate/styles.css';
+
+<Streamdown plugins={{ animate }} isAnimating={status === "streaming"}>
+  {markdown}
+</Streamdown>
+```
+
+**Custom configuration:**
+
+```tsx
+import { createAnimatePlugin } from '@streamdown/animate';
+
+const animate = createAnimatePlugin({
+  animation: 'blurIn',  // 'fadeIn' | 'blurIn' | 'slideUp' | custom
+  duration: 200,         // ms (default: 150)
+  easing: 'ease-out',
+  sep: 'word',           // 'word' | 'char'
+});
+```
+
+See [Animation](/docs/animation) for details.
+
 ## Plugin performance
 
 The plugins are optimized for performance:
@@ -304,3 +348,4 @@ The plugins are optimized for performance:
 - Shiki languages are lazy-loaded only when needed
 - Token results are cached to avoid re-highlighting
 - KaTeX CSS is only loaded when math syntax is used
+- Animate plugin is excluded from the pipeline when `isAnimating` is `false`
