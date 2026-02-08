@@ -25,6 +25,11 @@
     "typescript": "5.9.3",
     "ultracite": "7.0.8"
   },
+  "pnpm": {
+    "overrides": {
+      "lodash-es": ">=4.17.23"
+    }
+  },
   "packageManager": "pnpm@10.25.0",
   "engines": {
     "node": ">=18"
