@@ -41,10 +41,10 @@ export type Components = {
 
 export interface Options {
   allowElement?: AllowElement;
-  allowedElements?: ReadonlyArray<string>;
+  allowedElements?: readonly string[];
   children?: string;
   components?: Components;
-  disallowedElements?: ReadonlyArray<string>;
+  disallowedElements?: readonly string[];
   rehypePlugins?: PluggableList;
   remarkPlugins?: PluggableList;
   remarkRehypeOptions?: Readonly<RemarkRehypeOptions>;
@@ -232,6 +232,58 @@ const createProcessor = (options: Readonly<Options>) => {
 
 export const defaultUrlTransform: UrlTransform = (value) => value;
 
+const handleRawNode = (
+  parent: Parents,
+  index: number,
+  skipHtml: boolean | undefined,
+  value: string
+): void => {
+  if (skipHtml) {
+    parent.children.splice(index, 1);
+  } else {
+    parent.children[index] = { type: "text", value };
+  }
+};
+
+const transformUrls = (node: Element, transform: UrlTransform): void => {
+  for (const key in urlAttributes) {
+    if (
+      Object.hasOwn(urlAttributes, key) &&
+      Object.hasOwn(node.properties, key)
+    ) {
+      const value = node.properties[key];
+      const test = urlAttributes[key];
+      if (test === null || test.includes(node.tagName)) {
+        node.properties[key] =
+          transform(String(value || ""), key, node) ?? undefined;
+      }
+    }
+  }
+};
+
+const shouldRemoveElement = (
+  node: Readonly<Element>,
+  index: number | undefined,
+  parent: Readonly<Parents> | undefined,
+  allowedElements: readonly string[] | undefined,
+  disallowedElements: readonly string[] | undefined,
+  allowElement: AllowElement | undefined
+): boolean => {
+  let remove = false;
+
+  if (allowedElements) {
+    remove = !allowedElements.includes(node.tagName);
+  } else if (disallowedElements) {
+    remove = disallowedElements.includes(node.tagName);
+  }
+
+  if (!remove && allowElement && typeof index === "number") {
+    remove = !allowElement(node, index, parent);
+  }
+
+  return remove;
+};
+
 const post = (tree: Nodes, options: Readonly<Options>): ReactElement => {
   const {
     allowElement,
@@ -254,38 +306,21 @@ const post = (tree: Nodes, options: Readonly<Options>): ReactElement => {
 
     visit(tree as Root, (node, index, parent) => {
       if (node.type === "raw" && parent && typeof index === "number") {
-        if (skipHtml) {
-          parent.children.splice(index, 1);
-        } else {
-          parent.children[index] = { type: "text", value: node.value };
-        }
+        handleRawNode(parent, index, skipHtml, node.value);
         return index;
       }
 
       if (node.type === "element") {
-        for (const key in urlAttributes) {
-          if (
-            Object.hasOwn(urlAttributes, key) &&
-            Object.hasOwn(node.properties, key)
-          ) {
-            const value = node.properties[key];
-            const test = urlAttributes[key];
-            if (test === null || test.includes(node.tagName)) {
-              node.properties[key] =
-                transform(String(value || ""), key, node) ?? undefined;
-            }
-          }
-        }
+        transformUrls(node, transform);
 
-        let remove = allowedElements
-          ? !allowedElements.includes(node.tagName)
-          : disallowedElements
-            ? disallowedElements.includes(node.tagName)
-            : false;
-
-        if (!remove && allowElement && typeof index === "number") {
-          remove = !allowElement(node, index, parent);
-        }
+        const remove = shouldRemoveElement(
+          node,
+          index,
+          parent,
+          allowedElements,
+          disallowedElements,
+          allowElement
+        );
 
         if (remove && parent && typeof index === "number") {
           if (unwrapDisallowed && node.children) {

@@ -98,9 +98,6 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
       }
     }
 
-    // Optimize trim operations by checking characters directly
-    const trimmedBlock = currentBlock.trim();
-
     // Math block merging logic
     // If previous block has unclosed math (odd number of $$), merge current block into it.
     // This handles cases where marked's Lexer splits math blocks (e.g. = on its own line

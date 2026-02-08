@@ -3,7 +3,7 @@ import type { Element } from "hast";
 import type { ComponentType } from "react";
 import { describe, expect, it } from "vitest";
 import type { Components, Options } from "../lib/markdown";
-import { Markdown, defaultUrlTransform } from "../lib/markdown";
+import { defaultUrlTransform, Markdown } from "../lib/markdown";
 
 describe("Markdown Component", () => {
   describe("Basic Rendering", () => {
@@ -800,7 +800,7 @@ Let me know which you prefer!`;
     it("should only render allowed elements", () => {
       const content = "# Heading\n\n**bold** and *italic*";
       const { container } = render(
-        <Markdown children={content} allowedElements={["p", "em"]} />
+        <Markdown allowedElements={["p", "em"]} children={content} />
       );
       expect(container.querySelector("h1")).toBeFalsy();
       expect(container.querySelector("strong")).toBeFalsy();
@@ -810,7 +810,7 @@ Let me know which you prefer!`;
     it("should drop children of disallowed elements by default", () => {
       const content = "**bold text**";
       const { container } = render(
-        <Markdown children={content} allowedElements={["p"]} />
+        <Markdown allowedElements={["p"]} children={content} />
       );
       expect(container.querySelector("strong")).toBeFalsy();
       expect(container.textContent).not.toContain("bold text");
@@ -842,8 +842,8 @@ Let me know which you prefer!`;
       const content = "# Keep\n\n## Remove";
       const { container } = render(
         <Markdown
-          children={content}
           allowElement={(element) => element.tagName !== "h2"}
+          children={content}
         />
       );
       expect(container.querySelector("h1")).toBeTruthy();
@@ -854,9 +854,9 @@ Let me know which you prefer!`;
       const content = "# H1\n\n## H2\n\nParagraph";
       const { container } = render(
         <Markdown
-          children={content}
-          allowedElements={["h1", "h2", "p"]}
           allowElement={(element) => element.tagName !== "h2"}
+          allowedElements={["h1", "h2", "p"]}
+          children={content}
         />
       );
       expect(container.querySelector("h1")).toBeTruthy();
@@ -883,8 +883,8 @@ Let me know which you prefer!`;
       const content = "*italic* and **bold**";
       const { container } = render(
         <Markdown
-          children={content}
           allowedElements={["p", "em"]}
+          children={content}
           unwrapDisallowed
         />
       );
@@ -898,7 +898,7 @@ Let me know which you prefer!`;
     it("should strip raw HTML when skipHtml is true", () => {
       const content = "Text <strong>raw html</strong> more";
       const { container } = render(
-        <Markdown children={content} skipHtml rehypePlugins={[]} />
+        <Markdown children={content} rehypePlugins={[]} skipHtml />
       );
       // With skipHtml + no rehype-raw, raw HTML nodes are removed entirely
       expect(container.innerHTML).not.toContain("<strong>");
@@ -930,17 +930,21 @@ Let me know which you prefer!`;
 
   describe("defaultUrlTransform", () => {
     it("should pass through URLs unchanged", () => {
-      expect(defaultUrlTransform("http://example.com", "href", {} as Element)).toBe(
-        "http://example.com"
-      );
-      expect(defaultUrlTransform("https://example.com", "href", {} as Element)).toBe(
-        "https://example.com"
-      );
+      expect(
+        defaultUrlTransform("http://example.com", "href", {} as Element)
+      ).toBe("http://example.com");
+      expect(
+        defaultUrlTransform("https://example.com", "href", {} as Element)
+      ).toBe("https://example.com");
       expect(defaultUrlTransform("/path/to/page", "href", {} as Element)).toBe(
         "/path/to/page"
       );
-      expect(defaultUrlTransform("#section", "href", {} as Element)).toBe("#section");
-      expect(defaultUrlTransform("?query=1", "href", {} as Element)).toBe("?query=1");
+      expect(defaultUrlTransform("#section", "href", {} as Element)).toBe(
+        "#section"
+      );
+      expect(defaultUrlTransform("?query=1", "href", {} as Element)).toBe(
+        "?query=1"
+      );
     });
   });
 });
