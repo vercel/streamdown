@@ -21,7 +21,7 @@ export interface HighlightResult {
   tokens: HighlightToken[][];
   fg?: string;
   bg?: string;
-  rootStyle?: string;
+  rootStyle?: string | false;
 }
 
 /**
