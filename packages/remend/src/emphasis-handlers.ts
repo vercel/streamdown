@@ -89,6 +89,13 @@ const shouldSkipAsterisk = (
     return true;
   }
 
+  // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter per CommonMark)
+  const prevIsWhitespace = !prevChar || prevChar === " " || prevChar === "\t" || prevChar === "\n";
+  const nextIsWhitespace = !nextChar || nextChar === " " || nextChar === "\t" || nextChar === "\n";
+  if (prevIsWhitespace && nextIsWhitespace) {
+    return true;
+  }
+
   // Skip if this is a list marker
   if (isAsteriskListMarker(text, index, nextChar)) {
     return true;
@@ -350,9 +357,17 @@ const findFirstSingleAsteriskIndex = (text: string): number => {
       text[i - 1] !== "\\" &&
       !isWithinMathBlock(text, i)
     ) {
-      // Check if asterisk is word-internal (between word characters)
       const prevChar = i > 0 ? text[i - 1] : "";
       const nextChar = i < text.length - 1 ? text[i + 1] : "";
+
+      // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter)
+      const prevIsWs = !prevChar || prevChar === " " || prevChar === "\t" || prevChar === "\n";
+      const nextIsWs = !nextChar || nextChar === " " || nextChar === "\t" || nextChar === "\n";
+      if (prevIsWs && nextIsWs) {
+        continue;
+      }
+
+      // Check if asterisk is word-internal (between word characters)
       if (
         prevChar &&
         nextChar &&

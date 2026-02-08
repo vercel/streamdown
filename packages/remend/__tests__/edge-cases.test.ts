@@ -81,4 +81,15 @@ describe("edge cases", () => {
     expect(remend("**&lt;tag&gt;")).toBe("**&lt;tag&gt;**");
     expect(remend("`&amp;")).toBe("`&amp;`");
   });
+
+  it("should not treat asterisks flanked by whitespace as emphasis markers (#370)", () => {
+    expect(remend("3 + 2 - 5 * 0 = ?")).toBe("3 + 2 - 5 * 0 = ?");
+    expect(remend("5 * 0")).toBe("5 * 0");
+    expect(remend("x * y")).toBe("x * y");
+    expect(remend("a * b = c")).toBe("a * b = c");
+    // Even count of space-flanked asterisks should also be fine
+    expect(remend("2 * 3 * 4")).toBe("2 * 3 * 4");
+    // Mixed: space-flanked operator + real italic should still work
+    expect(remend("5 * 0 and *italic")).toBe("5 * 0 and *italic*");
+  });
 });
