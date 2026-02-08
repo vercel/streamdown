@@ -222,19 +222,9 @@ describe("Markdown Components", () => {
       if (!Code) {
         throw new Error("Code component not found");
       }
+      // Inline code: no data-block prop (not inside a <pre>)
       const { container } = render(
-        <Code
-          node={
-            {
-              position: {
-                start: { line: 1, column: 1 },
-                end: { line: 1, column: 10 },
-              },
-            } as any
-          }
-        >
-          code
-        </Code>
+        <Code node={null as any}>code</Code>
       );
       const code = container.querySelector("code");
       expect(code).toBeTruthy();
@@ -244,24 +234,17 @@ describe("Markdown Components", () => {
       expect(code?.className).toContain("py-0.5");
       expect(code?.className).toContain("font-mono");
       expect(code?.className).toContain("text-sm");
+      expect(code?.getAttribute("data-streamdown")).toBe("inline-code");
     });
 
-    it("should render block code without inline styles", async () => {
+    it("should render block code when data-block is set", async () => {
       const Code = components.code;
       if (!Code) {
         throw new Error("Code component not found");
       }
+      // Block code: data-block prop set by the pre component
       const { container } = render(
-        <Code
-          node={
-            {
-              position: {
-                start: { line: 1, column: 1 },
-                end: { line: 2, column: 10 },
-              },
-            } as any
-          }
-        >
+        <Code node={null as any} data-block="true">
           code
         </Code>
       );
@@ -285,18 +268,18 @@ describe("Markdown Components", () => {
       expect(copyButton).toBeTruthy();
     });
 
-    it("should render pre with code block", () => {
+    it("should render pre with code block and add data-block marker", () => {
       const Pre = components.pre;
       if (!Pre) {
         throw new Error("Pre component not found");
       }
       const codeElement = React.createElement("code", {}, "const x = 1;");
       const { container } = render(<Pre node={null as any}>{codeElement}</Pre>);
-      // The pre component returns its children
-      // The code element should be present as a child
+      // The pre component marks its code child with data-block
       const code = container.querySelector("code");
       expect(code).toBeTruthy();
       expect(code?.textContent).toBe("const x = 1;");
+      expect(code?.getAttribute("data-block")).toBe("true");
     });
 
     it("should extract language from code className", async () => {
@@ -304,18 +287,11 @@ describe("Markdown Components", () => {
       if (!Code) {
         throw new Error("Code component not found");
       }
-      // Test the code component directly since it handles language extraction
       const { container } = render(
         <Code
           className="language-javascript"
-          node={
-            {
-              position: {
-                start: { line: 1, column: 1 },
-                end: { line: 2, column: 10 },
-              },
-            } as any
-          }
+          node={null as any}
+          data-block="true"
         >
           const x = 1;
         </Code>
@@ -329,7 +305,6 @@ describe("Markdown Components", () => {
         expect(codeBlock).toBeTruthy();
       });
 
-      // Code component with multi-line position renders a CodeBlock with language
       const codeBlock = container.querySelector(
         '[data-streamdown="code-block"]'
       );
@@ -347,6 +322,7 @@ describe("Markdown Components", () => {
       // The pre component returns its children directly
       expect(container.textContent).toBe("plain text code");
     });
+
     it("should render mermaid code as regular code block when plugin not provided", async () => {
       const Code = components.code;
       if (!Code) {
@@ -355,14 +331,8 @@ describe("Markdown Components", () => {
       const { container } = render(
         <Code
           className="language-mermaid"
-          node={
-            {
-              position: {
-                start: { line: 1, column: 1 },
-                end: { line: 2, column: 10 },
-              },
-            } as any
-          }
+          node={null as any}
+          data-block="true"
         >
           {"graph TD; A-->B;"}
         </Code>
@@ -414,14 +384,8 @@ describe("Markdown Components", () => {
         <PluginContext.Provider value={{ mermaid: mockMermaidPlugin }}>
           <Code
             className="language-mermaid"
-            node={
-              {
-                position: {
-                  start: { line: 1, column: 1 },
-                  end: { line: 2, column: 10 },
-                },
-              } as any
-            }
+            node={null as any}
+            data-block="true"
           >
             {"graph TD; A-->B;"}
           </Code>
@@ -444,8 +408,6 @@ describe("Markdown Components", () => {
       expect(mermaidBlock?.className).toContain("relative");
       expect(mermaidBlock?.className).toContain("rounded-xl");
       expect(mermaidBlock?.className).toContain("border");
-
-      // Note: Full Mermaid rendering is tested in mermaid.test.tsx with proper mocks
     });
   });
 

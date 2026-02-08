@@ -98,12 +98,34 @@ describe("Markdown Component", () => {
       expect(code?.textContent).toBe("inline code");
     });
 
-    it("should render code blocks", () => {
+    it("should render fenced code blocks", () => {
       const content = "```\ncode block\n```";
       const { container } = render(<Markdown children={content} />);
       const code = container.querySelector("code");
       expect(code).toBeTruthy();
       expect(code?.textContent).toContain("code block");
+    });
+
+    it("should render indented code blocks (4 spaces)", () => {
+      const content = "    this is\n    code block\n    indent";
+      const { container } = render(<Markdown children={content} />);
+      const pre = container.querySelector("pre");
+      const code = container.querySelector("code");
+      expect(pre).toBeTruthy();
+      expect(code).toBeTruthy();
+      expect(code?.textContent).toContain("this is");
+      expect(code?.textContent).toContain("code block");
+      expect(code?.textContent).toContain("indent");
+    });
+
+    it("should render single-line indented code blocks", () => {
+      const content = "    single line code";
+      const { container } = render(<Markdown children={content} />);
+      const pre = container.querySelector("pre");
+      const code = container.querySelector("code");
+      expect(pre).toBeTruthy();
+      expect(code).toBeTruthy();
+      expect(code?.textContent).toContain("single line code");
     });
 
     it("should render blockquotes", () => {

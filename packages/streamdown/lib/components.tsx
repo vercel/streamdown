@@ -1,4 +1,5 @@
 import {
+  cloneElement,
   type DetailedHTMLProps,
   type HTMLAttributes,
   type ImgHTMLAttributes,
@@ -690,8 +691,10 @@ const CodeComponent = ({
   ...props
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Code component handles multiple rendering paths for inline code, code blocks, and mermaid diagrams"
-  ExtraProps) => {
-  const inline = node?.position?.start.line === node?.position?.end.line;
+  ExtraProps & { "data-block"?: string }) => {
+  // A code element is block-level when it was inside a <pre> element.
+  // The custom pre component marks its children with data-block.
+  const inline = !("data-block" in props);
   const { mermaid: mermaidContext, controls: controlsConfig } =
     useContext(StreamdownContext);
   const mermaidPlugin = useMermaidPlugin();
@@ -845,11 +848,10 @@ const MemoParagraph = memo<ParagraphProps>(
       }
 
       // Block code: renders as <div>, cannot be nested in <p>
-      // Check if it's block code (multi-line) vs inline code (single line)
+      // Check if it's block code via the data-block marker set by the pre component
       if (tagName === "code") {
-        const isBlockCode =
-          node?.position?.start.line !== node?.position?.end.line;
-        if (isBlockCode) {
+        const childProps = validChildren[0].props as Record<string, unknown>;
+        if ("data-block" in childProps) {
           return <>{children}</>;
         }
       }
@@ -887,7 +889,12 @@ export const components: Options["components"] = {
   blockquote: MemoBlockquote,
   code: MemoCode,
   img: MemoImg,
-  pre: ({ children }) => children,
+  pre: ({ children }) => {
+    if (isValidElement(children)) {
+      return cloneElement(children, { "data-block": "true" });
+    }
+    return children;
+  },
   sup: MemoSup,
   sub: MemoSub,
   p: MemoParagraph,
