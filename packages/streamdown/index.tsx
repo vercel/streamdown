@@ -96,9 +96,17 @@ export type StreamdownProps = Options & {
   allowedTags?: AllowedTags;
 };
 
+const defaultSanitizeSchema = {
+  ...defaultSchema,
+  protocols: {
+    ...defaultSchema.protocols,
+    href: [...(defaultSchema.protocols?.href ?? []), "tel"],
+  },
+};
+
 export const defaultRehypePlugins: Record<string, Pluggable> = {
   raw: rehypeRaw,
-  sanitize: [rehypeSanitize, {}],
+  sanitize: [rehypeSanitize, defaultSanitizeSchema],
   harden: [
     harden,
     {
@@ -346,13 +354,13 @@ export const Streamdown = memo(
         rehypePlugins === defaultRehypePluginsArray
       ) {
         const extendedSchema = {
-          ...defaultSchema,
+          ...defaultSanitizeSchema,
           tagNames: [
-            ...(defaultSchema.tagNames ?? []),
+            ...(defaultSanitizeSchema.tagNames ?? []),
             ...Object.keys(allowedTags),
           ],
           attributes: {
-            ...defaultSchema.attributes,
+            ...defaultSanitizeSchema.attributes,
             ...allowedTags,
           },
         };

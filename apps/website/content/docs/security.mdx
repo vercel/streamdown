@@ -14,14 +14,17 @@ Markdown can contain:
 - **JavaScript execution** - Code injection
 - **Prompt injection** - AI models manipulated to include harmful content
 
-Streamdown uses [rehype-harden](https://github.com/vercel-labs/markdown-sanitizers) to sanitize and validate content before rendering.
+Streamdown uses two layers of protection:
+
+1. **[rehype-sanitize](https://github.com/rehypejs/rehype-sanitize)** — strips dangerous HTML elements and attributes using GitHub's sanitization schema, extended with `tel:` protocol support
+2. **[rehype-harden](https://github.com/vercel-labs/markdown-sanitizers)** — restricts URL protocols, link domains, and image sources
 
 ## Default Security
 
 By default, Streamdown is configured with **permissive security** to allow maximum functionality:
 
 ```tsx
-// Default configuration
+// Default rehype-harden configuration
 {
   allowedImagePrefixes: ["*"],  // All images allowed
   allowedLinkPrefixes: ["*"],   // All links allowed
@@ -30,6 +33,8 @@ By default, Streamdown is configured with **permissive security** to allow maxim
   allowDataImages: true,        // Base64 images allowed
 }
 ```
+
+The default `rehype-sanitize` schema allows `http`, `https`, `irc`, `ircs`, `mailto`, `xmpp`, and `tel` protocols for links.
 
 This works well for trusted content but should be tightened for untrusted sources.
 
@@ -46,7 +51,8 @@ export default function Page() {
     <Streamdown
       rehypePlugins={[
         defaultRehypePlugins.raw,
-                [
+        defaultRehypePlugins.sanitize,
+        [
           harden,
           {
             allowedProtocols: [
@@ -63,6 +69,10 @@ export default function Page() {
   );
 }
 ```
+
+<Callout type="warning">
+  When overriding `rehypePlugins`, always include `defaultRehypePlugins.sanitize` to preserve XSS protection. The `rehypePlugins` prop **replaces** the entire default array — it does not merge.
+</Callout>
 
 This is useful for security-sensitive applications where you want to prevent custom protocol schemes like `javascript:`, `data:`, or desktop app protocols.
 
@@ -95,7 +105,8 @@ export default function Page() {
     <Streamdown
       rehypePlugins={[
         defaultRehypePlugins.raw,
-                [
+        defaultRehypePlugins.sanitize,
+        [
           harden,
           {
             defaultOrigin: 'https://streamdown.ai',
@@ -137,7 +148,8 @@ Similarly, restrict which domains can serve images:
 <Streamdown
   rehypePlugins={[
     defaultRehypePlugins.raw,
-        [
+    defaultRehypePlugins.sanitize,
+    [
       harden,
       {
         allowedImagePrefixes: [
@@ -202,7 +214,8 @@ export default function ChatMessage({ content, isAIGenerated }) {
     <Streamdown
       rehypePlugins={[
         defaultRehypePlugins.raw,
-                [harden, securityConfig],
+        defaultRehypePlugins.sanitize,
+        [harden, securityConfig],
       ]}
     >
       {content}
@@ -247,8 +260,9 @@ export default function Page() {
   return (
     <Streamdown
       rehypePlugins={[
-        // Omit defaultRehypePlugins.raw
-                defaultRehypePlugins.harden,
+        // Omit defaultRehypePlugins.raw to disable HTML
+        defaultRehypePlugins.sanitize,
+        defaultRehypePlugins.harden,
       ]}
     >
       {markdown}
