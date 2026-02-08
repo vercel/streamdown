@@ -117,10 +117,9 @@ export const Section = ({
             </div>
             <div className="h-[400px] overflow-y-auto bg-background p-4">
               <Streamdown
+                animated
                 isAnimating={isAnimating}
                 plugins={{ code, mermaid, math, cjk }}
-                animated
-                
                 {...streamdownProps}
               >
                 {content}
