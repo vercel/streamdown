@@ -27,7 +27,7 @@ export const GET = async (
       title: page.data.title,
       description: page.data.description,
       link: `${baseUrl}${page.url}`,
-      date: new Date(page.data.lastModified ?? new Date()),
+      date: new Date(),
       author: [
         {
           name: "Vercel",

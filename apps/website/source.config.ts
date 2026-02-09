@@ -5,7 +5,7 @@ import {
   frontmatterSchema,
   metaSchema,
 } from "fumadocs-mdx/config";
-import lastModified from "fumadocs-mdx/plugins/last-modified";
+
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 
@@ -29,5 +29,5 @@ export default defineConfig({
     remarkPlugins: [remarkMath, remarkMdxMermaid],
     rehypePlugins: (v) => [rehypeKatex, ...v],
   },
-  plugins: [lastModified()],
+  plugins: [],
 });
