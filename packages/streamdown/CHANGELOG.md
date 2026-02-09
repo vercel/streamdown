@@ -1,5 +1,43 @@
 # streamdown
 
+## 2.2.0
+
+### Minor Changes
+
+- c1e1e66: Bake animate into streamdown as built-in `animated` prop
+
+### Patch Changes
+
+- d5fe6d6: fix: properly handle HTML void elements in parse-blocks
+- 6bb03ca: fix: escape HTML when rehype-raw is omitted (#330)
+- a12de57: Custom tags in components
+- 83f043c: Fix: certain LaTeX syntaxes e.g. \(...\) are not rendering
+- aabb9ab: Fix $$ inside code blocks being treated as math delimiters
+
+  Code blocks can contain `$$` as shell syntax (e.g., `pstree -p $$` for current process ID). The math block merging logic was incorrectly counting `$$` inside code blocks, causing subsequent content to be merged as if it were part of a math block.
+
+  Added tracking of previous token type to skip math merging when the previous block was a code block.
+
+- 9f72224: Fix footnote detection incorrectly matching regex character classes
+
+  The footnote reference and definition patterns were too permissive, using `[^\]\s]` which matches any character except `]` and whitespace. This caused regex negated character classes like `[^\s...]` in code blocks to be incorrectly detected as footnotes, resulting in the entire document being returned as a single block.
+
+  Updated the patterns to only match valid footnote identifiers (alphanumeric characters, underscores, and hyphens) using `[\w-]` instead.
+
+- 6b42a85: Remove CJS builds
+- aeadcd6: Fix single-line indented code blocks
+- 82bc4a6: Fix tel links being blocked by default
+- fd5533c: fix: Tables cause vertical scroll trap
+- e633ff7: Strip trailing newlines in code blocks
+- 6be5da8: Fix carets and dark code blocks on Tailwind v3
+- 573ece6: Add documentation for monorepos
+- 48756b5: Extend ReactMarkdown props
+- Updated dependencies [c347b53]
+- Updated dependencies [6b42a85]
+- Updated dependencies [4fffb9f]
+- Updated dependencies [3e6a77d]
+  - remend@1.2.0
+
 ## 2.1.0
 
 ### Minor Changes
