@@ -26,7 +26,7 @@ export const ImageComponent = ({
   const [imageError, setImageError] = useState(false);
 
   const hasExplicitDimensions = props.width != null || props.height != null;
-  const showDownload = imageLoaded || hasExplicitDimensions;
+  const showDownload = (imageLoaded || hasExplicitDimensions) && !imageError;
   const showFallback = imageError && !hasExplicitDimensions;
 
   // Handle images already complete before React attaches event handlers (e.g. cached or SSR hydration)
