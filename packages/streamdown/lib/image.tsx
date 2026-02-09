@@ -23,21 +23,26 @@ export const ImageComponent = ({
 }: ImageComponentProps) => {
   const imgRef = useRef<HTMLImageElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const hasExplicitDimensions = props.width != null || props.height != null;
   const showDownload = imageLoaded || hasExplicitDimensions;
+  const showFallback = imageError && !hasExplicitDimensions;
 
   // Handle images already complete before React attaches event handlers (e.g. cached or SSR hydration)
   useEffect(() => {
     const img = imgRef.current;
     if (img?.complete) {
-      setImageLoaded(img.naturalWidth > 0);
+      const loaded = img.naturalWidth > 0;
+      setImageLoaded(loaded);
+      setImageError(!loaded);
     }
   }, [src]);
 
   const handleLoad = useCallback<React.ReactEventHandler<HTMLImageElement>>(
     (event) => {
       setImageLoaded(true);
+      setImageError(false);
       onLoadProp?.(event);
     },
     [onLoadProp]
@@ -46,6 +51,7 @@ export const ImageComponent = ({
   const handleError = useCallback<React.ReactEventHandler<HTMLImageElement>>(
     (event) => {
       setImageLoaded(false);
+      setImageError(true);
       onErrorProp?.(event);
     },
     [onErrorProp]
@@ -116,13 +122,25 @@ export const ImageComponent = ({
       <img
         ref={imgRef}
         alt={alt}
-        className={cn("max-w-full rounded-lg", className)}
+        className={cn(
+          "max-w-full rounded-lg",
+          showFallback && "hidden",
+          className
+        )}
         data-streamdown="image"
         src={src}
         onLoad={handleLoad}
         onError={handleError}
         {...props}
       />
+      {showFallback && (
+        <span
+          className="text-xs text-muted-foreground italic"
+          data-streamdown="image-fallback"
+        >
+          Image not available
+        </span>
+      )}
       <div className="pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block" />
       {showDownload && (
         <button
