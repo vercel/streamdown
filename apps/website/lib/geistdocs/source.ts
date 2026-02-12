@@ -25,8 +25,28 @@ export const getPageImage = (page: InferPageType<typeof source>) => {
 
 export const getLLMText = async (page: InferPageType<typeof source>) => {
   const processed = await page.data.getText("processed");
+  const { title, description, product, type, summary, prerequisites, related } =
+    page.data;
 
-  return `# ${page.data.title}
+  const frontmatter = [
+    "---",
+    `title: ${title}`,
+    description && `description: ${description}`,
+    product && `product: ${product}`,
+    type && `type: ${type}`,
+    summary && `summary: ${summary}`,
+    prerequisites?.length &&
+      `prerequisites:\n${prerequisites.map((p) => `  - ${p}`).join("\n")}`,
+    related?.length &&
+      `related:\n${related.map((r) => `  - ${r}`).join("\n")}`,
+    "---",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return `${frontmatter}
+
+# ${title}
 
 ${processed}`;
 };
