@@ -14,6 +14,7 @@ import {
 import { harden } from "rehype-harden";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
+import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
 import type { BundledTheme } from "shiki";
@@ -131,6 +132,7 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
 } as const;
 
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
+  breaks: [remarkBreaks, {}],
   gfm: [remarkGfm, {}],
 } as const;
 
