@@ -1,6 +1,6 @@
 import { type ComponentProps, type CSSProperties, memo, useMemo } from "react";
 import type { HighlightResult } from "../plugin-types";
-import { cn } from "../utils";
+import { cn, getTokenStyle } from "../utils";
 
 type CodeBlockBodyProps = ComponentProps<"pre"> & {
   result: HighlightResult;
@@ -95,13 +95,7 @@ export const CodeBlockBody = memo(
                   )}
                   // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
                   key={tokenIndex}
-                  style={
-                    {
-                      ...(token.color ? { "--sdm-c": token.color } : {}),
-                      ...(token.bgColor ? { "--sdm-tbg": token.bgColor } : {}),
-                      ...token.htmlStyle,
-                    } as CSSProperties
-                  }
+                  style={getTokenStyle(token)}
                   {...token.htmlAttrs}
                 >
                   {token.content}

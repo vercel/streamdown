@@ -1,22 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { CheckIcon, CopyIcon, ExternalLinkIcon, XIcon } from "./icons";
+import { lockBodyScroll, unlockBodyScroll } from "./scroll-lock";
 import { cn } from "./utils";
-
-let activeModalCount = 0;
-
-const lockBodyScroll = () => {
-  activeModalCount += 1;
-  if (activeModalCount === 1) {
-    document.body.style.overflow = "hidden";
-  }
-};
-
-const unlockBodyScroll = () => {
-  activeModalCount = Math.max(0, activeModalCount - 1);
-  if (activeModalCount === 0) {
-    document.body.style.overflow = "";
-  }
-};
 
 interface LinkSafetyModalProps {
   url: string;

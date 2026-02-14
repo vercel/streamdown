@@ -50,7 +50,13 @@ export type {
 export type ControlsConfig =
   | boolean
   | {
-      table?: boolean;
+      table?:
+        | boolean
+        | {
+            copy?: boolean;
+            download?: boolean;
+            fullscreen?: boolean;
+          };
       code?: boolean;
       mermaid?:
         | boolean
