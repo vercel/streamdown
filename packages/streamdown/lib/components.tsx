@@ -91,7 +91,9 @@ const shouldShowControls = (
   config:
     | boolean
     | {
-        table?: boolean;
+        table?:
+          | boolean
+          | { copy?: boolean; download?: boolean; fullscreen?: boolean };
         code?: boolean;
         mermaid?:
           | boolean
@@ -106,11 +108,49 @@ const shouldShowControls = (
   return config[type] !== false;
 };
 
+const shouldShowTableControl = (
+  config:
+    | boolean
+    | {
+        table?:
+          | boolean
+          | { copy?: boolean; download?: boolean; fullscreen?: boolean };
+        code?: boolean;
+        mermaid?:
+          | boolean
+          | {
+              download?: boolean;
+              copy?: boolean;
+              fullscreen?: boolean;
+              panZoom?: boolean;
+            };
+      },
+  controlType: "copy" | "download" | "fullscreen"
+): boolean => {
+  if (typeof config === "boolean") {
+    return config;
+  }
+
+  const tableConfig = config.table;
+
+  if (tableConfig === false) {
+    return false;
+  }
+
+  if (tableConfig === true || tableConfig === undefined) {
+    return true;
+  }
+
+  return tableConfig[controlType] !== false;
+};
+
 const shouldShowMermaidControl = (
   config:
     | boolean
     | {
-        table?: boolean;
+        table?:
+          | boolean
+          | { copy?: boolean; download?: boolean; fullscreen?: boolean };
         code?: boolean;
         mermaid?:
           | boolean
@@ -408,14 +448,24 @@ const MemoH6 = memo<HeadingProps<"h6">>(
 );
 MemoH6.displayName = "MarkdownH6";
 
-type TableProps = WithNode<JSX.IntrinsicElements["table"]>;
-const MemoTable = memo<TableProps>(
-  ({ children, className, node, ...props }: TableProps) => {
+type TableComponentProps = WithNode<JSX.IntrinsicElements["table"]>;
+const MemoTable = memo<TableComponentProps>(
+  ({ children, className, node, ...props }: TableComponentProps) => {
     const { controls: controlsConfig } = useContext(StreamdownContext);
     const showTableControls = shouldShowControls(controlsConfig, "table");
+    const showCopy = shouldShowTableControl(controlsConfig, "copy");
+    const showDownload = shouldShowTableControl(controlsConfig, "download");
+    const showFullscreen = shouldShowTableControl(controlsConfig, "fullscreen");
 
     return (
-      <Table className={className} showControls={showTableControls} {...props}>
+      <Table
+        className={className}
+        showControls={showTableControls}
+        showCopy={showCopy}
+        showDownload={showDownload}
+        showFullscreen={showFullscreen}
+        {...props}
+      >
         {children}
       </Table>
     );
