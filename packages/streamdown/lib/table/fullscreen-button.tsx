@@ -60,18 +60,9 @@ export const TableFullscreenButton = ({
       </button>
 
       {isFullscreen ? (
-        // biome-ignore lint/a11y/useSemanticElements: "div is used as a backdrop overlay, not a button"
         <div
           className="fixed inset-0 z-50 flex flex-col bg-background"
           data-streamdown="table-fullscreen"
-          onClick={handleToggle}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              handleToggle();
-            }
-          }}
-          role="button"
-          tabIndex={0}
         >
           <div className="flex items-center justify-end gap-1 p-4">
             {showCopy ? <TableCopyDropdown /> : null}
@@ -85,12 +76,8 @@ export const TableFullscreenButton = ({
               <XIcon size={20} />
             </button>
           </div>
-          {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
           <div
             className="flex-1 overflow-auto p-4 pt-0 [&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-            role="presentation"
           >
             <table
               className="w-full border-collapse border border-border"

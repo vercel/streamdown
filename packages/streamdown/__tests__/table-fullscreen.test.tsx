@@ -171,6 +171,56 @@ describe("TableFullscreenButton", () => {
     expect(downloadBtn).toBeTruthy();
   });
 
+  it("should not close fullscreen when clicking controls inside overlay", () => {
+    const { container } = render(
+      <Streamdown>{markdownWithTable}</Streamdown>
+    );
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    expect(overlay).toBeTruthy();
+
+    const copyBtn = overlay?.querySelector(
+      'button[title="Copy table"]'
+    ) as HTMLButtonElement;
+    expect(copyBtn).toBeTruthy();
+    fireEvent.click(copyBtn);
+
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeTruthy();
+  });
+
+  it("should not close fullscreen when clicking table content", () => {
+    const { container } = render(
+      <Streamdown>{markdownWithTable}</Streamdown>
+    );
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    const table = overlay?.querySelector(
+      '[data-streamdown="table"]'
+    ) as HTMLTableElement;
+    expect(table).toBeTruthy();
+    fireEvent.click(table);
+
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeTruthy();
+  });
+
   it("should hide copy in fullscreen when table copy is false", () => {
     const { container } = render(
       <Streamdown controls={{ table: { copy: false } }}>
