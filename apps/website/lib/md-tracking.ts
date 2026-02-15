@@ -2,14 +2,14 @@ import { siteId } from "@/geistdocs";
 
 const PLATFORM_URL = "https://geistdocs.com/md-tracking";
 
-type TrackMdRequestParams = {
+interface TrackMdRequestParams {
   path: string;
   userAgent: string | null;
   referer: string | null;
   acceptHeader: string | null;
   /** How the markdown was requested: 'md-url' for direct .md URLs, 'header-negotiated' for Accept header */
   requestType?: "md-url" | "header-negotiated";
-};
+}
 
 /**
  * Track a markdown page request via the geistdocs platform.

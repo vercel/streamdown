@@ -1,13 +1,4 @@
-import {
-  type HTMLAttributes,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import type { BundledLanguage } from "shiki";
-import { StreamdownContext } from "../../index";
-import { useCodePlugin } from "../plugin-context";
+import { type HTMLAttributes, lazy, Suspense, useMemo } from "react";
 import type { HighlightResult } from "../plugin-types";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContainer } from "./container";
@@ -21,6 +12,12 @@ type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   language: string;
 };
 
+const HighlightedCodeBlockBody = lazy(() =>
+  import("./highlighted-body").then((mod) => ({
+    default: mod.HighlightedCodeBlockBody,
+  }))
+);
+
 export const CodeBlock = ({
   code,
   language,
@@ -28,9 +25,6 @@ export const CodeBlock = ({
   children,
   ...rest
 }: CodeBlockProps) => {
-  const { shikiTheme } = useContext(StreamdownContext);
-  const codePlugin = useCodePlugin();
-
   // Remove trailing newlines to prevent empty line at end of code blocks
   const trimmedCode = useMemo(
     () => code.replace(TRAILING_NEWLINES_REGEX, ""),
@@ -55,49 +49,28 @@ export const CodeBlock = ({
     [trimmedCode]
   );
 
-  // Use raw as initial state
-  const [result, setResult] = useState<HighlightResult>(raw);
-
-  // Try to get cached result or subscribe to highlighting
-  useEffect(() => {
-    // If no code plugin, just use raw tokens (plain text)
-    if (!codePlugin) {
-      setResult(raw);
-      return;
-    }
-
-    const cachedResult = codePlugin.highlight(
-      {
-        code: trimmedCode,
-        language: language as BundledLanguage,
-        themes: shikiTheme,
-      },
-      (highlightedResult) => {
-        setResult(highlightedResult);
-      }
-    );
-
-    if (cachedResult) {
-      // Already cached, use it immediately
-      setResult(cachedResult);
-      return;
-    }
-
-    // Not cached - reset to raw tokens while waiting for highlighting
-    // This is critical for streaming: ensures we show current code, not stale tokens
-    setResult(raw);
-  }, [trimmedCode, language, shikiTheme, codePlugin, raw]);
-
   return (
     <CodeBlockContext.Provider value={{ code }}>
       <CodeBlockContainer language={language}>
         <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
-        <CodeBlockBody
-          className={className}
-          language={language}
-          result={result}
-          {...rest}
-        />
+        <Suspense
+          fallback={
+            <CodeBlockBody
+              className={className}
+              language={language}
+              result={raw}
+              {...rest}
+            />
+          }
+        >
+          <HighlightedCodeBlockBody
+            className={className}
+            code={trimmedCode}
+            language={language}
+            raw={raw}
+            {...rest}
+          />
+        </Suspense>
       </CodeBlockContainer>
     </CodeBlockContext.Provider>
   );

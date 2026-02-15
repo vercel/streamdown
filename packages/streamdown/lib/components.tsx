@@ -15,6 +15,7 @@ import {
 } from "react";
 // BundledLanguage type removed - we now support any language string
 import { StreamdownContext } from "../index";
+import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
 import { CodeBlockSkeleton } from "./code-block/skeleton";
@@ -28,9 +29,6 @@ import { Table } from "./table";
 import { cn } from "./utils";
 
 // Lazy load heavy components
-const CodeBlock = lazy(() =>
-  import("./code-block").then((mod) => ({ default: mod.CodeBlock }))
-);
 const Mermaid = lazy(() =>
   import("./mermaid").then((mod) => ({ default: mod.Mermaid }))
 );
@@ -786,20 +784,18 @@ const CodeComponent = ({
   const showCodeControls = shouldShowControls(controlsConfig, "code");
 
   return (
-    <Suspense fallback={<CodeBlockSkeleton />}>
-      <CodeBlock
-        className={cn("overflow-x-auto border-border border-t", className)}
-        code={code}
-        language={language}
-      >
-        {showCodeControls ? (
-          <>
-            <CodeBlockDownloadButton code={code} language={language} />
-            <CodeBlockCopyButton />
-          </>
-        ) : null}
-      </CodeBlock>
-    </Suspense>
+    <CodeBlock
+      className={cn("overflow-x-auto border-border border-t", className)}
+      code={code}
+      language={language}
+    >
+      {showCodeControls ? (
+        <>
+          <CodeBlockDownloadButton code={code} language={language} />
+          <CodeBlockCopyButton />
+        </>
+      ) : null}
+    </CodeBlock>
   );
 };
 

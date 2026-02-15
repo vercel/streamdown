@@ -247,7 +247,7 @@ describe("Markdown Components", () => {
         </Code>
       );
 
-      // Wait for lazy-loaded CodeBlock component
+      // Wait for code block to render
       await waitFor(() => {
         const codeBlock = container.querySelector(
           '[data-streamdown="code-block"]'
@@ -295,7 +295,7 @@ describe("Markdown Components", () => {
         </Code>
       );
 
-      // Wait for lazy-loaded CodeBlock component
+      // Wait for code block to render
       await waitFor(() => {
         const codeBlock = container.querySelector(
           '[data-streamdown="code-block"]'
@@ -332,7 +332,7 @@ describe("Markdown Components", () => {
         </Code>
       );
 
-      // Wait for Suspense boundary to resolve
+      // Wait for code block to render
       await waitFor(() => {
         const codeBlock = container.querySelector(
           '[data-streamdown="code-block"]'
