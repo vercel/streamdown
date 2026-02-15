@@ -211,6 +211,12 @@ function example() {
 
 The unterminated block parser ensures the code block renders properly even without the closing backticks.
 
+### Loading Behavior
+
+Code block shells render immediately with plain text content, then syntax colors are applied when highlighting resolves.
+
+This keeps code readable on first paint and improves visual stability during lazy highlight loading.
+
 ### Disabling Interactions During Streaming
 
 Use the `isAnimating` prop to disable copy buttons while streaming:
