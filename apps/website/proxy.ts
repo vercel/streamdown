@@ -8,6 +8,8 @@ import {
 import { i18n } from "@/lib/geistdocs/i18n";
 import { trackMdRequest } from "@/lib/md-tracking";
 
+const MD_FILE_REGEX = /\.mdx?$/;
+
 const { rewrite: rewriteLLM } = rewritePath(
   "/docs/*path",
   `/${i18n.defaultLanguage}/llms.mdx/*path`
@@ -37,7 +39,7 @@ const proxy = (request: NextRequest, context: NextFetchEvent) => {
       pathname.startsWith("/docs/")) &&
     (pathname.endsWith(".md") || pathname.endsWith(".mdx"))
   ) {
-    const stripped = pathname.replace(/\.mdx?$/, "");
+    const stripped = pathname.replace(MD_FILE_REGEX, "");
     const result =
       stripped === "/docs"
         ? `/${i18n.defaultLanguage}/llms.mdx`

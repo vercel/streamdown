@@ -40,8 +40,8 @@ This is a monorepo managed with Turbo. The main package is located at:
 - `pnpm test` - Run tests
 - `pnpm test:coverage` - Run tests with coverage
 - `pnpm test:ui` - Run tests with UI
-- `pnpm lint` - Run linting
-- `pnpm format` - Format code with Prettier
+- `pnpm check` - Run linting (ultracite)
+- `pnpm fix` - Fix linting issues (ultracite)
 - `pnpm check-types` - Type checking
 
 ### Making Changes
@@ -53,9 +53,9 @@ This is a monorepo managed with Turbo. The main package is located at:
 
 2. Make your changes and ensure:
    - All tests pass (`pnpm test`)
-   - Code is properly formatted (`pnpm format`)
+   - Code is properly formatted (`pnpm fix`)
    - Type checking passes (`pnpm check-types`)
-   - Linting passes (`pnpm lint`)
+   - Linting passes (`pnpm check`)
 
 3. Write or update tests for your changes
 
