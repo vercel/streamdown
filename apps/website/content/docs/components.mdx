@@ -59,9 +59,36 @@ You can override any of the following standard HTML components:
 Custom components receive all the props that the default components would receive, including:
 
 - `children` - The content to render
-- `className` - CSS class names (if applicable)
+- `className` - CSS class names from the Markdown AST (if applicable)
 - `node` - The Markdown AST node (for advanced use cases)
 - Element-specific props (e.g., `href` for links, `src` for images)
+
+<Callout type="warn">
+  Custom components **fully replace** the default implementations, including their built-in Tailwind styles. The `className` prop only contains classes from the Markdown AST (e.g., `language-js` on code elements) — it does **not** include the default styles that Streamdown normally applies.
+  
+  If you need to preserve the default appearance, you must re-apply the styles yourself. See the [Styling](/docs/styling) documentation for the default classes, or use [CSS selectors with `data-streamdown` attributes](/docs/styling#global-css-targeting) instead of component overrides when you only need visual changes.
+</Callout>
+
+For example, the default `h2` component applies `mt-6 mb-2 font-semibold text-2xl`. When you override it, those styles are lost unless you include them:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  components={{
+    // ❌ Loses default spacing and font styles
+    h2: ({ children }) => (
+      <h2 className="text-blue-500">{children}</h2>
+    ),
+    // ✅ Preserves default styles alongside custom ones
+    h2: ({ children, className }) => (
+      <h2 className={`mt-6 mb-2 font-semibold text-2xl text-blue-500 ${className ?? ''}`}>
+        {children}
+      </h2>
+    ),
+  }}
+>
+  {markdown}
+</Streamdown>
+```
 
 ```tsx title="app/page.tsx"
 <Streamdown
