@@ -50,14 +50,14 @@ export const TableCopyDropdown = ({
       }
 
       const tableData = extractTableDataFromElement(tableElement);
-      let content;
-      if (format === "csv") {
-        content = tableDataToCSV(tableData);
-      } else if (format === "tsv") {
-        content = tableDataToTSV(tableData);
-      } else {
-        content = tableDataToMarkdown(tableData);
-      }
+      
+      const formatters = {
+        csv: tableDataToCSV,
+        tsv: tableDataToTSV,
+        md: tableDataToMarkdown,
+      };
+      const formatter = formatters[format] || tableDataToMarkdown;
+      const content = formatter(tableData)
 
       const clipboardItemData = new ClipboardItem({
         "text/plain": new Blob([content], { type: "text/plain" }),
