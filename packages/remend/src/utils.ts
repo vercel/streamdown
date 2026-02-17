@@ -145,6 +145,33 @@ export const isWithinLinkOrImageUrl = (
   return false;
 };
 
+// Check if a position is within an HTML tag (between < and >)
+// e.g. <a target="_blank"> — the underscore in _blank is inside the tag
+export const isWithinHtmlTag = (text: string, position: number): boolean => {
+  // Search backwards from position to find < or >
+  for (let i = position - 1; i >= 0; i -= 1) {
+    if (text[i] === ">") {
+      return false; // Found closing > first — we're outside a tag
+    }
+    if (text[i] === "<") {
+      // Found opening < — check it starts a valid tag (followed by letter or /)
+      const nextChar = i + 1 < text.length ? text[i + 1] : "";
+      if (
+        (nextChar >= "a" && nextChar <= "z") ||
+        (nextChar >= "A" && nextChar <= "Z") ||
+        nextChar === "/"
+      ) {
+        return true;
+      }
+      return false;
+    }
+    if (text[i] === "\n") {
+      return false; // Tags don't span lines in this context
+    }
+  }
+  return false;
+};
+
 // Check if a marker sequence appears to be a horizontal rule
 // Horizontal rules must be on their own line with optional leading/trailing whitespace
 // Valid patterns: ---, ***, ___, or longer sequences with optional spaces between markers
