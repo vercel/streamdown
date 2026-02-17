@@ -238,9 +238,10 @@ If you want single newlines to always render as `<br>` without trailing spaces, 
 
 ```tsx
 import remarkBreaks from "remark-breaks";
+import { Streamdown, defaultRemarkPlugins } from "streamdown";
 
 <Streamdown
-  remarkPlugins={{ breaks: [remarkBreaks, {}] }}
+  remarkPlugins={[...Object.values(defaultRemarkPlugins), remarkBreaks]}
 >
   {markdown}
 </Streamdown>
