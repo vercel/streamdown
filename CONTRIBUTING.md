@@ -31,6 +31,7 @@ Thank you for your interest in contributing to Streamdown! We welcome contributi
 ### Project Structure
 
 This is a monorepo managed with Turbo. The main package is located at:
+
 - `packages/streamdown/` - The core Streamdown React component library
 
 ### Available Scripts
@@ -40,13 +41,14 @@ This is a monorepo managed with Turbo. The main package is located at:
 - `pnpm test` - Run tests
 - `pnpm test:coverage` - Run tests with coverage
 - `pnpm test:ui` - Run tests with UI
-- `pnpm check` - Run linting (ultracite)
-- `pnpm fix` - Fix linting issues (ultracite)
+- `pnpm check` - Check linting and formatting
+- `pnpm fix` - Fix linting and formatting
 - `pnpm check-types` - Type checking
 
 ### Making Changes
 
 1. Create a new branch for your feature or fix:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -63,6 +65,7 @@ This is a monorepo managed with Turbo. The main package is located at:
    ```bash
    pnpm changeset
    ```
+
    - Select the package(s) affected
    - Choose the appropriate version bump (patch/minor/major)
    - Write a concise description of the changes
@@ -80,6 +83,7 @@ We follow conventional commits for clear commit history:
 - `chore:` Maintenance tasks
 
 Examples:
+
 ```
 feat: add support for custom code block themes
 fix: resolve markdown parsing issue with nested lists

@@ -26,6 +26,57 @@ const voidElements = new Set([
   "wbr",
 ]);
 
+// Cache for tag patterns to avoid recreating RegExp objects
+const openTagPatternCache = new Map<string, RegExp>();
+const closeTagPatternCache = new Map<string, RegExp>();
+
+const getOpenTagPattern = (tagName: string): RegExp => {
+  const normalizedTag = tagName.toLowerCase();
+  const cached = openTagPatternCache.get(normalizedTag);
+  if (cached) {
+    return cached;
+  }
+  const pattern = new RegExp(`<${normalizedTag}(?=[\\s>/])[^>]*>`, "gi");
+  openTagPatternCache.set(normalizedTag, pattern);
+  return pattern;
+};
+
+const getCloseTagPattern = (tagName: string): RegExp => {
+  const normalizedTag = tagName.toLowerCase();
+  const cached = closeTagPatternCache.get(normalizedTag);
+  if (cached) {
+    return cached;
+  }
+  const pattern = new RegExp(`</${normalizedTag}(?=[\\s>])[^>]*>`, "gi");
+  closeTagPatternCache.set(normalizedTag, pattern);
+  return pattern;
+};
+
+// Count non-self-closing open tags in a block
+const countNonSelfClosingOpenTags = (block: string, tagName: string): number => {
+  if (voidElements.has(tagName.toLowerCase())) {
+    return 0;
+  }
+  const matches = block.match(getOpenTagPattern(tagName));
+  if (!matches) {
+    return 0;
+  }
+  let count = 0;
+  for (const match of matches) {
+    // Skip self-closing tags like <div />
+    if (!match.trimEnd().endsWith("/>")) {
+      count += 1;
+    }
+  }
+  return count;
+};
+
+// Count closing tags in a block
+const countClosingTags = (block: string, tagName: string): number => {
+  const matches = block.match(getCloseTagPattern(tagName));
+  return matches ? matches.length : 0;
+};
+
 // Helper function to count $$ occurrences
 const countDoubleDollars = (str: string): number => {
   let count = 0;
@@ -88,11 +139,11 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
       const openingTagMatch = currentBlock.match(openingTagPattern);
       if (openingTagMatch) {
         const tagName = openingTagMatch[1];
-        // Check if this is a self-closing tag or if there's a closing tag in the same block
-        const hasClosingTag = currentBlock.includes(`</${tagName}>`);
-        // Void elements don't need to be pushed to the stack as they don't have closing tags
-        if (!(hasClosingTag || voidElements.has(tagName.toLowerCase()))) {
-          // This is an opening tag without a closing tag in the same block
+        // Count how many tags remain unclosed within this block
+        const openTags = countNonSelfClosingOpenTags(currentBlock, tagName);
+        const closeTags = countClosingTags(currentBlock, tagName);
+        if (openTags > closeTags) {
+          // There is at least one unmatched opening tag, keep track of it
           htmlStack.push(tagName);
         }
       }

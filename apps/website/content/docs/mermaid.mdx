@@ -485,6 +485,32 @@ Or disable all Mermaid controls:
 
 When Mermaid diagrams are first streamed in, they appear as code blocks until the diagram syntax is complete. Streamdown's parser ensures the code block is properly formatted during streaming.
 
+### Avoid Continuous Re-rendering
+
+Mermaid diagrams are expensive to render. During streaming, you don't want to re-render the diagram on every chunk—that would be slow and cause flickering. Use the `useIsCodeFenceIncomplete` hook to wait until the code block is complete before rendering:
+
+```tsx
+import { Streamdown, useIsCodeFenceIncomplete } from "streamdown";
+import { mermaid } from "@streamdown/mermaid";
+
+const MyMermaidBlock = ({ children }) => {
+  const isIncomplete = useIsCodeFenceIncomplete();
+
+  if (isIncomplete) {
+    return (
+      <div className="animate-pulse bg-muted h-48 rounded-lg flex items-center justify-center">
+        <span className="text-muted-foreground">Loading diagram...</span>
+      </div>
+    );
+  }
+
+  // Only render Mermaid once the code block is fully received
+  return <Mermaid chart={children} />;
+};
+```
+
+This shows a placeholder while the code block is streaming, then renders the Mermaid diagram only once the closing ` ``` ` is received—without waiting for the entire markdown stream to finish.
+
 ### Disable Interactions During Streaming
 
 Use the `isAnimating` prop to disable interactive controls while content is streaming:

@@ -198,7 +198,7 @@ mailto:hello@example.com
 
 ## Line Breaks
 
-GFM respects line breaks without requiring two spaces:
+In standard Markdown (and GFM), single newlines within a paragraph are treated as **soft breaks** and rendered as spaces — the lines are combined into one paragraph:
 
 ```markdown
 This is line one
@@ -206,10 +206,43 @@ This is line two
 This is line three
 ```
 
-Standard Markdown would combine these into one paragraph, but GFM preserves the breaks.
+This renders as a single paragraph: "This is line one This is line two This is line three".
 
-To force a line break in standard Markdown:
+To force a visible line break, use one of these approaches:
+
+### Two Trailing Spaces (Hard Break)
+
+Add two or more spaces at the end of a line:
+
 ```markdown
-Line one
-Line two (note: two spaces after "one")
+Line one··
+Line two··
+Line three
+```
+
+(where `··` represents two spaces)
+
+### Backslash (Hard Break)
+
+Use a trailing backslash:
+
+```markdown
+Line one\
+Line two\
+Line three
+```
+
+### Using `remark-breaks`
+
+If you want single newlines to always render as `<br>` without trailing spaces, add the [`remark-breaks`](https://github.com/remarkjs/remark-breaks) plugin:
+
+```tsx
+import remarkBreaks from "remark-breaks";
+import { Streamdown, defaultRemarkPlugins } from "streamdown";
+
+<Streamdown
+  remarkPlugins={[...Object.values(defaultRemarkPlugins), remarkBreaks]}
+>
+  {markdown}
+</Streamdown>
 ```

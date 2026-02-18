@@ -9,10 +9,10 @@ import {
   SourcesTrigger,
 } from "../ai-elements/sources";
 
-type MessageMetadataProps = {
-  parts: MyUIMessage["parts"];
+interface MessageMetadataProps {
   inProgress: boolean;
-};
+  parts: MyUIMessage["parts"];
+}
 
 export const MessageMetadata = ({
   parts,

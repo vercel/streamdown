@@ -10,6 +10,8 @@ const TRAILING_NEWLINES_REGEX = /\n+$/;
 type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
   code: string;
   language: string;
+  /** Whether the code block is still being streamed (incomplete) */
+  isIncomplete?: boolean;
 };
 
 const HighlightedCodeBlockBody = lazy(() =>
@@ -23,6 +25,7 @@ export const CodeBlock = ({
   language,
   className,
   children,
+  isIncomplete = false,
   ...rest
 }: CodeBlockProps) => {
   // Remove trailing newlines to prevent empty line at end of code blocks
@@ -51,7 +54,7 @@ export const CodeBlock = ({
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
-      <CodeBlockContainer language={language}>
+      <CodeBlockContainer isIncomplete={isIncomplete} language={language}>
         <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
         <Suspense
           fallback={

@@ -59,9 +59,77 @@ You can override any of the following standard HTML components:
 Custom components receive all the props that the default components would receive, including:
 
 - `children` - The content to render
-- `className` - CSS class names (if applicable)
+- `className` - CSS class names from the Markdown AST (if applicable)
 - `node` - The Markdown AST node (for advanced use cases)
 - Element-specific props (e.g., `href` for links, `src` for images)
+
+<Callout type="warn">
+  Custom components **fully replace** the default implementations, including their built-in Tailwind styles. The `className` prop only contains classes from the Markdown AST (e.g., `language-js` on code elements) — it does **not** include the default styles that Streamdown normally applies.
+
+  If you need to preserve the default appearance, you must re-apply the styles yourself. See the [Styling](/docs/styling) documentation for the default classes, or use [CSS selectors with `data-streamdown` attributes](/docs/styling#global-css-targeting) instead of component overrides when you only need visual changes.
+</Callout>
+
+For example, the default `h2` component applies `mt-6 mb-2 font-semibold text-2xl`. When you override it, those styles are lost unless you include them:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  components={{
+    // ❌ Loses default spacing and font styles
+    h2: ({ children }) => (
+      <h2 className="text-blue-500">{children}</h2>
+    ),
+    // ✅ Preserves default styles alongside custom ones
+    h2: ({ children, className }) => (
+      <h2 className={`mt-6 mb-2 font-semibold text-2xl text-blue-500 ${className ?? ''}`}>
+        {children}
+      </h2>
+    ),
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+## Streaming State
+
+When streaming markdown, custom components can detect if their code fence is still being streamed using the `useIsCodeFenceIncomplete` hook. This is useful for expensive-to-render components where you want to show a loading state until the code block is complete.
+
+```tsx title="app/page.tsx"
+import { Streamdown, useIsCodeFenceIncomplete } from "streamdown";
+
+const MyCodeBlock = ({ children }) => {
+  const isIncomplete = useIsCodeFenceIncomplete();
+
+  if (isIncomplete) {
+    return <div className="animate-pulse bg-muted h-24 rounded" />;
+  }
+
+  return <pre><code>{children}</code></pre>;
+};
+
+export default function Page() {
+  return (
+    <Streamdown
+      components={{ code: MyCodeBlock }}
+      isAnimating={isStreaming}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+The hook returns `true` when all of the following are true:
+
+- `isAnimating={true}` (streaming mode is active)
+- The component is in the last block being streamed
+- That block has an unclosed code fence (` ``` ` without a closing ` ``` `)
+
+Once the code fence closes, the hook returns `false` and your component can render normally—even while the rest of the markdown continues streaming.
+
+<Callout type="info">
+  This is particularly useful for Mermaid diagrams and syntax highlighters where continuous re-rendering during streaming would cause performance issues.
+</Callout>
 
 ```tsx title="app/page.tsx"
 <Streamdown

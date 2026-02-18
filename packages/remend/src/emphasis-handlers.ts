@@ -13,6 +13,7 @@ import {
 import {
   isHorizontalRule,
   isWithinCodeBlock,
+  isWithinHtmlTag,
   isWithinLinkOrImageUrl,
   isWithinMathBlock,
   isWordChar,
@@ -148,6 +149,11 @@ const shouldSkipUnderscore = (
 
   // Skip if within a link or image URL
   if (isWithinLinkOrImageUrl(text, index)) {
+    return true;
+  }
+
+  // Skip if within an HTML tag (e.g. <a target="_blank">)
+  if (isWithinHtmlTag(text, index)) {
     return true;
   }
 

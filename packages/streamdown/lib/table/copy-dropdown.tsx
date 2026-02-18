@@ -5,13 +5,14 @@ import { cn } from "../utils";
 import {
   extractTableDataFromElement,
   tableDataToCSV,
+  tableDataToMarkdown,
   tableDataToTSV,
 } from "./utils";
 
 export interface TableCopyDropdownProps {
   children?: React.ReactNode;
   className?: string;
-  onCopy?: (format: "csv" | "tsv") => void;
+  onCopy?: (format: "csv" | "tsv" | "md") => void;
   onError?: (error: Error) => void;
   timeout?: number;
 }
@@ -29,7 +30,7 @@ export const TableCopyDropdown = ({
   const timeoutRef = useRef(0);
   const { isAnimating } = useContext(StreamdownContext);
 
-  const copyTableData = async (format: "csv" | "tsv") => {
+  const copyTableData = async (format: "csv" | "tsv" | "md") => {
     if (typeof window === "undefined" || !navigator?.clipboard?.write) {
       onError?.(new Error("Clipboard API not available"));
       return;
@@ -49,10 +50,14 @@ export const TableCopyDropdown = ({
       }
 
       const tableData = extractTableDataFromElement(tableElement);
-      const content =
-        format === "csv"
-          ? tableDataToCSV(tableData)
-          : tableDataToTSV(tableData);
+      
+      const formatters = {
+        csv: tableDataToCSV,
+        tsv: tableDataToTSV,
+        md: tableDataToMarkdown,
+      };
+      const formatter = formatters[format] || tableDataToMarkdown;
+      const content = formatter(tableData)
 
       const clipboardItemData = new ClipboardItem({
         "text/plain": new Blob([content], { type: "text/plain" }),
@@ -104,6 +109,14 @@ export const TableCopyDropdown = ({
       </button>
       {isOpen ? (
         <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg">
+          <button
+            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            onClick={() => copyTableData("md")}
+            title="Copy table as Markdown"
+            type="button"
+          >
+            Markdown
+          </button>
           <button
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => copyTableData("csv")}

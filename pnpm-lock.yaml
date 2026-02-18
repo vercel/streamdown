@@ -66,8 +66,8 @@ importers:
         specifier: ^0.560.0
         version: 0.560.0(react@19.2.3)
       next:
-        specifier: ^16.1.3
-        version: 16.1.3(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: ^16.1.5
+        version: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       radix-ui:
         specifier: latest
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -282,10 +282,10 @@ importers:
         version: link:../../packages/streamdown-mermaid
       '@vercel/analytics':
         specifier: ^1.6.1
-        version: 1.6.1(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
+        version: 1.6.1(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       '@vercel/speed-insights':
         specifier: ^1.3.1
-        version: 1.3.1(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
+        version: 1.3.1(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       ai:
         specifier: ^5.0.106
         version: 5.0.121(zod@4.3.5)
@@ -309,13 +309,13 @@ importers:
         version: 5.2.0
       fumadocs-core:
         specifier: 16.2.2
-        version: 16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       fumadocs-mdx:
         specifier: 14.0.4
-        version: 14.0.4(fumadocs-core@16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))
+        version: 14.0.4(fumadocs-core@16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0))
       fumadocs-ui:
         specifier: 16.2.2
-        version: 16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18)
+        version: 16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18)
       jotai:
         specifier: ^2.15.2
         version: 2.16.2(@babel/core@7.28.6)(@babel/template@7.28.6)(@types/react@19.2.8)(react@19.2.3)
@@ -335,8 +335,8 @@ importers:
         specifier: ^5.1.6
         version: 5.1.6
       next:
-        specifier: 16.0.10
-        version: 16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: 16.1.5
+        version: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -1422,104 +1422,53 @@ packages:
   '@mux/playback-core@0.32.2':
     resolution: {integrity: sha512-cmaZN0hRIrEFcSVsj+quBDOeztg5oxug02WwuAiweWkMt1vSBM8nlzuF03coRnD/sKhgnQawdJOrng42R8I0Cg==}
 
-  '@next/env@16.0.10':
-    resolution: {integrity: sha512-8tuaQkyDVgeONQ1MeT9Mkk8pQmZapMKFh5B+OrFUlG3rVmYTXcXlBetBgTurKXGaIZvkoqRT9JL5K3phXcgang==}
+  '@next/env@16.1.5':
+    resolution: {integrity: sha512-CRSCPJiSZoi4Pn69RYBDI9R7YK2g59vLexPQFXY0eyw+ILevIenCywzg+DqmlBik9zszEnw2HLFOUlLAcJbL7g==}
 
-  '@next/env@16.1.3':
-    resolution: {integrity: sha512-BLP14oBOvZWXgfdJf9ao+VD8O30uE+x7PaV++QtACLX329WcRSJRO5YJ+Bcvu0Q+c/lei41TjSiFf6pXqnpbQA==}
-
-  '@next/swc-darwin-arm64@16.0.10':
-    resolution: {integrity: sha512-4XgdKtdVsaflErz+B5XeG0T5PeXKDdruDf3CRpnhN+8UebNa5N2H58+3GDgpn/9GBurrQ1uWW768FfscwYkJRg==}
+  '@next/swc-darwin-arm64@16.1.5':
+    resolution: {integrity: sha512-eK7Wdm3Hjy/SCL7TevlH0C9chrpeOYWx2iR7guJDaz4zEQKWcS1IMVfMb9UKBFMg1XgzcPTYPIp1Vcpukkjg6Q==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
 
-  '@next/swc-darwin-arm64@16.1.3':
-    resolution: {integrity: sha512-CpOD3lmig6VflihVoGxiR/l5Jkjfi4uLaOR4ziriMv0YMDoF6cclI+p5t2nstM8TmaFiY6PCTBgRWB57/+LiBA==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@next/swc-darwin-x64@16.0.10':
-    resolution: {integrity: sha512-spbEObMvRKkQ3CkYVOME+ocPDFo5UqHb8EMTS78/0mQ+O1nqE8toHJVioZo4TvebATxgA8XMTHHrScPrn68OGw==}
+  '@next/swc-darwin-x64@16.1.5':
+    resolution: {integrity: sha512-foQscSHD1dCuxBmGkbIr6ScAUF6pRoDZP6czajyvmXPAOFNnQUJu2Os1SGELODjKp/ULa4fulnBWoHV3XdPLfA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
 
-  '@next/swc-darwin-x64@16.1.3':
-    resolution: {integrity: sha512-aF4us2JXh0zn3hNxvL1Bx3BOuh8Lcw3p3Xnurlvca/iptrDH1BrpObwkw9WZra7L7/0qB9kjlREq3hN/4x4x+Q==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [darwin]
-
-  '@next/swc-linux-arm64-gnu@16.0.10':
-    resolution: {integrity: sha512-uQtWE3X0iGB8apTIskOMi2w/MKONrPOUCi5yLO+v3O8Mb5c7K4Q5KD1jvTpTF5gJKa3VH/ijKjKUq9O9UhwOYw==}
+  '@next/swc-linux-arm64-gnu@16.1.5':
+    resolution: {integrity: sha512-qNIb42o3C02ccIeSeKjacF3HXotGsxh/FMk/rSRmCzOVMtoWH88odn2uZqF8RLsSUWHcAqTgYmPD3pZ03L9ZAA==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@next/swc-linux-arm64-gnu@16.1.3':
-    resolution: {integrity: sha512-8VRkcpcfBtYvhGgXAF7U3MBx6+G1lACM1XCo1JyaUr4KmAkTNP8Dv2wdMq7BI+jqRBw3zQE7c57+lmp7jCFfKA==}
+  '@next/swc-linux-arm64-musl@16.1.5':
+    resolution: {integrity: sha512-U+kBxGUY1xMAzDTXmuVMfhaWUZQAwzRaHJ/I6ihtR5SbTVUEaDRiEU9YMjy1obBWpdOBuk1bcm+tsmifYSygfw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
 
-  '@next/swc-linux-arm64-musl@16.0.10':
-    resolution: {integrity: sha512-llA+hiDTrYvyWI21Z0L1GiXwjQaanPVQQwru5peOgtooeJ8qx3tlqRV2P7uH2pKQaUfHxI/WVarvI5oYgGxaTw==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [linux]
-
-  '@next/swc-linux-arm64-musl@16.1.3':
-    resolution: {integrity: sha512-UbFx69E2UP7MhzogJRMFvV9KdEn4sLGPicClwgqnLht2TEi204B71HuVfps3ymGAh0c44QRAF+ZmvZZhLLmhNg==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [linux]
-
-  '@next/swc-linux-x64-gnu@16.0.10':
-    resolution: {integrity: sha512-AK2q5H0+a9nsXbeZ3FZdMtbtu9jxW4R/NgzZ6+lrTm3d6Zb7jYrWcgjcpM1k8uuqlSy4xIyPR2YiuUr+wXsavA==}
+  '@next/swc-linux-x64-gnu@16.1.5':
+    resolution: {integrity: sha512-gq2UtoCpN7Ke/7tKaU7i/1L7eFLfhMbXjNghSv0MVGF1dmuoaPeEVDvkDuO/9LVa44h5gqpWeJ4mRRznjDv7LA==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@next/swc-linux-x64-gnu@16.1.3':
-    resolution: {integrity: sha512-SzGTfTjR5e9T+sZh5zXqG/oeRQufExxBF6MssXS7HPeZFE98JDhCRZXpSyCfWrWrYrzmnw/RVhlP2AxQm+wkRQ==}
+  '@next/swc-linux-x64-musl@16.1.5':
+    resolution: {integrity: sha512-bQWSE729PbXT6mMklWLf8dotislPle2L70E9q6iwETYEOt092GDn0c+TTNj26AjmeceSsC4ndyGsK5nKqHYXjQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
-  '@next/swc-linux-x64-musl@16.0.10':
-    resolution: {integrity: sha512-1TDG9PDKivNw5550S111gsO4RGennLVl9cipPhtkXIFVwo31YZ73nEbLjNC8qG3SgTz/QZyYyaFYMeY4BKZR/g==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [linux]
-
-  '@next/swc-linux-x64-musl@16.1.3':
-    resolution: {integrity: sha512-HlrDpj0v+JBIvQex1mXHq93Mht5qQmfyci+ZNwGClnAQldSfxI6h0Vupte1dSR4ueNv4q7qp5kTnmLOBIQnGow==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [linux]
-
-  '@next/swc-win32-arm64-msvc@16.0.10':
-    resolution: {integrity: sha512-aEZIS4Hh32xdJQbHz121pyuVZniSNoqDVx1yIr2hy+ZwJGipeqnMZBJHyMxv2tiuAXGx6/xpTcQJ6btIiBjgmg==}
+  '@next/swc-win32-arm64-msvc@16.1.5':
+    resolution: {integrity: sha512-LZli0anutkIllMtTAWZlDqdfvjWX/ch8AFK5WgkNTvaqwlouiD1oHM+WW8RXMiL0+vAkAJyAGEzPPjO+hnrSNQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
 
-  '@next/swc-win32-arm64-msvc@16.1.3':
-    resolution: {integrity: sha512-3gFCp83/LSduZMSIa+lBREP7+5e7FxpdBoc9QrCdmp+dapmTK9I+SLpY60Z39GDmTXSZA4huGg9WwmYbr6+WRw==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [win32]
-
-  '@next/swc-win32-x64-msvc@16.0.10':
-    resolution: {integrity: sha512-E+njfCoFLb01RAFEnGZn6ERoOqhK1Gl3Lfz1Kjnj0Ulfu7oJbuMyvBKNj/bw8XZnenHDASlygTjZICQW+rYW1Q==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [win32]
-
-  '@next/swc-win32-x64-msvc@16.1.3':
-    resolution: {integrity: sha512-1SZVfFT8zmMB+Oblrh5OKDvUo5mYQOkX2We6VGzpg7JUVZlqe4DYOFGKYZKTweSx1gbMixyO1jnFT4thU+nNHQ==}
+  '@next/swc-win32-x64-msvc@16.1.5':
+    resolution: {integrity: sha512-7is37HJTNQGhjPpQbkKjKEboHYQnCgpVt/4rBrrln0D9nderNxZ8ZWs8w1fAtzUx7wEyYjQ+/13myFgFj6K2Ng==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
@@ -3299,8 +3248,8 @@ packages:
   bail@2.0.2:
     resolution: {integrity: sha512-0xO6mYd7JB2YesxDKplafRpsiOzPt9V02ddPCLbY1xYGPOX24NTyN50qnUxgCPcSoYMhKpAuBTjQoRZCAkUDRw==}
 
-  baseline-browser-mapping@2.9.15:
-    resolution: {integrity: sha512-kX8h7K2srmDyYnXRIppo4AH/wYgzWVCs+eKr3RusRSQ5PvRYoEFmR/I0PbdTjKFAoKqp5+kbxnNTFO9jOfSVJg==}
+  baseline-browser-mapping@2.9.19:
+    resolution: {integrity: sha512-ipDqC8FrAl/76p2SSWKSI+H9tFwm7vYqXQrItCuiVPt26Km0jS+NzSsBWAaBusvSbQcfJG+JitdMm+wZAgTYqg==}
     hasBin: true
 
   bcp-47-match@2.0.3:
@@ -3361,8 +3310,8 @@ packages:
     resolution: {integrity: sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg==}
     engines: {node: '>= 0.4'}
 
-  caniuse-lite@1.0.30001765:
-    resolution: {integrity: sha512-LWcNtSyZrakjECqmpP4qdg0MMGdN368D7X8XvvAqOcqMv0RxnlqVKZl2V6/mBR68oYMxOZPLw/gO7DuisMHUvQ==}
+  caniuse-lite@1.0.30001767:
+    resolution: {integrity: sha512-34+zUAMhSH+r+9eKmYG+k2Rpt8XttfE4yXAjoZvkAPs15xcYQhyBYdalJ65BzivAvGRMViEjy6oKr/S91loekQ==}
 
   castable-video@1.1.11:
     resolution: {integrity: sha512-LCRTK6oe7SB1SiUQFzZCo6D6gcEzijqBTVIuj3smKpQdesXM18QTbCVqWgh9MfOeQgTx/i9ji5jGcdqNPeWg2g==}
@@ -4956,29 +4905,8 @@ packages:
       react: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
       react-dom: ^16.8 || ^17 || ^18 || ^19 || ^19.0.0-rc
 
-  next@16.0.10:
-    resolution: {integrity: sha512-RtWh5PUgI+vxlV3HdR+IfWA1UUHu0+Ram/JBO4vWB54cVPentCD0e+lxyAYEsDTqGGMg7qpjhKh6dc6aW7W/sA==}
-    engines: {node: '>=20.9.0'}
-    hasBin: true
-    peerDependencies:
-      '@opentelemetry/api': ^1.1.0
-      '@playwright/test': ^1.51.1
-      babel-plugin-react-compiler: '*'
-      react: ^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0
-      react-dom: ^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0
-      sass: ^1.3.0
-    peerDependenciesMeta:
-      '@opentelemetry/api':
-        optional: true
-      '@playwright/test':
-        optional: true
-      babel-plugin-react-compiler:
-        optional: true
-      sass:
-        optional: true
-
-  next@16.1.3:
-    resolution: {integrity: sha512-gthG3TRD+E3/mA0uDQb9lqBmx1zVosq5kIwxNN6+MRNd085GzD+9VXMPUs+GGZCbZ+GDZdODUq4Pm7CTXK6ipw==}
+  next@16.1.5:
+    resolution: {integrity: sha512-f+wE+NSbiQgh3DSAlTaw2FwY5yGdVViAtp8TotNQj4kk4Q8Bh1sC/aL9aH+Rg1YAVn18OYXsRDT7U/079jgP7w==}
     engines: {node: '>=20.9.0'}
     hasBin: true
     peerDependencies:
@@ -5621,6 +5549,11 @@ packages:
 
   srvx@0.10.0:
     resolution: {integrity: sha512-NqIsR+wQCfkvvwczBh8J8uM4wTZx41K2lLSEp/3oMp917ODVVMtW5Me4epCmQ3gH8D+0b+/t4xxkUKutyhimTA==}
+    engines: {node: '>=20.16.0'}
+    hasBin: true
+
+  srvx@0.10.1:
+    resolution: {integrity: sha512-A//xtfak4eESMWWydSRFUVvCTQbSwivnGCEf8YGPe2eHU0+Z6znfUTCPF0a7oV3sObSOcrXHlL6Bs9vVctfXdg==}
     engines: {node: '>=20.16.0'}
     hasBin: true
 
@@ -7080,56 +7013,30 @@ snapshots:
       hls.js: 1.6.15
       mux-embed: 5.15.0
 
-  '@next/env@16.0.10': {}
+  '@next/env@16.1.5': {}
 
-  '@next/env@16.1.3': {}
-
-  '@next/swc-darwin-arm64@16.0.10':
+  '@next/swc-darwin-arm64@16.1.5':
     optional: true
 
-  '@next/swc-darwin-arm64@16.1.3':
+  '@next/swc-darwin-x64@16.1.5':
     optional: true
 
-  '@next/swc-darwin-x64@16.0.10':
+  '@next/swc-linux-arm64-gnu@16.1.5':
     optional: true
 
-  '@next/swc-darwin-x64@16.1.3':
+  '@next/swc-linux-arm64-musl@16.1.5':
     optional: true
 
-  '@next/swc-linux-arm64-gnu@16.0.10':
+  '@next/swc-linux-x64-gnu@16.1.5':
     optional: true
 
-  '@next/swc-linux-arm64-gnu@16.1.3':
+  '@next/swc-linux-x64-musl@16.1.5':
     optional: true
 
-  '@next/swc-linux-arm64-musl@16.0.10':
+  '@next/swc-win32-arm64-msvc@16.1.5':
     optional: true
 
-  '@next/swc-linux-arm64-musl@16.1.3':
-    optional: true
-
-  '@next/swc-linux-x64-gnu@16.0.10':
-    optional: true
-
-  '@next/swc-linux-x64-gnu@16.1.3':
-    optional: true
-
-  '@next/swc-linux-x64-musl@16.0.10':
-    optional: true
-
-  '@next/swc-linux-x64-musl@16.1.3':
-    optional: true
-
-  '@next/swc-win32-arm64-msvc@16.0.10':
-    optional: true
-
-  '@next/swc-win32-arm64-msvc@16.1.3':
-    optional: true
-
-  '@next/swc-win32-x64-msvc@16.0.10':
-    optional: true
-
-  '@next/swc-win32-x64-msvc@16.1.3':
+  '@next/swc-win32-x64-msvc@16.1.5':
     optional: true
 
   '@nodelib/fs.scandir@2.1.5':
@@ -8785,16 +8692,16 @@ snapshots:
 
   '@ungap/structured-clone@1.3.0': {}
 
-  '@vercel/analytics@1.6.1(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)':
+  '@vercel/analytics@1.6.1(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)':
     optionalDependencies:
-      next: 16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3
 
   '@vercel/oidc@3.1.0': {}
 
-  '@vercel/speed-insights@1.3.1(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)':
+  '@vercel/speed-insights@1.3.1(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)':
     optionalDependencies:
-      next: 16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3
 
   '@vimeo/player@2.29.0':
@@ -9011,7 +8918,7 @@ snapshots:
 
   bail@2.0.2: {}
 
-  baseline-browser-mapping@2.9.15: {}
+  baseline-browser-mapping@2.9.19: {}
 
   bcp-47-match@2.0.3: {}
 
@@ -9058,8 +8965,8 @@ snapshots:
 
   browserslist@4.28.1:
     dependencies:
-      baseline-browser-mapping: 2.9.15
-      caniuse-lite: 1.0.30001765
+      baseline-browser-mapping: 2.9.19
+      caniuse-lite: 1.0.30001767
       electron-to-chromium: 1.5.267
       node-releases: 2.0.27
       update-browserslist-db: 1.2.3(browserslist@4.28.1)
@@ -9083,7 +8990,7 @@ snapshots:
       call-bind-apply-helpers: 1.0.2
       get-intrinsic: 1.3.0
 
-  caniuse-lite@1.0.30001765: {}
+  caniuse-lite@1.0.30001767: {}
 
   castable-video@1.1.11:
     dependencies:
@@ -9843,7 +9750,7 @@ snapshots:
   fsevents@2.3.3:
     optional: true
 
-  fumadocs-core@16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  fumadocs-core@16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       '@formatjs/intl-localematcher': 0.6.2
       '@orama/orama': 3.1.18
@@ -9867,20 +9774,20 @@ snapshots:
       '@tanstack/react-router': 1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@types/react': 19.2.8
       lucide-react: 0.555.0(react@19.2.3)
-      next: 16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
     transitivePeerDependencies:
       - supports-color
 
-  fumadocs-mdx@14.0.4(fumadocs-core@16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)):
+  fumadocs-mdx@14.0.4(fumadocs-core@16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)):
     dependencies:
       '@mdx-js/mdx': 3.1.1
       '@standard-schema/spec': 1.1.0
       chokidar: 5.0.0
       esbuild: 0.27.2
       estree-util-value-to-estree: 3.5.0
-      fumadocs-core: 16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      fumadocs-core: 16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       js-yaml: 4.1.1
       lru-cache: 11.2.4
       mdast-util-to-markdown: 2.1.2
@@ -9895,13 +9802,13 @@ snapshots:
       vfile: 6.0.3
       zod: 4.3.5
     optionalDependencies:
-      next: 16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3
       vite: 7.3.1(@types/node@24.10.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)
     transitivePeerDependencies:
       - supports-color
 
-  fumadocs-ui@16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18):
+  fumadocs-ui@16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.1.18):
     dependencies:
       '@radix-ui/react-accordion': 1.2.12(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@radix-ui/react-collapsible': 1.1.12(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -9914,7 +9821,7 @@ snapshots:
       '@radix-ui/react-slot': 1.2.4(@types/react@19.2.8)(react@19.2.3)
       '@radix-ui/react-tabs': 1.1.13(@types/react-dom@19.2.3(@types/react@19.2.8))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       class-variance-authority: 0.7.1
-      fumadocs-core: 16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      fumadocs-core: 16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(lucide-react@0.555.0(react@19.2.3))(next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       lodash.merge: 4.6.2
       next-themes: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       postcss-selector-parser: 7.1.1
@@ -9925,7 +9832,7 @@ snapshots:
       tailwind-merge: 3.4.0
     optionalDependencies:
       '@types/react': 19.2.8
-      next: 16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      next: 16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       tailwindcss: 4.1.18
     transitivePeerDependencies:
       - '@mixedbread/sdk'
@@ -10002,7 +9909,7 @@ snapshots:
   h3@2.0.1-rc.7:
     dependencies:
       rou3: 0.7.12
-      srvx: 0.10.0
+      srvx: 0.10.1
 
   hachure-fill@0.5.2: {}
 
@@ -11121,49 +11028,25 @@ snapshots:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 
-  next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  next@16.1.5(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
-      '@next/env': 16.0.10
+      '@next/env': 16.1.5
       '@swc/helpers': 0.5.15
-      caniuse-lite: 1.0.30001765
+      baseline-browser-mapping: 2.9.19
+      caniuse-lite: 1.0.30001767
       postcss: 8.4.31
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
       styled-jsx: 5.1.6(@babel/core@7.28.6)(react@19.2.3)
     optionalDependencies:
-      '@next/swc-darwin-arm64': 16.0.10
-      '@next/swc-darwin-x64': 16.0.10
-      '@next/swc-linux-arm64-gnu': 16.0.10
-      '@next/swc-linux-arm64-musl': 16.0.10
-      '@next/swc-linux-x64-gnu': 16.0.10
-      '@next/swc-linux-x64-musl': 16.0.10
-      '@next/swc-win32-arm64-msvc': 16.0.10
-      '@next/swc-win32-x64-msvc': 16.0.10
-      '@opentelemetry/api': 1.9.0
-      sharp: 0.34.5
-    transitivePeerDependencies:
-      - '@babel/core'
-      - babel-plugin-macros
-
-  next@16.1.3(@opentelemetry/api@1.9.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
-    dependencies:
-      '@next/env': 16.1.3
-      '@swc/helpers': 0.5.15
-      baseline-browser-mapping: 2.9.15
-      caniuse-lite: 1.0.30001765
-      postcss: 8.4.31
-      react: 19.2.3
-      react-dom: 19.2.3(react@19.2.3)
-      styled-jsx: 5.1.6(@babel/core@7.28.6)(react@19.2.3)
-    optionalDependencies:
-      '@next/swc-darwin-arm64': 16.1.3
-      '@next/swc-darwin-x64': 16.1.3
-      '@next/swc-linux-arm64-gnu': 16.1.3
-      '@next/swc-linux-arm64-musl': 16.1.3
-      '@next/swc-linux-x64-gnu': 16.1.3
-      '@next/swc-linux-x64-musl': 16.1.3
-      '@next/swc-win32-arm64-msvc': 16.1.3
-      '@next/swc-win32-x64-msvc': 16.1.3
+      '@next/swc-darwin-arm64': 16.1.5
+      '@next/swc-darwin-x64': 16.1.5
+      '@next/swc-linux-arm64-gnu': 16.1.5
+      '@next/swc-linux-arm64-musl': 16.1.5
+      '@next/swc-linux-x64-gnu': 16.1.5
+      '@next/swc-linux-x64-musl': 16.1.5
+      '@next/swc-win32-arm64-msvc': 16.1.5
+      '@next/swc-win32-x64-msvc': 16.1.5
       '@opentelemetry/api': 1.9.0
       sharp: 0.34.5
     transitivePeerDependencies:
@@ -11986,6 +11869,8 @@ snapshots:
   sprintf-js@1.0.3: {}
 
   srvx@0.10.0: {}
+
+  srvx@0.10.1: {}
 
   stackback@0.0.2: {}
 
