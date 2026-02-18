@@ -120,14 +120,17 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
       // We're inside an HTML block, merge with the previous block
       mergedBlocks[mergedBlocksLen - 1] += currentBlock;
 
-      // Check if this token closes an HTML tag
-      // Note: Marked's Lexer splits HTML blocks at blank lines, so the closing tag
-      // may end up in a non-html token (e.g. paragraph). We must check all token types.
-      const closingTagMatch = currentBlock.match(closingTagPattern);
-      if (closingTagMatch) {
-        const closingTag = closingTagMatch[1];
-        // Check if this closes the most recent opening tag
-        if (htmlStack.at(-1) === closingTag) {
+      // Track nested opening and closing tags of the same type
+      // so that inner closing tags don't prematurely close the outer block
+      const trackedTag = htmlStack.at(-1) as string;
+      const newOpenTags = countNonSelfClosingOpenTags(currentBlock, trackedTag);
+      const newCloseTags = countClosingTags(currentBlock, trackedTag);
+
+      for (let i = 0; i < newOpenTags; i += 1) {
+        htmlStack.push(trackedTag);
+      }
+      for (let i = 0; i < newCloseTags; i += 1) {
+        if (htmlStack.length > 0 && htmlStack.at(-1) === trackedTag) {
           htmlStack.pop();
         }
       }
