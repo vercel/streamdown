@@ -9,7 +9,7 @@
     "@ai-sdk/anthropic": "^2.0.1",
     "@ai-sdk/mcp": "^0.0.5",
     "@ai-sdk/react": "^2.0.8",
-    "@modelcontextprotocol/sdk": "^1.25.2",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@tailwindcss/vite": "^4.0.6",
     "@tanstack/react-devtools": "^0.7.0",
     "@tanstack/react-router": "^1.132.0",
