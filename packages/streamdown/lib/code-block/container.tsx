@@ -16,7 +16,7 @@ export const CodeBlockContainer = ({
 }: CodeBlockContainerProps) => (
   <div
     className={cn(
-      "my-4 w-full overflow-hidden rounded-xl border border-border",
+      "my-4 w-full rounded-xl border border-border",
       className
     )}
     data-incomplete={isIncomplete || undefined}
