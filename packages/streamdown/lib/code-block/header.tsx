@@ -1,20 +1,13 @@
-import type { ReactNode } from "react";
-
 interface CodeBlockHeaderProps {
   language: string;
-  children: ReactNode;
 }
 
-export const CodeBlockHeader = ({
-  language,
-  children,
-}: CodeBlockHeaderProps) => (
+export const CodeBlockHeader = ({ language }: CodeBlockHeaderProps) => (
   <div
-    className="flex items-center justify-between bg-muted/80 p-3 text-muted-foreground text-xs"
+    className="flex h-12 items-center bg-muted/80 px-4 text-muted-foreground text-xs"
     data-language={language}
     data-streamdown="code-block-header"
   >
     <span className="ml-1 font-mono lowercase">{language}</span>
-    <div className="flex items-center gap-2">{children}</div>
   </div>
 );
