@@ -68,7 +68,7 @@ graph TD
       );
 
       const buttons = container.querySelectorAll(
-        '[data-streamdown="code-block-header"] button'
+        '[data-streamdown="code-block-actions"] button'
       );
 
       expect(buttons?.length).toBe(0);
@@ -108,7 +108,7 @@ graph TD
       );
 
       const buttons = container.querySelectorAll(
-        '[data-streamdown="code-block-header"] button'
+        '[data-streamdown="code-block-actions"] button'
       );
 
       expect(buttons?.length).toBe(0);
@@ -121,7 +121,7 @@ graph TD
 
       await waitFor(() => {
         const buttons = container.querySelectorAll(
-          '[data-streamdown="code-block-header"] button'
+          '[data-streamdown="code-block-actions"] button'
         );
         expect(buttons?.length).toBeGreaterThan(0);
       });
@@ -183,7 +183,7 @@ ${markdownWithCode}
 
       await waitFor(() => {
         const codeButtons = container.querySelectorAll(
-          '[data-streamdown="code-block-header"] button'
+          '[data-streamdown="code-block-actions"] button'
         );
         expect(codeButtons?.length).toBeGreaterThan(0);
       });
@@ -208,7 +208,7 @@ ${markdownWithCode}
       // Code controls should still show since not specified
       await waitFor(() => {
         const codeButtons = container.querySelectorAll(
-          '[data-streamdown="code-block-header"] button'
+          '[data-streamdown="code-block-actions"] button'
         );
         expect(codeButtons?.length).toBeGreaterThan(0);
       });
