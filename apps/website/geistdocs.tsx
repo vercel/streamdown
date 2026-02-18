@@ -20,6 +20,10 @@ export const nav = [
     href: "/docs",
   },
   {
+    label: "Playground",
+    href: "/playground",
+  },
+  {
     label: "AI Elements",
     href: "https://ai-sdk.dev/elements",
   },
