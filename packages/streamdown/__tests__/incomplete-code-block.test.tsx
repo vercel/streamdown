@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it } from "vitest";
-import { Block, Streamdown, useIsBlockIncomplete } from "../index";
+import { Block, Streamdown, useIsCodeFenceIncomplete } from "../index";
 import { hasIncompleteCodeFence } from "../lib/incomplete-code-utils";
 import type { ExtraProps } from "../lib/markdown";
 
@@ -61,14 +61,53 @@ describe("hasIncompleteCodeFence utility", () => {
     const markdown = "```js\ncode1\n```\n\n~~~python\ncode2\n~~~";
     expect(hasIncompleteCodeFence(markdown)).toBe(false);
   });
+
+  it("should handle 6+ backtick fences correctly", () => {
+    // A 6-backtick opening fence requires a 6+ backtick closing fence
+    expect(hasIncompleteCodeFence("``````\ncode here")).toBe(true);
+    expect(hasIncompleteCodeFence("``````\ncode\n``````")).toBe(false);
+    // 3 backticks cannot close a 6-backtick fence
+    expect(hasIncompleteCodeFence("``````\ncode\n```")).toBe(true);
+  });
+
+  it("should handle 4+ backtick fences correctly", () => {
+    expect(hasIncompleteCodeFence("````\ncode")).toBe(true);
+    expect(hasIncompleteCodeFence("````\ncode\n````")).toBe(false);
+    // Closing fence can be longer than opening
+    expect(hasIncompleteCodeFence("````\ncode\n`````")).toBe(false);
+    // 3 backticks cannot close a 4-backtick fence
+    expect(hasIncompleteCodeFence("````\ncode\n```")).toBe(true);
+  });
+
+  it("should not false-positive on inline backticks in prose", () => {
+    // Triple backticks in the middle of a line are not code fences
+    expect(hasIncompleteCodeFence("Use ``` to start a code fence")).toBe(false);
+    expect(
+      hasIncompleteCodeFence("The syntax is ``` for code blocks")
+    ).toBe(false);
+  });
+
+  it("should allow up to 3 spaces of indentation for fences", () => {
+    expect(hasIncompleteCodeFence("   ```\ncode")).toBe(true);
+    expect(hasIncompleteCodeFence("   ```\ncode\n   ```")).toBe(false);
+    // 4+ spaces of indentation is NOT a fence (it's an indented code block)
+    expect(hasIncompleteCodeFence("    ```\ncode")).toBe(false);
+  });
+
+  it("should require same character for closing fence", () => {
+    // Opening with backticks, closing with tildes should not close
+    expect(hasIncompleteCodeFence("```\ncode\n~~~")).toBe(true);
+    // Opening with tildes, closing with backticks should not close
+    expect(hasIncompleteCodeFence("~~~\ncode\n```")).toBe(true);
+  });
 });
 
-describe("useIsBlockIncomplete hook", () => {
+describe("useIsCodeFenceIncomplete hook", () => {
   it("should return true when streaming with incomplete code fence", () => {
-    let capturedIsBlockIncomplete: boolean | null = null;
+    let capturedValue: boolean | null = null;
 
     const ContextCapture = (props: ExtraProps & { children?: ReactNode }) => {
-      capturedIsBlockIncomplete = useIsBlockIncomplete();
+      capturedValue = useIsCodeFenceIncomplete();
       return <code>{props.children}</code>;
     };
 
@@ -83,14 +122,14 @@ describe("useIsBlockIncomplete hook", () => {
       </Streamdown>
     );
 
-    expect(capturedIsBlockIncomplete).toBe(true);
+    expect(capturedValue).toBe(true);
   });
 
   it("should return false when code fence is complete", () => {
-    let capturedIsBlockIncomplete: boolean | null = null;
+    let capturedValue: boolean | null = null;
 
     const ContextCapture = (_props: ExtraProps & { children?: ReactNode }) => {
-      capturedIsBlockIncomplete = useIsBlockIncomplete();
+      capturedValue = useIsCodeFenceIncomplete();
       return null;
     };
 
@@ -106,14 +145,14 @@ describe("useIsBlockIncomplete hook", () => {
     );
 
     // Last block has no incomplete code fence
-    expect(capturedIsBlockIncomplete).toBe(false);
+    expect(capturedValue).toBe(false);
   });
 
   it("should return false when not streaming", () => {
-    let capturedIsBlockIncomplete: boolean | null = null;
+    let capturedValue: boolean | null = null;
 
     const ContextCapture = (props: ExtraProps & { children?: ReactNode }) => {
-      capturedIsBlockIncomplete = useIsBlockIncomplete();
+      capturedValue = useIsCodeFenceIncomplete();
       return <code>{props.children}</code>;
     };
 
@@ -128,7 +167,7 @@ describe("useIsBlockIncomplete hook", () => {
       </Streamdown>
     );
 
-    expect(capturedIsBlockIncomplete).toBe(false);
+    expect(capturedValue).toBe(false);
   });
 });
 
@@ -245,14 +284,14 @@ const incomplete`;
   });
 });
 
-describe("custom component access to useIsBlockIncomplete", () => {
-  it("should allow custom code component to use useIsBlockIncomplete", async () => {
-    let capturedIsBlockIncomplete: boolean | null = null;
+describe("custom component access to useIsCodeFenceIncomplete", () => {
+  it("should allow custom code component to use useIsCodeFenceIncomplete", async () => {
+    let capturedValue: boolean | null = null;
 
     const CustomCode = (props: ExtraProps & { children?: ReactNode }) => {
-      capturedIsBlockIncomplete = useIsBlockIncomplete();
+      capturedValue = useIsCodeFenceIncomplete();
 
-      if (capturedIsBlockIncomplete) {
+      if (capturedValue) {
         return <div data-testid="loading">Loading code...</div>;
       }
 
@@ -272,20 +311,20 @@ describe("custom component access to useIsBlockIncomplete", () => {
 
     // Wait for custom component to render
     await waitFor(() => {
-      expect(capturedIsBlockIncomplete).not.toBeNull();
+      expect(capturedValue).not.toBeNull();
     });
 
-    expect(capturedIsBlockIncomplete).toBe(true);
+    expect(capturedValue).toBe(true);
 
     // Custom component should have rendered the loading state
     expect(screen.getByTestId("loading")).toBeTruthy();
   });
 
   it("should return false for complete code", async () => {
-    let capturedIsBlockIncomplete: boolean | null = null;
+    let capturedValue: boolean | null = null;
 
     const CustomCode = (props: ExtraProps & { children?: ReactNode }) => {
-      capturedIsBlockIncomplete = useIsBlockIncomplete();
+      capturedValue = useIsCodeFenceIncomplete();
       return <code>{props.children}</code>;
     };
 
@@ -302,10 +341,10 @@ describe("custom component access to useIsBlockIncomplete", () => {
 
     // Wait for custom component to render
     await waitFor(() => {
-      expect(capturedIsBlockIncomplete).not.toBeNull();
+      expect(capturedValue).not.toBeNull();
     });
 
-    expect(capturedIsBlockIncomplete).toBe(false);
+    expect(capturedValue).toBe(false);
   });
 });
 
@@ -315,8 +354,8 @@ describe("Block component exports", () => {
     expect(typeof Block).toBe("object"); // memo returns an object
   });
 
-  it("should export useIsBlockIncomplete hook", () => {
-    expect(useIsBlockIncomplete).toBeDefined();
-    expect(typeof useIsBlockIncomplete).toBe("function");
+  it("should export useIsCodeFenceIncomplete hook", () => {
+    expect(useIsCodeFenceIncomplete).toBeDefined();
+    expect(typeof useIsCodeFenceIncomplete).toBe("function");
   });
 });

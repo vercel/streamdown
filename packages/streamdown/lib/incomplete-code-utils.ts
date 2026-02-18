@@ -1,48 +1,54 @@
 /**
- * Counts occurrences of triple characters (``` or ~~~) in a string.
+ * Regex matching a code fence at the start of a line per CommonMark spec.
+ * Allows up to 3 spaces of indentation, then 3+ backticks or 3+ tildes.
+ * Captures the fence character (` or ~) and the full fence run.
  */
-const countTripleChars = (markdown: string, char: string): number => {
-  let count = 0;
-  let i = 0;
+const CODE_FENCE_PATTERN = /^[ \t]{0,3}(`{3,}|~{3,})/;
 
-  while (i < markdown.length - 2) {
-    if (
-      markdown[i] === char &&
-      markdown[i + 1] === char &&
-      markdown[i + 2] === char
-    ) {
-      count += 1;
-      i += 3; // Skip past the triple characters
+/**
+ * Checks if a markdown string contains an incomplete (unclosed) code fence
+ * by walking line-by-line per the CommonMark spec.
+ *
+ * Only counts fences that start at the beginning of a line (with up to 3
+ * spaces of indentation). This avoids false positives from inline backticks
+ * and correctly handles fences of any length (3+).
+ *
+ * A closing fence must use the same character as the opening fence and be
+ * at least as long.
+ *
+ * @param markdown - The markdown string to check
+ * @returns true if there's an unclosed code fence
+ */
+export const hasIncompleteCodeFence = (markdown: string): boolean => {
+  const lines = markdown.split("\n");
+  let openFenceChar: string | null = null;
+  let openFenceLength = 0;
+
+  for (const line of lines) {
+    const match = CODE_FENCE_PATTERN.exec(line);
+
+    if (openFenceChar === null) {
+      // Not inside a fence — look for an opening fence
+      if (match) {
+        const fenceRun = match[1];
+        openFenceChar = fenceRun[0];
+        openFenceLength = fenceRun.length;
+      }
     } else {
-      i += 1;
+      // Inside a fence — look for a closing fence with the same char and >= length
+      if (match) {
+        const fenceRun = match[1];
+        const char = fenceRun[0];
+        const length = fenceRun.length;
+
+        if (char === openFenceChar && length >= openFenceLength) {
+          // Valid closing fence
+          openFenceChar = null;
+          openFenceLength = 0;
+        }
+      }
     }
   }
 
-  return count;
-};
-
-/**
- * Checks if a markdown string contains an incomplete code fence.
- *
- * A code fence is incomplete if there's an odd number of ``` or ~~~ markers,
- * meaning there's an opening fence without a closing fence.
- * Supports both backtick (```) and tilde (~~~) fences per CommonMark/GFM spec.
- *
- * @param markdown - The markdown string to check
- * @returns true if there's an incomplete code fence
- *
- * @example
- * ```ts
- * hasIncompleteCodeFence("```javascript\nconst x = 1;") // true - no closing fence
- * hasIncompleteCodeFence("```javascript\nconst x = 1;\n```") // false - complete
- * hasIncompleteCodeFence("~~~python\nprint('hi')") // true - no closing fence
- * hasIncompleteCodeFence("Some text") // false - no code fence
- * ```
- */
-export const hasIncompleteCodeFence = (markdown: string): boolean => {
-  const backtickCount = countTripleChars(markdown, "`");
-  const tildeCount = countTripleChars(markdown, "~");
-
-  // Odd count of either means there's an unclosed code fence
-  return backtickCount % 2 === 1 || tildeCount % 2 === 1;
+  return openFenceChar !== null;
 };

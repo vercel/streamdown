@@ -19,7 +19,7 @@ import remend, { type RemendOptions } from "remend";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { type AnimateOptions, createAnimatePlugin } from "./lib/animate";
-import { BlockIncompleteContext } from "./lib/block-position-context";
+import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as defaultComponents } from "./lib/components";
 import { hasIncompleteCodeFence } from "./lib/incomplete-code-utils";
 import { Markdown, type Options } from "./lib/markdown";
@@ -32,7 +32,7 @@ export type { BundledLanguage, BundledTheme } from "shiki";
 export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimatePlugin } from "./lib/animate";
-export { useIsBlockIncomplete } from "./lib/block-position-context";
+export { useIsCodeFenceIncomplete } from "./lib/block-incomplete-context";
 export type {
   AllowElement,
   Components,

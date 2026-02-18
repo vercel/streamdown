@@ -92,15 +92,15 @@ For example, the default `h2` component applies `mt-6 mb-2 font-semibold text-2x
 
 ## Streaming State
 
-When streaming markdown, custom components can detect if their block is still being streamed using the `useIsBlockIncomplete` hook. This is useful for expensive-to-render components where you want to show a loading state until the block is complete.
+When streaming markdown, custom components can detect if their code fence is still being streamed using the `useIsCodeFenceIncomplete` hook. This is useful for expensive-to-render components where you want to show a loading state until the code block is complete.
 
 ```tsx title="app/page.tsx"
-import { Streamdown, useIsBlockIncomplete } from "streamdown";
+import { Streamdown, useIsCodeFenceIncomplete } from "streamdown";
 
 const MyCodeBlock = ({ children }) => {
-  const isBlockIncomplete = useIsBlockIncomplete();
+  const isIncomplete = useIsCodeFenceIncomplete();
 
-  if (isBlockIncomplete) {
+  if (isIncomplete) {
     return <div className="animate-pulse bg-muted h-24 rounded" />;
   }
 

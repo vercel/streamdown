@@ -2,17 +2,17 @@
 "streamdown": minor
 ---
 
-Add `useIsBlockIncomplete` hook for detecting incomplete streaming blocks
+Add `useIsCodeFenceIncomplete` hook for detecting incomplete code fences during streaming
 
-Custom components can now detect when the block they're rendering is still being streamed (incomplete). This is useful for showing loading states in code blocks during streaming.
+Custom components can now detect when the code fence in their block is still being streamed. This is useful for deferring expensive renders (syntax highlighting, Mermaid diagrams) until the code block is complete.
 
 ```tsx
-import { useIsBlockIncomplete } from 'streamdown';
+import { useIsCodeFenceIncomplete } from 'streamdown';
 
 const MyCodeBlock = ({ children }) => {
-  const isBlockIncomplete = useIsBlockIncomplete();
+  const isIncomplete = useIsCodeFenceIncomplete();
 
-  if (isBlockIncomplete) {
+  if (isIncomplete) {
     return <div>Loading code...</div>;
   }
 

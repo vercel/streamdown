@@ -487,16 +487,16 @@ When Mermaid diagrams are first streamed in, they appear as code blocks until th
 
 ### Avoid Continuous Re-rendering
 
-Mermaid diagrams are expensive to render. During streaming, you don't want to re-render the diagram on every chunk—that would be slow and cause flickering. Use the `useIsBlockIncomplete` hook to wait until the code block is complete before rendering:
+Mermaid diagrams are expensive to render. During streaming, you don't want to re-render the diagram on every chunk—that would be slow and cause flickering. Use the `useIsCodeFenceIncomplete` hook to wait until the code block is complete before rendering:
 
 ```tsx
-import { Streamdown, useIsBlockIncomplete } from "streamdown";
+import { Streamdown, useIsCodeFenceIncomplete } from "streamdown";
 import { mermaid } from "@streamdown/mermaid";
 
 const MyMermaidBlock = ({ children }) => {
-  const isBlockIncomplete = useIsBlockIncomplete();
+  const isIncomplete = useIsCodeFenceIncomplete();
 
-  if (isBlockIncomplete) {
+  if (isIncomplete) {
     return (
       <div className="animate-pulse bg-muted h-48 rounded-lg flex items-center justify-center">
         <span className="text-muted-foreground">Loading diagram...</span>
