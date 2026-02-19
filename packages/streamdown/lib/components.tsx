@@ -46,7 +46,7 @@ interface MarkdownPosition {
 }
 interface MarkdownNode {
   position?: MarkdownPosition;
-  properties?: { className?: string };
+  properties?: { className?: string; metastring?: string };
 }
 
 type WithNode<T> = T & {
@@ -717,6 +717,11 @@ const CodeComponent = ({
   const match = className?.match(LANGUAGE_REGEX);
   const language = match?.at(1) ?? "";
 
+  // Parse startLine from the code fence meta string (e.g. ```js startLine=10)
+  const metastring = node?.properties?.metastring;
+  const startLineMatch = metastring?.match(/startLine=(\d+)/);
+  const startLine = startLineMatch ? parseInt(startLineMatch[1], 10) : undefined;
+
   // Extract code content from children safely
   let code = "";
   if (
@@ -801,6 +806,7 @@ const CodeComponent = ({
       code={code}
       isIncomplete={isBlockIncomplete}
       language={language}
+      startLine={startLine}
     >
       {showCodeControls ? (
         <>

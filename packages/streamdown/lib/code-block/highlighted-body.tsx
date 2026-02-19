@@ -9,6 +9,7 @@ type HighlightedCodeBlockBodyProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: string;
   raw: HighlightResult;
+  startLine?: number;
 };
 
 export const HighlightedCodeBlockBody = ({
@@ -16,6 +17,7 @@ export const HighlightedCodeBlockBody = ({
   language,
   raw,
   className,
+  startLine,
   ...rest
 }: HighlightedCodeBlockBodyProps) => {
   const { shikiTheme } = useContext(StreamdownContext);
@@ -49,6 +51,7 @@ export const HighlightedCodeBlockBody = ({
       className={className}
       language={language}
       result={result}
+      startLine={startLine}
       {...rest}
     />
   );

@@ -16,6 +16,7 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
+import { remarkCodeMeta } from "./lib/remark/code-meta";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { type AnimateOptions, createAnimatePlugin } from "./lib/animate";
@@ -147,6 +148,13 @@ const defaultSanitizeSchema = {
     ...defaultSchema.protocols,
     href: [...(defaultSchema.protocols?.href ?? []), "tel"],
   },
+  attributes: {
+    ...defaultSchema.attributes,
+    code: [
+      ...(defaultSchema.attributes?.code ?? []),
+      "metastring",
+    ],
+  },
 };
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
@@ -166,6 +174,7 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
 
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
   gfm: [remarkGfm, {}],
+  codeMeta: remarkCodeMeta,
 } as const;
 
 // Stable plugin arrays for cache efficiency - created once at module level

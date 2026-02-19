@@ -5,6 +5,7 @@ import { cn } from "../utils";
 type CodeBlockBodyProps = ComponentProps<"div"> & {
   result: HighlightResult;
   language: string;
+  startLine?: number;
 };
 
 // Memoize line numbers class string since it's constant
@@ -42,7 +43,14 @@ const parseRootStyle = (rootStyle: string): Record<string, string> => {
 };
 
 export const CodeBlockBody = memo(
-  ({ children, result, language, className, ...rest }: CodeBlockBodyProps) => {
+  ({
+    children,
+    result,
+    language,
+    className,
+    startLine,
+    ...rest
+  }: CodeBlockBodyProps) => {
     // Use CSS custom properties instead of direct inline styles so that
     // dark-mode Tailwind classes can override without !important.
     // This is necessary because !important syntax differs between Tailwind v3 and v4.
@@ -82,7 +90,14 @@ export const CodeBlockBody = memo(
           )}
           style={preStyle}
         >
-          <code className="[counter-increment:line_0] [counter-reset:line]">
+          <code
+            className="[counter-increment:line_0] [counter-reset:line]"
+            style={
+              startLine && startLine > 1
+                ? { counterReset: `line ${startLine - 1}` }
+                : undefined
+            }
+          >
             {result.tokens.map((row, index) => (
               <span
                 className={LINE_NUMBER_CLASSES}
@@ -150,7 +165,8 @@ export const CodeBlockBody = memo(
     return (
       prevProps.result === nextProps.result &&
       prevProps.language === nextProps.language &&
-      prevProps.className === nextProps.className
+      prevProps.className === nextProps.className &&
+      prevProps.startLine === nextProps.startLine
     );
   }
 );
