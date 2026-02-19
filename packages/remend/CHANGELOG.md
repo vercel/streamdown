@@ -1,5 +1,11 @@
 # remend
 
+## 1.2.1
+
+### Patch Changes
+
+- 6374fbf: Fix stray asterisks stemming from mermaid diagrams
+
 ## 1.2.0
 
 ### Minor Changes
