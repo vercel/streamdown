@@ -21,7 +21,11 @@ Thank you for your interest in contributing to Streamdown! We welcome contributi
    ```bash
    pnpm install
    ```
-4. Run the tests to ensure everything is working:
+4. Build all packages (required before running tests):
+   ```bash
+   pnpm build
+   ```
+5. Run the tests to ensure everything is working:
    ```bash
    pnpm test
    ```
