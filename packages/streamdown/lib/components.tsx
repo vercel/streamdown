@@ -15,6 +15,9 @@ import {
 } from "react";
 // BundledLanguage type removed - we now support any language string
 import { StreamdownContext } from "../index";
+
+const START_LINE_PATTERN = /startLine=(\d+)/;
+
 import { useIsCodeFenceIncomplete } from "./block-incomplete-context";
 import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
@@ -719,8 +722,10 @@ const CodeComponent = ({
 
   // Parse startLine from the code fence meta string (e.g. ```js startLine=10)
   const metastring = node?.properties?.metastring;
-  const startLineMatch = metastring?.match(/startLine=(\d+)/);
-  const startLine = startLineMatch ? parseInt(startLineMatch[1], 10) : undefined;
+  const startLineMatch = metastring?.match(START_LINE_PATTERN);
+  const startLine = startLineMatch
+    ? Number.parseInt(startLineMatch[1], 10)
+    : undefined;
 
   // Extract code content from children safely
   let code = "";

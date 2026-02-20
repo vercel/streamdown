@@ -16,7 +16,6 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
-import { remarkCodeMeta } from "./lib/remark/code-meta";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { type AnimateOptions, createAnimatePlugin } from "./lib/animate";
@@ -28,6 +27,7 @@ import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig } from "./lib/plugin-types";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
+import { remarkCodeMeta } from "./lib/remark/code-meta";
 import { cn } from "./lib/utils";
 
 export type { BundledLanguage, BundledTheme } from "shiki";
@@ -150,10 +150,7 @@ const defaultSanitizeSchema = {
   },
   attributes: {
     ...defaultSchema.attributes,
-    code: [
-      ...(defaultSchema.attributes?.code ?? []),
-      "metastring",
-    ],
+    code: [...(defaultSchema.attributes?.code ?? []), "metastring"],
   },
 };
 

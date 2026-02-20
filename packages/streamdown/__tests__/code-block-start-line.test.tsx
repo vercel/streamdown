@@ -26,9 +26,16 @@ describe("remarkCodeMeta", () => {
     processor.runSync(tree);
 
     let foundMeta: string | undefined;
-    visit(tree, "code", (node: { meta?: string; data?: { hProperties?: Record<string, unknown> } }) => {
-      foundMeta = node.data?.hProperties?.["metastring"] as string | undefined;
-    });
+    visit(
+      tree,
+      "code",
+      (node: {
+        meta?: string;
+        data?: { hProperties?: Record<string, unknown> };
+      }) => {
+        foundMeta = node.data?.hProperties?.metastring as string | undefined;
+      }
+    );
 
     expect(foundMeta).toBe("startLine=10");
   });
@@ -45,9 +52,16 @@ describe("remarkCodeMeta", () => {
     processor.runSync(tree);
 
     let foundMeta: string | undefined;
-    visit(tree, "code", (node: { meta?: string; data?: { hProperties?: Record<string, unknown> } }) => {
-      foundMeta = node.data?.hProperties?.["metastring"] as string | undefined;
-    });
+    visit(
+      tree,
+      "code",
+      (node: {
+        meta?: string;
+        data?: { hProperties?: Record<string, unknown> };
+      }) => {
+        foundMeta = node.data?.hProperties?.metastring as string | undefined;
+      }
+    );
 
     expect(foundMeta).toBeUndefined();
   });
@@ -63,20 +77,28 @@ describe("remarkCodeMeta", () => {
     const tree = processor.parse(markdown);
 
     // Manually pre-set an existing hProperty to ensure we don't overwrite it
-    visit(tree, "code", (node: { data?: { hProperties?: Record<string, unknown> } }) => {
-      node.data = node.data ?? {};
-      node.data.hProperties = { existing: "value" };
-    });
+    visit(
+      tree,
+      "code",
+      (node: { data?: { hProperties?: Record<string, unknown> } }) => {
+        node.data = node.data ?? {};
+        node.data.hProperties = { existing: "value" };
+      }
+    );
 
     processor.runSync(tree);
 
     let props: Record<string, unknown> | undefined;
-    visit(tree, "code", (node: { data?: { hProperties?: Record<string, unknown> } }) => {
-      props = node.data?.hProperties;
-    });
+    visit(
+      tree,
+      "code",
+      (node: { data?: { hProperties?: Record<string, unknown> } }) => {
+        props = node.data?.hProperties;
+      }
+    );
 
-    expect(props?.["metastring"]).toBe("startLine=5");
-    expect(props?.["existing"]).toBe("value");
+    expect(props?.metastring).toBe("startLine=5");
+    expect(props?.existing).toBe("value");
   });
 });
 
@@ -86,10 +108,7 @@ describe("remarkCodeMeta", () => {
 
 describe("CodeBlockBody with startLine", () => {
   const baseResult = {
-    tokens: [
-      [{ content: "const x = 1;" }],
-      [{ content: "const y = 2;" }],
-    ],
+    tokens: [[{ content: "const x = 1;" }], [{ content: "const y = 2;" }]],
     bg: "transparent",
     fg: "inherit",
   };
@@ -127,7 +146,11 @@ describe("CodeBlockBody with startLine", () => {
 
   it("sets counter-reset to N-1 when startLine=100", () => {
     const { container } = render(
-      <CodeBlockBody language="javascript" result={baseResult} startLine={100} />
+      <CodeBlockBody
+        language="javascript"
+        result={baseResult}
+        startLine={100}
+      />
     );
 
     const code = container.querySelector("code");
@@ -156,9 +179,7 @@ describe("CodeBlock with startLine", () => {
 
   it("renders without startLine using default counter (starts at 1)", async () => {
     const { container } = render(
-      wrapWithContext(
-        <CodeBlock code="line one\nline two" language="text" />
-      )
+      wrapWithContext(<CodeBlock code="line one\nline two" language="text" />)
     );
 
     await waitFor(
