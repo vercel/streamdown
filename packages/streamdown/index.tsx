@@ -19,9 +19,9 @@ import remend, { type RemendOptions } from "remend";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { type AnimateOptions, createAnimatePlugin } from "./lib/animate";
-import { detectTextDirection } from "./lib/detect-direction";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as defaultComponents } from "./lib/components";
+import { detectTextDirection } from "./lib/detect-direction";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
 import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
@@ -35,6 +35,7 @@ export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimatePlugin } from "./lib/animate";
 export { useIsCodeFenceIncomplete } from "./lib/block-incomplete-context";
+export { detectTextDirection } from "./lib/detect-direction";
 export type {
   AllowElement,
   Components,
@@ -43,7 +44,6 @@ export type {
 } from "./lib/markdown";
 export { defaultUrlTransform } from "./lib/markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
-export { detectTextDirection } from "./lib/detect-direction";
 export type {
   CjkPlugin,
   CodeHighlighterPlugin,
@@ -520,11 +520,13 @@ export const Streamdown = memo(
         <PluginContext.Provider value={plugins ?? null}>
           <StreamdownContext.Provider value={contextValue}>
             <div
-              dir={dir === "auto" ? detectTextDirection(processedChildren) : dir}
               className={cn(
                 "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
                 className
               )}
+              dir={
+                dir === "auto" ? detectTextDirection(processedChildren) : dir
+              }
             >
               <Markdown
                 components={mergedComponents}
@@ -559,7 +561,8 @@ export const Streamdown = memo(
               const isLastBlock = index === blocksToRender.length - 1;
               const isIncomplete =
                 isAnimating && isLastBlock && hasIncompleteCodeFence(block);
-              const resolvedDir = dir === "auto" ? detectTextDirection(block) : dir;
+              const resolvedDir =
+                dir === "auto" ? detectTextDirection(block) : dir;
               return (
                 <BlockComponent
                   components={mergedComponents}

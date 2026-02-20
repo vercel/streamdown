@@ -6,6 +6,8 @@
 const RTL_PATTERN =
   /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F\u0780-\u07BF\u07C0-\u07FF\u0800-\u083F\u0840-\u085F\u08A0-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
 
+const LETTER_PATTERN = /\p{L}/u;
+
 /**
  * Detect text direction using the "first strong character" algorithm.
  * Skips whitespace, punctuation, digits, and markdown syntax to find
@@ -24,9 +26,13 @@ export function detectTextDirection(text: string): "ltr" | "rtl" {
 
   // Find first strong directional character (any Unicode letter)
   for (const char of stripped) {
-    if (RTL_PATTERN.test(char)) return "rtl";
+    if (RTL_PATTERN.test(char)) {
+      return "rtl";
+    }
     // Latin, CJK, Cyrillic, etc. — any letter that's not RTL is LTR
-    if (/\p{L}/u.test(char)) return "ltr";
+    if (LETTER_PATTERN.test(char)) {
+      return "ltr";
+    }
   }
 
   return "ltr";
