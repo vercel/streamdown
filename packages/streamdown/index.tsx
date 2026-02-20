@@ -19,6 +19,7 @@ import remend, { type RemendOptions } from "remend";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { type AnimateOptions, createAnimatePlugin } from "./lib/animate";
+import { detectTextDirection } from "./lib/detect-direction";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as defaultComponents } from "./lib/components";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
@@ -42,6 +43,7 @@ export type {
 } from "./lib/markdown";
 export { defaultUrlTransform } from "./lib/markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
+export { detectTextDirection } from "./lib/detect-direction";
 export type {
   CjkPlugin,
   CodeHighlighterPlugin,
@@ -122,6 +124,8 @@ export type AllowedTags = Record<string, string[]>;
 
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
+  /** Text direction for blocks. "auto" detects per-block using first strong character algorithm. */
+  dir?: "auto" | "ltr" | "rtl";
   BlockComponent?: React.ComponentType<BlockProps>;
   parseMarkdownIntoBlocksFn?: (markdown: string) => string[];
   parseIncompleteMarkdown?: boolean;
@@ -207,6 +211,8 @@ export type BlockProps = Options & {
   index: number;
   /** Whether this block is incomplete (still being streamed) */
   isIncomplete: boolean;
+  /** Resolved text direction for this block */
+  dir?: "ltr" | "rtl";
 };
 
 export const Block = memo(
@@ -217,6 +223,7 @@ export const Block = memo(
     shouldNormalizeHtmlIndentation,
     index: __,
     isIncomplete,
+    dir,
     ...props
   }: BlockProps) => {
     // Note: remend is already applied to the entire markdown before parsing into blocks
@@ -226,9 +233,11 @@ export const Block = memo(
         ? normalizeHtmlIndentation(content)
         : content;
 
+    const inner = <Markdown {...props}>{normalizedContent}</Markdown>;
+
     return (
       <BlockIncompleteContext.Provider value={isIncomplete}>
-        <Markdown {...props}>{normalizedContent}</Markdown>
+        {dir ? <div dir={dir}>{inner}</div> : inner}
       </BlockIncompleteContext.Provider>
     );
   },
@@ -248,6 +257,10 @@ export const Block = memo(
     }
 
     if (prevProps.isIncomplete !== nextProps.isIncomplete) {
+      return false;
+    }
+
+    if (prevProps.dir !== nextProps.dir) {
       return false;
     }
 
@@ -294,6 +307,7 @@ export const Streamdown = memo(
   ({
     children,
     mode = "streaming",
+    dir,
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     normalizeHtmlIndentation: shouldNormalizeHtmlIndentation = false,
     components,
@@ -506,6 +520,7 @@ export const Streamdown = memo(
         <PluginContext.Provider value={plugins ?? null}>
           <StreamdownContext.Provider value={contextValue}>
             <div
+              dir={dir === "auto" ? detectTextDirection(processedChildren) : dir}
               className={cn(
                 "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
                 className
@@ -544,10 +559,12 @@ export const Streamdown = memo(
               const isLastBlock = index === blocksToRender.length - 1;
               const isIncomplete =
                 isAnimating && isLastBlock && hasIncompleteCodeFence(block);
+              const resolvedDir = dir === "auto" ? detectTextDirection(block) : dir;
               return (
                 <BlockComponent
                   components={mergedComponents}
                   content={block}
+                  dir={resolvedDir}
                   index={index}
                   isIncomplete={isIncomplete}
                   key={blockKeys[index]}
@@ -575,6 +592,7 @@ export const Streamdown = memo(
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
-    prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation
+    prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
+    prevProps.dir === nextProps.dir
 );
 Streamdown.displayName = "Streamdown";
