@@ -15,10 +15,11 @@ export type CnFunction = (...inputs: ClassValue[]) => string;
  */
 export const prefixClasses = (prefix: string, classString: string): string => {
   if (!prefix || !classString) return classString;
+  const prefixWithColon = `${prefix}:`;
   return classString
     .split(/\s+/)
     .filter(Boolean)
-    .map((cls) => `${prefix}:${cls}`)
+    .map((cls) => cls.startsWith(prefixWithColon) ? cls : `${prefix}:${cls}`)
     .join(" ");
 };
 

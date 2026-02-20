@@ -43,6 +43,18 @@ describe("prefixClasses", () => {
       "tw:sm:flex tw:md:hidden"
     );
   });
+
+  it("should not double-prefix classes that are already prefixed", () => {
+    expect(prefixClasses("tw", "tw:flex tw:items-center")).toBe(
+      "tw:flex tw:items-center"
+    );
+  });
+
+  it("should not double-prefix mixed already-prefixed and unprefixed classes", () => {
+    expect(prefixClasses("tw", "tw:flex items-center")).toBe(
+      "tw:flex tw:items-center"
+    );
+  });
 });
 
 describe("createCn", () => {
