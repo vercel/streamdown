@@ -1,6 +1,6 @@
 import { type HTMLAttributes, lazy, Suspense, useMemo } from "react";
-import { useCn } from "../prefix-context";
 import type { HighlightResult } from "../plugin-types";
+import { useCn } from "../prefix-context";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContainer } from "./container";
 import { CodeBlockContext } from "./context";
@@ -59,9 +59,15 @@ export const CodeBlock = ({
       <CodeBlockContainer isIncomplete={isIncomplete} language={language}>
         <CodeBlockHeader language={language} />
         {children ? (
-          <div className={cn("pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end")}>
+          <div
+            className={cn(
+              "pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end"
+            )}
+          >
             <div
-              className={cn("pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur")}
+              className={cn(
+                "pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur"
+              )}
               data-streamdown="code-block-actions"
             >
               {children}

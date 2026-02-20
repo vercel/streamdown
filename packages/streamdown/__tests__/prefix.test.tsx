@@ -3,6 +3,9 @@ import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 import { createCn, prefixClasses } from "../lib/utils";
 
+const TW_PREFIX_PATTERN = /tw:/;
+const TW_PREFIX_START_PATTERN = /^tw:/;
+
 describe("prefixClasses", () => {
   it("should prepend prefix to each class", () => {
     expect(prefixClasses("tw", "flex items-center")).toBe(
@@ -81,22 +84,20 @@ describe("createCn", () => {
 
   it("should handle conditional classes", () => {
     const cn = createCn("tw");
-    expect(cn("flex", false && "hidden", "items-center")).toBe(
-      "tw:flex tw:items-center"
-    );
+    expect(cn("flex", false, "items-center")).toBe("tw:flex tw:items-center");
   });
 });
 
 describe("Streamdown with prefix", () => {
   it("should render with prefixed classes", () => {
     const { container } = render(
-      <Streamdown prefix="tw" mode="static">
+      <Streamdown mode="static" prefix="tw">
         **bold text**
       </Streamdown>
     );
 
     const wrapper = container.firstElementChild;
-    expect(wrapper?.className).toMatch(/tw:/);
+    expect(wrapper?.className).toMatch(TW_PREFIX_PATTERN);
   });
 
   it("should render without prefix by default", () => {
@@ -105,17 +106,17 @@ describe("Streamdown with prefix", () => {
     );
 
     const wrapper = container.firstElementChild;
-    expect(wrapper?.className).not.toMatch(/tw:/);
+    expect(wrapper?.className).not.toMatch(TW_PREFIX_PATTERN);
   });
 
   it("should prefix internal component classes", () => {
     const { container } = render(
-      <Streamdown prefix="tw" mode="static">
+      <Streamdown mode="static" prefix="tw">
         **bold text**
       </Streamdown>
     );
 
     const strong = container.querySelector("[data-streamdown='strong']");
-    expect(strong?.className).toMatch(/^tw:/);
+    expect(strong?.className).toMatch(TW_PREFIX_START_PATTERN);
   });
 });

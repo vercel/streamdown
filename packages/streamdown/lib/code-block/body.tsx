@@ -47,10 +47,7 @@ export const CodeBlockBody = memo(
     const cn = useCn();
 
     // Prefix the pre-computed line number classes
-    const lineNumberClasses = useMemo(
-      () => cn(LINE_NUMBER_CLASSES_BASE),
-      [cn]
-    );
+    const lineNumberClasses = useMemo(() => cn(LINE_NUMBER_CLASSES_BASE), [cn]);
 
     // Use CSS custom properties instead of direct inline styles so that
     // dark-mode Tailwind classes can override without !important.
@@ -91,7 +88,9 @@ export const CodeBlockBody = memo(
           )}
           style={preStyle}
         >
-          <code className={cn("[counter-increment:line_0] [counter-reset:line]")}>
+          <code
+            className={cn("[counter-increment:line_0] [counter-reset:line]")}
+          >
             {result.tokens.map((row, index) => (
               <span
                 className={lineNumberClasses}

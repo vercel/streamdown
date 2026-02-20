@@ -74,7 +74,9 @@ export const LinkSafetyModal = ({
   return (
     // biome-ignore lint/a11y/useSemanticElements: "div is used as a backdrop overlay"
     <div
-      className={cn("fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm")}
+      className={cn(
+        "fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm"
+      )}
       data-streamdown="link-safety-modal"
       onClick={onClose}
       onKeyDown={(e) => {
@@ -87,13 +89,17 @@ export const LinkSafetyModal = ({
     >
       {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
       <div
-        className={cn("relative mx-4 flex w-full max-w-md flex-col gap-4 rounded-xl border bg-background p-6 shadow-lg")}
+        className={cn(
+          "relative mx-4 flex w-full max-w-md flex-col gap-4 rounded-xl border bg-background p-6 shadow-lg"
+        )}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         role="presentation"
       >
         <button
-          className={cn("absolute top-4 right-4 rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground")}
+          className={cn(
+            "absolute top-4 right-4 rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+          )}
           onClick={onClose}
           title="Close"
           type="button"
@@ -122,7 +128,9 @@ export const LinkSafetyModal = ({
 
         <div className={cn("flex gap-2")}>
           <button
-            className={cn("flex flex-1 items-center justify-center gap-2 rounded-md border bg-background px-4 py-2 font-medium text-sm transition-all hover:bg-muted")}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-2 rounded-md border bg-background px-4 py-2 font-medium text-sm transition-all hover:bg-muted"
+            )}
             onClick={handleCopy}
             type="button"
           >
@@ -139,7 +147,9 @@ export const LinkSafetyModal = ({
             )}
           </button>
           <button
-            className={cn("flex flex-1 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground text-sm transition-all hover:bg-primary/90")}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground text-sm transition-all hover:bg-primary/90"
+            )}
             onClick={handleConfirm}
             type="button"
           >

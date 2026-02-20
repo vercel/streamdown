@@ -26,8 +26,8 @@ import type { ExtraProps, Options } from "./markdown";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
 import { useMermaidPlugin } from "./plugin-context";
-import { Table } from "./table";
 import { useCn } from "./prefix-context";
+import { Table } from "./table";
 
 // Lazy load heavy components
 const Mermaid = lazy(() =>
@@ -144,16 +144,16 @@ const MemoOl = memo<OlProps>(
   ({ children, className, node, ...props }: OlProps) => {
     const cn = useCn();
     return (
-    <ol
-      className={cn(
-        "list-inside list-decimal whitespace-normal [li_&]:pl-6",
-        className
-      )}
-      data-streamdown="ordered-list"
-      {...props}
-    >
-      {children}
-    </ol>
+      <ol
+        className={cn(
+          "list-inside list-decimal whitespace-normal [li_&]:pl-6",
+          className
+        )}
+        data-streamdown="ordered-list"
+        {...props}
+      >
+        {children}
+      </ol>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -166,13 +166,13 @@ const MemoLi = memo<LiProps>(
   ({ children, className, node, ...props }: LiProps) => {
     const cn = useCn();
     return (
-    <li
-      className={cn("py-1 [&>p]:inline", className)}
-      data-streamdown="list-item"
-      {...props}
-    >
-      {children}
-    </li>
+      <li
+        className={cn("py-1 [&>p]:inline", className)}
+        data-streamdown="list-item"
+        {...props}
+      >
+        {children}
+      </li>
     );
   },
   (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
@@ -184,16 +184,16 @@ const MemoUl = memo<UlProps>(
   ({ children, className, node, ...props }: UlProps) => {
     const cn = useCn();
     return (
-    <ul
-      className={cn(
-        "list-inside list-disc whitespace-normal [li_&]:pl-6",
-        className
-      )}
-      data-streamdown="unordered-list"
-      {...props}
-    >
-      {children}
-    </ul>
+      <ul
+        className={cn(
+          "list-inside list-disc whitespace-normal [li_&]:pl-6",
+          className
+        )}
+        data-streamdown="unordered-list"
+        {...props}
+      >
+        {children}
+      </ul>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -205,11 +205,11 @@ const MemoHr = memo<HrProps>(
   ({ className, node, ...props }: HrProps) => {
     const cn = useCn();
     return (
-    <hr
-      className={cn("my-6 border-border", className)}
-      data-streamdown="horizontal-rule"
-      {...props}
-    />
+      <hr
+        className={cn("my-6 border-border", className)}
+        data-streamdown="horizontal-rule"
+        {...props}
+      />
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -221,13 +221,13 @@ const MemoStrong = memo<StrongProps>(
   ({ children, className, node, ...props }: StrongProps) => {
     const cn = useCn();
     return (
-    <span
-      className={cn("font-semibold", className)}
-      data-streamdown="strong"
-      {...props}
-    >
-      {children}
-    </span>
+      <span
+        className={cn("font-semibold", className)}
+        data-streamdown="strong"
+        {...props}
+      >
+        {children}
+      </span>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -343,13 +343,13 @@ const MemoH1 = memo<HeadingProps<"h1">>(
   ({ children, className, node, ...props }) => {
     const cn = useCn();
     return (
-    <h1
-      className={cn("mt-6 mb-2 font-semibold text-3xl", className)}
-      data-streamdown="heading-1"
-      {...props}
-    >
-      {children}
-    </h1>
+      <h1
+        className={cn("mt-6 mb-2 font-semibold text-3xl", className)}
+        data-streamdown="heading-1"
+        {...props}
+      >
+        {children}
+      </h1>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -360,13 +360,13 @@ const MemoH2 = memo<HeadingProps<"h2">>(
   ({ children, className, node, ...props }) => {
     const cn = useCn();
     return (
-    <h2
-      className={cn("mt-6 mb-2 font-semibold text-2xl", className)}
-      data-streamdown="heading-2"
-      {...props}
-    >
-      {children}
-    </h2>
+      <h2
+        className={cn("mt-6 mb-2 font-semibold text-2xl", className)}
+        data-streamdown="heading-2"
+        {...props}
+      >
+        {children}
+      </h2>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -377,13 +377,13 @@ const MemoH3 = memo<HeadingProps<"h3">>(
   ({ children, className, node, ...props }) => {
     const cn = useCn();
     return (
-    <h3
-      className={cn("mt-6 mb-2 font-semibold text-xl", className)}
-      data-streamdown="heading-3"
-      {...props}
-    >
-      {children}
-    </h3>
+      <h3
+        className={cn("mt-6 mb-2 font-semibold text-xl", className)}
+        data-streamdown="heading-3"
+        {...props}
+      >
+        {children}
+      </h3>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -394,13 +394,13 @@ const MemoH4 = memo<HeadingProps<"h4">>(
   ({ children, className, node, ...props }) => {
     const cn = useCn();
     return (
-    <h4
-      className={cn("mt-6 mb-2 font-semibold text-lg", className)}
-      data-streamdown="heading-4"
-      {...props}
-    >
-      {children}
-    </h4>
+      <h4
+        className={cn("mt-6 mb-2 font-semibold text-lg", className)}
+        data-streamdown="heading-4"
+        {...props}
+      >
+        {children}
+      </h4>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -411,13 +411,13 @@ const MemoH5 = memo<HeadingProps<"h5">>(
   ({ children, className, node, ...props }) => {
     const cn = useCn();
     return (
-    <h5
-      className={cn("mt-6 mb-2 font-semibold text-base", className)}
-      data-streamdown="heading-5"
-      {...props}
-    >
-      {children}
-    </h5>
+      <h5
+        className={cn("mt-6 mb-2 font-semibold text-base", className)}
+        data-streamdown="heading-5"
+        {...props}
+      >
+        {children}
+      </h5>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -428,13 +428,13 @@ const MemoH6 = memo<HeadingProps<"h6">>(
   ({ children, className, node, ...props }) => {
     const cn = useCn();
     return (
-    <h6
-      className={cn("mt-6 mb-2 font-semibold text-sm", className)}
-      data-streamdown="heading-6"
-      {...props}
-    >
-      {children}
-    </h6>
+      <h6
+        className={cn("mt-6 mb-2 font-semibold text-sm", className)}
+        data-streamdown="heading-6"
+        {...props}
+      >
+        {children}
+      </h6>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -462,13 +462,13 @@ const MemoThead = memo<TheadProps>(
   ({ children, className, node, ...props }: TheadProps) => {
     const cn = useCn();
     return (
-    <thead
-      className={cn("bg-muted/80", className)}
-      data-streamdown="table-header"
-      {...props}
-    >
-      {children}
-    </thead>
+      <thead
+        className={cn("bg-muted/80", className)}
+        data-streamdown="table-header"
+        {...props}
+      >
+        {children}
+      </thead>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -480,13 +480,13 @@ const MemoTbody = memo<TbodyProps>(
   ({ children, className, node, ...props }: TbodyProps) => {
     const cn = useCn();
     return (
-    <tbody
-      className={cn("divide-y divide-border", className)}
-      data-streamdown="table-body"
-      {...props}
-    >
-      {children}
-    </tbody>
+      <tbody
+        className={cn("divide-y divide-border", className)}
+        data-streamdown="table-body"
+        {...props}
+      >
+        {children}
+      </tbody>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -498,13 +498,13 @@ const MemoTr = memo<TrProps>(
   ({ children, className, node, ...props }: TrProps) => {
     const cn = useCn();
     return (
-    <tr
-      className={cn("border-border", className)}
-      data-streamdown="table-row"
-      {...props}
-    >
-      {children}
-    </tr>
+      <tr
+        className={cn("border-border", className)}
+        data-streamdown="table-row"
+        {...props}
+      >
+        {children}
+      </tr>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -516,16 +516,16 @@ const MemoTh = memo<ThProps>(
   ({ children, className, node, ...props }: ThProps) => {
     const cn = useCn();
     return (
-    <th
-      className={cn(
-        "whitespace-nowrap px-4 py-2 text-left font-semibold text-sm",
-        className
-      )}
-      data-streamdown="table-header-cell"
-      {...props}
-    >
-      {children}
-    </th>
+      <th
+        className={cn(
+          "whitespace-nowrap px-4 py-2 text-left font-semibold text-sm",
+          className
+        )}
+        data-streamdown="table-header-cell"
+        {...props}
+      >
+        {children}
+      </th>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -537,13 +537,13 @@ const MemoTd = memo<TdProps>(
   ({ children, className, node, ...props }: TdProps) => {
     const cn = useCn();
     return (
-    <td
-      className={cn("px-4 py-2 text-sm", className)}
-      data-streamdown="table-cell"
-      {...props}
-    >
-      {children}
-    </td>
+      <td
+        className={cn("px-4 py-2 text-sm", className)}
+        data-streamdown="table-cell"
+        {...props}
+      >
+        {children}
+      </td>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -555,16 +555,16 @@ const MemoBlockquote = memo<BlockquoteProps>(
   ({ children, className, node, ...props }: BlockquoteProps) => {
     const cn = useCn();
     return (
-    <blockquote
-      className={cn(
-        "my-4 border-muted-foreground/30 border-l-4 pl-4 text-muted-foreground italic",
-        className
-      )}
-      data-streamdown="blockquote"
-      {...props}
-    >
-      {children}
-    </blockquote>
+      <blockquote
+        className={cn(
+          "my-4 border-muted-foreground/30 border-l-4 pl-4 text-muted-foreground italic",
+          className
+        )}
+        data-streamdown="blockquote"
+        {...props}
+      >
+        {children}
+      </blockquote>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -576,13 +576,13 @@ const MemoSup = memo<SupProps>(
   ({ children, className, node, ...props }: SupProps) => {
     const cn = useCn();
     return (
-    <sup
-      className={cn("text-sm", className)}
-      data-streamdown="superscript"
-      {...props}
-    >
-      {children}
-    </sup>
+      <sup
+        className={cn("text-sm", className)}
+        data-streamdown="superscript"
+        {...props}
+      >
+        {children}
+      </sup>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -594,13 +594,13 @@ const MemoSub = memo<SubProps>(
   ({ children, className, node, ...props }: SubProps) => {
     const cn = useCn();
     return (
-    <sub
-      className={cn("text-sm", className)}
-      data-streamdown="subscript"
-      {...props}
-    >
-      {children}
-    </sub>
+      <sub
+        className={cn("text-sm", className)}
+        data-streamdown="subscript"
+        {...props}
+      >
+        {children}
+      </sub>
     );
   },
   (p, n) => sameClassAndNode(p, n)
@@ -815,13 +815,23 @@ const CodeComponent = ({
           )}
           data-streamdown="mermaid-block"
         >
-          <div className={cn("flex h-8 items-center text-muted-foreground text-xs")}>
+          <div
+            className={cn(
+              "flex h-8 items-center text-muted-foreground text-xs"
+            )}
+          >
             <span className={cn("ml-1 font-mono lowercase")}>mermaid</span>
           </div>
           {shouldShowMermaidControls ? (
-            <div className={cn("pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end")}>
+            <div
+              className={cn(
+                "pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end"
+              )}
+            >
               <div
-                className={cn("pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur")}
+                className={cn(
+                  "pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur"
+                )}
                 data-streamdown="mermaid-block-actions"
               >
                 {showDownload ? (

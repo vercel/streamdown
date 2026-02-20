@@ -145,7 +145,11 @@ export const ImageComponent = ({
           Image not available
         </span>
       )}
-      <div className={cn("pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block")} />
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block"
+        )}
+      />
       {showDownload && (
         <button
           className={cn(

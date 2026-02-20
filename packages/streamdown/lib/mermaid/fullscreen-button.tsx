@@ -108,7 +108,9 @@ export const MermaidFullscreenButton = ({
         ? createPortal(
             // biome-ignore lint/a11y/useSemanticElements: "div is used as a backdrop overlay, not a button"
             <div
-              className={cn("fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm")}
+              className={cn(
+                "fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
+              )}
               onClick={handleToggle}
               onKeyDown={(e) => {
                 if (e.key === "Escape") {
@@ -119,7 +121,9 @@ export const MermaidFullscreenButton = ({
               tabIndex={0}
             >
               <button
-                className={cn("absolute top-4 right-4 z-10 rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground")}
+                className={cn(
+                  "absolute top-4 right-4 z-10 rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+                )}
                 onClick={handleToggle}
                 title="Exit fullscreen"
                 type="button"

@@ -28,7 +28,7 @@ import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig } from "./lib/plugin-types";
 import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
-import { type CnFunction, cn, createCn } from "./lib/utils";
+import { createCn } from "./lib/utils";
 
 export type { BundledLanguage, BundledTheme } from "shiki";
 export type { AnimateOptions } from "./lib/animate";
@@ -546,30 +546,32 @@ export const Streamdown = memo(
                   : null,
                 className
               )}
-            style={style}
-          >
-            {blocksToRender.length === 0 && caret && isAnimating && <span />}
-            {blocksToRender.map((block, index) => {
-              const isLastBlock = index === blocksToRender.length - 1;
-              const isIncomplete =
-                isAnimating && isLastBlock && hasIncompleteCodeFence(block);
-              return (
-                <BlockComponent
-                  components={mergedComponents}
-                  content={block}
-                  index={index}
-                  isIncomplete={isIncomplete}
-                  key={blockKeys[index]}
-                  rehypePlugins={mergedRehypePlugins}
-                  remarkPlugins={mergedRemarkPlugins}
-                  shouldNormalizeHtmlIndentation={
-                    shouldNormalizeHtmlIndentation
-                  }
-                  shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-                  {...props}
-                />
-              );
-            })}
+              style={style}
+            >
+              {blocksToRender.length === 0 && caret && isAnimating && <span />}
+              {blocksToRender.map((block, index) => {
+                const isLastBlock = index === blocksToRender.length - 1;
+                const isIncomplete =
+                  isAnimating && isLastBlock && hasIncompleteCodeFence(block);
+                return (
+                  <BlockComponent
+                    components={mergedComponents}
+                    content={block}
+                    index={index}
+                    isIncomplete={isIncomplete}
+                    key={blockKeys[index]}
+                    rehypePlugins={mergedRehypePlugins}
+                    remarkPlugins={mergedRemarkPlugins}
+                    shouldNormalizeHtmlIndentation={
+                      shouldNormalizeHtmlIndentation
+                    }
+                    shouldParseIncompleteMarkdown={
+                      shouldParseIncompleteMarkdown
+                    }
+                    {...props}
+                  />
+                );
+              })}
             </div>
           </PrefixContext.Provider>
         </StreamdownContext.Provider>

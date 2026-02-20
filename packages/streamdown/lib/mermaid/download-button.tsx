@@ -116,9 +116,15 @@ export const MermaidDownloadDropdown = ({
         {children ?? <DownloadIcon size={14} />}
       </button>
       {isOpen ? (
-        <div className={cn("absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg")}>
+        <div
+          className={cn(
+            "absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg"
+          )}
+        >
           <button
-            className={cn("w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40")}
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
             onClick={() => downloadMermaid("svg")}
             title="Download diagram as SVG"
             type="button"
@@ -126,7 +132,9 @@ export const MermaidDownloadDropdown = ({
             SVG
           </button>
           <button
-            className={cn("w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40")}
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
             onClick={() => downloadMermaid("png")}
             title="Download diagram as PNG"
             type="button"
@@ -134,7 +142,9 @@ export const MermaidDownloadDropdown = ({
             PNG
           </button>
           <button
-            className={cn("w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40")}
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
             onClick={() => downloadMermaid("mmd")}
             title="Download diagram as MMD"
             type="button"

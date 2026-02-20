@@ -109,9 +109,15 @@ export const TableCopyDropdown = ({
         {children ?? <Icon size={14} />}
       </button>
       {isOpen ? (
-        <div className={cn("absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg")}>
+        <div
+          className={cn(
+            "absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg"
+          )}
+        >
           <button
-            className={cn("w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40")}
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
             onClick={() => copyTableData("md")}
             title="Copy table as Markdown"
             type="button"
@@ -119,7 +125,9 @@ export const TableCopyDropdown = ({
             Markdown
           </button>
           <button
-            className={cn("w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40")}
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
             onClick={() => copyTableData("csv")}
             title="Copy table as CSV"
             type="button"
@@ -127,7 +135,9 @@ export const TableCopyDropdown = ({
             CSV
           </button>
           <button
-            className={cn("w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40")}
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
             onClick={() => copyTableData("tsv")}
             title="Copy table as TSV"
             type="button"
