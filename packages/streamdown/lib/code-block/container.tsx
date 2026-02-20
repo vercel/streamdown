@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { cn } from "../utils";
+import { useCn } from "../prefix-context";
 
 type CodeBlockContainerProps = ComponentProps<"div"> & {
   language: string;
@@ -13,7 +13,9 @@ export const CodeBlockContainer = ({
   style,
   isIncomplete,
   ...props
-}: CodeBlockContainerProps) => (
+}: CodeBlockContainerProps) => {
+  const cn = useCn();
+  return (
   <div
     className={cn(
       "my-4 flex w-full flex-col gap-2 rounded-xl border border-border bg-sidebar p-2",
@@ -32,4 +34,5 @@ export const CodeBlockContainer = ({
     }}
     {...props}
   />
-);
+  );
+};

@@ -27,7 +27,7 @@ import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
 import { useMermaidPlugin } from "./plugin-context";
 import { Table } from "./table";
-import { cn } from "./utils";
+import { useCn } from "./prefix-context";
 
 // Lazy load heavy components
 const Mermaid = lazy(() =>
@@ -141,7 +141,9 @@ const shouldShowMermaidControl = (
 
 type OlProps = WithNode<JSX.IntrinsicElements["ol"]>;
 const MemoOl = memo<OlProps>(
-  ({ children, className, node, ...props }: OlProps) => (
+  ({ children, className, node, ...props }: OlProps) => {
+    const cn = useCn();
+    return (
     <ol
       className={cn(
         "list-inside list-decimal whitespace-normal [li_&]:pl-6",
@@ -152,7 +154,8 @@ const MemoOl = memo<OlProps>(
     >
       {children}
     </ol>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoOl.displayName = "MarkdownOl";
@@ -160,7 +163,9 @@ MemoOl.displayName = "MarkdownOl";
 type LiProps = WithNode<JSX.IntrinsicElements["li"]>;
 
 const MemoLi = memo<LiProps>(
-  ({ children, className, node, ...props }: LiProps) => (
+  ({ children, className, node, ...props }: LiProps) => {
+    const cn = useCn();
+    return (
     <li
       className={cn("py-1 [&>p]:inline", className)}
       data-streamdown="list-item"
@@ -168,14 +173,17 @@ const MemoLi = memo<LiProps>(
     >
       {children}
     </li>
-  ),
+    );
+  },
   (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
 );
 MemoLi.displayName = "MarkdownLi";
 
 type UlProps = WithNode<JSX.IntrinsicElements["ul"]>;
 const MemoUl = memo<UlProps>(
-  ({ children, className, node, ...props }: UlProps) => (
+  ({ children, className, node, ...props }: UlProps) => {
+    const cn = useCn();
+    return (
     <ul
       className={cn(
         "list-inside list-disc whitespace-normal [li_&]:pl-6",
@@ -186,27 +194,33 @@ const MemoUl = memo<UlProps>(
     >
       {children}
     </ul>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoUl.displayName = "MarkdownUl";
 
 type HrProps = WithNode<JSX.IntrinsicElements["hr"]>;
 const MemoHr = memo<HrProps>(
-  ({ className, node, ...props }: HrProps) => (
+  ({ className, node, ...props }: HrProps) => {
+    const cn = useCn();
+    return (
     <hr
       className={cn("my-6 border-border", className)}
       data-streamdown="horizontal-rule"
       {...props}
     />
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoHr.displayName = "MarkdownHr";
 
 type StrongProps = WithNode<JSX.IntrinsicElements["span"]>;
 const MemoStrong = memo<StrongProps>(
-  ({ children, className, node, ...props }: StrongProps) => (
+  ({ children, className, node, ...props }: StrongProps) => {
+    const cn = useCn();
+    return (
     <span
       className={cn("font-semibold", className)}
       data-streamdown="strong"
@@ -214,7 +228,8 @@ const MemoStrong = memo<StrongProps>(
     >
       {children}
     </span>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoStrong.displayName = "MarkdownStrong";
@@ -228,6 +243,7 @@ const LinkComponent = ({
   node,
   ...props
 }: AProps) => {
+  const cn = useCn();
   const { linkSafety } = useContext(StreamdownContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isIncomplete = href === "streamdown:incomplete-link";
@@ -324,7 +340,9 @@ type HeadingProps<TTag extends keyof JSX.IntrinsicElements> = WithNode<
 >;
 
 const MemoH1 = memo<HeadingProps<"h1">>(
-  ({ children, className, node, ...props }) => (
+  ({ children, className, node, ...props }) => {
+    const cn = useCn();
+    return (
     <h1
       className={cn("mt-6 mb-2 font-semibold text-3xl", className)}
       data-streamdown="heading-1"
@@ -332,13 +350,16 @@ const MemoH1 = memo<HeadingProps<"h1">>(
     >
       {children}
     </h1>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoH1.displayName = "MarkdownH1";
 
 const MemoH2 = memo<HeadingProps<"h2">>(
-  ({ children, className, node, ...props }) => (
+  ({ children, className, node, ...props }) => {
+    const cn = useCn();
+    return (
     <h2
       className={cn("mt-6 mb-2 font-semibold text-2xl", className)}
       data-streamdown="heading-2"
@@ -346,13 +367,16 @@ const MemoH2 = memo<HeadingProps<"h2">>(
     >
       {children}
     </h2>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoH2.displayName = "MarkdownH2";
 
 const MemoH3 = memo<HeadingProps<"h3">>(
-  ({ children, className, node, ...props }) => (
+  ({ children, className, node, ...props }) => {
+    const cn = useCn();
+    return (
     <h3
       className={cn("mt-6 mb-2 font-semibold text-xl", className)}
       data-streamdown="heading-3"
@@ -360,13 +384,16 @@ const MemoH3 = memo<HeadingProps<"h3">>(
     >
       {children}
     </h3>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoH3.displayName = "MarkdownH3";
 
 const MemoH4 = memo<HeadingProps<"h4">>(
-  ({ children, className, node, ...props }) => (
+  ({ children, className, node, ...props }) => {
+    const cn = useCn();
+    return (
     <h4
       className={cn("mt-6 mb-2 font-semibold text-lg", className)}
       data-streamdown="heading-4"
@@ -374,13 +401,16 @@ const MemoH4 = memo<HeadingProps<"h4">>(
     >
       {children}
     </h4>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoH4.displayName = "MarkdownH4";
 
 const MemoH5 = memo<HeadingProps<"h5">>(
-  ({ children, className, node, ...props }) => (
+  ({ children, className, node, ...props }) => {
+    const cn = useCn();
+    return (
     <h5
       className={cn("mt-6 mb-2 font-semibold text-base", className)}
       data-streamdown="heading-5"
@@ -388,13 +418,16 @@ const MemoH5 = memo<HeadingProps<"h5">>(
     >
       {children}
     </h5>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoH5.displayName = "MarkdownH5";
 
 const MemoH6 = memo<HeadingProps<"h6">>(
-  ({ children, className, node, ...props }) => (
+  ({ children, className, node, ...props }) => {
+    const cn = useCn();
+    return (
     <h6
       className={cn("mt-6 mb-2 font-semibold text-sm", className)}
       data-streamdown="heading-6"
@@ -402,7 +435,8 @@ const MemoH6 = memo<HeadingProps<"h6">>(
     >
       {children}
     </h6>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoH6.displayName = "MarkdownH6";
@@ -425,7 +459,9 @@ MemoTable.displayName = "MarkdownTable";
 
 type TheadProps = WithNode<JSX.IntrinsicElements["thead"]>;
 const MemoThead = memo<TheadProps>(
-  ({ children, className, node, ...props }: TheadProps) => (
+  ({ children, className, node, ...props }: TheadProps) => {
+    const cn = useCn();
+    return (
     <thead
       className={cn("bg-muted/80", className)}
       data-streamdown="table-header"
@@ -433,14 +469,17 @@ const MemoThead = memo<TheadProps>(
     >
       {children}
     </thead>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoThead.displayName = "MarkdownThead";
 
 type TbodyProps = WithNode<JSX.IntrinsicElements["tbody"]>;
 const MemoTbody = memo<TbodyProps>(
-  ({ children, className, node, ...props }: TbodyProps) => (
+  ({ children, className, node, ...props }: TbodyProps) => {
+    const cn = useCn();
+    return (
     <tbody
       className={cn("divide-y divide-border", className)}
       data-streamdown="table-body"
@@ -448,14 +487,17 @@ const MemoTbody = memo<TbodyProps>(
     >
       {children}
     </tbody>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoTbody.displayName = "MarkdownTbody";
 
 type TrProps = WithNode<JSX.IntrinsicElements["tr"]>;
 const MemoTr = memo<TrProps>(
-  ({ children, className, node, ...props }: TrProps) => (
+  ({ children, className, node, ...props }: TrProps) => {
+    const cn = useCn();
+    return (
     <tr
       className={cn("border-border", className)}
       data-streamdown="table-row"
@@ -463,14 +505,17 @@ const MemoTr = memo<TrProps>(
     >
       {children}
     </tr>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoTr.displayName = "MarkdownTr";
 
 type ThProps = WithNode<JSX.IntrinsicElements["th"]>;
 const MemoTh = memo<ThProps>(
-  ({ children, className, node, ...props }: ThProps) => (
+  ({ children, className, node, ...props }: ThProps) => {
+    const cn = useCn();
+    return (
     <th
       className={cn(
         "whitespace-nowrap px-4 py-2 text-left font-semibold text-sm",
@@ -481,14 +526,17 @@ const MemoTh = memo<ThProps>(
     >
       {children}
     </th>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoTh.displayName = "MarkdownTh";
 
 type TdProps = WithNode<JSX.IntrinsicElements["td"]>;
 const MemoTd = memo<TdProps>(
-  ({ children, className, node, ...props }: TdProps) => (
+  ({ children, className, node, ...props }: TdProps) => {
+    const cn = useCn();
+    return (
     <td
       className={cn("px-4 py-2 text-sm", className)}
       data-streamdown="table-cell"
@@ -496,14 +544,17 @@ const MemoTd = memo<TdProps>(
     >
       {children}
     </td>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoTd.displayName = "MarkdownTd";
 
 type BlockquoteProps = WithNode<JSX.IntrinsicElements["blockquote"]>;
 const MemoBlockquote = memo<BlockquoteProps>(
-  ({ children, className, node, ...props }: BlockquoteProps) => (
+  ({ children, className, node, ...props }: BlockquoteProps) => {
+    const cn = useCn();
+    return (
     <blockquote
       className={cn(
         "my-4 border-muted-foreground/30 border-l-4 pl-4 text-muted-foreground italic",
@@ -514,14 +565,17 @@ const MemoBlockquote = memo<BlockquoteProps>(
     >
       {children}
     </blockquote>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoBlockquote.displayName = "MarkdownBlockquote";
 
 type SupProps = WithNode<JSX.IntrinsicElements["sup"]>;
 const MemoSup = memo<SupProps>(
-  ({ children, className, node, ...props }: SupProps) => (
+  ({ children, className, node, ...props }: SupProps) => {
+    const cn = useCn();
+    return (
     <sup
       className={cn("text-sm", className)}
       data-streamdown="superscript"
@@ -529,14 +583,17 @@ const MemoSup = memo<SupProps>(
     >
       {children}
     </sup>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoSup.displayName = "MarkdownSup";
 
 type SubProps = WithNode<JSX.IntrinsicElements["sub"]>;
 const MemoSub = memo<SubProps>(
-  ({ children, className, node, ...props }: SubProps) => (
+  ({ children, className, node, ...props }: SubProps) => {
+    const cn = useCn();
+    return (
     <sub
       className={cn("text-sm", className)}
       data-streamdown="subscript"
@@ -544,7 +601,8 @@ const MemoSub = memo<SubProps>(
     >
       {children}
     </sub>
-  ),
+    );
+  },
   (p, n) => sameClassAndNode(p, n)
 );
 MemoSub.displayName = "MarkdownSub";
@@ -691,6 +749,7 @@ const CodeComponent = ({
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Code component handles multiple rendering paths for inline code, code blocks, and mermaid diagrams"
   ExtraProps & { "data-block"?: string }) => {
+  const cn = useCn();
   // A code element is block-level when it was inside a <pre> element.
   // The custom pre component marks its children with data-block.
   const inline = !("data-block" in props);
@@ -756,13 +815,13 @@ const CodeComponent = ({
           )}
           data-streamdown="mermaid-block"
         >
-          <div className="flex h-8 items-center text-muted-foreground text-xs">
-            <span className="ml-1 font-mono lowercase">mermaid</span>
+          <div className={cn("flex h-8 items-center text-muted-foreground text-xs")}>
+            <span className={cn("ml-1 font-mono lowercase")}>mermaid</span>
           </div>
           {shouldShowMermaidControls ? (
-            <div className="pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end">
+            <div className={cn("pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end")}>
               <div
-                className="pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur"
+                className={cn("pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur")}
                 data-streamdown="mermaid-block-actions"
               >
                 {showDownload ? (
@@ -781,7 +840,7 @@ const CodeComponent = ({
               </div>
             </div>
           ) : null}
-          <div className="rounded-md border border-border bg-background">
+          <div className={cn("rounded-md border border-border bg-background")}>
             <Mermaid
               chart={code}
               config={mermaidContext?.config}

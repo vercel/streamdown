@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { CheckIcon, CopyIcon, ExternalLinkIcon, XIcon } from "./icons";
-import { cn } from "./utils";
+import { useCn } from "./prefix-context";
 
 let activeModalCount = 0;
 
@@ -31,6 +31,7 @@ export const LinkSafetyModal = ({
   onClose,
   onConfirm,
 }: LinkSafetyModalProps) => {
+  const cn = useCn();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -73,7 +74,7 @@ export const LinkSafetyModal = ({
   return (
     // biome-ignore lint/a11y/useSemanticElements: "div is used as a backdrop overlay"
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm"
+      className={cn("fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm")}
       data-streamdown="link-safety-modal"
       onClick={onClose}
       onKeyDown={(e) => {
@@ -86,13 +87,13 @@ export const LinkSafetyModal = ({
     >
       {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
       <div
-        className="relative mx-4 flex w-full max-w-md flex-col gap-4 rounded-xl border bg-background p-6 shadow-lg"
+        className={cn("relative mx-4 flex w-full max-w-md flex-col gap-4 rounded-xl border bg-background p-6 shadow-lg")}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         role="presentation"
       >
         <button
-          className="absolute top-4 right-4 rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+          className={cn("absolute top-4 right-4 rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground")}
           onClick={onClose}
           title="Close"
           type="button"
@@ -100,12 +101,12 @@ export const LinkSafetyModal = ({
           <XIcon size={16} />
         </button>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 font-semibold text-lg">
+        <div className={cn("flex flex-col gap-2")}>
+          <div className={cn("flex items-center gap-2 font-semibold text-lg")}>
             <ExternalLinkIcon size={20} />
             <span>Open external link?</span>
           </div>
-          <p className="text-muted-foreground text-sm">
+          <p className={cn("text-muted-foreground text-sm")}>
             You're about to visit an external website.
           </p>
         </div>
@@ -119,9 +120,9 @@ export const LinkSafetyModal = ({
           {url}
         </div>
 
-        <div className="flex gap-2">
+        <div className={cn("flex gap-2")}>
           <button
-            className="flex flex-1 items-center justify-center gap-2 rounded-md border bg-background px-4 py-2 font-medium text-sm transition-all hover:bg-muted"
+            className={cn("flex flex-1 items-center justify-center gap-2 rounded-md border bg-background px-4 py-2 font-medium text-sm transition-all hover:bg-muted")}
             onClick={handleCopy}
             type="button"
           >
@@ -138,7 +139,7 @@ export const LinkSafetyModal = ({
             )}
           </button>
           <button
-            className="flex flex-1 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground text-sm transition-all hover:bg-primary/90"
+            className={cn("flex flex-1 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground text-sm transition-all hover:bg-primary/90")}
             onClick={handleConfirm}
             type="button"
           >

@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import { useDeferredRender } from "../../hooks/use-deferred-render";
 import { StreamdownContext } from "../../index";
 import { useMermaidPlugin } from "../plugin-context";
-import { cn } from "../utils";
+import { useCn } from "../prefix-context";
 import { PanZoom } from "./pan-zoom";
 
 interface MermaidProps {
@@ -21,6 +21,7 @@ export const Mermaid = ({
   fullscreen = false,
   showControls = true,
 }: MermaidProps) => {
+  const cn = useCn();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [svgContent, setSvgContent] = useState<string>("");
@@ -103,9 +104,9 @@ export const Mermaid = ({
         className={cn("my-4 flex justify-center p-4", className)}
         ref={containerRef}
       >
-        <div className="flex items-center space-x-2 text-muted-foreground">
-          <div className="h-4 w-4 animate-spin rounded-full border-current border-b-2" />
-          <span className="text-sm">Loading diagram...</span>
+        <div className={cn("flex items-center space-x-2 text-muted-foreground")}>
+          <div className={cn("h-4 w-4 animate-spin rounded-full border-current border-b-2")} />
+          <span className={cn("text-sm")}>Loading diagram...</span>
         </div>
       </div>
     );
@@ -130,12 +131,12 @@ export const Mermaid = ({
         className={cn("rounded-md bg-red-50 p-4", className)}
         ref={containerRef}
       >
-        <p className="font-mono text-red-700 text-sm">Mermaid Error: {error}</p>
-        <details className="mt-2">
-          <summary className="cursor-pointer text-red-600 text-xs">
+        <p className={cn("font-mono text-red-700 text-sm")}>Mermaid Error: {error}</p>
+        <details className={cn("mt-2")}>
+          <summary className={cn("cursor-pointer text-red-600 text-xs")}>
             Show Code
           </summary>
-          <pre className="mt-2 overflow-x-auto rounded bg-red-100 p-2 text-red-800 text-xs">
+          <pre className={cn("mt-2 overflow-x-auto rounded bg-red-100 p-2 text-red-800 text-xs")}>
             {chart}
           </pre>
         </details>
