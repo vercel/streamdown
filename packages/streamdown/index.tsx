@@ -21,6 +21,7 @@ import type { Pluggable } from "unified";
 import { type AnimateOptions, createAnimatePlugin } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as defaultComponents } from "./lib/components";
+import { type IconMap, IconProvider } from "./lib/icon-context";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
 import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
@@ -28,15 +29,14 @@ import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig } from "./lib/plugin-types";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
-import { IconProvider, type IconMap } from "./lib/icon-context";
 import { cn } from "./lib/utils";
 
-export type { IconMap } from "./lib/icon-context";
 export type { BundledLanguage, BundledTheme } from "shiki";
 export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimatePlugin } from "./lib/animate";
 export { useIsCodeFenceIncomplete } from "./lib/block-incomplete-context";
+export type { IconMap } from "./lib/icon-context";
 export type {
   AllowElement,
   Components,
@@ -543,39 +543,41 @@ export const Streamdown = memo(
       <PluginContext.Provider value={plugins ?? null}>
         <StreamdownContext.Provider value={contextValue}>
           <IconProvider icons={iconOverrides}>
-          <div
-            className={cn(
-              "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
-              caret && !shouldHideCaret
-                ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-[var(--streamdown-caret)]"
-                : null,
-              className
-            )}
-            style={style}
-          >
-            {blocksToRender.length === 0 && caret && isAnimating && <span />}
-            {blocksToRender.map((block, index) => {
-              const isLastBlock = index === blocksToRender.length - 1;
-              const isIncomplete =
-                isAnimating && isLastBlock && hasIncompleteCodeFence(block);
-              return (
-                <BlockComponent
-                  components={mergedComponents}
-                  content={block}
-                  index={index}
-                  isIncomplete={isIncomplete}
-                  key={blockKeys[index]}
-                  rehypePlugins={mergedRehypePlugins}
-                  remarkPlugins={mergedRemarkPlugins}
-                  shouldNormalizeHtmlIndentation={
-                    shouldNormalizeHtmlIndentation
-                  }
-                  shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-                  {...props}
-                />
-              );
-            })}
-          </div>
+            <div
+              className={cn(
+                "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+                caret && !shouldHideCaret
+                  ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-[var(--streamdown-caret)]"
+                  : null,
+                className
+              )}
+              style={style}
+            >
+              {blocksToRender.length === 0 && caret && isAnimating && <span />}
+              {blocksToRender.map((block, index) => {
+                const isLastBlock = index === blocksToRender.length - 1;
+                const isIncomplete =
+                  isAnimating && isLastBlock && hasIncompleteCodeFence(block);
+                return (
+                  <BlockComponent
+                    components={mergedComponents}
+                    content={block}
+                    index={index}
+                    isIncomplete={isIncomplete}
+                    key={blockKeys[index]}
+                    rehypePlugins={mergedRehypePlugins}
+                    remarkPlugins={mergedRemarkPlugins}
+                    shouldNormalizeHtmlIndentation={
+                      shouldNormalizeHtmlIndentation
+                    }
+                    shouldParseIncompleteMarkdown={
+                      shouldParseIncompleteMarkdown
+                    }
+                    {...props}
+                  />
+                );
+              })}
+            </div>
           </IconProvider>
         </StreamdownContext.Provider>
       </PluginContext.Provider>

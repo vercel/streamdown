@@ -1,6 +1,6 @@
 "use client";
 
-import { type SVGProps, createContext, useContext, useMemo } from "react";
+import { createContext, type SVGProps, useContext, useMemo } from "react";
 import {
   CheckIcon,
   CopyIcon,
@@ -16,7 +16,7 @@ import {
 
 export type IconComponent = React.ComponentType<SVGProps<SVGSVGElement>>;
 
-export type IconMap = {
+export interface IconMap {
   CheckIcon: IconComponent;
   CopyIcon: IconComponent;
   DownloadIcon: IconComponent;
@@ -27,7 +27,7 @@ export type IconMap = {
   XIcon: IconComponent;
   ZoomInIcon: IconComponent;
   ZoomOutIcon: IconComponent;
-};
+}
 
 export const defaultIcons: IconMap = {
   CheckIcon,
@@ -53,7 +53,7 @@ export const IconProvider = ({
 }) => {
   const value = useMemo(
     () => (icons ? { ...defaultIcons, ...icons } : defaultIcons),
-    [icons],
+    [icons]
   );
   return <IconContext.Provider value={value}>{children}</IconContext.Provider>;
 };
