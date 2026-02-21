@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
-import { CheckIcon, CopyIcon } from "../icons";
+import { useIcons } from "../icon-context";
 import { cn } from "../utils";
 import {
   extractTableDataFromElement,
@@ -91,7 +91,8 @@ export const TableCopyDropdown = ({
     };
   }, []);
 
-  const Icon = isCopied ? CheckIcon : CopyIcon;
+  const icons = useIcons();
+  const Icon = isCopied ? icons.CheckIcon : icons.CopyIcon;
 
   return (
     <div className="relative" ref={dropdownRef}>

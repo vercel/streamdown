@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
-import { DownloadIcon } from "../icons";
+import { useIcons } from "../icon-context";
 import { cn, save } from "../utils";
 import {
   extractTableDataFromElement,
@@ -26,6 +26,7 @@ export const TableDownloadButton = ({
   filename,
 }: TableDownloadButtonProps) => {
   const { isAnimating } = useContext(StreamdownContext);
+  const icons = useIcons();
 
   const downloadTableData = (event: React.MouseEvent<HTMLButtonElement>) => {
     try {
@@ -90,7 +91,7 @@ export const TableDownloadButton = ({
       title={`Download table as ${format.toUpperCase()}`}
       type="button"
     >
-      {children ?? <DownloadIcon size={14} />}
+      {children ?? <icons.DownloadIcon size={14} />}
     </button>
   );
 };
@@ -111,6 +112,7 @@ export const TableDownloadDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { isAnimating } = useContext(StreamdownContext);
+  const icons = useIcons();
 
   const downloadTableData = (format: "csv" | "markdown") => {
     try {
@@ -169,7 +171,7 @@ export const TableDownloadDropdown = ({
         title="Download table"
         type="button"
       >
-        {children ?? <DownloadIcon size={14} />}
+        {children ?? <icons.DownloadIcon size={14} />}
       </button>
       {isOpen ? (
         <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg">

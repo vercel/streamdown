@@ -2,7 +2,7 @@ import type { MermaidConfig } from "mermaid";
 import { type ComponentProps, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
-import { Maximize2Icon, XIcon } from "../icons";
+import { useIcons } from "../icon-context";
 import { cn } from "../utils";
 import { Mermaid } from ".";
 
@@ -38,6 +38,7 @@ export const MermaidFullscreenButton = ({
   className,
   ...props
 }: MermaidFullscreenButtonProps) => {
+  const { Maximize2Icon, XIcon } = useIcons();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { isAnimating, controls: controlsConfig } =
     useContext(StreamdownContext);

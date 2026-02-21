@@ -28,8 +28,10 @@ import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig } from "./lib/plugin-types";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
+import { IconProvider, type IconMap } from "./lib/icon-context";
 import { cn } from "./lib/utils";
 
+export type { IconMap } from "./lib/icon-context";
 export type { BundledLanguage, BundledTheme } from "shiki";
 export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
@@ -140,6 +142,8 @@ export type StreamdownProps = Options & {
   linkSafety?: LinkSafetyConfig;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
+  /** Custom icons to override the default icons used in controls */
+  icons?: Partial<IconMap>;
 };
 
 const defaultSanitizeSchema = {
@@ -320,6 +324,7 @@ export const Streamdown = memo(
       enabled: true,
     },
     allowedTags,
+    icons: iconOverrides,
     ...props
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
@@ -511,21 +516,23 @@ export const Streamdown = memo(
       return (
         <PluginContext.Provider value={plugins ?? null}>
           <StreamdownContext.Provider value={contextValue}>
-            <div
-              className={cn(
-                "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
-                className
-              )}
-            >
-              <Markdown
-                components={mergedComponents}
-                rehypePlugins={mergedRehypePlugins}
-                remarkPlugins={mergedRemarkPlugins}
-                {...props}
+            <IconProvider icons={iconOverrides}>
+              <div
+                className={cn(
+                  "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+                  className
+                )}
               >
-                {processedChildren}
-              </Markdown>
-            </div>
+                <Markdown
+                  components={mergedComponents}
+                  rehypePlugins={mergedRehypePlugins}
+                  remarkPlugins={mergedRemarkPlugins}
+                  {...props}
+                >
+                  {processedChildren}
+                </Markdown>
+              </div>
+            </IconProvider>
           </StreamdownContext.Provider>
         </PluginContext.Provider>
       );
@@ -535,6 +542,7 @@ export const Streamdown = memo(
     return (
       <PluginContext.Provider value={plugins ?? null}>
         <StreamdownContext.Provider value={contextValue}>
+          <IconProvider icons={iconOverrides}>
           <div
             className={cn(
               "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
@@ -568,6 +576,7 @@ export const Streamdown = memo(
               );
             })}
           </div>
+          </IconProvider>
         </StreamdownContext.Provider>
       </PluginContext.Provider>
     );

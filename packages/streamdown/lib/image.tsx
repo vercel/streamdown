@@ -1,6 +1,6 @@
 import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { DownloadIcon } from "./icons";
+import { useIcons } from "./icon-context";
 import type { ExtraProps } from "./markdown";
 import { cn, save } from "./utils";
 
@@ -21,6 +21,7 @@ export const ImageComponent = ({
   onError: onErrorProp,
   ...props
 }: ImageComponentProps) => {
+  const { DownloadIcon } = useIcons();
   const imgRef = useRef<HTMLImageElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);

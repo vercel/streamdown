@@ -1,7 +1,7 @@
 import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
-import { DownloadIcon } from "../icons";
+import { useIcons } from "../icon-context";
 import { useMermaidPlugin } from "../plugin-context";
 import { cn, save } from "../utils";
 import { svgToPngBlob } from "./utils";
@@ -26,6 +26,7 @@ export const MermaidDownloadDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { isAnimating } = useContext(StreamdownContext);
+  const icons = useIcons();
   const mermaidPlugin = useMermaidPlugin();
 
   const downloadMermaid = async (format: "mmd" | "png" | "svg") => {
@@ -111,7 +112,7 @@ export const MermaidDownloadDropdown = ({
         title="Download diagram"
         type="button"
       >
-        {children ?? <DownloadIcon size={14} />}
+        {children ?? <icons.DownloadIcon size={14} />}
       </button>
       {isOpen ? (
         <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg">
