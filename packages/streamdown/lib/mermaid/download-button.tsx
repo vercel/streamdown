@@ -3,6 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
 import { DownloadIcon } from "../icons";
 import { useMermaidPlugin } from "../plugin-context";
+import { useTranslations } from "../translations-context";
 import { cn, save } from "../utils";
 import { svgToPngBlob } from "./utils";
 
@@ -27,6 +28,7 @@ export const MermaidDownloadDropdown = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { isAnimating } = useContext(StreamdownContext);
   const mermaidPlugin = useMermaidPlugin();
+  const t = useTranslations();
 
   const downloadMermaid = async (format: "mmd" | "png" | "svg") => {
     try {
@@ -108,7 +110,7 @@ export const MermaidDownloadDropdown = ({
         )}
         disabled={isAnimating}
         onClick={() => setIsOpen(!isOpen)}
-        title="Download diagram"
+        title={t.downloadDiagram}
         type="button"
       >
         {children ?? <DownloadIcon size={14} />}
@@ -118,26 +120,26 @@ export const MermaidDownloadDropdown = ({
           <button
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => downloadMermaid("svg")}
-            title="Download diagram as SVG"
+            title={t.downloadDiagramAsSvg}
             type="button"
           >
-            SVG
+            {t.mermaidFormatSvg}
           </button>
           <button
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => downloadMermaid("png")}
-            title="Download diagram as PNG"
+            title={t.downloadDiagramAsPng}
             type="button"
           >
-            PNG
+            {t.mermaidFormatPng}
           </button>
           <button
             className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             onClick={() => downloadMermaid("mmd")}
-            title="Download diagram as MMD"
+            title={t.downloadDiagramAsMmd}
             type="button"
           >
-            MMD
+            {t.mermaidFormatMmd}
           </button>
         </div>
       ) : null}

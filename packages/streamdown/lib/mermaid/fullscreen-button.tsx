@@ -3,6 +3,7 @@ import { type ComponentProps, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
 import { Maximize2Icon, XIcon } from "../icons";
+import { useTranslations } from "../translations-context";
 import { cn } from "../utils";
 import { Mermaid } from ".";
 
@@ -41,6 +42,7 @@ export const MermaidFullscreenButton = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { isAnimating, controls: controlsConfig } =
     useContext(StreamdownContext);
+  const t = useTranslations();
   const showPanZoomControls = (() => {
     if (typeof controlsConfig === "boolean") {
       return controlsConfig;
@@ -96,7 +98,7 @@ export const MermaidFullscreenButton = ({
         )}
         disabled={isAnimating}
         onClick={handleToggle}
-        title="View fullscreen"
+        title={t.viewFullscreen}
         type="button"
         {...props}
       >
@@ -120,7 +122,7 @@ export const MermaidFullscreenButton = ({
               <button
                 className="absolute top-4 right-4 z-10 rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
                 onClick={handleToggle}
-                title="Exit fullscreen"
+                title={t.exitFullscreen}
                 type="button"
               >
                 <XIcon size={20} />
