@@ -16,7 +16,6 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
-import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import { type AnimateOptions, createAnimatePlugin } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
@@ -25,7 +24,7 @@ import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
 import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
-import type { PluginConfig } from "./lib/plugin-types";
+import type { PluginConfig, ThemeInput } from "./lib/plugin-types";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { cn } from "./lib/utils";
 
@@ -45,10 +44,12 @@ export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
   CjkPlugin,
   CodeHighlighterPlugin,
+  CustomTheme,
   DiagramPlugin,
   HighlightOptions,
   MathPlugin,
   PluginConfig,
+  ThemeInput,
 } from "./lib/plugin-types";
 
 // Patterns for HTML indentation normalization
@@ -128,7 +129,7 @@ export type StreamdownProps = Options & {
   /** Normalize HTML block indentation to prevent 4+ spaces being treated as code blocks. @default false */
   normalizeHtmlIndentation?: boolean;
   className?: string;
-  shikiTheme?: [BundledTheme, BundledTheme];
+  shikiTheme?: [ThemeInput, ThemeInput];
   mermaid?: MermaidOptions;
   controls?: ControlsConfig;
   isAnimating?: boolean;
@@ -179,12 +180,12 @@ const carets = {
 
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
+  shikiTheme: [ThemeInput, ThemeInput];
   controls: ControlsConfig;
   isAnimating: boolean;
   linkSafety?: LinkSafetyConfig;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
-  shikiTheme: [BundledTheme, BundledTheme];
 }
 
 const defaultStreamdownContext: StreamdownContextType = {
@@ -285,7 +286,7 @@ export const Block = memo(
 
 Block.displayName = "Block";
 
-const defaultShikiTheme: [BundledTheme, BundledTheme] = [
+const defaultShikiTheme: [ThemeInput, ThemeInput] = [
   "github-light",
   "github-dark",
 ];

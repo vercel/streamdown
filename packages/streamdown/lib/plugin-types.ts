@@ -1,5 +1,20 @@
 import type { MermaidConfig } from "mermaid";
 import type { BundledLanguage, BundledTheme } from "shiki";
+
+/**
+ * A custom theme object compatible with shiki's ThemeRegistrationAny.
+ * Must have a `name` property for identification and caching.
+ */
+export interface CustomTheme {
+  name: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Theme input type that accepts either a built-in theme name or a custom theme object.
+ */
+export type ThemeInput = BundledTheme | CustomTheme;
+
 import type { Pluggable } from "unified";
 
 /**
@@ -30,7 +45,7 @@ export interface HighlightResult {
 export interface HighlightOptions {
   code: string;
   language: BundledLanguage;
-  themes: [string, string];
+  themes: [string, string] | [ThemeInput, ThemeInput];
 }
 
 /**
@@ -59,6 +74,14 @@ export interface CodeHighlighterPlugin {
    * Check if language is supported
    */
   supportsLanguage: (language: BundledLanguage) => boolean;
+  /**
+   * Get list of supported languages
+   */
+  getSupportedLanguages: () => BundledLanguage[];
+  /**
+   * Get the configured themes
+   */
+  getThemes: () => [ThemeInput, ThemeInput];
   type: "code-highlighter";
 }
 
