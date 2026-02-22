@@ -59,7 +59,7 @@ export interface CodeHighlighterPlugin {
   /**
    * Get the configured themes
    */
-  getThemes: () => [BundledTheme, BundledTheme];
+  getThemes: () => [ThemeInput, ThemeInput];
   /**
    * Highlight code and return tokens
    * Returns null if highlighting not ready yet (async loading)
@@ -74,14 +74,6 @@ export interface CodeHighlighterPlugin {
    * Check if language is supported
    */
   supportsLanguage: (language: BundledLanguage) => boolean;
-  /**
-   * Get list of supported languages
-   */
-  getSupportedLanguages: () => BundledLanguage[];
-  /**
-   * Get the configured themes
-   */
-  getThemes: () => [ThemeInput, ThemeInput];
   type: "code-highlighter";
 }
 

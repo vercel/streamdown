@@ -180,12 +180,12 @@ const carets = {
 
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
-  shikiTheme: [ThemeInput, ThemeInput];
   controls: ControlsConfig;
   isAnimating: boolean;
   linkSafety?: LinkSafetyConfig;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
+  shikiTheme: [ThemeInput, ThemeInput];
 }
 
 const defaultStreamdownContext: StreamdownContextType = {
