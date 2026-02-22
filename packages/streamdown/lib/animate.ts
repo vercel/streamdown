@@ -5,6 +5,23 @@ import { SKIP, visitParents } from "unist-util-visit-parents";
 export interface AnimatePlugin {
   name: "animate";
   rehypePlugin: Pluggable;
+  /**
+   * Set the number of characters from a previous render.
+   * Characters up to this count will skip animation (duration=0ms),
+   * preventing re-animation of already-visible content during streaming updates.
+   * Must be the HAST character count from the previous render (not raw markdown length).
+   */
+  setPrevContentLength: (length: number) => void;
+  /**
+   * Reset prevContentLength to 0 (animate everything).
+   */
+  resetPrevContentLength: () => void;
+  /**
+   * Returns the total HAST text node character count from the last render.
+   * Use this value (not raw markdown length) as the argument to setPrevContentLength
+   * on the next render to correctly identify already-visible content.
+   */
+  getLastRenderCharCount: () => number;
   type: "animate";
 }
 
@@ -79,13 +96,16 @@ const makeSpan = (
   word: string,
   animation: string,
   duration: number,
-  easing: string
+  easing: string,
+  skipAnimation?: boolean
 ): Element => ({
   type: "element",
   tagName: "span",
   properties: {
     "data-sd-animate": true,
-    style: `--sd-animation:sd-${animation};--sd-duration:${duration}ms;--sd-easing:${easing}`,
+    style: skipAnimation
+      ? `--sd-animation:sd-${animation};--sd-duration:0ms;--sd-easing:${easing}`
+      : `--sd-animation:sd-${animation};--sd-duration:${duration}ms;--sd-easing:${easing}`,
   },
   children: [{ type: "text", value: word }],
 });
@@ -95,12 +115,17 @@ interface AnimateConfig {
   duration: number;
   easing: string;
   sep: "word" | "char";
+  /** Number of HAST characters from previous render that should not be re-animated */
+  prevContentLength?: number;
+  /** Total HAST character count from the last completed render */
+  lastRenderCharCount: number;
 }
 
 const processTextNode = (
   node: Text,
   ancestors: Node[],
-  config: AnimateConfig
+  config: AnimateConfig,
+  charCounter: { count: number }
 ): number | typeof SKIP | undefined => {
   const ancestor = ancestors.at(-1);
   /* v8 ignore next */
@@ -121,16 +146,29 @@ const processTextNode = (
 
   const text = node.value;
   if (!text.trim()) {
+    charCounter.count += text.length;
     return;
   }
 
   const parts = config.sep === "char" ? splitByChar(text) : splitByWord(text);
+  const prevLen = config.prevContentLength ?? 0;
 
-  const nodes: (Element | Text)[] = parts.map((part) =>
-    WHITESPACE_ONLY_RE.test(part)
-      ? ({ type: "text", value: part } as Text)
-      : makeSpan(part, config.animation, config.duration, config.easing)
-  );
+  const nodes: (Element | Text)[] = parts.map((part) => {
+    const partStart = charCounter.count;
+    charCounter.count += part.length;
+    if (WHITESPACE_ONLY_RE.test(part)) {
+      return { type: "text", value: part } as Text;
+    }
+    // Skip animation for content that was already rendered previously
+    const skipAnimation = prevLen > 0 && partStart < prevLen;
+    return makeSpan(
+      part,
+      config.animation,
+      config.duration,
+      config.easing,
+      skipAnimation
+    );
+  });
 
   parent.children.splice(index, 1, ...nodes);
   return index + nodes.length;
@@ -142,18 +180,30 @@ export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
     duration: options?.duration ?? 150,
     easing: options?.easing ?? "ease",
     sep: options?.sep ?? "word",
+    lastRenderCharCount: 0,
   };
 
   const rehypeAnimate = () => (tree: Root) => {
+    const charCounter = { count: 0 };
     visitParents(tree, "text", (node: Text, ancestors) =>
-      processTextNode(node, ancestors, config)
+      processTextNode(node, ancestors, config, charCounter)
     );
+    config.lastRenderCharCount = charCounter.count;
   };
 
   return {
     name: "animate",
     type: "animate",
     rehypePlugin: rehypeAnimate,
+    setPrevContentLength(length: number) {
+      config.prevContentLength = length;
+    },
+    resetPrevContentLength() {
+      config.prevContentLength = 0;
+    },
+    getLastRenderCharCount() {
+      return config.lastRenderCharCount;
+    },
   };
 }
 

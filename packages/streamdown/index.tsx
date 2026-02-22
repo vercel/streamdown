@@ -8,6 +8,7 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -18,7 +19,11 @@ import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
 import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
-import { type AnimateOptions, createAnimatePlugin } from "./lib/animate";
+import {
+  type AnimateOptions,
+  type AnimatePlugin,
+  createAnimatePlugin,
+} from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as defaultComponents } from "./lib/components";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
@@ -207,6 +212,8 @@ export type BlockProps = Options & {
   index: number;
   /** Whether this block is incomplete (still being streamed) */
   isIncomplete: boolean;
+  /** Animate plugin instance for tracking previous content length */
+  animatePlugin?: AnimatePlugin | null;
 };
 
 export const Block = memo(
@@ -217,8 +224,20 @@ export const Block = memo(
     shouldNormalizeHtmlIndentation,
     index: __,
     isIncomplete,
+    animatePlugin: animatePluginProp,
     ...props
   }: BlockProps) => {
+    // Track previous content length to prevent re-animation of already-visible content.
+    // When a block's content grows during streaming, only new characters get animated.
+    const prevContentLengthRef = useRef(0);
+
+    // Set prevContentLength on the animate plugin before the synchronous rehype render.
+    // This is safe because React renders synchronously — the rehype pipeline will read
+    // this value during the same synchronous render pass.
+    if (animatePluginProp) {
+      animatePluginProp.setPrevContentLength(prevContentLengthRef.current);
+    }
+
     // Note: remend is already applied to the entire markdown before parsing into blocks
     // in the Streamdown component, so we don't need to apply it again here
     const normalizedContent =
@@ -226,11 +245,24 @@ export const Block = memo(
         ? normalizeHtmlIndentation(content)
         : content;
 
-    return (
+    const result = (
       <BlockIncompleteContext.Provider value={isIncomplete}>
         <Markdown {...props}>{normalizedContent}</Markdown>
       </BlockIncompleteContext.Provider>
     );
+
+    // Update prev content length after this render using the HAST character count
+    // (not raw markdown length) to match the units used by charCounter in the animate plugin.
+    prevContentLengthRef.current = animatePluginProp
+      ? animatePluginProp.getLastRenderCharCount()
+      : 0;
+
+    // Reset so other blocks don't inherit this block's prevContentLength
+    if (animatePluginProp) {
+      animatePluginProp.resetPrevContentLength();
+    }
+
+    return result;
   },
   (prevProps, nextProps) => {
     // Deep comparison for better memoization
@@ -382,6 +414,14 @@ export const Streamdown = memo(
       [blocksToRender.length, generatedId]
     );
 
+    // Use value-based deps so animatePlugin stays stable when the user passes an
+    // inline object literal for `animated` (e.g. animated={{ animation: 'fadeIn' }}).
+    // A stable plugin reference is required for the prevContentLength tracking in
+    // Block to work: the rehype processor is cached by plugin name, so it always
+    // uses the first closure created. If the plugin is recreated the mutation of
+    // config.prevContentLength would target a new config object that the cached
+    // processor never reads.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: intentional value-based comparison
     const animatePlugin = useMemo(() => {
       if (!animated) {
         return null;
@@ -390,7 +430,21 @@ export const Streamdown = memo(
         return createAnimatePlugin();
       }
       return createAnimatePlugin(animated);
-    }, [animated]);
+    }, [
+      animated === true,
+      typeof animated === "object" && animated !== null
+        ? animated.animation
+        : undefined,
+      typeof animated === "object" && animated !== null
+        ? animated.duration
+        : undefined,
+      typeof animated === "object" && animated !== null
+        ? animated.easing
+        : undefined,
+      typeof animated === "object" && animated !== null
+        ? animated.sep
+        : undefined,
+    ]);
 
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
@@ -546,6 +600,7 @@ export const Streamdown = memo(
                 isAnimating && isLastBlock && hasIncompleteCodeFence(block);
               return (
                 <BlockComponent
+                  animatePlugin={animatePlugin}
                   components={mergedComponents}
                   content={block}
                   index={index}

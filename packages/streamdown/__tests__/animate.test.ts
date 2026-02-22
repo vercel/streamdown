@@ -180,4 +180,51 @@ describe("animate plugin", () => {
       expect(result).toContain("--sd-easing:ease");
     });
   });
+
+  describe("getLastRenderCharCount", () => {
+    it("should return 0 before any render", () => {
+      const plugin = createAnimatePlugin();
+      expect(plugin.getLastRenderCharCount()).toBe(0);
+    });
+
+    it("should return HAST text node char count after render", async () => {
+      const plugin = createAnimatePlugin();
+      // "Hello world" = 11 HAST chars (5 + 1 space + 5)
+      await processHtml("<p>Hello world</p>", plugin);
+      expect(plugin.getLastRenderCharCount()).toBe(11);
+    });
+
+    it("should not include markdown syntax chars — only rendered text", async () => {
+      const plugin = createAnimatePlugin();
+      // plain text: "Hello" = 5 HAST chars
+      await processHtml("<p>Hello</p>", plugin);
+      expect(plugin.getLastRenderCharCount()).toBe(5);
+    });
+
+    it("should update after each render", async () => {
+      const plugin = createAnimatePlugin();
+      await processHtml("<p>Hi</p>", plugin);
+      const firstCount = plugin.getLastRenderCharCount();
+      await processHtml("<p>Hello world</p>", plugin);
+      const secondCount = plugin.getLastRenderCharCount();
+      expect(secondCount).toBeGreaterThan(firstCount);
+    });
+
+    it("setPrevContentLength with getLastRenderCharCount should skip already-rendered chars", async () => {
+      const plugin = createAnimatePlugin();
+      // First render: "Hello"
+      await processHtml("<p>Hello</p>", plugin);
+      const prevCount = plugin.getLastRenderCharCount();
+
+      // Second render: "Hello world" — set prev length from HAST count
+      plugin.setPrevContentLength(prevCount);
+      const result = await processHtml("<p>Hello world</p>", plugin);
+
+      // "Hello" (chars 0-4) should have duration:0ms — already visible
+      // " world" should have normal duration
+      const spans = result.match(/--sd-duration:[^;"]*/g) ?? [];
+      expect(spans.some((s) => s.includes("0ms"))).toBe(true);
+      expect(spans.some((s) => s.includes("150ms"))).toBe(true);
+    });
+  });
 });
