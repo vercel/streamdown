@@ -227,14 +227,16 @@ export const Block = memo(
     animatePlugin: animatePluginProp,
     ...props
   }: BlockProps) => {
-    // Track previous content length to prevent re-animation of already-visible content.
-    // When a block's content grows during streaming, only new characters get animated.
+    // Track the HAST character count from the PREVIOUS render pass.
+    // React renders depth-first: this Block's function body runs, returns JSX, then
+    // the child Markdown component runs (processor.runSync synchronously processes
+    // content through rehype). On the current render, getLastRenderCharCount() still
+    // holds the value from the PREVIOUS Markdown run — exactly what we need as
+    // prevContentLength for this render. After Markdown runs, the plugin stores the
+    // new count and self-resets prevContentLength so sibling blocks start clean.
     const prevContentLengthRef = useRef(0);
-
-    // Set prevContentLength on the animate plugin before the synchronous rehype render.
-    // This is safe because React renders synchronously — the rehype pipeline will read
-    // this value during the same synchronous render pass.
     if (animatePluginProp) {
+      prevContentLengthRef.current = animatePluginProp.getLastRenderCharCount();
       animatePluginProp.setPrevContentLength(prevContentLengthRef.current);
     }
 
@@ -245,24 +247,11 @@ export const Block = memo(
         ? normalizeHtmlIndentation(content)
         : content;
 
-    const result = (
+    return (
       <BlockIncompleteContext.Provider value={isIncomplete}>
         <Markdown {...props}>{normalizedContent}</Markdown>
       </BlockIncompleteContext.Provider>
     );
-
-    // Update prev content length after this render using the HAST character count
-    // (not raw markdown length) to match the units used by charCounter in the animate plugin.
-    prevContentLengthRef.current = animatePluginProp
-      ? animatePluginProp.getLastRenderCharCount()
-      : 0;
-
-    // Reset so other blocks don't inherit this block's prevContentLength
-    if (animatePluginProp) {
-      animatePluginProp.resetPrevContentLength();
-    }
-
-    return result;
   },
   (prevProps, nextProps) => {
     // Deep comparison for better memoization

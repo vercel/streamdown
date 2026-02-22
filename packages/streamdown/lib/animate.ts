@@ -189,6 +189,11 @@ export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
       processTextNode(node, ancestors, config, charCounter)
     );
     config.lastRenderCharCount = charCounter.count;
+    // Self-reset after each run so sibling blocks don't inherit this block's
+    // prevContentLength. With React's depth-first rendering, this executes after
+    // the current block's Markdown renders but before the next sibling block's
+    // Markdown renders — so each block gets exactly its own prevContentLength.
+    config.prevContentLength = 0;
   };
 
   return {
