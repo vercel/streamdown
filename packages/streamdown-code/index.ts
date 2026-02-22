@@ -227,7 +227,10 @@ export function createCodePlugin(
       }
 
       // Start highlighting in background
-      getHighlighter(resolvedLanguage as BundledLanguage, defaultThemes)
+      getHighlighter(
+        resolvedLanguage as BundledLanguage,
+        themes as [ThemeInput, ThemeInput]
+      )
         .then((highlighter) => {
           const availableLangs = highlighter.getLoadedLanguages();
           const langToUse = (
