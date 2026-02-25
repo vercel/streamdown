@@ -149,6 +149,48 @@ Once the code fence closes, the hook returns `false` and your component can rend
 </Streamdown>
 ```
 
+## Preserving Table Interactivity
+
+When overriding the `table` component, the built-in copy and download buttons are lost because custom components fully replace default implementations. To restore them, import the table action components and include them in your custom table:
+
+```tsx title="app/page.tsx"
+import {
+  Streamdown,
+  TableCopyDropdown,
+  TableDownloadDropdown,
+} from "streamdown";
+
+<Streamdown
+  components={{
+    table: ({ children, className }) => (
+      <div data-streamdown="table-wrapper">
+        <div className="flex items-center justify-end gap-1">
+          <TableCopyDropdown />
+          <TableDownloadDropdown />
+        </div>
+        <MyCustomTable className={className}>{children}</MyCustomTable>
+      </div>
+    ),
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+<Callout type="warn">
+  The `data-streamdown="table-wrapper"` attribute is required — the copy and download components use it to locate the nearest `<table>` element.
+</Callout>
+
+You can also use the lower-level utilities for custom implementations:
+
+```tsx title="app/page.tsx"
+import {
+  extractTableDataFromElement,
+  tableDataToCSV,
+  tableDataToMarkdown,
+} from "streamdown";
+```
+
 ## Custom HTML Tags
 
 You can render custom HTML tags from AI responses (like `<source>`, `<mention>`, etc.) using the `allowedTags` prop alongside `components`. This is useful when you instruct the AI to output structured data that renders as interactive components.
