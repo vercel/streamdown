@@ -27,6 +27,8 @@ import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig } from "./lib/plugin-types";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
+import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
+import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { cn } from "./lib/utils";
 
 export type { BundledLanguage, BundledTheme } from "shiki";
@@ -139,6 +141,22 @@ export type StreamdownProps = Options & {
   linkSafety?: LinkSafetyConfig;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
+  /**
+   * Tags whose children should be treated as plain text (no markdown parsing).
+   * Useful for mention/entity tags in AI UIs where child content is a data
+   * label rather than prose. Requires the tag to also be listed in `allowedTags`.
+   *
+   * @example
+   * ```tsx
+   * <Streamdown
+   *   allowedTags={{ mention: ['user_id'] }}
+   *   literalTagContent={['mention']}
+   * >
+   *   {`<mention user_id="123">@_some_username_</mention>`}
+   * </Streamdown>
+   * ```
+   */
+  literalTagContent?: string[];
 };
 
 const defaultSanitizeSchema = {
@@ -314,6 +332,7 @@ export const Streamdown = memo(
       enabled: true,
     },
     allowedTags,
+    literalTagContent,
     ...props
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
@@ -341,6 +360,12 @@ export const Streamdown = memo(
         result = preprocessCustomTags(result, allowedTagNames);
       }
 
+      // Escape markdown metacharacters inside literal-tag-content tags so that
+      // children are rendered as plain text rather than parsed as markdown.
+      if (literalTagContent && literalTagContent.length > 0) {
+        result = preprocessLiteralTagContent(result, literalTagContent);
+      }
+
       return result;
     }, [
       children,
@@ -348,6 +373,7 @@ export const Streamdown = memo(
       shouldParseIncompleteMarkdown,
       remendOptions,
       allowedTagNames,
+      literalTagContent,
     ]);
 
     const blocks = useMemo(
@@ -471,6 +497,10 @@ export const Streamdown = memo(
         ];
       }
 
+      if (literalTagContent && literalTagContent.length > 0) {
+        result = [...result, [rehypeLiteralTagContent, literalTagContent]];
+      }
+
       if (plugins?.math) {
         result = [...result, plugins.math.rehypePlugin];
       }
@@ -480,7 +510,14 @@ export const Streamdown = memo(
       }
 
       return result;
-    }, [rehypePlugins, plugins?.math, animatePlugin, isAnimating, allowedTags]);
+    }, [
+      rehypePlugins,
+      plugins?.math,
+      animatePlugin,
+      isAnimating,
+      allowedTags,
+      literalTagContent,
+    ]);
 
     const shouldHideCaret = useMemo(() => {
       if (!isAnimating || blocksToRender.length === 0) {

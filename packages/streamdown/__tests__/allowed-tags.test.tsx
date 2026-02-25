@@ -218,3 +218,124 @@ Content for snippet 2
     expect(container.textContent).toContain("Hello world");
   });
 });
+
+describe("literalTagContent prop", () => {
+  it("should render underscore content as plain text (not emphasis)", () => {
+    const Mention = (props: CustomComponentProps) => (
+      <span data-testid="mention">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ mention: ["user_id"] }}
+        components={{ mention: Mention }}
+        literalTagContent={["mention"]}
+        mode="static"
+      >
+        {'<mention user_id="123">_some_username_</mention>'}
+      </Streamdown>
+    );
+
+    const mention = container.querySelector('[data-testid="mention"]');
+    expect(mention).toBeTruthy();
+    // Children should be plain text, not an <em> element
+    expect(mention?.querySelector("em")).toBeNull();
+    expect(mention?.textContent).toBe("_some_username_");
+  });
+
+  it("should only apply literal mode to the specified tags", () => {
+    const Mention = (props: CustomComponentProps) => (
+      <span data-testid="mention">{props.children as React.ReactNode}</span>
+    );
+    const Note = (props: CustomComponentProps) => (
+      <span data-testid="note">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ mention: [], note: [] }}
+        components={{ mention: Mention, note: Note }}
+        literalTagContent={["mention"]}
+        mode="static"
+      >
+        {"<mention>_literal_</mention> <note>_parsed_</note>"}
+      </Streamdown>
+    );
+
+    const mention = container.querySelector('[data-testid="mention"]');
+    const note = container.querySelector('[data-testid="note"]');
+
+    // mention: no emphasis, raw underscores
+    expect(mention?.querySelector("em")).toBeNull();
+    expect(mention?.textContent).toBe("_literal_");
+
+    // note: emphasis IS parsed (not in literalTagContent)
+    expect(note?.querySelector("em")).toBeTruthy();
+  });
+
+  it("should render bold, inline code and other markdown as plain text", () => {
+    const Tag = (props: CustomComponentProps) => (
+      <span data-testid="tag">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ tag: [] }}
+        components={{ tag: Tag }}
+        literalTagContent={["tag"]}
+        mode="static"
+      >
+        {"<tag>**bold** and `code`</tag>"}
+      </Streamdown>
+    );
+
+    const tag = container.querySelector('[data-testid="tag"]');
+    expect(tag?.querySelector("strong")).toBeNull();
+    expect(tag?.querySelector("code")).toBeNull();
+    expect(tag?.textContent).toContain("**bold**");
+    expect(tag?.textContent).toContain("`code`");
+  });
+
+  it("should have no effect when literalTagContent is an empty array", () => {
+    const Mention = (props: CustomComponentProps) => (
+      <span data-testid="mention">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ mention: [] }}
+        components={{ mention: Mention }}
+        literalTagContent={[]}
+        mode="static"
+      >
+        {"<mention>_parsed_</mention>"}
+      </Streamdown>
+    );
+
+    const mention = container.querySelector('[data-testid="mention"]');
+    // Markdown IS still parsed (empty literalTagContent = no effect)
+    expect(mention?.querySelector("em")).toBeTruthy();
+  });
+
+  it("should work in streaming mode", () => {
+    const Mention = (props: CustomComponentProps) => (
+      <span data-testid="mention">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ mention: ["user_id"] }}
+        components={{ mention: Mention }}
+        literalTagContent={["mention"]}
+        mode="streaming"
+      >
+        {'Hello <mention user_id="42">_handle_</mention>'}
+      </Streamdown>
+    );
+
+    const mention = container.querySelector('[data-testid="mention"]');
+    expect(mention).toBeTruthy();
+    expect(mention?.querySelector("em")).toBeNull();
+    expect(mention?.textContent).toBe("_handle_");
+  });
+});
