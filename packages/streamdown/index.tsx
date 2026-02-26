@@ -355,15 +355,19 @@ export const Streamdown = memo(
           ? remend(children, remendOptions)
           : children;
 
-      // Preprocess custom tags to prevent blank lines from splitting HTML blocks
-      if (allowedTagNames.length > 0) {
-        result = preprocessCustomTags(result, allowedTagNames);
-      }
-
       // Escape markdown metacharacters inside literal-tag-content tags so that
       // children are rendered as plain text rather than parsed as markdown.
+      // This must run BEFORE preprocessCustomTags so that the HTML comments
+      // (<!---->) inserted to preserve blank lines are not themselves escaped.
       if (literalTagContent && literalTagContent.length > 0) {
         result = preprocessLiteralTagContent(result, literalTagContent);
+      }
+
+      // Preprocess custom tags to prevent blank lines from splitting HTML blocks.
+      // Runs after preprocessLiteralTagContent so that the inserted <!---->
+      // markers are not corrupted by markdown metacharacter escaping.
+      if (allowedTagNames.length > 0) {
+        result = preprocessCustomTags(result, allowedTagNames);
       }
 
       return result;
