@@ -207,7 +207,16 @@ export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
       config.prevContentLength = 0;
     },
     getLastRenderCharCount() {
-      return config.lastRenderCharCount;
+      // Reset after reading so sibling Block components start clean.
+      // Each Block reads this value for its own prevContentLength and
+      // then immediately calls setPrevContentLength; since React renders
+      // depth-first, the rehype run for that Block sets lastRenderCharCount
+      // before the next sibling Block reads it. Resetting here ensures the
+      // next sibling Block sees 0 (no previous chars) rather than the prior
+      // block's character count.
+      const count = config.lastRenderCharCount;
+      config.lastRenderCharCount = 0;
+      return count;
     },
   };
 }
