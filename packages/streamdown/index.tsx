@@ -8,6 +8,7 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -139,6 +140,10 @@ export type StreamdownProps = Options & {
   linkSafety?: LinkSafetyConfig;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
+  /** Called when isAnimating transitions from false to true. Suppressed in mode="static". Memoize with useCallback to avoid unnecessary effect re-runs. */
+  onAnimationStart?: () => void;
+  /** Called when isAnimating transitions from true to false. Suppressed in mode="static". Memoize with useCallback to avoid unnecessary effect re-runs. */
+  onAnimationEnd?: () => void;
 };
 
 const defaultSanitizeSchema = {
@@ -314,11 +319,30 @@ export const Streamdown = memo(
       enabled: true,
     },
     allowedTags,
+    onAnimationStart,
+    onAnimationEnd,
     ...props
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
     const generatedId = useId();
     const [_isPending, startTransition] = useTransition();
+
+    const prevIsAnimatingRef = useRef<boolean | undefined>(undefined);
+
+    useEffect(() => {
+      if (mode === "static") {
+        return;
+      }
+
+      const prev = prevIsAnimatingRef.current;
+      prevIsAnimatingRef.current = isAnimating;
+
+      if (isAnimating && !prev) {
+        onAnimationStart?.();
+      } else if (!isAnimating && prev === true) {
+        onAnimationEnd?.();
+      }
+    }, [isAnimating, onAnimationStart, onAnimationEnd, mode]);
 
     const allowedTagNames = useMemo(
       () => (allowedTags ? Object.keys(allowedTags) : []),
@@ -575,6 +599,8 @@ export const Streamdown = memo(
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
-    prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation
+    prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
+    prevProps.onAnimationStart === nextProps.onAnimationStart &&
+    prevProps.onAnimationEnd === nextProps.onAnimationEnd
 );
 Streamdown.displayName = "Streamdown";
