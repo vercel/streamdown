@@ -34,6 +34,10 @@ npm install @streamdown/code @streamdown/mermaid @streamdown/math @streamdown/cj
 **Tailwind v4** — add to `globals.css`:
 ```css
 @source "../node_modules/streamdown/dist/*.js";
+@source "../node_modules/@streamdown/code/dist/*.js";
+@source "../node_modules/@streamdown/cjk/dist/*.js";
+@source "../node_modules/@streamdown/math/dist/*.js";
+@source "../node_modules/@streamdown/mermaid/dist/*.js";
 ```
 
 **Tailwind v3** — add to `tailwind.config.js`:
