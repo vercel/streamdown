@@ -50,7 +50,7 @@ describe("mixed formatting", () => {
   it("should handle deeply nested incomplete formatting", () => {
     // Formats are closed in the order they're processed
     expect(remend("**bold *italic `code ~~strike")).toBe(
-      "**bold *italic `code ~~strike*`~~"
+      "**bold *italic `code ~~strike*`"
     );
   });
 

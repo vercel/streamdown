@@ -63,3 +63,21 @@ describe("inline code formatting (`)", () => {
     );
   });
 });
+
+describe("emphasis markers inside inline code spans should not leak", () => {
+  it("should not complete bold/italic/strikethrough if they are inside inline code", () => {
+    expect(remend("`**bold`")).toBe("`**bold`");
+    expect(remend("`*italic`")).toBe("`*italic`");
+    expect(remend("`~~strikethrough`")).toBe("`~~strikethrough`");
+  });
+
+  it("should still complete emphasis markers outside inline code", () => {
+    expect(remend("**bold")).toBe("**bold**");
+    expect(remend("*italic")).toBe("*italic*");
+    expect(remend("~~strike")).toBe("~~strike~~");
+  });
+
+  it("should complete emphasis after a closed inline code span", () => {
+    expect(remend("`code` **bold")).toBe("`code` **bold**");
+  });
+});
