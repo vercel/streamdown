@@ -1,17 +1,15 @@
-import { ArrowDownWideNarrowIcon } from "lucide-react";
+import { BookHeartIcon } from "lucide-react";
 
 export const Logo = () => (
-  <>
-    <span className="hidden font-semibold text-xl tracking-tight sm:block">
-      Streamdown
-    </span>
-    <ArrowDownWideNarrowIcon className="sm:hidden" />
-  </>
+  <div className="flex items-center gap-2">
+    <BookHeartIcon className="size-5" />
+    <p className="font-semibold text-xl tracking-tight">Geistdocs</p>
+  </div>
 );
 
 export const github = {
   owner: "vercel",
-  repo: "streamdown",
+  repo: "geistdocs",
 };
 
 export const nav = [
@@ -20,37 +18,37 @@ export const nav = [
     href: "/docs",
   },
   {
-    label: "Features",
-    href: "/docs/animation",
-  },
-  {
-    label: "Plugins",
-    href: "/docs/plugins",
-  },
-  {
-    label: "Playground",
-    href: "/playground",
+    label: "Source",
+    href: `https://github.com/${github.owner}/${github.repo}/`,
   },
 ];
 
 export const suggestions = [
-  "What is Streamdown?",
-  "How does unterminated markdown parsing work?",
-  "How is Streamdown secure?",
-  "Is Streamdown performance optimized?",
+  "What is Geistdocs?",
+  "What can I make with Geistdocs?",
+  "What syntax does Geistdocs support?",
+  "How do I deploy my Geistdocs site?",
 ];
 
-export const title = "Streamdown Documentation";
+export const title = "Geistdocs Documentation";
 
 export const prompt =
-  "You are a helpful assistant specializing in answering questions about Streamdown - a markdown renderer designed for streaming content from AI models that is highly interactive, customizable, and easy to use.";
+  "You are a helpful assistant specializing in answering questions about Geistdocs, a modern documentation template built with Next.js and Fumadocs.";
 
 export const translations = {
   en: {
     displayName: "English",
   },
+  cn: {
+    displayName: "Chinese",
+    search: "搜尋文檔",
+  },
 };
 
 export const basePath: string | undefined = undefined;
 
-export const siteId: string | undefined = "streamdown";
+/**
+ * Unique identifier for this site, used in markdown request tracking analytics.
+ * Each site using geistdocs should set this to a unique value (e.g. "ai-sdk-docs", "next-docs").
+ */
+export const siteId: string | undefined = undefined;

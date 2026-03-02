@@ -1,25 +1,2 @@
 @import "tailwindcss";
 @import "./styles/geistdocs.css";
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
-.bg-dashed {
-  background-image: linear-gradient(
-    45deg,
-    var(--border) 12.5%,
-    transparent 12.5%,
-    transparent 50%,
-    var(--border) 50%,
-    var(--border) 62.5%,
-    transparent 62.5%,
-    transparent 100%
-  );
-  background-size: 0.25rem 0.25rem;
-}

@@ -47,5 +47,11 @@ export const getLLMText = async (page: InferPageType<typeof source>) => {
 
 # ${title}
 
-${processed}`;
+${processed}
+
+---
+
+For a semantic overview of all documentation, see [/sitemap.md](/sitemap.md)
+
+For an index of all available documentation, see [/llms.txt](/llms.txt)`;
 };

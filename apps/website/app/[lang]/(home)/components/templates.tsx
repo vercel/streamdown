@@ -1,4 +1,4 @@
-import Image, { type StaticImageData } from "next/image";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface TemplatesProps {
@@ -6,7 +6,7 @@ interface TemplatesProps {
     title: string;
     description: string;
     link: string;
-    image: string | StaticImageData;
+    image: string;
   }[];
   description: string;
   title: string;
