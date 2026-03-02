@@ -32,6 +32,10 @@ Then, update your Tailwind `globals.css` to include the following so that Tailwi
 
 ```css
 @source "../node_modules/streamdown/dist/*.js";
+@source "../node_modules/@streamdown/code/dist/*.js";
+@source "../node_modules/@streamdown/cjk/dist/*.js";
+@source "../node_modules/@streamdown/math/dist/*.js";
+@source "../node_modules/@streamdown/mermaid/dist/*.js";
 ```
 
 The path must be relative from your CSS file to the `node_modules` folder containing `streamdown`. In a standard Next.js project where `globals.css` lives in `app/`, the default path above should work.
@@ -52,6 +56,10 @@ monorepo/
 ```css
 /* apps/web/app/globals.css → 3 levels up to reach root node_modules */
 @source "../../../node_modules/streamdown/dist/*.js";
+@source "../../../node_modules/@streamdown/code/dist/*.js";
+@source "../../../node_modules/@streamdown/cjk/dist/*.js";
+@source "../../../node_modules/@streamdown/math/dist/*.js";
+@source "../../../node_modules/@streamdown/mermaid/dist/*.js";
 ```
 
 Adjust the number of `../` segments based on where your CSS file lives relative to the root `node_modules`.
