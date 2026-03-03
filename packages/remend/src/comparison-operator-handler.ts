@@ -2,7 +2,7 @@
 // AI models frequently generate list items like "- > 25: expensive" where
 // the > is a "greater than" operator, not a blockquote marker.
 
-import { isWithinCodeBlock } from "./utils";
+import { isInsideCodeBlock } from "./code-block-utils";
 
 // Match list items where > appears as a comparison operator followed by a digit
 // Pattern: list marker (-, *, +, or 1.) followed by > then optional = and a digit
@@ -23,7 +23,7 @@ export const handleComparisonOperators = (text: string): string => {
     LIST_COMPARISON_PATTERN,
     (match, prefix, suffix, offset) => {
       // Don't escape inside code blocks
-      if (isWithinCodeBlock(text, offset)) {
+      if (isInsideCodeBlock(text, offset)) {
         return match;
       }
 

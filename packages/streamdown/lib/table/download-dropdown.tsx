@@ -92,7 +92,7 @@ export const TableDownloadButton = ({
       title={`Download table as ${format.toUpperCase()}`}
       type="button"
     >
-      {children ?? <DownloadIcon size={14} />}
+      {children ?? <DownloadIcon height={14} width={14} />}
     </button>
   );
 };
@@ -172,7 +172,7 @@ export const TableDownloadDropdown = ({
         title="Download table"
         type="button"
       >
-        {children ?? <DownloadIcon size={14} />}
+        {children ?? <DownloadIcon height={14} width={14} />}
       </button>
       {isOpen ? (
         <div

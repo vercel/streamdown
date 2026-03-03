@@ -8,6 +8,7 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
@@ -51,6 +52,24 @@ export type {
   MathPlugin,
   PluginConfig,
 } from "./lib/plugin-types";
+export {
+  TableCopyDropdown,
+  type TableCopyDropdownProps,
+} from "./lib/table/copy-dropdown";
+export {
+  TableDownloadButton,
+  type TableDownloadButtonProps,
+  TableDownloadDropdown,
+  type TableDownloadDropdownProps,
+} from "./lib/table/download-dropdown";
+export {
+  escapeMarkdownTableCell,
+  extractTableDataFromElement,
+  type TableData,
+  tableDataToCSV,
+  tableDataToMarkdown,
+  tableDataToTSV,
+} from "./lib/table/utils";
 
 // Patterns for HTML indentation normalization
 // Matches if content starts with an HTML tag (possibly with leading whitespace)
@@ -142,6 +161,10 @@ export type StreamdownProps = Options & {
   allowedTags?: AllowedTags;
   /** Tailwind CSS prefix to prepend to all utility classes. Enables Tailwind v4's `prefix()` support. */
   prefix?: string;
+  /** Called when isAnimating transitions from false to true. Suppressed in mode="static". */
+  onAnimationStart?: () => void;
+  /** Called when isAnimating transitions from true to false. Suppressed in mode="static". */
+  onAnimationEnd?: () => void;
 };
 
 const defaultSanitizeSchema = {
@@ -318,6 +341,8 @@ export const Streamdown = memo(
     },
     allowedTags,
     prefix,
+    onAnimationStart,
+    onAnimationEnd,
     ...props
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
@@ -325,6 +350,40 @@ export const Streamdown = memo(
     const [_isPending, startTransition] = useTransition();
 
     const prefixedCn = useMemo(() => createCn(prefix), [prefix]);
+
+    // null means "first render" — distinguishes from false so we can fire
+    // onAnimationStart on mount when isAnimating={true} without firing
+    // onAnimationEnd on mount when isAnimating={false}.
+    const prevIsAnimatingRef = useRef<boolean | null>(null);
+
+    // Store callbacks in refs so the effect doesn't re-run when they change
+    const onAnimationStartRef = useRef(onAnimationStart);
+    const onAnimationEndRef = useRef(onAnimationEnd);
+    onAnimationStartRef.current = onAnimationStart;
+    onAnimationEndRef.current = onAnimationEnd;
+
+    useEffect(() => {
+      if (mode === "static") {
+        return;
+      }
+
+      const prev = prevIsAnimatingRef.current;
+      prevIsAnimatingRef.current = isAnimating;
+
+      // First render: only fire start (never end, since there's no prior state to end)
+      if (prev === null) {
+        if (isAnimating) {
+          onAnimationStartRef.current?.();
+        }
+        return;
+      }
+
+      if (isAnimating && !prev) {
+        onAnimationStartRef.current?.();
+      } else if (!isAnimating && prev) {
+        onAnimationEndRef.current?.();
+      }
+    }, [isAnimating, mode]);
 
     const allowedTagNames = useMemo(
       () => (allowedTags ? Object.keys(allowedTags) : []),
