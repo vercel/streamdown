@@ -52,6 +52,11 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
       default: "streaming",
       options: ["streaming", "static"],
     },
+    dir: {
+      description:
+        "Text direction. 'auto' detects per-block using the first strong character algorithm.",
+      type: '"auto" | "ltr" | "rtl"',
+    },
   }}
 />
 
@@ -61,8 +66,8 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
   type={{
     shikiTheme: {
       description:
-        "Light and dark themes for code syntax highlighting. Any Shiki theme name can be used - bundled themes (github-light, github-dark) load instantly, others load from CDN.",
-      type: "[string, string]",
+        "Light and dark themes for code syntax highlighting. Accepts bundled theme names or custom theme objects (ThemeRegistrationAny).",
+      type: "[ThemeInput, ThemeInput]",
       default: "['github-light', 'github-dark']",
     },
     components: {
@@ -73,6 +78,16 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
       description:
         "Custom HTML tags to allow through sanitization, with their permitted attributes. Use with 'components' to render custom tags like <ref> or <mention>. Only works with default rehype plugins.",
       type: "Record<string, string[]>",
+    },
+    literalTagContent: {
+      description:
+        "Tags whose children are treated as plain text (no markdown parsing). Useful when tag children contain underscores or asterisks that would otherwise be formatted. Tags must also appear in allowedTags.",
+      type: "string[]",
+    },
+    prefix: {
+      description:
+        "Tailwind CSS prefix prepended to all utility classes. Enables Tailwind v4 prefix() support. User-supplied className values are also prefixed.",
+      type: "string",
     },
   }}
 />
@@ -131,6 +146,16 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
     plugins: {
       description: "Plugin configuration for math, mermaid, code highlighting, and CJK support. See [Plugins](/docs/plugins).",
       type: "PluginConfig",
+    },
+    icons: {
+      description:
+        "Custom icons to override the defaults used in controls. See the IconMap interface for available keys.",
+      type: "Partial<IconMap>",
+    },
+    translations: {
+      description:
+        "Override default English labels for controls and modals. See [Internationalization](/docs/internationalization).",
+      type: "Partial<StreamdownTranslations>",
     },
     caret: {
       description: "Show a caret indicator at the end of streaming content. See [Carets](/docs/carets).",

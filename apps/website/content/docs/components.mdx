@@ -306,6 +306,32 @@ Use `data*` in the attributes array to allow all `data-*` attributes on a tag:
   If you provide custom `rehypePlugins`, you'll need to configure `rehype-sanitize` yourself to allow custom tags. See the [Security](/docs/security) documentation for details.
 </Callout>
 
+### Plain text tag content
+
+By default, children of custom HTML tags are parsed as markdown. This means underscores, asterisks, and other markdown metacharacters in tag content get formatted unexpectedly — for example, `<mention>some_user_name</mention>` renders with italicized text instead of a literal underscore.
+
+Use the `literalTagContent` prop to treat the children of specific tags as plain text:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  allowedTags={{
+    mention: ["user_id"],
+  }}
+  literalTagContent={["mention"]}
+  components={{
+    mention: ({ user_id, children }) => (
+      <span className="text-blue-600">@{children}</span>
+    ),
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+<Callout type="warn">
+  Tags listed in `literalTagContent` must also be listed in `allowedTags`. Otherwise the tag is stripped by the sanitizer before literal content handling applies.
+</Callout>
+
 ### Security Considerations
 
 When allowing custom HTML tags:
