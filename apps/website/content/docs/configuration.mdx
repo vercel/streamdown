@@ -136,6 +136,14 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       description: "Show a caret indicator at the end of streaming content. See [Carets](/docs/carets).",
       type: '"block" | "circle"',
     },
+    onAnimationStart: {
+      description: "Called when isAnimating transitions from false to true. Suppressed in static mode. Memoize with useCallback. See [Animation](/docs/animation).",
+      type: "() => void",
+    },
+    onAnimationEnd: {
+      description: "Called when isAnimating transitions from true to false. Suppressed in static mode. Memoize with useCallback. See [Animation](/docs/animation).",
+      type: "() => void",
+    },
   }}
 />
 

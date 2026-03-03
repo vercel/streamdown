@@ -1,7 +1,8 @@
 import { type ComponentProps, useContext } from "react";
 import { StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
-import { cn, save } from "../utils";
+import { useCn } from "../prefix-context";
+import { save } from "../utils";
 import { useCodeBlockContext } from "./context";
 
 export type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
@@ -330,6 +331,7 @@ export const CodeBlockDownloadButton = ({
   code?: string;
   language?: string;
 }) => {
+  const cn = useCn();
   const { code: contextCode } = useCodeBlockContext();
   const { isAnimating } = useContext(StreamdownContext);
   const icons = useIcons();

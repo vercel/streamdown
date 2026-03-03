@@ -2,7 +2,8 @@ import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useIcons } from "./icon-context";
 import type { ExtraProps } from "./markdown";
-import { cn, save } from "./utils";
+import { useCn } from "./prefix-context";
+import { save } from "./utils";
 
 const fileExtensionPattern = /\.[^/.]+$/;
 
@@ -22,6 +23,7 @@ export const ImageComponent = ({
   ...props
 }: ImageComponentProps) => {
   const { DownloadIcon } = useIcons();
+  const cn = useCn();
   const imgRef = useRef<HTMLImageElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -116,7 +118,7 @@ export const ImageComponent = ({
 
   return (
     <div
-      className="group relative my-4 inline-block"
+      className={cn("group relative my-4 inline-block")}
       data-streamdown="image-wrapper"
     >
       {/** biome-ignore lint/performance/noImgElement: "streamdown is framework-agnostic" */}
@@ -138,13 +140,17 @@ export const ImageComponent = ({
       />
       {showFallback && (
         <span
-          className="text-muted-foreground text-xs italic"
+          className={cn("text-muted-foreground text-xs italic")}
           data-streamdown="image-fallback"
         >
           Image not available
         </span>
       )}
-      <div className="pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block" />
+      <div
+        className={cn(
+          "pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block"
+        )}
+      />
       {showDownload && (
         <button
           className={cn(

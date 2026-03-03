@@ -7,7 +7,7 @@ import {
 } from "react";
 import { StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
-import { cn } from "../utils";
+import { useCn } from "../prefix-context";
 import { useCodeBlockContext } from "./context";
 
 export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
@@ -25,6 +25,7 @@ export const CodeBlockCopyButton = ({
   code: propCode,
   ...props
 }: CodeBlockCopyButtonProps & { code?: string }) => {
+  const cn = useCn();
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
   const { code: contextCode } = useCodeBlockContext();

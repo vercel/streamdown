@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useIcons } from "../icon-context";
-import { cn } from "../utils";
+import { useCn } from "../prefix-context";
 
 interface PanZoomProps {
   children: ReactNode;
@@ -25,6 +25,7 @@ export const PanZoom = ({
   fullscreen = false,
 }: PanZoomProps) => {
   const { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } = useIcons();
+  const cn = useCn();
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(initialZoom);
@@ -166,7 +167,9 @@ export const PanZoom = ({
           )}
         >
           <button
-            className="flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            className={cn(
+              "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            )}
             disabled={zoom >= maxZoom}
             onClick={handleZoomIn}
             title="Zoom in"
@@ -175,7 +178,9 @@ export const PanZoom = ({
             <ZoomInIcon size={16} />
           </button>
           <button
-            className="flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            className={cn(
+              "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            )}
             disabled={zoom <= minZoom}
             onClick={handleZoomOut}
             title="Zoom out"
@@ -184,7 +189,9 @@ export const PanZoom = ({
             <ZoomOutIcon size={16} />
           </button>
           <button
-            className="flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className={cn(
+              "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            )}
             onClick={handleReset}
             title="Reset zoom and pan"
             type="button"
