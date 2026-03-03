@@ -176,6 +176,45 @@ describe("CodeBlockBody", () => {
     expect(lineSpans.length).toBe(3);
   });
 
+  it("should render newline for empty row (single empty-content token)", () => {
+    const result = {
+      tokens: [
+        [{ content: "line 1" }],
+        [{ content: "" }],
+        [{ content: "line 3" }],
+      ],
+    };
+
+    const { container } = render(
+      <CodeBlockBody language="text" result={result} />
+    );
+
+    const lineSpans = container.querySelectorAll("code > span");
+    expect(lineSpans.length).toBe(3);
+
+    // Empty row should contain a newline, not a token span
+    const emptyLine = lineSpans[1];
+    expect(emptyLine?.querySelector("span")).toBeNull();
+    expect(emptyLine?.textContent).toBe("\n");
+  });
+
+  it("should render newline for empty row (zero tokens)", () => {
+    const result = {
+      tokens: [[{ content: "line 1" }], [], [{ content: "line 3" }]],
+    };
+
+    const { container } = render(
+      <CodeBlockBody language="text" result={result} />
+    );
+
+    const lineSpans = container.querySelectorAll("code > span");
+    expect(lineSpans.length).toBe(3);
+
+    const emptyLine = lineSpans[1];
+    expect(emptyLine?.querySelector("span")).toBeNull();
+    expect(emptyLine?.textContent).toBe("\n");
+  });
+
   it("should handle token with color property", () => {
     const result = {
       tokens: [[{ content: "colored", color: "#abc123" }]],
