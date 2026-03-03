@@ -36,6 +36,15 @@ Then, update your Tailwind `globals.css` to include the following so that Tailwi
 
 The path must be relative from your CSS file to the `node_modules` folder containing `streamdown`. In a standard Next.js project where `globals.css` lives in `app/`, the default path above should work.
 
+If you install optional Streamdown plugins, add their matching `@source` lines from the relevant plugin docs (`/docs/plugins/code`, `/docs/plugins/cjk`, `/docs/plugins/math`, `/docs/plugins/mermaid`). Only include plugin `@source` entries for packages that are actually installed.
+
+Example:
+
+```css
+@source "../node_modules/@streamdown/code/dist/*.js";
+```
+
+
 ### Monorepo setup
 
 In a monorepo (npm workspaces, Turbo, pnpm, etc.), dependencies are typically hoisted to the root `node_modules`. You need to adjust the relative path to point there:
@@ -54,7 +63,7 @@ monorepo/
 @source "../../../node_modules/streamdown/dist/*.js";
 ```
 
-Adjust the number of `../` segments based on where your CSS file lives relative to the root `node_modules`.
+Adjust the number of `../` segments based on where your CSS file lives relative to the root `node_modules`. If you install Streamdown plugins, add their respective `@source` entries only when those packages are installed.
 
 ## Usage
 

@@ -22,6 +22,16 @@ The `@streamdown/code` plugin provides syntax highlighting for code blocks using
 npm install @streamdown/code
 ```
 
+## Tailwind CSS (v4)
+
+If you use Tailwind v4, add this to your `globals.css` only when `@streamdown/code` is installed:
+
+```css title="globals.css"
+@source "../node_modules/@streamdown/code/dist/*.js";
+```
+
+Adjust the path for monorepos so it points to the correct `node_modules` location.
+
 ## Usage
 
 ```tsx
