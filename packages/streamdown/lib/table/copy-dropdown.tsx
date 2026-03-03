@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 import {
   extractTableDataFromElement,
   tableDataToCSV,
@@ -30,6 +31,7 @@ export const TableCopyDropdown = ({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef(0);
   const { isAnimating } = useContext(StreamdownContext);
+  const t = useTranslations();
 
   const copyTableData = async (format: "csv" | "tsv" | "md") => {
     if (typeof window === "undefined" || !navigator?.clipboard?.write) {
@@ -104,7 +106,7 @@ export const TableCopyDropdown = ({
         )}
         disabled={isAnimating}
         onClick={() => setIsOpen(!isOpen)}
-        title="Copy table"
+        title={t.copyTable}
         type="button"
       >
         {children ?? <Icon height={14} width={14} />}
@@ -120,30 +122,30 @@ export const TableCopyDropdown = ({
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}
             onClick={() => copyTableData("md")}
-            title="Copy table as Markdown"
+            title={t.copyTableAsMarkdown}
             type="button"
           >
-            Markdown
+            {t.tableFormatMarkdown}
           </button>
           <button
             className={cn(
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}
             onClick={() => copyTableData("csv")}
-            title="Copy table as CSV"
+            title={t.copyTableAsCsv}
             type="button"
           >
-            CSV
+            {t.tableFormatCsv}
           </button>
           <button
             className={cn(
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}
             onClick={() => copyTableData("tsv")}
-            title="Copy table as TSV"
+            title={t.copyTableAsTsv}
             type="button"
           >
-            TSV
+            {t.tableFormatTsv}
           </button>
         </div>
       ) : null}

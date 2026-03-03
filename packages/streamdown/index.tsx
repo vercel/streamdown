@@ -34,6 +34,11 @@ import type { PluginConfig, ThemeInput } from "./lib/plugin-types";
 import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
+import {
+  defaultTranslations,
+  type StreamdownTranslations,
+  TranslationsContext,
+} from "./lib/translations-context";
 import { createCn } from "./lib/utils";
 
 export type { BundledLanguage, BundledTheme } from "shiki";
@@ -59,6 +64,8 @@ export type {
   PluginConfig,
   ThemeInput,
 } from "./lib/plugin-types";
+export type { StreamdownTranslations } from "./lib/translations-context";
+export { defaultTranslations } from "./lib/translations-context";
 export type { ThemeRegistrationAny } from "shiki";
 export {
   TableCopyDropdown,
@@ -167,6 +174,8 @@ export type StreamdownProps = Options & {
   linkSafety?: LinkSafetyConfig;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
+  /** Override UI strings for i18n / custom labels */
+  translations?: Partial<StreamdownTranslations>;
   /** Custom icons to override the default icons used in controls */
   icons?: Partial<IconMap>;
   /** Tailwind CSS prefix to prepend to all utility classes (e.g. `"tw"` produces `tw:flex` instead of `flex`). Enables Tailwind v4's `prefix()` support. Note: user-supplied `className` values are also prefixed. */
@@ -371,6 +380,7 @@ export const Streamdown = memo(
       enabled: true,
     },
     allowedTags,
+    translations,
     icons: iconOverrides,
     prefix,
     onAnimationStart,
@@ -526,6 +536,19 @@ export const Streamdown = memo(
       ]
     );
 
+    // Stable key derived from translations values so inline objects don't
+    // defeat memoization (same pattern used for `animated` above).
+    const translationsKey = useMemo(
+      () => (translations ? JSON.stringify(translations) : ""),
+      [translations]
+    );
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: keyed by translationsKey for value equality
+    const translationsValue = useMemo(
+      () => ({ ...defaultTranslations, ...translations }),
+      [translationsKey]
+    );
+
     // Memoize merged components to avoid recreating on every render
     const mergedComponents = useMemo(
       () => ({
@@ -616,6 +639,37 @@ export const Streamdown = memo(
     // Static mode: simple rendering without streaming features
     if (mode === "static") {
       return (
+        <TranslationsContext.Provider value={translationsValue}>
+          <PluginContext.Provider value={plugins ?? null}>
+            <StreamdownContext.Provider value={contextValue}>
+              <IconProvider icons={iconOverrides}>
+                <PrefixContext.Provider value={prefixedCn}>
+                  <div
+                    className={prefixedCn(
+                      "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+                      className
+                    )}
+                  >
+                    <Markdown
+                      components={mergedComponents}
+                      rehypePlugins={mergedRehypePlugins}
+                      remarkPlugins={mergedRemarkPlugins}
+                      {...props}
+                    >
+                      {processedChildren}
+                    </Markdown>
+                  </div>
+                </PrefixContext.Provider>
+              </IconProvider>
+            </StreamdownContext.Provider>
+          </PluginContext.Provider>
+        </TranslationsContext.Provider>
+      );
+    }
+
+    // Streaming mode: parse into blocks with memoization and incomplete markdown handling
+    return (
+      <TranslationsContext.Provider value={translationsValue}>
         <PluginContext.Provider value={plugins ?? null}>
           <StreamdownContext.Provider value={contextValue}>
             <IconProvider icons={iconOverrides}>
@@ -623,71 +677,44 @@ export const Streamdown = memo(
                 <div
                   className={prefixedCn(
                     "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+                    caret && !shouldHideCaret
+                      ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-[var(--streamdown-caret)]"
+                      : null,
                     className
                   )}
+                  style={style}
                 >
-                  <Markdown
-                    components={mergedComponents}
-                    rehypePlugins={mergedRehypePlugins}
-                    remarkPlugins={mergedRemarkPlugins}
-                    {...props}
-                  >
-                    {processedChildren}
-                  </Markdown>
+                  {blocksToRender.length === 0 && caret && isAnimating && <span />}
+                  {blocksToRender.map((block, index) => {
+                    const isLastBlock = index === blocksToRender.length - 1;
+                    const isIncomplete =
+                      isAnimating && isLastBlock && hasIncompleteCodeFence(block);
+                    return (
+                      <BlockComponent
+                        animatePlugin={animatePlugin}
+                        components={mergedComponents}
+                        content={block}
+                        index={index}
+                        isIncomplete={isIncomplete}
+                        key={blockKeys[index]}
+                        rehypePlugins={mergedRehypePlugins}
+                        remarkPlugins={mergedRemarkPlugins}
+                        shouldNormalizeHtmlIndentation={
+                          shouldNormalizeHtmlIndentation
+                        }
+                        shouldParseIncompleteMarkdown={
+                          shouldParseIncompleteMarkdown
+                        }
+                        {...props}
+                      />
+                    );
+                  })}
                 </div>
               </PrefixContext.Provider>
             </IconProvider>
           </StreamdownContext.Provider>
         </PluginContext.Provider>
-      );
-    }
-
-    // Streaming mode: parse into blocks with memoization and incomplete markdown handling
-    return (
-      <PluginContext.Provider value={plugins ?? null}>
-        <StreamdownContext.Provider value={contextValue}>
-          <IconProvider icons={iconOverrides}>
-            <PrefixContext.Provider value={prefixedCn}>
-              <div
-                className={prefixedCn(
-                  "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
-                  caret && !shouldHideCaret
-                    ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-[var(--streamdown-caret)]"
-                    : null,
-                  className
-                )}
-                style={style}
-              >
-                {blocksToRender.length === 0 && caret && isAnimating && <span />}
-                {blocksToRender.map((block, index) => {
-                  const isLastBlock = index === blocksToRender.length - 1;
-                  const isIncomplete =
-                    isAnimating && isLastBlock && hasIncompleteCodeFence(block);
-                  return (
-                    <BlockComponent
-                      animatePlugin={animatePlugin}
-                      components={mergedComponents}
-                      content={block}
-                      index={index}
-                      isIncomplete={isIncomplete}
-                      key={blockKeys[index]}
-                      rehypePlugins={mergedRehypePlugins}
-                      remarkPlugins={mergedRemarkPlugins}
-                      shouldNormalizeHtmlIndentation={
-                        shouldNormalizeHtmlIndentation
-                      }
-                      shouldParseIncompleteMarkdown={
-                        shouldParseIncompleteMarkdown
-                      }
-                      {...props}
-                    />
-                  );
-                })}
-              </div>
-            </PrefixContext.Provider>
-          </IconProvider>
-        </StreamdownContext.Provider>
-      </PluginContext.Provider>
+      </TranslationsContext.Provider>
     );
   },
   (prevProps, nextProps) =>
@@ -700,6 +727,8 @@ export const Streamdown = memo(
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
+    JSON.stringify(prevProps.translations) ===
+      JSON.stringify(nextProps.translations) &&
     prevProps.prefix === nextProps.prefix
 );
 Streamdown.displayName = "Streamdown";

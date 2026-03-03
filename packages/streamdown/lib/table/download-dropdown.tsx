@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 import { save } from "../utils";
 import {
   extractTableDataFromElement,
@@ -28,6 +29,7 @@ export const TableDownloadButton = ({
 }: TableDownloadButtonProps) => {
   const cn = useCn();
   const { isAnimating } = useContext(StreamdownContext);
+  const t = useTranslations();
   const icons = useIcons();
 
   const downloadTableData = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -90,7 +92,9 @@ export const TableDownloadButton = ({
       )}
       disabled={isAnimating}
       onClick={downloadTableData}
-      title={`Download table as ${format.toUpperCase()}`}
+      title={
+        format === "csv" ? t.downloadTableAsCsv : t.downloadTableAsMarkdown
+      }
       type="button"
     >
       {children ?? <icons.DownloadIcon size={14} />}
@@ -115,6 +119,7 @@ export const TableDownloadDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { isAnimating } = useContext(StreamdownContext);
+  const t = useTranslations();
   const icons = useIcons();
 
   const downloadTableData = (format: "csv" | "markdown") => {
@@ -171,7 +176,7 @@ export const TableDownloadDropdown = ({
         )}
         disabled={isAnimating}
         onClick={() => setIsOpen(!isOpen)}
-        title="Download table"
+        title={t.downloadTable}
         type="button"
       >
         {children ?? <icons.DownloadIcon size={14} />}
@@ -187,20 +192,20 @@ export const TableDownloadDropdown = ({
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}
             onClick={() => downloadTableData("csv")}
-            title="Download table as CSV"
+            title={t.downloadTableAsCsv}
             type="button"
           >
-            CSV
+            {t.tableFormatCsv}
           </button>
           <button
             className={cn(
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}
             onClick={() => downloadTableData("markdown")}
-            title="Download table as Markdown"
+            title={t.downloadTableAsMarkdown}
             type="button"
           >
-            Markdown
+            {t.tableFormatMarkdown}
           </button>
         </div>
       ) : null}

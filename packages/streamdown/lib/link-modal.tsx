@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useIcons } from "./icon-context";
 import { useCn } from "./prefix-context";
+import { useTranslations } from "./translations-context";
 
 let activeModalCount = 0;
 
@@ -34,6 +35,7 @@ export const LinkSafetyModal = ({
   const { CheckIcon, CopyIcon, ExternalLinkIcon, XIcon } = useIcons();
   const cn = useCn();
   const [copied, setCopied] = useState(false);
+  const t = useTranslations();
 
   const handleCopy = useCallback(async () => {
     try {
@@ -102,7 +104,7 @@ export const LinkSafetyModal = ({
             "absolute top-4 right-4 rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
           )}
           onClick={onClose}
-          title="Close"
+          title={t.close}
           type="button"
         >
           <XIcon size={16} />
@@ -111,10 +113,10 @@ export const LinkSafetyModal = ({
         <div className={cn("flex flex-col gap-2")}>
           <div className={cn("flex items-center gap-2 font-semibold text-lg")}>
             <ExternalLinkIcon size={20} />
-            <span>Open external link?</span>
+            <span>{t.openExternalLink}</span>
           </div>
           <p className={cn("text-muted-foreground text-sm")}>
-            You're about to visit an external website.
+            {t.externalLinkWarning}
           </p>
         </div>
 
@@ -138,12 +140,12 @@ export const LinkSafetyModal = ({
             {copied ? (
               <>
                 <CheckIcon size={14} />
-                <span>Copied</span>
+                <span>{t.copied}</span>
               </>
             ) : (
               <>
                 <CopyIcon size={14} />
-                <span>Copy link</span>
+                <span>{t.copyLink}</span>
               </>
             )}
           </button>
@@ -155,7 +157,7 @@ export const LinkSafetyModal = ({
             type="button"
           >
             <ExternalLinkIcon size={14} />
-            <span>Open link</span>
+            <span>{t.openLink}</span>
           </button>
         </div>
       </div>

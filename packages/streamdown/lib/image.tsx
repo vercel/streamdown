@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useIcons } from "./icon-context";
 import type { ExtraProps } from "./markdown";
 import { useCn } from "./prefix-context";
+import { useTranslations } from "./translations-context";
 import { save } from "./utils";
 
 const fileExtensionPattern = /\.[^/.]+$/;
@@ -27,6 +28,7 @@ export const ImageComponent = ({
   const imgRef = useRef<HTMLImageElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const t = useTranslations();
 
   const hasExplicitDimensions = props.width != null || props.height != null;
   const showDownload = (imageLoaded || hasExplicitDimensions) && !imageError;
@@ -143,7 +145,7 @@ export const ImageComponent = ({
           className={cn("text-muted-foreground text-xs italic")}
           data-streamdown="image-fallback"
         >
-          Image not available
+          {t.imageNotAvailable}
         </span>
       )}
       <div
@@ -158,7 +160,7 @@ export const ImageComponent = ({
             "opacity-0 group-hover:opacity-100"
           )}
           onClick={downloadImage}
-          title="Download image"
+          title={t.downloadImage}
           type="button"
         >
           <DownloadIcon size={14} />
