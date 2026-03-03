@@ -89,60 +89,59 @@ export const CodeBlockBody = memo(
                 // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
                 key={index}
               >
-                {/* biome-ignore lint/complexity/noExcessiveCognitiveComplexity: dual-theme token style mapping */}
-                {row.length === 0 || (row.length === 1 && row[0].content === "") ? (
-                  // Empty line: insert newline to preserve copy behavior
-                  "\n"
-                ) : (
-                  row.map((token, tokenIndex) => {
-                    // Shiki dual-theme tokens put direct CSS properties (color,
-                    // background-color) into htmlStyle alongside CSS custom
-                    // properties (--shiki-dark, etc). Direct properties as inline
-                    // styles override the Tailwind class-based dark mode approach,
-                    // so we redirect them to CSS custom properties instead.
-                    const tokenStyle: Record<string, string> = {};
-                    let hasBg = Boolean(token.bgColor);
-  
-                    if (token.color) {
-                      tokenStyle["--sdm-c"] = token.color;
-                    }
-                    if (token.bgColor) {
-                      tokenStyle["--sdm-tbg"] = token.bgColor;
-                    }
-  
-                    if (token.htmlStyle) {
-                      for (const [key, value] of Object.entries(
-                        token.htmlStyle
-                      )) {
-                        if (key === "color") {
-                          tokenStyle["--sdm-c"] = value;
-                        } else if (key === "background-color") {
-                          tokenStyle["--sdm-tbg"] = value;
-                          hasBg = true;
-                        } else {
-                          tokenStyle[key] = value;
+                {row.length === 0 || (row.length === 1 && row[0].content === "")
+                  ? // Empty line: insert newline to preserve copy behavior
+                    "\n"
+                  : // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: dual-theme token style mapping
+                    row.map((token, tokenIndex) => {
+                      // Shiki dual-theme tokens put direct CSS properties (color,
+                      // background-color) into htmlStyle alongside CSS custom
+                      // properties (--shiki-dark, etc). Direct properties as inline
+                      // styles override the Tailwind class-based dark mode approach,
+                      // so we redirect them to CSS custom properties instead.
+                      const tokenStyle: Record<string, string> = {};
+                      let hasBg = Boolean(token.bgColor);
+
+                      if (token.color) {
+                        tokenStyle["--sdm-c"] = token.color;
+                      }
+                      if (token.bgColor) {
+                        tokenStyle["--sdm-tbg"] = token.bgColor;
+                      }
+
+                      if (token.htmlStyle) {
+                        for (const [key, value] of Object.entries(
+                          token.htmlStyle
+                        )) {
+                          if (key === "color") {
+                            tokenStyle["--sdm-c"] = value;
+                          } else if (key === "background-color") {
+                            tokenStyle["--sdm-tbg"] = value;
+                            hasBg = true;
+                          } else {
+                            tokenStyle[key] = value;
+                          }
                         }
                       }
-                    }
-  
-                    return (
-                      <span
-                        className={cn(
-                          "text-[var(--sdm-c,inherit)]",
-                          "dark:text-[var(--shiki-dark,var(--sdm-c,inherit))]",
-                          hasBg && "bg-[var(--sdm-tbg)]",
-                          hasBg && "dark:bg-[var(--shiki-dark-bg,var(--sdm-tbg))]"
-                        )}
-                        // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
-                        key={tokenIndex}
-                        style={tokenStyle as CSSProperties}
-                        {...token.htmlAttrs}
-                      >
-                        {token.content}
-                      </span>
-                    );
-                  })
-                )}
+
+                      return (
+                        <span
+                          className={cn(
+                            "text-[var(--sdm-c,inherit)]",
+                            "dark:text-[var(--shiki-dark,var(--sdm-c,inherit))]",
+                            hasBg && "bg-[var(--sdm-tbg)]",
+                            hasBg &&
+                              "dark:bg-[var(--shiki-dark-bg,var(--sdm-tbg))]"
+                          )}
+                          // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
+                          key={tokenIndex}
+                          style={tokenStyle as CSSProperties}
+                          {...token.htmlAttrs}
+                        >
+                          {token.content}
+                        </span>
+                      );
+                    })}
               </span>
             ))}
           </code>
