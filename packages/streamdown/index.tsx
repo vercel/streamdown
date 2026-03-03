@@ -536,9 +536,17 @@ export const Streamdown = memo(
       ]
     );
 
+    // Stable key derived from translations values so inline objects don't
+    // defeat memoization (same pattern used for `animated` above).
+    const translationsKey = useMemo(
+      () => (translations ? JSON.stringify(translations) : ""),
+      [translations]
+    );
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: keyed by translationsKey for value equality
     const translationsValue = useMemo(
       () => ({ ...defaultTranslations, ...translations }),
-      [translations]
+      [translationsKey]
     );
 
     // Memoize merged components to avoid recreating on every render
@@ -719,7 +727,8 @@ export const Streamdown = memo(
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
-    prevProps.translations === nextProps.translations &&
+    JSON.stringify(prevProps.translations) ===
+      JSON.stringify(nextProps.translations) &&
     prevProps.prefix === nextProps.prefix
 );
 Streamdown.displayName = "Streamdown";
