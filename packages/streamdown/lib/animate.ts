@@ -3,25 +3,20 @@ import type { Pluggable } from "unified";
 import { SKIP, visitParents } from "unist-util-visit-parents";
 
 export interface AnimatePlugin {
+  /**
+   * Returns the total HAST text node character count from the last
+   * rehype run, then resets to 0. Use this value as the argument to
+   * setPrevContentLength on the next render.
+   */
+  getLastRenderCharCount: () => number;
   name: "animate";
   rehypePlugin: Pluggable;
   /**
-   * Set the number of characters from a previous render.
-   * Characters up to this count will skip animation (duration=0ms),
-   * preventing re-animation of already-visible content during streaming updates.
-   * Must be the HAST character count from the previous render (not raw markdown length).
+   * Set the number of HAST text characters from a previous render.
+   * Characters up to this count will get duration=0ms, preventing
+   * re-animation of already-visible content during streaming updates.
    */
   setPrevContentLength: (length: number) => void;
-  /**
-   * Reset prevContentLength to 0 (animate everything).
-   */
-  resetPrevContentLength: () => void;
-  /**
-   * Returns the total HAST text node character count from the last render.
-   * Use this value (not raw markdown length) as the argument to setPrevContentLength
-   * on the next render to correctly identify already-visible content.
-   */
-  getLastRenderCharCount: () => number;
   type: "animate";
 }
 
@@ -115,16 +110,24 @@ interface AnimateConfig {
   duration: number;
   easing: string;
   sep: "word" | "char";
-  /** Number of HAST characters from previous render that should not be re-animated */
-  prevContentLength?: number;
-  /** Total HAST character count from the last completed render */
+}
+
+/**
+ * Mutable render state shared between the plugin API and the rehype
+ * closure. Stored separately from AnimateConfig so that the processor
+ * cache (which retains the first closure) always reads from the same
+ * object that setPrevContentLength / getLastRenderCharCount mutate.
+ */
+interface AnimateRenderState {
   lastRenderCharCount: number;
+  prevContentLength: number;
 }
 
 const processTextNode = (
   node: Text,
   ancestors: Node[],
   config: AnimateConfig,
+  renderState: AnimateRenderState,
   charCounter: { count: number }
 ): number | typeof SKIP | undefined => {
   const ancestor = ancestors.at(-1);
@@ -151,7 +154,7 @@ const processTextNode = (
   }
 
   const parts = config.sep === "char" ? splitByChar(text) : splitByWord(text);
-  const prevLen = config.prevContentLength ?? 0;
+  const prevLen = renderState.prevContentLength;
 
   const nodes: (Element | Text)[] = parts.map((part) => {
     const partStart = charCounter.count;
@@ -159,7 +162,6 @@ const processTextNode = (
     if (WHITESPACE_ONLY_RE.test(part)) {
       return { type: "text", value: part } as Text;
     }
-    // Skip animation for content that was already rendered previously
     const skipAnimation = prevLen > 0 && partStart < prevLen;
     return makeSpan(
       part,
@@ -174,48 +176,56 @@ const processTextNode = (
   return index + nodes.length;
 };
 
+// Instance counter ensures each plugin gets a unique rehype function name.
+// The processor cache in markdown.ts keys by function name, so without unique
+// names, different AnimatePlugin instances would share a cached processor
+// whose closure reads a stale config.
+let instanceId = 0;
+
 export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
   const config: AnimateConfig = {
     animation: options?.animation ?? "fadeIn",
     duration: options?.duration ?? 150,
     easing: options?.easing ?? "ease",
     sep: options?.sep ?? "word",
+  };
+
+  // Mutable render state — the rehype closure and the plugin API methods
+  // both reference this same object.
+  const renderState: AnimateRenderState = {
+    prevContentLength: 0,
     lastRenderCharCount: 0,
   };
 
+  const id = instanceId++;
   const rehypeAnimate = () => (tree: Root) => {
     const charCounter = { count: 0 };
     visitParents(tree, "text", (node: Text, ancestors) =>
-      processTextNode(node, ancestors, config, charCounter)
+      processTextNode(node, ancestors, config, renderState, charCounter)
     );
-    config.lastRenderCharCount = charCounter.count;
-    // Self-reset after each run so sibling blocks don't inherit this block's
-    // prevContentLength. With React's depth-first rendering, this executes after
-    // the current block's Markdown renders but before the next sibling block's
-    // Markdown renders — so each block gets exactly its own prevContentLength.
-    config.prevContentLength = 0;
+    renderState.lastRenderCharCount = charCounter.count;
+    // Self-reset so sibling blocks don't inherit this block's value.
+    // React renders depth-first: this runs after the current block's
+    // Markdown but before the next sibling block's Markdown.
+    renderState.prevContentLength = 0;
   };
+
+  // Give each instance a unique function name so the processor cache
+  // in markdown.ts creates a separate processor per plugin instance.
+  Object.defineProperty(rehypeAnimate, "name", {
+    value: `rehypeAnimate$${id}`,
+  });
 
   return {
     name: "animate",
     type: "animate",
     rehypePlugin: rehypeAnimate,
     setPrevContentLength(length: number) {
-      config.prevContentLength = length;
-    },
-    resetPrevContentLength() {
-      config.prevContentLength = 0;
+      renderState.prevContentLength = length;
     },
     getLastRenderCharCount() {
-      // Reset after reading so sibling Block components start clean.
-      // Each Block reads this value for its own prevContentLength and
-      // then immediately calls setPrevContentLength; since React renders
-      // depth-first, the rehype run for that Block sets lastRenderCharCount
-      // before the next sibling Block reads it. Resetting here ensures the
-      // next sibling Block sees 0 (no previous chars) rather than the prior
-      // block's character count.
-      const count = config.lastRenderCharCount;
-      config.lastRenderCharCount = 0;
+      const count = renderState.lastRenderCharCount;
+      renderState.lastRenderCharCount = 0;
       return count;
     },
   };

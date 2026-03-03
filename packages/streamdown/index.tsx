@@ -8,7 +8,6 @@ import {
   useEffect,
   useId,
   useMemo,
-  useRef,
   useState,
   useTransition,
 } from "react";
@@ -227,17 +226,17 @@ export const Block = memo(
     animatePlugin: animatePluginProp,
     ...props
   }: BlockProps) => {
-    // Track the HAST character count from the PREVIOUS render pass.
-    // React renders depth-first: this Block's function body runs, returns JSX, then
-    // the child Markdown component runs (processor.runSync synchronously processes
-    // content through rehype). On the current render, getLastRenderCharCount() still
-    // holds the value from the PREVIOUS Markdown run — exactly what we need as
-    // prevContentLength for this render. After Markdown runs, the plugin stores the
-    // new count and self-resets prevContentLength so sibling blocks start clean.
-    const prevContentLengthRef = useRef(0);
+    // Tell the animate plugin how many HAST characters were already rendered
+    // so it can skip their animation (duration=0ms) on this render pass.
+    //
+    // getLastRenderCharCount() returns the char count from the PREVIOUS
+    // rehype run then resets to 0. React renders depth-first: this Block's
+    // body runs, then its child Markdown calls processor.runSync (which
+    // runs rehypeAnimate synchronously). So the value here is from the
+    // previous render — exactly what we need as prevContentLength.
     if (animatePluginProp) {
-      prevContentLengthRef.current = animatePluginProp.getLastRenderCharCount();
-      animatePluginProp.setPrevContentLength(prevContentLengthRef.current);
+      const prevCount = animatePluginProp.getLastRenderCharCount();
+      animatePluginProp.setPrevContentLength(prevCount);
     }
 
     // Note: remend is already applied to the entire markdown before parsing into blocks
@@ -381,8 +380,9 @@ export const Streamdown = memo(
     const [displayBlocks, setDisplayBlocks] = useState<string[]>(blocks);
 
     // Use transition for block updates in streaming mode to avoid blocking UI
+    // biome-ignore lint/correctness/useExhaustiveDependencies: animatePlugin checked but not a dep
     useEffect(() => {
-      if (mode === "streaming") {
+      if (mode === "streaming" && !animatePlugin) {
         startTransition(() => {
           setDisplayBlocks(blocks);
         });
@@ -403,37 +403,30 @@ export const Streamdown = memo(
       [blocksToRender.length, generatedId]
     );
 
-    // Use value-based deps so animatePlugin stays stable when the user passes an
-    // inline object literal for `animated` (e.g. animated={{ animation: 'fadeIn' }}).
-    // A stable plugin reference is required for the prevContentLength tracking in
-    // Block to work: the rehype processor is cached by plugin name, so it always
-    // uses the first closure created. If the plugin is recreated the mutation of
-    // config.prevContentLength would target a new config object that the cached
-    // processor never reads.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: intentional value-based comparison
+    // Stable key derived from animated option values. This prevents the
+    // plugin from being recreated when the user passes an inline object
+    // literal (e.g. animated={{ animation: 'fadeIn' }}) whose reference
+    // changes on every parent render.
+    const animatedKey = useMemo(() => {
+      if (animated === true) {
+        return "true";
+      }
+      if (animated) {
+        return JSON.stringify(animated);
+      }
+      return "";
+    }, [animated]);
+
+    // biome-ignore lint/correctness/useExhaustiveDependencies: keyed by animatedKey for value equality
     const animatePlugin = useMemo(() => {
-      if (!animated) {
+      if (!animatedKey) {
         return null;
       }
-      if (animated === true) {
+      if (animatedKey === "true") {
         return createAnimatePlugin();
       }
-      return createAnimatePlugin(animated);
-    }, [
-      animated === true,
-      typeof animated === "object" && animated !== null
-        ? animated.animation
-        : undefined,
-      typeof animated === "object" && animated !== null
-        ? animated.duration
-        : undefined,
-      typeof animated === "object" && animated !== null
-        ? animated.easing
-        : undefined,
-      typeof animated === "object" && animated !== null
-        ? animated.sep
-        : undefined,
-    ]);
+      return createAnimatePlugin(animated as AnimateOptions);
+    }, [animatedKey]);
 
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(

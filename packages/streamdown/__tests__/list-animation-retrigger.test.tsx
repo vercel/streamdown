@@ -7,8 +7,12 @@
  * for ALL text — including already-visible content — causing those characters to
  * re-run their CSS entry animation.
  *
- * Fix: track prevContentLength per Block and set --sd-duration:0ms for text-node
- * positions that were already rendered in the previous pass.
+ * Fix: two layers of protection:
+ * 1. Memo'd list components (MemoLi, MemoUl, etc.) prevent re-rendering when
+ *    the node position hasn't changed — existing spans stay in the DOM.
+ * 2. When the node position DOES change (e.g., during streaming as text grows),
+ *    the animate plugin tracks prevContentLength and sets --sd-duration:0ms for
+ *    text-node positions that were already rendered in the previous pass.
  */
 
 import { act, render } from "@testing-library/react";
@@ -65,55 +69,55 @@ describe("list animation retrigger fix (#410)", () => {
     expect(remountedCount).toBe(0);
   });
 
-  it("sets --sd-duration:0ms on already-rendered content to prevent visual re-animation", async () => {
+  it("sets --sd-duration:0ms on already-rendered content when item text grows", async () => {
+    // When a list item's text grows during streaming, its node position
+    // changes (end column extends). This causes the memo'd MemoLi to
+    // re-render, and the animate plugin applies 0ms to already-visible chars.
     const { rerender, container } = render(
       <Streamdown animated={animatedConfig} isAnimating={true}>
-        {"- Item 1\n- Item 2\n"}
+        {"- AB\n"}
       </Streamdown>
     );
     await act(() => Promise.resolve());
 
-    // First render: all spans should have normal duration (700ms)
+    // First render: "AB" → 2 animated chars (A, B), both 700ms
     const firstRenderSpans = Array.from(
       container.querySelectorAll("[data-sd-animate]")
     ) as HTMLElement[];
-    expect(firstRenderSpans.length).toBeGreaterThan(0);
-
-    // After initial render all existing spans have full duration
+    expect(firstRenderSpans.length).toBe(2);
     for (const span of firstRenderSpans) {
-      const style = span.getAttribute("style") ?? "";
-      expect(style).toContain("--sd-duration: 700ms");
+      const duration = span.style.getPropertyValue("--sd-duration");
+      expect(duration).toBe("700ms");
     }
 
-    // Force a re-render (simulates streaming update — e.g., a new item appears)
+    // Streaming update: item text grows from "AB" to "AB CD"
+    // This changes the li node position → MemoLi re-renders
     await act(() => {
       rerender(
         <Streamdown animated={animatedConfig} isAnimating={true}>
-          {"- Item 1\n- Item 2\n\n- Item 3\n"}
+          {"- AB CD\n"}
         </Streamdown>
       );
     });
     await act(() => Promise.resolve());
 
-    // Spans for Item 1 and Item 2 (already rendered) should have duration:0ms
-    // to suppress any visual re-animation
-    const item1Spans = Array.from(
-      container.querySelectorAll("li:first-child [data-sd-animate]")
+    const afterSpans = Array.from(
+      container.querySelectorAll("[data-sd-animate]")
     ) as HTMLElement[];
-    expect(item1Spans.length).toBeGreaterThan(0);
-    for (const span of item1Spans) {
-      const style = span.getAttribute("style") ?? "";
-      expect(style).toContain("--sd-duration: 0ms");
+
+    // Should have 4 animated chars: A, B (old), C, D (new)
+    expect(afterSpans.length).toBe(4);
+
+    // "A" and "B" (chars 0-1) should have duration:0ms — already visible
+    for (const span of afterSpans.slice(0, 2)) {
+      const duration = span.style.getPropertyValue("--sd-duration");
+      expect(duration).toBe("0ms");
     }
 
-    // Spans for Item 3 (newly streamed) should have normal duration
-    const item3Spans = Array.from(
-      container.querySelectorAll("li:last-child [data-sd-animate]")
-    ) as HTMLElement[];
-    expect(item3Spans.length).toBeGreaterThan(0);
-    for (const span of item3Spans) {
-      const style = span.getAttribute("style") ?? "";
-      expect(style).toContain("--sd-duration: 700ms");
+    // "C" and "D" (chars 2-3) should have normal duration
+    for (const span of afterSpans.slice(2)) {
+      const duration = span.style.getPropertyValue("--sd-duration");
+      expect(duration).toBe("700ms");
     }
   });
 
