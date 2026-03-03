@@ -26,8 +26,9 @@ import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig, ThemeInput } from "./lib/plugin-types";
+import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
-import { cn } from "./lib/utils";
+import { createCn } from "./lib/utils";
 
 export type { BundledLanguage, BundledTheme } from "shiki";
 export type { AnimateOptions } from "./lib/animate";
@@ -159,6 +160,8 @@ export type StreamdownProps = Options & {
   linkSafety?: LinkSafetyConfig;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
+  /** Tailwind CSS prefix to prepend to all utility classes (e.g. `"tw"` produces `tw:flex` instead of `flex`). Enables Tailwind v4's `prefix()` support. Note: user-supplied `className` values are also prefixed. */
+  prefix?: string;
   /** Called when isAnimating transitions from false to true. Suppressed in mode="static". */
   onAnimationStart?: () => void;
   /** Called when isAnimating transitions from true to false. Suppressed in mode="static". */
@@ -338,6 +341,7 @@ export const Streamdown = memo(
       enabled: true,
     },
     allowedTags,
+    prefix,
     onAnimationStart,
     onAnimationEnd,
     ...props
@@ -345,6 +349,8 @@ export const Streamdown = memo(
     // All hooks must be called before any conditional returns
     const generatedId = useId();
     const [_isPending, startTransition] = useTransition();
+
+    const prefixedCn = useMemo(() => createCn(prefix), [prefix]);
 
     // null means "first render" — distinguishes from false so we can fire
     // onAnimationStart on mount when isAnimating={true} without firing
@@ -565,21 +571,23 @@ export const Streamdown = memo(
       return (
         <PluginContext.Provider value={plugins ?? null}>
           <StreamdownContext.Provider value={contextValue}>
-            <div
-              className={cn(
-                "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
-                className
-              )}
-            >
-              <Markdown
-                components={mergedComponents}
-                rehypePlugins={mergedRehypePlugins}
-                remarkPlugins={mergedRemarkPlugins}
-                {...props}
+            <PrefixContext.Provider value={prefixedCn}>
+              <div
+                className={prefixedCn(
+                  "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+                  className
+                )}
               >
-                {processedChildren}
-              </Markdown>
-            </div>
+                <Markdown
+                  components={mergedComponents}
+                  rehypePlugins={mergedRehypePlugins}
+                  remarkPlugins={mergedRemarkPlugins}
+                  {...props}
+                >
+                  {processedChildren}
+                </Markdown>
+              </div>
+            </PrefixContext.Provider>
           </StreamdownContext.Provider>
         </PluginContext.Provider>
       );
@@ -589,39 +597,43 @@ export const Streamdown = memo(
     return (
       <PluginContext.Provider value={plugins ?? null}>
         <StreamdownContext.Provider value={contextValue}>
-          <div
-            className={cn(
-              "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
-              caret && !shouldHideCaret
-                ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-[var(--streamdown-caret)]"
-                : null,
-              className
-            )}
-            style={style}
-          >
-            {blocksToRender.length === 0 && caret && isAnimating && <span />}
-            {blocksToRender.map((block, index) => {
-              const isLastBlock = index === blocksToRender.length - 1;
-              const isIncomplete =
-                isAnimating && isLastBlock && hasIncompleteCodeFence(block);
-              return (
-                <BlockComponent
-                  components={mergedComponents}
-                  content={block}
-                  index={index}
-                  isIncomplete={isIncomplete}
-                  key={blockKeys[index]}
-                  rehypePlugins={mergedRehypePlugins}
-                  remarkPlugins={mergedRemarkPlugins}
-                  shouldNormalizeHtmlIndentation={
-                    shouldNormalizeHtmlIndentation
-                  }
-                  shouldParseIncompleteMarkdown={shouldParseIncompleteMarkdown}
-                  {...props}
-                />
-              );
-            })}
-          </div>
+          <PrefixContext.Provider value={prefixedCn}>
+            <div
+              className={prefixedCn(
+                "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+                caret && !shouldHideCaret
+                  ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-[var(--streamdown-caret)]"
+                  : null,
+                className
+              )}
+              style={style}
+            >
+              {blocksToRender.length === 0 && caret && isAnimating && <span />}
+              {blocksToRender.map((block, index) => {
+                const isLastBlock = index === blocksToRender.length - 1;
+                const isIncomplete =
+                  isAnimating && isLastBlock && hasIncompleteCodeFence(block);
+                return (
+                  <BlockComponent
+                    components={mergedComponents}
+                    content={block}
+                    index={index}
+                    isIncomplete={isIncomplete}
+                    key={blockKeys[index]}
+                    rehypePlugins={mergedRehypePlugins}
+                    remarkPlugins={mergedRemarkPlugins}
+                    shouldNormalizeHtmlIndentation={
+                      shouldNormalizeHtmlIndentation
+                    }
+                    shouldParseIncompleteMarkdown={
+                      shouldParseIncompleteMarkdown
+                    }
+                    {...props}
+                  />
+                );
+              })}
+            </div>
+          </PrefixContext.Provider>
         </StreamdownContext.Provider>
       </PluginContext.Provider>
     );
@@ -635,6 +647,7 @@ export const Streamdown = memo(
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
-    prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation
+    prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
+    prevProps.prefix === nextProps.prefix
 );
 Streamdown.displayName = "Streamdown";

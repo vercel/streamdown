@@ -1,14 +1,15 @@
 import { type ComponentProps, type CSSProperties, memo, useMemo } from "react";
 import type { HighlightResult } from "../plugin-types";
-import { cn } from "../utils";
+import { useCn } from "../prefix-context";
+import { cn as baseCn } from "../utils";
 
 type CodeBlockBodyProps = ComponentProps<"div"> & {
   result: HighlightResult;
   language: string;
 };
 
-// Memoize line numbers class string since it's constant
-const LINE_NUMBER_CLASSES = cn(
+// Base line numbers class string (merged without prefix for memoization)
+const LINE_NUMBER_CLASSES_BASE = baseCn(
   "block",
   "before:content-[counter(line)]",
   "before:inline-block",
@@ -43,6 +44,11 @@ const parseRootStyle = (rootStyle: string): Record<string, string> => {
 
 export const CodeBlockBody = memo(
   ({ children, result, language, className, ...rest }: CodeBlockBodyProps) => {
+    const cn = useCn();
+
+    // Prefix the pre-computed line number classes
+    const lineNumberClasses = useMemo(() => cn(LINE_NUMBER_CLASSES_BASE), [cn]);
+
     // Use CSS custom properties instead of direct inline styles so that
     // dark-mode Tailwind classes can override without !important.
     // This is necessary because !important syntax differs between Tailwind v3 and v4.
@@ -82,10 +88,12 @@ export const CodeBlockBody = memo(
           )}
           style={preStyle}
         >
-          <code className="[counter-increment:line_0] [counter-reset:line]">
+          <code
+            className={cn("[counter-increment:line_0] [counter-reset:line]")}
+          >
             {result.tokens.map((row, index) => (
               <span
-                className={LINE_NUMBER_CLASSES}
+                className={lineNumberClasses}
                 // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
                 key={index}
               >
