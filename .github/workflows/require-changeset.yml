@@ -1,0 +1,31 @@
+name: Require Changeset
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  require-changeset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'no-changeset') }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for new changeset files
+        run: |
+          CHANGESETS=$(git diff --diff-filter=A --name-only ${{ github.event.pull_request.base.sha }} -- '.changeset/*.md')
+          if [ -z "$CHANGESETS" ]; then
+            echo "::error::No new changeset file found. Please run 'npx changeset' to create one."
+            exit 1
+          fi
+          echo "Found changeset(s):"
+          echo "$CHANGESETS"
