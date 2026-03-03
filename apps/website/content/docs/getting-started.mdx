@@ -46,13 +46,22 @@ Add the following CSS source directive to your `globals.css` or main CSS file:
 
 ```css title="globals.css"
 @source "../node_modules/streamdown/dist/*.js";
-@source "../node_modules/@streamdown/code/dist/*.js";
-@source "../node_modules/@streamdown/cjk/dist/*.js";
-@source "../node_modules/@streamdown/math/dist/*.js";
-@source "../node_modules/@streamdown/mermaid/dist/*.js";
 ```
 
 The path must be relative from your CSS file to the `node_modules` folder containing `streamdown`. In a standard Next.js project where `globals.css` lives in `app/`, the default path above should work.
+
+If you install optional plugins, add their matching `@source` lines only for packages you've installed. See the plugin pages for exact paths and examples:
+
+- Code: /docs/plugins/code
+- CJK: /docs/plugins/cjk
+- Math: /docs/plugins/math
+- Mermaid: /docs/plugins/mermaid
+
+Example: to include the code plugin, add this to `globals.css` (adjust the relative path as needed):
+
+```css title="globals.css"
+@source "../node_modules/@streamdown/code/dist/*.js";
+```
 
 ### Animation styles
 
@@ -78,10 +87,6 @@ monorepo/
 ```css title="globals.css"
 /* apps/web/app/globals.css → 3 levels up to reach root node_modules */
 @source "../../../node_modules/streamdown/dist/*.js";
-@source "../../../node_modules/@streamdown/code/dist/*.js";
-@source "../../../node_modules/@streamdown/cjk/dist/*.js";
-@source "../../../node_modules/@streamdown/math/dist/*.js";
-@source "../../../node_modules/@streamdown/mermaid/dist/*.js";
 ```
 
 Adjust the number of `../` segments based on where your CSS file lives relative to the root `node_modules`.
