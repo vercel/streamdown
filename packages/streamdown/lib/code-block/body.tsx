@@ -1,7 +1,7 @@
 import { type ComponentProps, type CSSProperties, memo, useMemo } from "react";
 import type { HighlightResult } from "../plugin-types";
 import { useCn } from "../prefix-context";
-import { cn } from "../utils";
+import { cn as baseCn } from "../utils";
 
 type CodeBlockBodyProps = ComponentProps<"div"> & {
   result: HighlightResult;
@@ -9,7 +9,7 @@ type CodeBlockBodyProps = ComponentProps<"div"> & {
 };
 
 // Base line numbers class string (merged without prefix for memoization)
-const LINE_NUMBER_CLASSES_BASE = cn(
+const LINE_NUMBER_CLASSES_BASE = baseCn(
   "block",
   "before:content-[counter(line)]",
   "before:inline-block",

@@ -159,7 +159,7 @@ export type StreamdownProps = Options & {
   linkSafety?: LinkSafetyConfig;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
-  /** Tailwind CSS prefix to prepend to all utility classes. Enables Tailwind v4's `prefix()` support. */
+  /** Tailwind CSS prefix to prepend to all utility classes (e.g. `"tw"` produces `tw:flex` instead of `flex`). Enables Tailwind v4's `prefix()` support. Note: user-supplied `className` values are also prefixed. */
   prefix?: string;
   /** Called when isAnimating transitions from false to true. Suppressed in mode="static". */
   onAnimationStart?: () => void;
