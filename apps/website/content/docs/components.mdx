@@ -178,17 +178,36 @@ import {
 ```
 
 <Callout type="warn">
-  The `data-streamdown="table-wrapper"` attribute is required — the copy and download components use it to locate the nearest `<table>` element.
+  The `data-streamdown="table-wrapper"` attribute is required — the action components use `.closest()` to find this wrapper, then `.querySelector("table")` to locate the `<table>` element inside it. Your custom table component must render a `<table>` element as a descendant of the wrapper div.
 </Callout>
 
-You can also use the lower-level utilities for custom implementations:
+A `TableDownloadButton` component is also available for rendering a single-format download button instead of a dropdown:
+
+```tsx title="app/page.tsx"
+import { TableDownloadButton } from "streamdown";
+
+<TableDownloadButton format="csv" />
+```
+
+### Lower-level utilities
+
+For fully custom implementations, use the extraction and conversion utilities directly:
 
 ```tsx title="app/page.tsx"
 import {
   extractTableDataFromElement,
   tableDataToCSV,
+  tableDataToTSV,
   tableDataToMarkdown,
 } from "streamdown";
+
+// Extract structured data from a <table> DOM element
+const data = extractTableDataFromElement(tableElement);
+
+// Convert to various formats
+const csv = tableDataToCSV(data);
+const tsv = tableDataToTSV(data);
+const markdown = tableDataToMarkdown(data);
 ```
 
 ## Custom HTML Tags
