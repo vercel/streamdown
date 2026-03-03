@@ -1,4 +1,7 @@
 import { render, waitFor } from "@testing-library/react";
+import remarkParse from "remark-parse";
+import { unified } from "unified";
+import { visit } from "unist-util-visit";
 import { describe, expect, it } from "vitest";
 import { StreamdownContext } from "../index";
 import { CodeBlock } from "../lib/code-block";
@@ -14,11 +17,7 @@ describe("remarkCodeMeta", () => {
     expect(typeof remarkCodeMeta).toBe("function");
   });
 
-  it("attaches metastring to hProperties when meta is present", async () => {
-    const { unified } = await import("unified");
-    const { default: remarkParse } = await import("remark-parse");
-    const { visit } = await import("unist-util-visit");
-
+  it("attaches metastring to hProperties when meta is present", () => {
     const processor = unified().use(remarkParse).use(remarkCodeMeta);
 
     const markdown = "```js startLine=10\nconst x = 1;\n```";
@@ -40,11 +39,7 @@ describe("remarkCodeMeta", () => {
     expect(foundMeta).toBe("startLine=10");
   });
 
-  it("does not attach metastring when meta is absent", async () => {
-    const { unified } = await import("unified");
-    const { default: remarkParse } = await import("remark-parse");
-    const { visit } = await import("unist-util-visit");
-
+  it("does not attach metastring when meta is absent", () => {
     const processor = unified().use(remarkParse).use(remarkCodeMeta);
 
     const markdown = "```js\nconst x = 1;\n```";
@@ -66,11 +61,7 @@ describe("remarkCodeMeta", () => {
     expect(foundMeta).toBeUndefined();
   });
 
-  it("preserves existing hProperties when adding metastring", async () => {
-    const { unified } = await import("unified");
-    const { default: remarkParse } = await import("remark-parse");
-    const { visit } = await import("unist-util-visit");
-
+  it("preserves existing hProperties when adding metastring", () => {
     const processor = unified().use(remarkParse).use(remarkCodeMeta);
 
     const markdown = "```js startLine=5\nconst y = 2;\n```";

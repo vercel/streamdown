@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, type SVGProps, useContext, useMemo } from "react";
+import { createContext, type SVGProps, useContext, useRef } from "react";
 import {
   CheckIcon,
   CopyIcon,
@@ -14,7 +14,9 @@ import {
   ZoomOutIcon,
 } from "./icons";
 
-export type IconComponent = React.ComponentType<SVGProps<SVGSVGElement>>;
+export type IconComponent = React.ComponentType<
+  SVGProps<SVGSVGElement> & { size?: number }
+>;
 
 export interface IconMap {
   CheckIcon: IconComponent;
@@ -44,6 +46,18 @@ export const defaultIcons: IconMap = {
 
 export const IconContext = createContext<IconMap>(defaultIcons);
 
+const shallowEqual = (
+  a?: Partial<IconMap>,
+  b?: Partial<IconMap>
+): boolean => {
+  if (a === b) return true;
+  if (!a || !b) return a === b;
+  const keysA = Object.keys(a) as (keyof IconMap)[];
+  const keysB = Object.keys(b) as (keyof IconMap)[];
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every((key) => a[key] === b[key]);
+};
+
 export const IconProvider = ({
   icons,
   children,
@@ -51,10 +65,20 @@ export const IconProvider = ({
   icons?: Partial<IconMap>;
   children: React.ReactNode;
 }) => {
-  const value = useMemo(
-    () => (icons ? { ...defaultIcons, ...icons } : defaultIcons),
-    [icons]
+  const prevIconsRef = useRef(icons);
+  const prevValueRef = useRef<IconMap>(
+    icons ? { ...defaultIcons, ...icons } : defaultIcons
   );
+
+  if (!shallowEqual(prevIconsRef.current, icons)) {
+    prevIconsRef.current = icons;
+    prevValueRef.current = icons
+      ? { ...defaultIcons, ...icons }
+      : defaultIcons;
+  }
+
+  const value = prevValueRef.current;
+
   return <IconContext.Provider value={value}>{children}</IconContext.Provider>;
 };
 

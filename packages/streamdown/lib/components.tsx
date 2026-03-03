@@ -15,9 +15,6 @@ import {
 } from "react";
 // BundledLanguage type removed - we now support any language string
 import { StreamdownContext } from "../index";
-
-const START_LINE_PATTERN = /startLine=(\d+)/;
-
 import { useIsCodeFenceIncomplete } from "./block-incomplete-context";
 import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
@@ -31,6 +28,8 @@ import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
 import { useMermaidPlugin } from "./plugin-context";
 import { useCn } from "./prefix-context";
 import { Table } from "./table";
+
+const START_LINE_PATTERN = /startLine=(\d+)/;
 
 // Lazy load heavy components
 const Mermaid = lazy(() =>
@@ -782,9 +781,13 @@ const CodeComponent = ({
   // Parse startLine from the code fence meta string (e.g. ```js startLine=10)
   const metastring = node?.properties?.metastring;
   const startLineMatch = metastring?.match(START_LINE_PATTERN);
-  const startLine = startLineMatch
+  const parsedStartLine = startLineMatch
     ? Number.parseInt(startLineMatch[1], 10)
     : undefined;
+  const startLine =
+    parsedStartLine !== undefined && parsedStartLine >= 1
+      ? parsedStartLine
+      : undefined;
 
   // Extract code content from children safely
   let code = "";
