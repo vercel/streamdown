@@ -21,15 +21,43 @@ The `@streamdown/cjk` plugin improves handling of CJK (Chinese, Japanese, Korean
 npm install @streamdown/cjk
 ```
 
-## Tailwind CSS (v4)
+## Tailwind CSS
 
-If you use Tailwind v4, add this to your `globals.css` only when `@streamdown/cjk` is installed:
+### Tailwind v4
+
+Add the following `@source` directive to your `globals.css` or main CSS file:
 
 ```css title="globals.css"
 @source "../node_modules/@streamdown/cjk/dist/*.js";
 ```
 
-Adjust the path for monorepos so it points to the correct `node_modules` location.
+The path must be relative from your CSS file to the `node_modules` folder containing `@streamdown/cjk`. In a monorepo, adjust the number of `../` segments to reach the root `node_modules`.
+
+### Tailwind v3
+
+Add `@streamdown/cjk` to your `content` array in `tailwind.config.js`:
+
+```js title="tailwind.config.js"
+module.exports = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/@streamdown/cjk/dist/*.js",
+  ],
+  // ... rest of your config
+};
+```
+
+In a monorepo, adjust the path to reach the root `node_modules`:
+
+```js title="tailwind.config.js"
+module.exports = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "../../node_modules/@streamdown/cjk/dist/*.js",
+  ],
+  // ... rest of your config
+};
+```
 
 ## Usage
 
