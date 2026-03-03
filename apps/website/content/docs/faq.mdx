@@ -62,10 +62,19 @@ Add a `@source` directive to your `globals.css` file with the path to Streamdown
 
 ```css title="globals.css"
 @source "../node_modules/streamdown/dist/*.js";
+```
+
+If you install optional plugins, add their matching `@source` lines only for packages you've installed. See the plugin pages for exact paths and examples:
+
+- Code: /docs/plugins/code
+- CJK: /docs/plugins/cjk
+- Math: /docs/plugins/math
+- Mermaid: /docs/plugins/mermaid
+
+Example: to include the code plugin, add this to `globals.css` (adjust the relative path as needed):
+
+```css title="globals.css"
 @source "../node_modules/@streamdown/code/dist/*.js";
-@source "../node_modules/@streamdown/cjk/dist/*.js";
-@source "../node_modules/@streamdown/math/dist/*.js";
-@source "../node_modules/@streamdown/mermaid/dist/*.js";
 ```
 
 ### Tailwind v3
