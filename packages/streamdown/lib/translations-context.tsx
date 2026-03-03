@@ -3,41 +3,40 @@
 import { createContext, useContext } from "react";
 
 export interface StreamdownTranslations {
-  close: string;
-  copied: string;
   // Code block
   copyCode: string;
-  copyLink: string;
-  // Table
-  copyTable: string;
-  copyTableAsCsv: string;
-  copyTableAsMarkdown: string;
-  copyTableAsTsv: string;
+  downloadFile: string;
   // Mermaid
   downloadDiagram: string;
   downloadDiagramAsMmd: string;
   downloadDiagramAsPng: string;
   downloadDiagramAsSvg: string;
-  downloadFile: string;
-  downloadImage: string;
+  exitFullscreen: string;
+  mermaidFormatMmd: string;
+  mermaidFormatPng: string;
+  mermaidFormatSvg: string;
+  viewFullscreen: string;
+  // Table
+  copyTable: string;
+  copyTableAsCsv: string;
+  copyTableAsMarkdown: string;
+  copyTableAsTsv: string;
   downloadTable: string;
   downloadTableAsCsv: string;
   downloadTableAsMarkdown: string;
-  exitFullscreen: string;
-  externalLinkWarning: string;
-  // Image
-  imageNotAvailable: string;
-  mermaidFormatMmd: string;
-  mermaidFormatPng: string;
-  // Mermaid format labels in dropdown
-  mermaidFormatSvg: string;
-  // Link modal
-  openExternalLink: string;
-  openLink: string;
   tableFormatCsv: string;
   tableFormatMarkdown: string;
   tableFormatTsv: string;
-  viewFullscreen: string;
+  // Image
+  downloadImage: string;
+  imageNotAvailable: string;
+  // Link modal
+  close: string;
+  copied: string;
+  copyLink: string;
+  externalLinkWarning: string;
+  openExternalLink: string;
+  openLink: string;
 }
 
 export const defaultTranslations: StreamdownTranslations = {
@@ -51,7 +50,6 @@ export const defaultTranslations: StreamdownTranslations = {
   downloadDiagramAsMmd: "Download diagram as MMD",
   viewFullscreen: "View fullscreen",
   exitFullscreen: "Exit fullscreen",
-  // Mermaid format labels in dropdown
   mermaidFormatSvg: "SVG",
   mermaidFormatPng: "PNG",
   mermaidFormatMmd: "MMD",

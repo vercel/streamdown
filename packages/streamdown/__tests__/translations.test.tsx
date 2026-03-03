@@ -250,17 +250,13 @@ describe("LinkSafetyModal translations", () => {
 
 describe("TranslationsContext", () => {
   it("should be accessible from TranslationsContext directly", () => {
-    let capturedTranslations:
-      | ReturnType<typeof defaultTranslations.copyCode>
-      | undefined;
+    let capturedTranslations: string | undefined;
 
     const TestConsumer = () => {
       return (
         <TranslationsContext.Consumer>
           {(value) => {
-            capturedTranslations = value.copyCode as unknown as ReturnType<
-              typeof defaultTranslations.copyCode
-            >;
+            capturedTranslations = value.copyCode;
             return null;
           }}
         </TranslationsContext.Consumer>
