@@ -677,6 +677,10 @@ export const handleIncompleteSingleUnderscoreItalic = (
     return text;
   }
 
+  if (isWithinCompleteInlineCode(text, firstSingleUnderscoreIndex)) {
+    return text;
+  }
+
   const singleUnderscores = countSingleUnderscores(text);
   if (singleUnderscores % 2 === 1) {
     // Check if we need to insert _ before trailing ** for proper nesting
