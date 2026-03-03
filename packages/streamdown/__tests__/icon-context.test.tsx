@@ -1,19 +1,20 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import type { SVGProps } from "react";
 import { describe, expect, it } from "vitest";
-import {
-  defaultIcons,
-  IconProvider,
-  useIcons,
-} from "../lib/icon-context";
+import { type defaultIcons, IconProvider, useIcons } from "../lib/icon-context";
 
 const CustomCheckIcon = (props: SVGProps<SVGSVGElement>) => (
   <svg data-testid="custom-check" {...props}>
+    <title>Check icon</title>
     <circle r="5" />
   </svg>
 );
 
-const IconConsumer = ({ iconName }: { iconName: keyof typeof defaultIcons }) => {
+const IconConsumer = ({
+  iconName,
+}: {
+  iconName: keyof typeof defaultIcons;
+}) => {
   const icons = useIcons();
   const Icon = icons[iconName];
   return <Icon data-testid="rendered-icon" />;

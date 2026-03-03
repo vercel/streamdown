@@ -44,7 +44,11 @@ import {
 } from "./lib/translations-context";
 import { createCn } from "./lib/utils";
 
-export type { BundledLanguage, BundledTheme } from "shiki";
+export type {
+  BundledLanguage,
+  BundledTheme,
+  ThemeRegistrationAny,
+} from "shiki";
 export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimatePlugin } from "./lib/animate";
@@ -68,9 +72,6 @@ export type {
   PluginConfig,
   ThemeInput,
 } from "./lib/plugin-types";
-export type { StreamdownTranslations } from "./lib/translations-context";
-export { defaultTranslations } from "./lib/translations-context";
-export type { ThemeRegistrationAny } from "shiki";
 export {
   TableCopyDropdown,
   type TableCopyDropdownProps,
@@ -89,6 +90,8 @@ export {
   tableDataToMarkdown,
   tableDataToTSV,
 } from "./lib/table/utils";
+export type { StreamdownTranslations } from "./lib/translations-context";
+export { defaultTranslations } from "./lib/translations-context";
 
 // Patterns for HTML indentation normalization
 // Matches if content starts with an HTML tag (possibly with leading whitespace)
@@ -535,9 +538,7 @@ export const Streamdown = memo(
     // runs once per block change rather than on every render pass.
     const blockDirections = useMemo(
       () =>
-        dir === "auto"
-          ? blocksToRender.map(detectTextDirection)
-          : undefined,
+        dir === "auto" ? blocksToRender.map(detectTextDirection) : undefined,
       [blocksToRender, dir]
     );
 
@@ -760,17 +761,24 @@ export const Streamdown = memo(
                   )}
                   style={style}
                 >
-                  {blocksToRender.length === 0 && caret && isAnimating && <span />}
+                  {blocksToRender.length === 0 && caret && isAnimating && (
+                    <span />
+                  )}
                   {blocksToRender.map((block, index) => {
                     const isLastBlock = index === blocksToRender.length - 1;
                     const isIncomplete =
-                      isAnimating && isLastBlock && hasIncompleteCodeFence(block);
+                      isAnimating &&
+                      isLastBlock &&
+                      hasIncompleteCodeFence(block);
                     return (
                       <BlockComponent
                         animatePlugin={animatePlugin}
                         components={mergedComponents}
                         content={block}
-                        dir={blockDirections?.[index] ?? (dir !== "auto" ? dir : undefined)}
+                        dir={
+                          blockDirections?.[index] ??
+                          (dir !== "auto" ? dir : undefined)
+                        }
                         index={index}
                         isIncomplete={isIncomplete}
                         key={blockKeys[index]}

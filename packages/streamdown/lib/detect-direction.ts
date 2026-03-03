@@ -3,8 +3,7 @@
  * Covers: Hebrew, Arabic, Syriac, Thaana, NKo, Samaritan, Mandaic,
  * Arabic Supplement/Extended, and RTL presentation forms.
  */
-const RTL_PATTERN =
-  /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
+const RTL_PATTERN = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
 
 const LETTER_PATTERN = /\p{L}/u;
 

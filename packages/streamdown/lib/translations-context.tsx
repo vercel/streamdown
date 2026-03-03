@@ -3,40 +3,40 @@
 import { createContext, useContext } from "react";
 
 export interface StreamdownTranslations {
+  // Link modal
+  close: string;
+  copied: string;
   // Code block
   copyCode: string;
-  downloadFile: string;
-  // Mermaid
-  downloadDiagram: string;
-  downloadDiagramAsMmd: string;
-  downloadDiagramAsPng: string;
-  downloadDiagramAsSvg: string;
-  exitFullscreen: string;
-  mermaidFormatMmd: string;
-  mermaidFormatPng: string;
-  mermaidFormatSvg: string;
-  viewFullscreen: string;
+  copyLink: string;
   // Table
   copyTable: string;
   copyTableAsCsv: string;
   copyTableAsMarkdown: string;
   copyTableAsTsv: string;
+  // Mermaid
+  downloadDiagram: string;
+  downloadDiagramAsMmd: string;
+  downloadDiagramAsPng: string;
+  downloadDiagramAsSvg: string;
+  downloadFile: string;
+  // Image
+  downloadImage: string;
   downloadTable: string;
   downloadTableAsCsv: string;
   downloadTableAsMarkdown: string;
+  exitFullscreen: string;
+  externalLinkWarning: string;
+  imageNotAvailable: string;
+  mermaidFormatMmd: string;
+  mermaidFormatPng: string;
+  mermaidFormatSvg: string;
+  openExternalLink: string;
+  openLink: string;
   tableFormatCsv: string;
   tableFormatMarkdown: string;
   tableFormatTsv: string;
-  // Image
-  downloadImage: string;
-  imageNotAvailable: string;
-  // Link modal
-  close: string;
-  copied: string;
-  copyLink: string;
-  externalLinkWarning: string;
-  openExternalLink: string;
-  openLink: string;
+  viewFullscreen: string;
 }
 
 export const defaultTranslations: StreamdownTranslations = {

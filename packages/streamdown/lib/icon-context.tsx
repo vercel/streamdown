@@ -46,15 +46,18 @@ export const defaultIcons: IconMap = {
 
 export const IconContext = createContext<IconMap>(defaultIcons);
 
-const shallowEqual = (
-  a?: Partial<IconMap>,
-  b?: Partial<IconMap>
-): boolean => {
-  if (a === b) return true;
-  if (!a || !b) return a === b;
+const shallowEqual = (a?: Partial<IconMap>, b?: Partial<IconMap>): boolean => {
+  if (a === b) {
+    return true;
+  }
+  if (!(a && b)) {
+    return a === b;
+  }
   const keysA = Object.keys(a) as (keyof IconMap)[];
   const keysB = Object.keys(b) as (keyof IconMap)[];
-  if (keysA.length !== keysB.length) return false;
+  if (keysA.length !== keysB.length) {
+    return false;
+  }
   return keysA.every((key) => a[key] === b[key]);
 };
 
@@ -72,9 +75,7 @@ export const IconProvider = ({
 
   if (!shallowEqual(prevIconsRef.current, icons)) {
     prevIconsRef.current = icons;
-    prevValueRef.current = icons
-      ? { ...defaultIcons, ...icons }
-      : defaultIcons;
+    prevValueRef.current = icons ? { ...defaultIcons, ...icons } : defaultIcons;
   }
 
   const value = prevValueRef.current;

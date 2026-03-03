@@ -6,17 +6,17 @@ export const revalidate = false;
 const DOCS_PREFIX_PATTERN = /^\/docs\/?/;
 const WHITESPACE_PATTERN = /\s+/;
 
-type PageNode = {
-  title: string;
+interface PageNode {
+  children: PageNode[];
   description: string;
-  url: string;
-  type?: string;
-  summary?: string;
+  lastmod?: string;
   prerequisites?: string[];
   product?: string;
-  lastmod?: string;
-  children: PageNode[];
-};
+  summary?: string;
+  title: string;
+  type?: string;
+  url: string;
+}
 
 function buildTree(
   pages: Array<{

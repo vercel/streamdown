@@ -3,12 +3,12 @@
 import {
   type BundledLanguage,
   type BundledTheme,
-  type ThemeRegistrationAny,
   bundledLanguages,
   bundledLanguagesInfo,
   createHighlighter,
   type HighlighterGeneric,
   type SpecialLanguage,
+  type ThemeRegistrationAny,
   type TokensResult,
 } from "shiki";
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
