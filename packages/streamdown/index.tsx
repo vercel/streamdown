@@ -33,6 +33,8 @@ import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig, ThemeInput } from "./lib/plugin-types";
 import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
+import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
+import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
 import {
   defaultTranslations,
@@ -174,6 +176,22 @@ export type StreamdownProps = Options & {
   linkSafety?: LinkSafetyConfig;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
+  /**
+   * Tags whose children should be treated as plain text (no markdown parsing).
+   * Useful for mention/entity tags in AI UIs where child content is a data
+   * label rather than prose. Requires the tag to also be listed in `allowedTags`.
+   *
+   * @example
+   * ```tsx
+   * <Streamdown
+   *   allowedTags={{ mention: ['user_id'] }}
+   *   literalTagContent={['mention']}
+   * >
+   *   {`<mention user_id="123">@_some_username_</mention>`}
+   * </Streamdown>
+   * ```
+   */
+  literalTagContent?: string[];
   /** Override UI strings for i18n / custom labels */
   translations?: Partial<StreamdownTranslations>;
   /** Custom icons to override the default icons used in controls */
@@ -380,6 +398,7 @@ export const Streamdown = memo(
       enabled: true,
     },
     allowedTags,
+    literalTagContent,
     translations,
     icons: iconOverrides,
     prefix,
@@ -443,7 +462,17 @@ export const Streamdown = memo(
           ? remend(children, remendOptions)
           : children;
 
-      // Preprocess custom tags to prevent blank lines from splitting HTML blocks
+      // Escape markdown metacharacters inside literal-tag-content tags so that
+      // children are rendered as plain text rather than parsed as markdown.
+      // This must run BEFORE preprocessCustomTags so that the HTML comments
+      // (<!---->) inserted to preserve blank lines are not themselves escaped.
+      if (literalTagContent && literalTagContent.length > 0) {
+        result = preprocessLiteralTagContent(result, literalTagContent);
+      }
+
+      // Preprocess custom tags to prevent blank lines from splitting HTML blocks.
+      // Runs after preprocessLiteralTagContent so that the inserted <!---->
+      // markers are not corrupted by markdown metacharacter escaping.
       if (allowedTagNames.length > 0) {
         result = preprocessCustomTags(result, allowedTagNames);
       }
@@ -455,6 +484,7 @@ export const Streamdown = memo(
       shouldParseIncompleteMarkdown,
       remendOptions,
       allowedTagNames,
+      literalTagContent,
     ]);
 
     const blocks = useMemo(
@@ -607,6 +637,10 @@ export const Streamdown = memo(
         ];
       }
 
+      if (literalTagContent && literalTagContent.length > 0) {
+        result = [...result, [rehypeLiteralTagContent, literalTagContent]];
+      }
+
       if (plugins?.math) {
         result = [...result, plugins.math.rehypePlugin];
       }
@@ -616,7 +650,14 @@ export const Streamdown = memo(
       }
 
       return result;
-    }, [rehypePlugins, plugins?.math, animatePlugin, isAnimating, allowedTags]);
+    }, [
+      rehypePlugins,
+      plugins?.math,
+      animatePlugin,
+      isAnimating,
+      allowedTags,
+      literalTagContent,
+    ]);
 
     const shouldHideCaret = useMemo(() => {
       if (!isAnimating || blocksToRender.length === 0) {
@@ -727,6 +768,7 @@ export const Streamdown = memo(
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
+    prevProps.literalTagContent === nextProps.literalTagContent &&
     JSON.stringify(prevProps.translations) ===
       JSON.stringify(nextProps.translations) &&
     prevProps.prefix === nextProps.prefix
