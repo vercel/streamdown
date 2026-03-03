@@ -25,6 +25,7 @@ import {
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as defaultComponents } from "./lib/components";
+import { detectTextDirection } from "./lib/detect-direction";
 import { type IconMap, IconProvider } from "./lib/icon-context";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
 import { Markdown, type Options } from "./lib/markdown";
@@ -48,6 +49,7 @@ export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimatePlugin } from "./lib/animate";
 export { useIsCodeFenceIncomplete } from "./lib/block-incomplete-context";
+export { detectTextDirection } from "./lib/detect-direction";
 export type { IconMap } from "./lib/icon-context";
 export type {
   AllowElement,
@@ -159,6 +161,8 @@ export type AllowedTags = Record<string, string[]>;
 
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
+  /** Text direction for blocks. "auto" detects per-block using first strong character algorithm. */
+  dir?: "auto" | "ltr" | "rtl";
   BlockComponent?: React.ComponentType<BlockProps>;
   parseMarkdownIntoBlocksFn?: (markdown: string) => string[];
   parseIncompleteMarkdown?: boolean;
@@ -275,6 +279,8 @@ export type BlockProps = Options & {
   index: number;
   /** Whether this block is incomplete (still being streamed) */
   isIncomplete: boolean;
+  /** Resolved text direction for this block */
+  dir?: "ltr" | "rtl";
   /** Animate plugin instance for tracking previous content length */
   animatePlugin?: AnimatePlugin | null;
 };
@@ -287,6 +293,7 @@ export const Block = memo(
     shouldNormalizeHtmlIndentation,
     index: __,
     isIncomplete,
+    dir,
     animatePlugin: animatePluginProp,
     ...props
   }: BlockProps) => {
@@ -310,9 +317,17 @@ export const Block = memo(
         ? normalizeHtmlIndentation(content)
         : content;
 
+    const inner = <Markdown {...props}>{normalizedContent}</Markdown>;
+
     return (
       <BlockIncompleteContext.Provider value={isIncomplete}>
-        <Markdown {...props}>{normalizedContent}</Markdown>
+        {dir ? (
+          <div dir={dir} style={{ display: "contents" }}>
+            {inner}
+          </div>
+        ) : (
+          inner
+        )}
       </BlockIncompleteContext.Provider>
     );
   },
@@ -332,6 +347,10 @@ export const Block = memo(
     }
 
     if (prevProps.isIncomplete !== nextProps.isIncomplete) {
+      return false;
+    }
+
+    if (prevProps.dir !== nextProps.dir) {
       return false;
     }
 
@@ -378,6 +397,7 @@ export const Streamdown = memo(
   ({
     children,
     mode = "streaming",
+    dir,
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     normalizeHtmlIndentation: shouldNormalizeHtmlIndentation = false,
     components,
@@ -510,6 +530,16 @@ export const Streamdown = memo(
 
     // Use displayBlocks for rendering to leverage useTransition
     const blocksToRender = mode === "streaming" ? displayBlocks : blocks;
+
+    // Pre-compute per-block text directions when dir="auto" so detection
+    // runs once per block change rather than on every render pass.
+    const blockDirections = useMemo(
+      () =>
+        dir === "auto"
+          ? blocksToRender.map(detectTextDirection)
+          : undefined,
+      [blocksToRender, dir]
+    );
 
     // Generate stable keys based on index only
     // Don't use content hash - that causes unmount/remount when content changes
@@ -690,6 +720,11 @@ export const Streamdown = memo(
                       "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
                       className
                     )}
+                    dir={
+                      dir === "auto"
+                        ? detectTextDirection(processedChildren)
+                        : dir
+                    }
                   >
                     <Markdown
                       components={mergedComponents}
@@ -735,6 +770,7 @@ export const Streamdown = memo(
                         animatePlugin={animatePlugin}
                         components={mergedComponents}
                         content={block}
+                        dir={blockDirections?.[index] ?? (dir !== "auto" ? dir : undefined)}
                         index={index}
                         isIncomplete={isIncomplete}
                         key={blockKeys[index]}
@@ -771,6 +807,7 @@ export const Streamdown = memo(
     prevProps.literalTagContent === nextProps.literalTagContent &&
     JSON.stringify(prevProps.translations) ===
       JSON.stringify(nextProps.translations) &&
-    prevProps.prefix === nextProps.prefix
+    prevProps.prefix === nextProps.prefix &&
+    prevProps.dir === nextProps.dir
 );
 Streamdown.displayName = "Streamdown";
