@@ -140,9 +140,9 @@ export type StreamdownProps = Options & {
   linkSafety?: LinkSafetyConfig;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
-  /** Called when isAnimating transitions from false to true. Suppressed in mode="static". Memoize with useCallback to avoid unnecessary effect re-runs. */
+  /** Called when isAnimating transitions from false to true. Suppressed in mode="static". */
   onAnimationStart?: () => void;
-  /** Called when isAnimating transitions from true to false. Suppressed in mode="static". Memoize with useCallback to avoid unnecessary effect re-runs. */
+  /** Called when isAnimating transitions from true to false. Suppressed in mode="static". */
   onAnimationEnd?: () => void;
 };
 
@@ -327,7 +327,16 @@ export const Streamdown = memo(
     const generatedId = useId();
     const [_isPending, startTransition] = useTransition();
 
-    const prevIsAnimatingRef = useRef<boolean | undefined>(undefined);
+    // null means "first render" — distinguishes from false so we can fire
+    // onAnimationStart on mount when isAnimating={true} without firing
+    // onAnimationEnd on mount when isAnimating={false}.
+    const prevIsAnimatingRef = useRef<boolean | null>(null);
+
+    // Store callbacks in refs so the effect doesn't re-run when they change
+    const onAnimationStartRef = useRef(onAnimationStart);
+    const onAnimationEndRef = useRef(onAnimationEnd);
+    onAnimationStartRef.current = onAnimationStart;
+    onAnimationEndRef.current = onAnimationEnd;
 
     useEffect(() => {
       if (mode === "static") {
@@ -337,12 +346,20 @@ export const Streamdown = memo(
       const prev = prevIsAnimatingRef.current;
       prevIsAnimatingRef.current = isAnimating;
 
-      if (isAnimating && !prev) {
-        onAnimationStart?.();
-      } else if (!isAnimating && prev === true) {
-        onAnimationEnd?.();
+      // First render: only fire start (never end, since there's no prior state to end)
+      if (prev === null) {
+        if (isAnimating) {
+          onAnimationStartRef.current?.();
+        }
+        return;
       }
-    }, [isAnimating, onAnimationStart, onAnimationEnd, mode]);
+
+      if (isAnimating && !prev) {
+        onAnimationStartRef.current?.();
+      } else if (!isAnimating && prev) {
+        onAnimationEndRef.current?.();
+      }
+    }, [isAnimating, mode]);
 
     const allowedTagNames = useMemo(
       () => (allowedTags ? Object.keys(allowedTags) : []),
@@ -599,8 +616,6 @@ export const Streamdown = memo(
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
-    prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
-    prevProps.onAnimationStart === nextProps.onAnimationStart &&
-    prevProps.onAnimationEnd === nextProps.onAnimationEnd
+    prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation
 );
 Streamdown.displayName = "Streamdown";
