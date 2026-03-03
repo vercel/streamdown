@@ -2,8 +2,9 @@ import type { MermaidConfig } from "mermaid";
 import { type ComponentProps, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
-import { Maximize2Icon, XIcon } from "../icons";
-import { cn } from "../utils";
+import { useIcons } from "../icon-context";
+import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 import { Mermaid } from ".";
 
 // Track the number of active fullscreen modals to manage body scroll lock correctly
@@ -38,9 +39,12 @@ export const MermaidFullscreenButton = ({
   className,
   ...props
 }: MermaidFullscreenButtonProps) => {
+  const { Maximize2Icon, XIcon } = useIcons();
+  const cn = useCn();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { isAnimating, controls: controlsConfig } =
     useContext(StreamdownContext);
+  const t = useTranslations();
   const showPanZoomControls = (() => {
     if (typeof controlsConfig === "boolean") {
       return controlsConfig;
@@ -96,7 +100,7 @@ export const MermaidFullscreenButton = ({
         )}
         disabled={isAnimating}
         onClick={handleToggle}
-        title="View fullscreen"
+        title={t.viewFullscreen}
         type="button"
         {...props}
       >
@@ -107,7 +111,9 @@ export const MermaidFullscreenButton = ({
         ? createPortal(
             // biome-ignore lint/a11y/useSemanticElements: "div is used as a backdrop overlay, not a button"
             <div
-              className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
+              className={cn(
+                "fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
+              )}
               onClick={handleToggle}
               onKeyDown={(e) => {
                 if (e.key === "Escape") {
@@ -118,23 +124,25 @@ export const MermaidFullscreenButton = ({
               tabIndex={0}
             >
               <button
-                className="absolute top-4 right-4 z-10 rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+                className={cn(
+                  "absolute top-4 right-4 z-10 rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+                )}
                 onClick={handleToggle}
-                title="Exit fullscreen"
+                title={t.exitFullscreen}
                 type="button"
               >
                 <XIcon size={20} />
               </button>
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
               <div
-                className="flex size-full items-center justify-center p-4"
+                className={cn("flex size-full items-center justify-center p-4")}
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
                 role="presentation"
               >
                 <Mermaid
                   chart={chart}
-                  className="size-full [&_svg]:h-auto [&_svg]:w-auto"
+                  className={cn("size-full [&_svg]:h-auto [&_svg]:w-auto")}
                   config={config}
                   fullscreen={true}
                   showControls={showPanZoomControls}

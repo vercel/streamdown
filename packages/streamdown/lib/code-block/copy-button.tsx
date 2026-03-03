@@ -6,8 +6,9 @@ import {
   useState,
 } from "react";
 import { StreamdownContext } from "../../index";
-import { CheckIcon, CopyIcon } from "../icons";
-import { cn } from "../utils";
+import { useIcons } from "../icon-context";
+import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 import { useCodeBlockContext } from "./context";
 
 export type CodeBlockCopyButtonProps = ComponentProps<"button"> & {
@@ -25,10 +26,12 @@ export const CodeBlockCopyButton = ({
   code: propCode,
   ...props
 }: CodeBlockCopyButtonProps & { code?: string }) => {
+  const cn = useCn();
   const [isCopied, setIsCopied] = useState(false);
   const timeoutRef = useRef(0);
   const { code: contextCode } = useCodeBlockContext();
   const { isAnimating } = useContext(StreamdownContext);
+  const t = useTranslations();
   const code = propCode ?? contextCode;
 
   const copyToClipboard = async () => {
@@ -59,7 +62,8 @@ export const CodeBlockCopyButton = ({
     []
   );
 
-  const Icon = isCopied ? CheckIcon : CopyIcon;
+  const icons = useIcons();
+  const Icon = isCopied ? icons.CheckIcon : icons.CopyIcon;
 
   return (
     <button
@@ -70,7 +74,7 @@ export const CodeBlockCopyButton = ({
       data-streamdown="code-block-copy-button"
       disabled={isAnimating}
       onClick={copyToClipboard}
-      title="Copy Code"
+      title={t.copyCode}
       type="button"
       {...props}
     >

@@ -245,7 +245,7 @@ describe("TableDownloadButton", () => {
     );
 
     const button = buttonDiv.querySelector("button");
-    expect(button?.getAttribute("title")).toContain("MARKDOWN");
+    expect(button?.getAttribute("title")).toContain("Markdown");
 
     expect(button).toBeTruthy();
     if (button) {
