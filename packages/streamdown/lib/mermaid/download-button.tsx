@@ -1,10 +1,11 @@
 import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
-import { DownloadIcon } from "../icons";
+import { useIcons } from "../icon-context";
 import { useMermaidPlugin } from "../plugin-context";
+import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
-import { cn, save } from "../utils";
+import { save } from "../utils";
 import { svgToPngBlob } from "./utils";
 
 interface MermaidDownloadDropdownProps {
@@ -24,9 +25,11 @@ export const MermaidDownloadDropdown = ({
   config,
   onError,
 }: MermaidDownloadDropdownProps) => {
+  const cn = useCn();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { isAnimating } = useContext(StreamdownContext);
+  const icons = useIcons();
   const mermaidPlugin = useMermaidPlugin();
   const t = useTranslations();
 
@@ -102,7 +105,7 @@ export const MermaidDownloadDropdown = ({
   }, []);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className={cn("relative")} ref={dropdownRef}>
       <button
         className={cn(
           "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
@@ -113,12 +116,18 @@ export const MermaidDownloadDropdown = ({
         title={t.downloadDiagram}
         type="button"
       >
-        {children ?? <DownloadIcon size={14} />}
+        {children ?? <icons.DownloadIcon size={14} />}
       </button>
       {isOpen ? (
-        <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg">
+        <div
+          className={cn(
+            "absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg"
+          )}
+        >
           <button
-            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
             onClick={() => downloadMermaid("svg")}
             title={t.downloadDiagramAsSvg}
             type="button"
@@ -126,7 +135,9 @@ export const MermaidDownloadDropdown = ({
             {t.mermaidFormatSvg}
           </button>
           <button
-            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
             onClick={() => downloadMermaid("png")}
             title={t.downloadDiagramAsPng}
             type="button"
@@ -134,7 +145,9 @@ export const MermaidDownloadDropdown = ({
             {t.mermaidFormatPng}
           </button>
           <button
-            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
             onClick={() => downloadMermaid("mmd")}
             title={t.downloadDiagramAsMmd}
             type="button"

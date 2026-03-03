@@ -1,4 +1,4 @@
-import type { BundledLanguage } from "shiki";
+import type { BundledLanguage, ThemeRegistrationAny } from "shiki";
 import { describe, expect, it, vi } from "vitest";
 import { code, createCodePlugin } from "../index";
 
@@ -302,5 +302,88 @@ describe("createCodePlugin", () => {
     expect(typeof plugin.supportsLanguage).toBe("function");
     expect(typeof plugin.getSupportedLanguages).toBe("function");
     expect(typeof plugin.getThemes).toBe("function");
+  });
+
+  it("should create plugin with custom theme objects", () => {
+    const customLight: ThemeRegistrationAny = {
+      name: "my-light-theme",
+      type: "light",
+      colors: { "editor.background": "#ffffff" },
+      tokenColors: [],
+    };
+    const customDark: ThemeRegistrationAny = {
+      name: "my-dark-theme",
+      type: "dark",
+      colors: { "editor.background": "#1e1e1e" },
+      tokenColors: [],
+    };
+    const plugin = createCodePlugin({
+      themes: [customLight, customDark],
+    });
+    const themes = plugin.getThemes();
+    expect(themes[0]).toBe(customLight);
+    expect(themes[1]).toBe(customDark);
+  });
+
+  it("should create plugin with mixed built-in and custom themes", () => {
+    const customDark: ThemeRegistrationAny = {
+      name: "my-dark-theme",
+      type: "dark",
+      colors: { "editor.background": "#1e1e1e" },
+      tokenColors: [],
+    };
+    const plugin = createCodePlugin({
+      themes: ["github-light", customDark],
+    });
+    const themes = plugin.getThemes();
+    expect(themes[0]).toBe("github-light");
+    expect(themes[1]).toBe(customDark);
+  });
+
+  it("should highlight code with custom theme objects", async () => {
+    const customLight: ThemeRegistrationAny = {
+      name: "custom-light",
+      type: "light",
+      colors: {
+        "editor.background": "#ffffff",
+        "editor.foreground": "#000000",
+      },
+      tokenColors: [],
+    };
+    const customDark: ThemeRegistrationAny = {
+      name: "custom-dark",
+      type: "dark",
+      colors: {
+        "editor.background": "#1e1e1e",
+        "editor.foreground": "#d4d4d4",
+      },
+      tokenColors: [],
+    };
+    const plugin = createCodePlugin({
+      themes: [customLight, customDark],
+    });
+
+    const callback = vi.fn();
+    const result = plugin.highlight(
+      {
+        code: "const x = 1;",
+        language: "javascript",
+        themes: [customLight, customDark],
+      },
+      callback
+    );
+
+    expect(result).toBeNull();
+
+    await vi.waitFor(
+      () => {
+        expect(callback).toHaveBeenCalled();
+      },
+      { timeout: 5000 }
+    );
+
+    const highlightResult = callback.mock.calls[0][0];
+    expect(highlightResult.tokens).toBeDefined();
+    expect(Array.isArray(highlightResult.tokens)).toBe(true);
   });
 });

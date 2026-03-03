@@ -1,5 +1,6 @@
 import { type HTMLAttributes, lazy, Suspense, useMemo } from "react";
 import type { HighlightResult } from "../plugin-types";
+import { useCn } from "../prefix-context";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContainer } from "./container";
 import { CodeBlockContext } from "./context";
@@ -12,6 +13,8 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   language: string;
   /** Whether the code block is still being streamed (incomplete) */
   isIncomplete?: boolean;
+  /** Custom starting line number for line numbering (default: 1) */
+  startLine?: number;
 };
 
 const HighlightedCodeBlockBody = lazy(() =>
@@ -26,8 +29,10 @@ export const CodeBlock = ({
   className,
   children,
   isIncomplete = false,
+  startLine,
   ...rest
 }: CodeBlockProps) => {
+  const cn = useCn();
   // Remove trailing newlines to prevent empty line at end of code blocks
   const trimmedCode = useMemo(
     () => code.replace(TRAILING_NEWLINES_REGEX, ""),
@@ -57,9 +62,15 @@ export const CodeBlock = ({
       <CodeBlockContainer isIncomplete={isIncomplete} language={language}>
         <CodeBlockHeader language={language} />
         {children ? (
-          <div className="pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end">
+          <div
+            className={cn(
+              "pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end"
+            )}
+          >
             <div
-              className="pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur"
+              className={cn(
+                "pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur"
+              )}
               data-streamdown="code-block-actions"
             >
               {children}
@@ -72,6 +83,7 @@ export const CodeBlock = ({
               className={className}
               language={language}
               result={raw}
+              startLine={startLine}
               {...rest}
             />
           }
@@ -81,6 +93,7 @@ export const CodeBlock = ({
             code={trimmedCode}
             language={language}
             raw={raw}
+            startLine={startLine}
             {...rest}
           />
         </Suspense>
