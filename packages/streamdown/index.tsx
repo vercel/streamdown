@@ -51,6 +51,24 @@ export type {
   MathPlugin,
   PluginConfig,
 } from "./lib/plugin-types";
+export {
+  TableCopyDropdown,
+  type TableCopyDropdownProps,
+} from "./lib/table/copy-dropdown";
+export {
+  TableDownloadButton,
+  type TableDownloadButtonProps,
+  TableDownloadDropdown,
+  type TableDownloadDropdownProps,
+} from "./lib/table/download-dropdown";
+export {
+  escapeMarkdownTableCell,
+  extractTableDataFromElement,
+  type TableData,
+  tableDataToCSV,
+  tableDataToMarkdown,
+  tableDataToTSV,
+} from "./lib/table/utils";
 
 // Patterns for HTML indentation normalization
 // Matches if content starts with an HTML tag (possibly with leading whitespace)

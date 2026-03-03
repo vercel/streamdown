@@ -105,7 +105,7 @@ export const TableCopyDropdown = ({
         title="Copy table"
         type="button"
       >
-        {children ?? <Icon size={14} />}
+        {children ?? <Icon height={14} width={14} />}
       </button>
       {isOpen ? (
         <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg">
