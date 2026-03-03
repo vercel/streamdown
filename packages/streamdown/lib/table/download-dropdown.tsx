@@ -94,7 +94,7 @@ export const TableDownloadButton = ({
       }
       type="button"
     >
-      {children ?? <DownloadIcon size={14} />}
+      {children ?? <DownloadIcon height={14} width={14} />}
     </button>
   );
 };
@@ -174,7 +174,7 @@ export const TableDownloadDropdown = ({
         title={t.downloadTable}
         type="button"
       >
-        {children ?? <DownloadIcon size={14} />}
+        {children ?? <DownloadIcon height={14} width={14} />}
       </button>
       {isOpen ? (
         <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg">

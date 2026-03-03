@@ -36,6 +36,13 @@ npm install @streamdown/code @streamdown/mermaid @streamdown/math @streamdown/cj
 @source "../node_modules/streamdown/dist/*.js";
 ```
 
+Add plugin `@source` lines **only for packages you have installed** (omitting uninstalled plugins avoids Tailwind errors). See plugin pages for exact paths:
+- Code: `@source "../node_modules/@streamdown/code/dist/*.js";`
+- CJK: `@source "../node_modules/@streamdown/cjk/dist/*.js";`
+- Math: `@source "../node_modules/@streamdown/math/dist/*.js";`
+- Mermaid: `@source "../node_modules/@streamdown/mermaid/dist/*.js";`
+
+
 **Tailwind v3** — add to `tailwind.config.js`:
 ```js
 module.exports = {

@@ -145,6 +145,39 @@ Define your own `@keyframes` and reference them by name:
 
 The animation name is automatically prefixed with `sd-`, so define your keyframes as `sd-yourName`.
 
+## Callbacks
+
+Use `onAnimationStart` and `onAnimationEnd` to react to animation state changes. These fire when `isAnimating` transitions from `false` to `true` and vice versa. Both callbacks are suppressed in `mode="static"`.
+
+```tsx title="app/page.tsx"
+import { Streamdown } from "streamdown";
+import "streamdown/styles.css";
+import { useCallback } from "react";
+
+export default function Page() {
+  const handleAnimationStart = useCallback(() => {
+    console.log("Streaming started");
+  }, []);
+
+  const handleAnimationEnd = useCallback(() => {
+    console.log("Streaming ended");
+  }, []);
+
+  return (
+    <Streamdown
+      animated
+      isAnimating={status === "streaming"}
+      onAnimationStart={handleAnimationStart}
+      onAnimationEnd={handleAnimationEnd}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+Memoize callbacks with `useCallback` to avoid unnecessary effect re-runs.
+
 ## Advanced usage
 
 For direct access to the rehype plugin (e.g. in custom pipelines), use `createAnimatePlugin`:
