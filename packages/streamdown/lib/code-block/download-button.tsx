@@ -1,7 +1,9 @@
 import { type ComponentProps, useContext } from "react";
 import { StreamdownContext } from "../../index";
-import { DownloadIcon } from "../icons";
-import { cn, save } from "../utils";
+import { useIcons } from "../icon-context";
+import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
+import { save } from "../utils";
 import { useCodeBlockContext } from "./context";
 
 export type CodeBlockDownloadButtonProps = ComponentProps<"button"> & {
@@ -330,8 +332,11 @@ export const CodeBlockDownloadButton = ({
   code?: string;
   language?: string;
 }) => {
+  const cn = useCn();
   const { code: contextCode } = useCodeBlockContext();
   const { isAnimating } = useContext(StreamdownContext);
+  const t = useTranslations();
+  const icons = useIcons();
   const code = propCode ?? contextCode;
   const extension =
     language && language in languageExtensionMap
@@ -358,11 +363,11 @@ export const CodeBlockDownloadButton = ({
       data-streamdown="code-block-download-button"
       disabled={isAnimating}
       onClick={downloadCode}
-      title="Download file"
+      title={t.downloadFile}
       type="button"
       {...props}
     >
-      {children ?? <DownloadIcon size={14} />}
+      {children ?? <icons.DownloadIcon size={14} />}
     </button>
   );
 };

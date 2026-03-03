@@ -185,11 +185,9 @@ const processorCache = new ProcessorCache();
 export const Markdown = (options: Readonly<Options>) => {
   const processor = getCachedProcessor(options);
   const content = options.children || "";
-  return post(
-    // biome-ignore lint/suspicious/noExplicitAny: runSync return type varies with processor configuration
-    processor.runSync(processor.parse(content), content) as any,
-    options
-  );
+  // biome-ignore lint/suspicious/noExplicitAny: runSync return type varies with processor configuration
+  const tree = processor.runSync(processor.parse(content), content) as any;
+  return post(tree, options);
 };
 
 const getCachedProcessor = (options: Readonly<Options>) => {

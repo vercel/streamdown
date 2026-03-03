@@ -1,6 +1,12 @@
 import type { MermaidConfig } from "mermaid";
-import type { BundledLanguage, BundledTheme } from "shiki";
+import type {
+  BundledLanguage,
+  BundledTheme,
+  ThemeRegistrationAny,
+} from "shiki";
 import type { Pluggable } from "unified";
+
+export type ThemeInput = BundledTheme | ThemeRegistrationAny;
 
 /**
  * A single token in a highlighted line
@@ -30,7 +36,7 @@ export interface HighlightResult {
 export interface HighlightOptions {
   code: string;
   language: BundledLanguage;
-  themes: [string, string];
+  themes: [ThemeInput, ThemeInput];
 }
 
 /**
@@ -44,7 +50,7 @@ export interface CodeHighlighterPlugin {
   /**
    * Get the configured themes
    */
-  getThemes: () => [BundledTheme, BundledTheme];
+  getThemes: () => [ThemeInput, ThemeInput];
   /**
    * Highlight code and return tokens
    * Returns null if highlighting not ready yet (async loading)

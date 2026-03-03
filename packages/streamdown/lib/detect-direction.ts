@@ -1,17 +1,22 @@
 /**
  * Unicode ranges for RTL "strong" characters.
- * Covers: Arabic, Hebrew, Thaana, NKo, Samaritan, Mandaic, Syriac,
+ * Covers: Hebrew, Arabic, Syriac, Thaana, NKo, Samaritan, Mandaic,
  * Arabic Supplement/Extended, and RTL presentation forms.
  */
 const RTL_PATTERN =
-  /[\u0590-\u05FF\u0600-\u06FF\u0700-\u074F\u0750-\u077F\u0780-\u07BF\u07C0-\u07FF\u0800-\u083F\u0840-\u085F\u08A0-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
+  /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
 
 const LETTER_PATTERN = /\p{L}/u;
 
 /**
  * Detect text direction using the "first strong character" algorithm.
- * Skips whitespace, punctuation, digits, and markdown syntax to find
- * the first Unicode letter with strong directionality.
+ * Strips common markdown syntax then finds the first Unicode letter
+ * with strong directionality.
+ *
+ * Note: markdown stripping is best-effort — nested formatting,
+ * multi-line fenced code blocks, and raw HTML are not fully handled.
+ * This is acceptable since the algorithm only needs to reach the first
+ * strong character, which is almost always in plain prose.
  *
  * @returns "rtl" if first strong char is RTL, "ltr" otherwise
  */
