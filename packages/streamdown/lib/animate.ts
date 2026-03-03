@@ -3,8 +3,20 @@ import type { Pluggable } from "unified";
 import { SKIP, visitParents } from "unist-util-visit-parents";
 
 export interface AnimatePlugin {
+  /**
+   * Returns the total HAST text node character count from the last
+   * rehype run, then resets to 0. Use this value as the argument to
+   * setPrevContentLength on the next render.
+   */
+  getLastRenderCharCount: () => number;
   name: "animate";
   rehypePlugin: Pluggable;
+  /**
+   * Set the number of HAST text characters from a previous render.
+   * Characters up to this count will get duration=0ms, preventing
+   * re-animation of already-visible content during streaming updates.
+   */
+  setPrevContentLength: (length: number) => void;
   type: "animate";
 }
 
@@ -79,13 +91,16 @@ const makeSpan = (
   word: string,
   animation: string,
   duration: number,
-  easing: string
+  easing: string,
+  skipAnimation?: boolean
 ): Element => ({
   type: "element",
   tagName: "span",
   properties: {
     "data-sd-animate": true,
-    style: `--sd-animation:sd-${animation};--sd-duration:${duration}ms;--sd-easing:${easing}`,
+    style: skipAnimation
+      ? `--sd-animation:sd-${animation};--sd-duration:0ms;--sd-easing:${easing}`
+      : `--sd-animation:sd-${animation};--sd-duration:${duration}ms;--sd-easing:${easing}`,
   },
   children: [{ type: "text", value: word }],
 });
@@ -97,10 +112,23 @@ interface AnimateConfig {
   sep: "word" | "char";
 }
 
+/**
+ * Mutable render state shared between the plugin API and the rehype
+ * closure. Stored separately from AnimateConfig so that the processor
+ * cache (which retains the first closure) always reads from the same
+ * object that setPrevContentLength / getLastRenderCharCount mutate.
+ */
+interface AnimateRenderState {
+  lastRenderCharCount: number;
+  prevContentLength: number;
+}
+
 const processTextNode = (
   node: Text,
   ancestors: Node[],
-  config: AnimateConfig
+  config: AnimateConfig,
+  renderState: AnimateRenderState,
+  charCounter: { count: number }
 ): number | typeof SKIP | undefined => {
   const ancestor = ancestors.at(-1);
   /* v8 ignore next */
@@ -121,20 +149,38 @@ const processTextNode = (
 
   const text = node.value;
   if (!text.trim()) {
+    charCounter.count += text.length;
     return;
   }
 
   const parts = config.sep === "char" ? splitByChar(text) : splitByWord(text);
+  const prevLen = renderState.prevContentLength;
 
-  const nodes: (Element | Text)[] = parts.map((part) =>
-    WHITESPACE_ONLY_RE.test(part)
-      ? ({ type: "text", value: part } as Text)
-      : makeSpan(part, config.animation, config.duration, config.easing)
-  );
+  const nodes: (Element | Text)[] = parts.map((part) => {
+    const partStart = charCounter.count;
+    charCounter.count += part.length;
+    if (WHITESPACE_ONLY_RE.test(part)) {
+      return { type: "text", value: part } as Text;
+    }
+    const skipAnimation = prevLen > 0 && partStart < prevLen;
+    return makeSpan(
+      part,
+      config.animation,
+      config.duration,
+      config.easing,
+      skipAnimation
+    );
+  });
 
   parent.children.splice(index, 1, ...nodes);
   return index + nodes.length;
 };
+
+// Instance counter ensures each plugin gets a unique rehype function name.
+// The processor cache in markdown.ts keys by function name, so without unique
+// names, different AnimatePlugin instances would share a cached processor
+// whose closure reads a stale config.
+let instanceId = 0;
 
 export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
   const config: AnimateConfig = {
@@ -144,16 +190,44 @@ export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
     sep: options?.sep ?? "word",
   };
 
-  const rehypeAnimate = () => (tree: Root) => {
-    visitParents(tree, "text", (node: Text, ancestors) =>
-      processTextNode(node, ancestors, config)
-    );
+  // Mutable render state — the rehype closure and the plugin API methods
+  // both reference this same object.
+  const renderState: AnimateRenderState = {
+    prevContentLength: 0,
+    lastRenderCharCount: 0,
   };
+
+  const id = instanceId++;
+  const rehypeAnimate = () => (tree: Root) => {
+    const charCounter = { count: 0 };
+    visitParents(tree, "text", (node: Text, ancestors) =>
+      processTextNode(node, ancestors, config, renderState, charCounter)
+    );
+    renderState.lastRenderCharCount = charCounter.count;
+    // Self-reset so sibling blocks don't inherit this block's value.
+    // React renders depth-first: this runs after the current block's
+    // Markdown but before the next sibling block's Markdown.
+    renderState.prevContentLength = 0;
+  };
+
+  // Give each instance a unique function name so the processor cache
+  // in markdown.ts creates a separate processor per plugin instance.
+  Object.defineProperty(rehypeAnimate, "name", {
+    value: `rehypeAnimate$${id}`,
+  });
 
   return {
     name: "animate",
     type: "animate",
     rehypePlugin: rehypeAnimate,
+    setPrevContentLength(length: number) {
+      renderState.prevContentLength = length;
+    },
+    getLastRenderCharCount() {
+      const count = renderState.lastRenderCharCount;
+      renderState.lastRenderCharCount = 0;
+      return count;
+    },
   };
 }
 
