@@ -45,13 +45,13 @@ export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
   CjkPlugin,
   CodeHighlighterPlugin,
-  CustomTheme,
   DiagramPlugin,
   HighlightOptions,
   MathPlugin,
   PluginConfig,
   ThemeInput,
 } from "./lib/plugin-types";
+export type { ThemeRegistrationAny } from "shiki";
 export {
   TableCopyDropdown,
   type TableCopyDropdownProps,

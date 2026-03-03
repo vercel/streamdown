@@ -1,21 +1,12 @@
 import type { MermaidConfig } from "mermaid";
-import type { BundledLanguage, BundledTheme } from "shiki";
-
-/**
- * A custom theme object compatible with shiki's ThemeRegistrationAny.
- * Must have a `name` property for identification and caching.
- */
-export interface CustomTheme {
-  name: string;
-  [key: string]: unknown;
-}
-
-/**
- * Theme input type that accepts either a built-in theme name or a custom theme object.
- */
-export type ThemeInput = BundledTheme | CustomTheme;
-
+import type {
+  BundledLanguage,
+  BundledTheme,
+  ThemeRegistrationAny,
+} from "shiki";
 import type { Pluggable } from "unified";
+
+export type ThemeInput = BundledTheme | ThemeRegistrationAny;
 
 /**
  * A single token in a highlighted line
@@ -45,7 +36,7 @@ export interface HighlightResult {
 export interface HighlightOptions {
   code: string;
   language: BundledLanguage;
-  themes: [string, string] | [ThemeInput, ThemeInput];
+  themes: [ThemeInput, ThemeInput];
 }
 
 /**

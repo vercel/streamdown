@@ -1,6 +1,5 @@
-import type { BundledLanguage } from "shiki";
+import type { BundledLanguage, ThemeRegistrationAny } from "shiki";
 import { describe, expect, it, vi } from "vitest";
-import type { CustomTheme } from "../index";
 import { code, createCodePlugin } from "../index";
 
 describe("code", () => {
@@ -306,13 +305,13 @@ describe("createCodePlugin", () => {
   });
 
   it("should create plugin with custom theme objects", () => {
-    const customLight: CustomTheme = {
+    const customLight: ThemeRegistrationAny = {
       name: "my-light-theme",
       type: "light",
       colors: { "editor.background": "#ffffff" },
       tokenColors: [],
     };
-    const customDark: CustomTheme = {
+    const customDark: ThemeRegistrationAny = {
       name: "my-dark-theme",
       type: "dark",
       colors: { "editor.background": "#1e1e1e" },
@@ -327,7 +326,7 @@ describe("createCodePlugin", () => {
   });
 
   it("should create plugin with mixed built-in and custom themes", () => {
-    const customDark: CustomTheme = {
+    const customDark: ThemeRegistrationAny = {
       name: "my-dark-theme",
       type: "dark",
       colors: { "editor.background": "#1e1e1e" },
@@ -342,7 +341,7 @@ describe("createCodePlugin", () => {
   });
 
   it("should highlight code with custom theme objects", async () => {
-    const customLight: CustomTheme = {
+    const customLight: ThemeRegistrationAny = {
       name: "custom-light",
       type: "light",
       colors: {
@@ -351,7 +350,7 @@ describe("createCodePlugin", () => {
       },
       tokenColors: [],
     };
-    const customDark: CustomTheme = {
+    const customDark: ThemeRegistrationAny = {
       name: "custom-dark",
       type: "dark",
       colors: {
