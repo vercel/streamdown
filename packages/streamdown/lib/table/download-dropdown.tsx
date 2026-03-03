@@ -1,7 +1,8 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
 import { DownloadIcon } from "../icons";
-import { cn, save } from "../utils";
+import { useCn } from "../prefix-context";
+import { save } from "../utils";
 import {
   extractTableDataFromElement,
   tableDataToCSV,
@@ -25,6 +26,7 @@ export const TableDownloadButton = ({
   format = "csv",
   filename,
 }: TableDownloadButtonProps) => {
+  const cn = useCn();
   const { isAnimating } = useContext(StreamdownContext);
 
   const downloadTableData = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -108,6 +110,7 @@ export const TableDownloadDropdown = ({
   onDownload,
   onError,
 }: TableDownloadDropdownProps) => {
+  const cn = useCn();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { isAnimating } = useContext(StreamdownContext);
@@ -158,7 +161,7 @@ export const TableDownloadDropdown = ({
   }, []);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className={cn("relative")} ref={dropdownRef}>
       <button
         className={cn(
           "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
@@ -172,9 +175,15 @@ export const TableDownloadDropdown = ({
         {children ?? <DownloadIcon height={14} width={14} />}
       </button>
       {isOpen ? (
-        <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg">
+        <div
+          className={cn(
+            "absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg"
+          )}
+        >
           <button
-            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
             onClick={() => downloadTableData("csv")}
             title="Download table as CSV"
             type="button"
@@ -182,7 +191,9 @@ export const TableDownloadDropdown = ({
             CSV
           </button>
           <button
-            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
             onClick={() => downloadTableData("markdown")}
             title="Download table as Markdown"
             type="button"
