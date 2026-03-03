@@ -7,14 +7,31 @@
  * rehype plugins execute the markdown has already been parsed and structural
  * information (e.g. underscores around emphasis) is lost.
  *
+ * Note: content that already contains backslash escapes (e.g. `\_`) will be
+ * double-escaped and render with a visible backslash. This is acceptable since
+ * the intended use case is raw data labels (usernames, handles) that should
+ * not contain markdown escape sequences.
+ *
  * Example:
  *   Input:  `<mention user_id="123">_some_username_</mention>`
  *   Output: `<mention user_id="123">\_some\_username\_</mention>`
  *   Rendered: literal `_some_username_`
  */
 
-// All characters that CommonMark treats as potential markdown metacharacters
-const MARKDOWN_ESCAPE_RE = /([\\`*_{}[\]()#+\-.!|~])/g;
+// Characters that CommonMark treats as inline formatting metacharacters.
+// Only escapes characters that can trigger formatting anywhere in text:
+//   \  backslash escapes
+//   `  code spans
+//   *  emphasis / strong
+//   _  emphasis / strong
+//   ~  strikethrough (GFM)
+//   [  link / image start
+//   ]  link / image end
+//   |  table cell delimiter (GFM)
+// Line-start-only syntax (headings, lists, blockquotes) is not escaped
+// because tag content rarely starts lines and the rehype plugin provides
+// a safety net.
+const MARKDOWN_ESCAPE_RE = /([\\`*_~[\]|])/g;
 
 const escapeMarkdown = (text: string): string =>
   text.replace(MARKDOWN_ESCAPE_RE, "\\$1");

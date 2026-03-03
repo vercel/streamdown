@@ -1,18 +1,16 @@
-import type { Element, Root, Text } from "hast";
+import type { Element, ElementContent, Root, Text } from "hast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
 
 /**
  * Recursively collect all text content from a HAST node subtree.
  */
-const collectText = (node: Element | Text): string => {
+const collectText = (node: ElementContent): string => {
   if (node.type === "text") {
     return (node as Text).value;
   }
   if ("children" in node && Array.isArray(node.children)) {
-    return node.children
-      .map((child) => collectText(child as Element | Text))
-      .join("");
+    return (node.children as ElementContent[]).map(collectText).join("");
   }
   return "";
 };
