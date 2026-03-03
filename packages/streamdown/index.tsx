@@ -17,7 +17,6 @@ import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
-import type { BundledTheme } from "shiki";
 import type { Pluggable } from "unified";
 import {
   type AnimateOptions,
@@ -30,7 +29,7 @@ import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
 import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
-import type { PluginConfig } from "./lib/plugin-types";
+import type { PluginConfig, ThemeInput } from "./lib/plugin-types";
 import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { createCn } from "./lib/utils";
@@ -55,7 +54,9 @@ export type {
   HighlightOptions,
   MathPlugin,
   PluginConfig,
+  ThemeInput,
 } from "./lib/plugin-types";
+export type { ThemeRegistrationAny } from "shiki";
 export {
   TableCopyDropdown,
   type TableCopyDropdownProps,
@@ -152,7 +153,7 @@ export type StreamdownProps = Options & {
   /** Normalize HTML block indentation to prevent 4+ spaces being treated as code blocks. @default false */
   normalizeHtmlIndentation?: boolean;
   className?: string;
-  shikiTheme?: [BundledTheme, BundledTheme];
+  shikiTheme?: [ThemeInput, ThemeInput];
   mermaid?: MermaidOptions;
   controls?: ControlsConfig;
   isAnimating?: boolean;
@@ -214,7 +215,7 @@ export interface StreamdownContextType {
   linkSafety?: LinkSafetyConfig;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
-  shikiTheme: [BundledTheme, BundledTheme];
+  shikiTheme: [ThemeInput, ThemeInput];
 }
 
 const defaultStreamdownContext: StreamdownContextType = {
@@ -331,7 +332,7 @@ export const Block = memo(
 
 Block.displayName = "Block";
 
-const defaultShikiTheme: [BundledTheme, BundledTheme] = [
+const defaultShikiTheme: [ThemeInput, ThemeInput] = [
   "github-light",
   "github-dark",
 ];
