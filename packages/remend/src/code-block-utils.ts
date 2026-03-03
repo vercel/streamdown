@@ -5,6 +5,12 @@ export const isInsideCodeBlock = (text: string, position: number): boolean => {
   let inMultilineCode = false;
 
   for (let i = 0; i < position; i += 1) {
+    // Skip escaped backticks
+    if (text[i] === "\\" && i + 1 < text.length && text[i + 1] === "`") {
+      i += 1;
+      continue;
+    }
+
     // Check for triple backticks (multiline code blocks)
     if (text.substring(i, i + 3) === "```") {
       inMultilineCode = !inMultilineCode;
@@ -30,10 +36,15 @@ export const isPartOfTripleBacktick = (text: string, i: number): boolean => {
   return isTripleStart || isTripleMiddle || isTripleEnd;
 };
 
-// Counts single backticks that are not part of triple backticks
+// Counts single backticks that are not part of triple backticks or escaped
 export const countSingleBackticks = (text: string): number => {
   let count = 0;
   for (let i = 0; i < text.length; i += 1) {
+    // Skip escaped backticks
+    if (text[i] === "\\" && i + 1 < text.length && text[i + 1] === "`") {
+      i += 1;
+      continue;
+    }
     if (text[i] === "`" && !isPartOfTripleBacktick(text, i)) {
       count += 1;
     }
@@ -52,6 +63,12 @@ export const isWithinCompleteInlineCode = (
   let inlineCodeStart = -1;
 
   for (let i = 0; i < text.length; i += 1) {
+    // Skip escaped backticks
+    if (text[i] === "\\" && i + 1 < text.length && text[i + 1] === "`") {
+      i += 1;
+      continue;
+    }
+
     // Check for triple backticks (multiline code blocks)
     if (text.substring(i, i + 3) === "```") {
       inMultilineCode = !inMultilineCode;

@@ -677,7 +677,10 @@ export const handleIncompleteSingleUnderscoreItalic = (
     return text;
   }
 
-  if (isWithinCompleteInlineCode(text, firstSingleUnderscoreIndex)) {
+  if (
+    isInsideCodeBlock(text, firstSingleUnderscoreIndex) ||
+    isWithinCompleteInlineCode(text, firstSingleUnderscoreIndex)
+  ) {
     return text;
   }
 
