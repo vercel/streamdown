@@ -3,6 +3,7 @@
 import {
   type BundledLanguage,
   type BundledTheme,
+  type ThemeRegistrationAny,
   bundledLanguages,
   bundledLanguagesInfo,
   createHighlighter,
@@ -13,6 +14,8 @@ import {
 import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 
 const jsEngine = createJavaScriptRegexEngine({ forgiving: true });
+
+export type ThemeInput = BundledTheme | ThemeRegistrationAny;
 
 /**
  * Result from code highlighting
@@ -25,7 +28,7 @@ export type HighlightResult = TokensResult;
 export interface HighlightOptions {
   code: string;
   language: BundledLanguage;
-  themes: [string, string];
+  themes: [ThemeInput, ThemeInput];
 }
 
 /**
@@ -39,7 +42,7 @@ export interface CodeHighlighterPlugin {
   /**
    * Get the configured themes
    */
-  getThemes: () => [BundledTheme, BundledTheme];
+  getThemes: () => [ThemeInput, ThemeInput];
   /**
    * Highlight code and return tokens
    * Returns null if highlighting not ready yet (async loading)
@@ -65,7 +68,7 @@ export interface CodePluginOptions {
    * Default themes for syntax highlighting [light, dark]
    * @default ["github-light", "github-dark"]
    */
-  themes?: [BundledTheme, BundledTheme];
+  themes?: [ThemeInput, ThemeInput];
 }
 
 const languageAliases = Object.fromEntries(
@@ -104,10 +107,13 @@ const tokensCache = new Map<string, TokensResult>();
 // Subscribers for async token updates
 const subscribers = new Map<string, Set<(result: TokensResult) => void>>();
 
+const getThemeName = (theme: ThemeInput): string =>
+  typeof theme === "string" ? theme : (theme.name ?? "custom");
+
 const getHighlighterCacheKey = (
   language: BundledLanguage,
-  themeNames: [string, string]
-) => `${language}-${themeNames[0]}-${themeNames[1]}`;
+  themes: [ThemeInput, ThemeInput]
+) => `${language}-${getThemeName(themes[0])}-${getThemeName(themes[1])}`;
 
 const getTokensCacheKey = (
   code: string,
@@ -121,9 +127,9 @@ const getTokensCacheKey = (
 
 const getHighlighter = (
   language: BundledLanguage,
-  themeNames: [string, string]
+  themes: [ThemeInput, ThemeInput]
 ): Promise<HighlighterGeneric<BundledLanguage, BundledTheme>> => {
-  const cacheKey = getHighlighterCacheKey(language, themeNames);
+  const cacheKey = getHighlighterCacheKey(language, themes);
 
   if (highlighterCache.has(cacheKey)) {
     return highlighterCache.get(cacheKey) as Promise<
@@ -132,7 +138,7 @@ const getHighlighter = (
   }
 
   const highlighterPromise = createHighlighter({
-    themes: themeNames,
+    themes,
     langs: [language],
     engine: jsEngine,
   });
@@ -147,7 +153,7 @@ const getHighlighter = (
 export function createCodePlugin(
   options: CodePluginOptions = {}
 ): CodeHighlighterPlugin {
-  const defaultThemes: [BundledTheme, BundledTheme] = options.themes ?? [
+  const defaultThemes: [ThemeInput, ThemeInput] = options.themes ?? [
     "github-light",
     "github-dark",
   ];
@@ -165,19 +171,23 @@ export function createCodePlugin(
       return Array.from(languageNames);
     },
 
-    getThemes(): [BundledTheme, BundledTheme] {
+    getThemes(): [ThemeInput, ThemeInput] {
       return defaultThemes;
     },
 
     highlight(
-      { code, language, themes: themeNames }: HighlightOptions,
+      { code, language, themes }: HighlightOptions,
       callback?: (result: HighlightResult) => void
     ): HighlightResult | null {
       const resolvedLanguage = normalizeLanguage(language);
+      const themeNames: [string, string] = [
+        getThemeName(themes[0]),
+        getThemeName(themes[1]),
+      ];
       const tokensCacheKey = getTokensCacheKey(
         code,
         resolvedLanguage,
-        themeNames as [string, string]
+        themeNames
       );
 
       // Return cached result if available
@@ -197,10 +207,7 @@ export function createCodePlugin(
       }
 
       // Start highlighting in background
-      getHighlighter(
-        resolvedLanguage as BundledLanguage,
-        themeNames as [string, string]
-      )
+      getHighlighter(resolvedLanguage as BundledLanguage, themes)
         .then((highlighter) => {
           const availableLangs = highlighter.getLoadedLanguages();
           const langToUse = (
