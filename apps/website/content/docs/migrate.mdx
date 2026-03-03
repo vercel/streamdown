@@ -1,0 +1,156 @@
+---
+title: Migrate from react-markdown
+description: Learn how to migrate from react-markdown to Streamdown.
+type: guide
+summary: Migrate from react-markdown to Streamdown.
+prerequisites:
+  - /docs/getting-started
+related:
+  - /docs/getting-started
+  - /docs/configuration
+  - /docs/components
+  - /docs/styling
+---
+
+Streamdown is a drop-in replacement for `react-markdown`, designed for AI-powered streaming. It supports all of the same props — `children`, `components`, `remarkPlugins`, `rehypePlugins`, `remarkRehypeOptions`, `allowElement`, `allowedElements`, `disallowedElements`, `skipHtml`, `unwrapDisallowed`, and `urlTransform` — so existing usage works without changes. On top of that, you get built-in syntax highlighting, GFM, math, mermaid diagrams, and prestyled typography.
+
+## AI-assisted migration
+
+You can use the following prompt with an AI coding assistant to automate the migration:
+
+```md title="prompt.md"
+Can you update this repo to use Streamdown instead of React Markdown.
+
+Migration instructions:
+
+- Replace `import ReactMarkdown from "react-markdown"` (or equivalent) with `import { Streamdown } from "streamdown"`
+- If type `Options` is used from react-markdown, create a new type `type Options = ComponentPropsWithoutRef<typeof Streamdown>`
+- If type `Components` is used from react-markdown, create a new type `type Components = ComponentPropsWithoutRef<typeof Streamdown>['components']`
+- If any of the following plugins are used, you can remove them as they're built in to Streamdown: rehype-harden, rehype-katex, rehype-raw, remark-cjk-friendly, remark-cjk-friendly-gfm-strikethrough, remark-gfm, remark-math. However, check that they're not being used elsewhere first.
+- If code blocks or mermaid components exist, you can remove them too as they're built in to Streamdown. This may involve also uninstalling shiki / react-syntax-highlighter from the package.json.
+- If the project is using a tailwind.config file, add the following to the `content` array: `'./node_modules/streamdown/dist/*.js',` (ensuring the node modules path is correct).
+- If the project is using Tailwind 4 globals.css, add the following near the top under imports: `@source "../node_modules/streamdown/dist/*.js";` (ensuring the node modules path is correct).
+- If the old ReactMarkdown component has custom components e.g. p tags, li tags, etc. you can delete them all. These are prestyled in Streamdown.
+- If the old ReactMarkdown component uses `prose` classes, you can remove them too.
+- When updating deps, use the local package manager as defined by the `packageManager` field in package.json or the lockfile e.g. pnpm-lock.yaml = pnpm.
+- When installing Streamdown, use the latest versions of the packages (`streamdown`, `@streamdown/code`, etc.)
+- If the old ReactMarkdown component is memoized / a "MemoizedReactMarkdown" (or equivalent) component exists, remove the memoization. Streamdown does this internally.
+- **Final step: Check if the markdown wrapper file is now redundant. If it just re-exports Streamdown without any custom props, styling, or logic, delete the wrapper file and import Streamdown directly where needed.**
+```
+
+## What you get
+
+By switching to Streamdown, you can remove a significant amount of boilerplate:
+
+- **100% prop compatibility** — All `react-markdown` props are supported, including `allowElement`, `allowedElements`, `disallowedElements`, `skipHtml`, `unwrapDisallowed`, and `urlTransform`. Types like `Components`, `AllowElement`, `UrlTransform`, and `ExtraProps` are exported directly.
+- **Built-in plugins** — GFM, math (KaTeX), raw HTML, and CJK support are included by default. No need for `remark-gfm`, `remark-math`, `rehype-katex`, `rehype-raw`, `rehype-harden`, `remark-cjk-friendly`, or `remark-cjk-friendly-gfm-strikethrough`.
+- **Code highlighting** — Syntax highlighting with Shiki is built in. You can remove `shiki`, `react-syntax-highlighter`, or any custom code block components.
+- **Mermaid diagrams** — Rendered automatically. No custom mermaid component needed.
+- **Prestyled typography** — All HTML elements are styled out of the box. No `prose` classes or custom component overrides for basic elements like `p`, `li`, `h1`, etc.
+- **Internal memoization** — No need for `MemoizedReactMarkdown` wrappers.
+
+## Step-by-step migration
+
+### 1. Install Streamdown
+
+```package-install
+npm i streamdown
+```
+
+### 2. Update imports
+
+Replace `react-markdown` imports with Streamdown:
+
+```tsx title="Before"
+import ReactMarkdown from "react-markdown";
+```
+
+```tsx title="After"
+import { Streamdown } from "streamdown";
+```
+
+Streamdown exports the same types as `react-markdown`, so you can import them directly:
+
+```tsx title="Before"
+import type { Options, Components, ExtraProps } from "react-markdown";
+```
+
+```tsx title="After"
+import type { Components, ExtraProps, AllowElement, UrlTransform } from "streamdown";
+```
+
+If you need a type for the full Streamdown props, use `StreamdownProps`:
+
+```tsx
+import type { StreamdownProps } from "streamdown";
+```
+
+### 3. Remove built-in plugins
+
+If your project uses any of these plugins, you can uninstall them — they're built in to Streamdown:
+
+- `rehype-harden`
+- `rehype-katex`
+- `rehype-raw`
+- `remark-cjk-friendly`
+- `remark-cjk-friendly-gfm-strikethrough`
+- `remark-gfm`
+- `remark-math`
+
+<Callout type="warn">
+  Check that these plugins aren't used elsewhere in your project before removing them.
+</Callout>
+
+### 4. Remove code block and mermaid components
+
+Custom code block or mermaid diagram components can be deleted — Streamdown handles these natively. This may also allow you to uninstall `shiki` or `react-syntax-highlighter` from your `package.json`.
+
+### 5. Remove custom component overrides
+
+If the old `ReactMarkdown` component has custom component overrides for basic elements (e.g. `p`, `li`, `h1`), you can delete them. Streamdown prestyles all standard HTML elements.
+
+Similarly, if the wrapper uses `prose` Tailwind classes, you can remove those too.
+
+### 6. Remove memoization
+
+If a `MemoizedReactMarkdown` (or equivalent) wrapper exists, remove it. Streamdown handles memoization internally.
+
+### 7. Configure Tailwind CSS
+
+Streamdown uses Tailwind CSS for styling. Add the source path so Tailwind picks up the classes:
+
+**Tailwind v4** — add to your `globals.css`:
+
+```css title="globals.css"
+@source "../node_modules/streamdown/dist/*.js";
+```
+
+Add plugin `@source` lines only for packages you have installed. For exact paths and examples, see the plugin pages:
+
+- Code: [/docs/plugins/code](/docs/plugins/code)
+- CJK: [/docs/plugins/cjk](/docs/plugins/cjk)
+- Math: [/docs/plugins/math](/docs/plugins/math)
+- Mermaid: [/docs/plugins/mermaid](/docs/plugins/mermaid)
+
+Example (add to `globals.css`):
+
+```css
+@source "../node_modules/@streamdown/code/dist/*.js";
+```
+
+**Tailwind v3** — add to your `tailwind.config.js`:
+
+```js title="tailwind.config.js"
+module.exports = {
+  content: [
+    // ... your existing paths
+    "./node_modules/streamdown/dist/*.js",
+  ],
+};
+```
+
+Adjust the `node_modules` path based on your project structure. See [Tailwind CSS Configuration](/docs/getting-started#tailwind-css-configuration) for monorepo setups.
+
+### 8. Clean up
+
+Check if your markdown wrapper file is now redundant. If it just re-exports Streamdown without any custom props, styling, or logic, delete the wrapper and import Streamdown directly where needed.

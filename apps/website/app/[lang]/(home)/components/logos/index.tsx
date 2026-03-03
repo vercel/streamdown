@@ -1,11 +1,16 @@
 import {
+  AWS,
   Cloudflare,
   Dify,
   ElevenLabs,
+  GoogleCloud,
+  HuggingFace,
   Langfuse,
   Mastra,
   Mintlify,
+  Moonshot,
   Ollama,
+  Sentry,
   Supabase,
   Trigger,
   Upstash,
@@ -22,6 +27,11 @@ const logos = [
   { name: "Upstash", src: Upstash },
   { name: "Langfuse", src: Langfuse },
   { name: "Dify", src: Dify },
+  { name: "Sentry", src: Sentry },
+  { name: "Moonshot AI", src: Moonshot },
+  { name: "AWS", src: AWS },
+  { name: "Google Cloud", src: GoogleCloud },
+  { name: "HuggingFace", src: HuggingFace },
 ];
 
 export const Logos = () => (
