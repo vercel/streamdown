@@ -1,4 +1,8 @@
 import {
+  isInsideCodeBlock,
+  isWithinCompleteInlineCode,
+} from "./code-block-utils";
+import {
   doubleTildeGlobalPattern,
   halfCompleteTildePattern,
   strikethroughPattern,
@@ -21,6 +25,15 @@ export const handleIncompleteStrikethrough = (text: string): string => {
       return text;
     }
 
+    // Don't close if the marker is inside an inline code span or fenced code block
+    const markerIndex = text.lastIndexOf(strikethroughMatch[1]);
+    if (
+      isInsideCodeBlock(text, markerIndex) ||
+      isWithinCompleteInlineCode(text, markerIndex)
+    ) {
+      return text;
+    }
+
     // doubleTildeGlobalPattern always matches when strikethroughPattern matched
     const tildePairs = text.match(doubleTildeGlobalPattern)?.length;
     if (tildePairs % 2 === 1) {
@@ -31,6 +44,14 @@ export const handleIncompleteStrikethrough = (text: string): string => {
     // The pattern /(~~)([^~]*?)$/ won't match ~~content~ because it ends with ~
     const halfCompleteMatch = text.match(halfCompleteTildePattern);
     if (halfCompleteMatch) {
+      // Don't close if the marker is inside an inline code span or fenced code block
+      const markerIndex = text.lastIndexOf(halfCompleteMatch[0].slice(0, 2));
+      if (
+        isInsideCodeBlock(text, markerIndex) ||
+        isWithinCompleteInlineCode(text, markerIndex)
+      ) {
+        return text;
+      }
       // doubleTildeGlobalPattern always matches when halfCompleteTildePattern matched
       const tildePairs = text.match(doubleTildeGlobalPattern)?.length;
       if (tildePairs % 2 === 1) {
