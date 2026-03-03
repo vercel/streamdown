@@ -22,6 +22,44 @@ The `@streamdown/math` plugin renders mathematical expressions using [KaTeX](htt
 npm install @streamdown/math
 ```
 
+## Tailwind CSS
+
+### Tailwind v4
+
+Add the following `@source` directive to your `globals.css` or main CSS file:
+
+```css title="globals.css"
+@source "../node_modules/@streamdown/math/dist/*.js";
+```
+
+The path must be relative from your CSS file to the `node_modules` folder containing `@streamdown/math`. In a monorepo, adjust the number of `../` segments to reach the root `node_modules`.
+
+### Tailwind v3
+
+Add `@streamdown/math` to your `content` array in `tailwind.config.js`:
+
+```js title="tailwind.config.js"
+module.exports = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/@streamdown/math/dist/*.js",
+  ],
+  // ... rest of your config
+};
+```
+
+In a monorepo, adjust the path to reach the root `node_modules`:
+
+```js title="tailwind.config.js"
+module.exports = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "../../node_modules/@streamdown/math/dist/*.js",
+  ],
+  // ... rest of your config
+};
+```
+
 ## Usage
 
 ```tsx title="chat.tsx" lineNumbers

@@ -63,3 +63,32 @@ describe("inline code formatting (`)", () => {
     );
   });
 });
+
+describe("escaped backticks in inline code", () => {
+  it("should not treat escaped backticks as code delimiters", () => {
+    // \` is not a real backtick delimiter, so **bold should still be completed
+    expect(remend("\\`not code\\` **bold")).toBe("\\`not code\\` **bold**");
+  });
+
+  it("should complete emphasis when only escaped backticks are present", () => {
+    expect(remend("\\` *italic")).toBe("\\` *italic*");
+  });
+});
+
+describe("emphasis markers inside inline code spans should not leak", () => {
+  it("should not complete bold/italic/strikethrough if they are inside inline code", () => {
+    expect(remend("`**bold`")).toBe("`**bold`");
+    expect(remend("`*italic`")).toBe("`*italic`");
+    expect(remend("`~~strikethrough`")).toBe("`~~strikethrough`");
+  });
+
+  it("should still complete emphasis markers outside inline code", () => {
+    expect(remend("**bold")).toBe("**bold**");
+    expect(remend("*italic")).toBe("*italic*");
+    expect(remend("~~strike")).toBe("~~strike~~");
+  });
+
+  it("should complete emphasis after a closed inline code span", () => {
+    expect(remend("`code` **bold")).toBe("`code` **bold**");
+  });
+});
