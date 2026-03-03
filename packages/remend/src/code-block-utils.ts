@@ -40,3 +40,40 @@ export const countSingleBackticks = (text: string): number => {
   }
   return count;
 };
+
+// Check if a position is inside a COMPLETE inline code span (both opening and closing backtick present).
+// Returns false for incomplete inline code spans (streaming) so emphasis markers can still be completed.
+export const isWithinCompleteInlineCode = (
+  text: string,
+  position: number
+): boolean => {
+  let inInlineCode = false;
+  let inMultilineCode = false;
+  let inlineCodeStart = -1;
+
+  for (let i = 0; i < text.length; i += 1) {
+    // Check for triple backticks (multiline code blocks)
+    if (text.substring(i, i + 3) === "```") {
+      inMultilineCode = !inMultilineCode;
+      i += 2;
+      continue;
+    }
+
+    // Only check for inline code if not in multiline code
+    if (!inMultilineCode && text[i] === "`") {
+      if (inInlineCode) {
+        // Found closing backtick — check if position is inside this complete span
+        if (inlineCodeStart < position && position < i) {
+          return true;
+        }
+        inInlineCode = false;
+        inlineCodeStart = -1;
+      } else {
+        inInlineCode = true;
+        inlineCodeStart = i;
+      }
+    }
+  }
+
+  return false;
+};

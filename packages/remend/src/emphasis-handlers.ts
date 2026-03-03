@@ -1,4 +1,8 @@
 import {
+  isInsideCodeBlock,
+  isWithinCompleteInlineCode,
+} from "./code-block-utils";
+import {
   boldItalicPattern,
   boldPattern,
   fourOrMoreAsterisksPattern,
@@ -11,7 +15,6 @@ import {
 } from "./patterns";
 import {
   isHorizontalRule,
-  isWithinCodeBlock,
   isWithinHtmlTag,
   isWithinLinkOrImageUrl,
   isWithinMathBlock,
@@ -340,8 +343,11 @@ export const handleIncompleteBold = (text: string): string => {
   const contentAfterMarker = boldMatch[2];
   const markerIndex = text.lastIndexOf(boldMatch[1]);
 
-  // Check if the bold marker is within a code block
-  if (isWithinCodeBlock(text, markerIndex)) {
+  // Check if the bold marker is within a code block (fenced or inline)
+  if (
+    isInsideCodeBlock(text, markerIndex) ||
+    isWithinCompleteInlineCode(text, markerIndex)
+  ) {
     return text;
   }
 
@@ -404,7 +410,12 @@ export const handleIncompleteDoubleUnderscoreItalic = (
     const halfCompleteMatch = text.match(halfCompleteUnderscorePattern);
     if (halfCompleteMatch) {
       const markerIndex = text.lastIndexOf(halfCompleteMatch[1]);
-      if (!isWithinCodeBlock(text, markerIndex)) {
+      if (
+        !(
+          isInsideCodeBlock(text, markerIndex) ||
+          isWithinCompleteInlineCode(text, markerIndex)
+        )
+      ) {
         const underscorePairs = countDoubleUnderscoresOutsideCodeBlocks(text);
         if (underscorePairs % 2 === 1) {
           return `${text}_`;
@@ -417,8 +428,11 @@ export const handleIncompleteDoubleUnderscoreItalic = (
   const contentAfterMarker = italicMatch[2];
   const markerIndex = text.lastIndexOf(italicMatch[1]);
 
-  // Check if the italic marker is within a code block
-  if (isWithinCodeBlock(text, markerIndex)) {
+  // Check if the italic marker is within a code block (fenced or inline)
+  if (
+    isInsideCodeBlock(text, markerIndex) ||
+    isWithinCompleteInlineCode(text, markerIndex)
+  ) {
     return text;
   }
 
@@ -503,6 +517,14 @@ export const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   const firstSingleAsteriskIndex = findFirstSingleAsteriskIndex(text);
 
   if (firstSingleAsteriskIndex === -1) {
+    return text;
+  }
+
+  // Don't close if the marker is inside a complete inline code span or fenced code block
+  if (
+    isInsideCodeBlock(text, firstSingleAsteriskIndex) ||
+    isWithinCompleteInlineCode(text, firstSingleAsteriskIndex)
+  ) {
     return text;
   }
 
@@ -655,6 +677,10 @@ export const handleIncompleteSingleUnderscoreItalic = (
     return text;
   }
 
+  if (isWithinCompleteInlineCode(text, firstSingleUnderscoreIndex)) {
+    return text;
+  }
+
   const singleUnderscores = countSingleUnderscores(text);
   if (singleUnderscores % 2 === 1) {
     // Check if we need to insert _ before trailing ** for proper nesting
@@ -688,7 +714,10 @@ const shouldSkipBoldItalicCompletion = (
     return true;
   }
 
-  if (isWithinCodeBlock(text, markerIndex)) {
+  if (
+    isInsideCodeBlock(text, markerIndex) ||
+    isWithinCompleteInlineCode(text, markerIndex)
+  ) {
     return true;
   }
 
