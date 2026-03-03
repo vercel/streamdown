@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } from "../icons";
+import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
 
 interface PanZoomProps {
@@ -24,6 +24,7 @@ export const PanZoom = ({
   initialZoom = 1,
   fullscreen = false,
 }: PanZoomProps) => {
+  const { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } = useIcons();
   const cn = useCn();
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);

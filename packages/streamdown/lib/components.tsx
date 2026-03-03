@@ -29,6 +29,8 @@ import { useMermaidPlugin } from "./plugin-context";
 import { useCn } from "./prefix-context";
 import { Table } from "./table";
 
+const START_LINE_PATTERN = /startLine=(\d+)/;
+
 // Lazy load heavy components
 const Mermaid = lazy(() =>
   import("./mermaid").then((mod) => ({ default: mod.Mermaid }))
@@ -46,7 +48,7 @@ interface MarkdownPosition {
 }
 interface MarkdownNode {
   position?: MarkdownPosition;
-  properties?: { className?: string };
+  properties?: { className?: string; metastring?: string };
 }
 
 type WithNode<T> = T & {
@@ -776,6 +778,17 @@ const CodeComponent = ({
   const match = className?.match(LANGUAGE_REGEX);
   const language = match?.at(1) ?? "";
 
+  // Parse startLine from the code fence meta string (e.g. ```js startLine=10)
+  const metastring = node?.properties?.metastring;
+  const startLineMatch = metastring?.match(START_LINE_PATTERN);
+  const parsedStartLine = startLineMatch
+    ? Number.parseInt(startLineMatch[1], 10)
+    : undefined;
+  const startLine =
+    parsedStartLine !== undefined && parsedStartLine >= 1
+      ? parsedStartLine
+      : undefined;
+
   // Extract code content from children safely
   let code = "";
   if (
@@ -870,6 +883,7 @@ const CodeComponent = ({
       code={code}
       isIncomplete={isBlockIncomplete}
       language={language}
+      startLine={startLine}
     >
       {showCodeControls ? (
         <>

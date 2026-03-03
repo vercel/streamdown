@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import { StreamdownContext } from "../../index";
-import { CheckIcon, CopyIcon } from "../icons";
+import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
 import { useCodeBlockContext } from "./context";
 
@@ -60,7 +60,8 @@ export const CodeBlockCopyButton = ({
     []
   );
 
-  const Icon = isCopied ? CheckIcon : CopyIcon;
+  const icons = useIcons();
+  const Icon = isCopied ? icons.CheckIcon : icons.CopyIcon;
 
   return (
     <button

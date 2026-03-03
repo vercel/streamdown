@@ -6,6 +6,7 @@ import { cn as baseCn } from "../utils";
 type CodeBlockBodyProps = ComponentProps<"div"> & {
   result: HighlightResult;
   language: string;
+  startLine?: number;
 };
 
 // Base line numbers class string (merged without prefix for memoization)
@@ -43,7 +44,14 @@ const parseRootStyle = (rootStyle: string): Record<string, string> => {
 };
 
 export const CodeBlockBody = memo(
-  ({ children, result, language, className, ...rest }: CodeBlockBodyProps) => {
+  ({
+    children,
+    result,
+    language,
+    className,
+    startLine,
+    ...rest
+  }: CodeBlockBodyProps) => {
     const cn = useCn();
 
     // Prefix the pre-computed line number classes
@@ -90,6 +98,11 @@ export const CodeBlockBody = memo(
         >
           <code
             className={cn("[counter-increment:line_0] [counter-reset:line]")}
+            style={
+              startLine && startLine > 1
+                ? { counterReset: `line ${startLine - 1}` }
+                : undefined
+            }
           >
             {result.tokens.map((row, index) => (
               <span
@@ -158,7 +171,8 @@ export const CodeBlockBody = memo(
     return (
       prevProps.result === nextProps.result &&
       prevProps.language === nextProps.language &&
-      prevProps.className === nextProps.className
+      prevProps.className === nextProps.className &&
+      prevProps.startLine === nextProps.startLine
     );
   }
 );

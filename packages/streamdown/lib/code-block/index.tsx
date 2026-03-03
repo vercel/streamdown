@@ -13,6 +13,8 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   language: string;
   /** Whether the code block is still being streamed (incomplete) */
   isIncomplete?: boolean;
+  /** Custom starting line number for line numbering (default: 1) */
+  startLine?: number;
 };
 
 const HighlightedCodeBlockBody = lazy(() =>
@@ -27,6 +29,7 @@ export const CodeBlock = ({
   className,
   children,
   isIncomplete = false,
+  startLine,
   ...rest
 }: CodeBlockProps) => {
   const cn = useCn();
@@ -80,6 +83,7 @@ export const CodeBlock = ({
               className={className}
               language={language}
               result={raw}
+              startLine={startLine}
               {...rest}
             />
           }
@@ -89,6 +93,7 @@ export const CodeBlock = ({
             code={trimmedCode}
             language={language}
             raw={raw}
+            startLine={startLine}
             {...rest}
           />
         </Suspense>

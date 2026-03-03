@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { CheckIcon, CopyIcon, ExternalLinkIcon, XIcon } from "./icons";
+import { useIcons } from "./icon-context";
 import { useCn } from "./prefix-context";
 
 let activeModalCount = 0;
@@ -31,6 +31,7 @@ export const LinkSafetyModal = ({
   onClose,
   onConfirm,
 }: LinkSafetyModalProps) => {
+  const { CheckIcon, CopyIcon, ExternalLinkIcon, XIcon } = useIcons();
   const cn = useCn();
   const [copied, setCopied] = useState(false);
 

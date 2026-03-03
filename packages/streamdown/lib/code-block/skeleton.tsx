@@ -1,7 +1,8 @@
-import { Loader2Icon } from "../icons";
+import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
 
 export const CodeBlockSkeleton = () => {
+  const { Loader2Icon } = useIcons();
   const cn = useCn();
   return (
     <div

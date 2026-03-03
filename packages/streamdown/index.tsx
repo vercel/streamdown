@@ -25,6 +25,7 @@ import {
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as defaultComponents } from "./lib/components";
+import { type IconMap, IconProvider } from "./lib/icon-context";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
 import { Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
@@ -32,6 +33,7 @@ import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig, ThemeInput } from "./lib/plugin-types";
 import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
+import { remarkCodeMeta } from "./lib/remark/code-meta";
 import { createCn } from "./lib/utils";
 
 export type { BundledLanguage, BundledTheme } from "shiki";
@@ -39,6 +41,7 @@ export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimatePlugin } from "./lib/animate";
 export { useIsCodeFenceIncomplete } from "./lib/block-incomplete-context";
+export type { IconMap } from "./lib/icon-context";
 export type {
   AllowElement,
   Components,
@@ -164,6 +167,8 @@ export type StreamdownProps = Options & {
   linkSafety?: LinkSafetyConfig;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
+  /** Custom icons to override the default icons used in controls */
+  icons?: Partial<IconMap>;
   /** Tailwind CSS prefix to prepend to all utility classes (e.g. `"tw"` produces `tw:flex` instead of `flex`). Enables Tailwind v4's `prefix()` support. Note: user-supplied `className` values are also prefixed. */
   prefix?: string;
   /** Called when isAnimating transitions from false to true. Suppressed in mode="static". */
@@ -177,6 +182,10 @@ const defaultSanitizeSchema = {
   protocols: {
     ...defaultSchema.protocols,
     href: [...(defaultSchema.protocols?.href ?? []), "tel"],
+  },
+  attributes: {
+    ...defaultSchema.attributes,
+    code: [...(defaultSchema.attributes?.code ?? []), "metastring"],
   },
 };
 
@@ -197,6 +206,7 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
 
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
   gfm: [remarkGfm, {}],
+  codeMeta: remarkCodeMeta,
 } as const;
 
 // Stable plugin arrays for cache efficiency - created once at module level
@@ -361,6 +371,7 @@ export const Streamdown = memo(
       enabled: true,
     },
     allowedTags,
+    icons: iconOverrides,
     prefix,
     onAnimationStart,
     onAnimationEnd,
@@ -607,23 +618,25 @@ export const Streamdown = memo(
       return (
         <PluginContext.Provider value={plugins ?? null}>
           <StreamdownContext.Provider value={contextValue}>
-            <PrefixContext.Provider value={prefixedCn}>
-              <div
-                className={prefixedCn(
-                  "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
-                  className
-                )}
-              >
-                <Markdown
-                  components={mergedComponents}
-                  rehypePlugins={mergedRehypePlugins}
-                  remarkPlugins={mergedRemarkPlugins}
-                  {...props}
+            <IconProvider icons={iconOverrides}>
+              <PrefixContext.Provider value={prefixedCn}>
+                <div
+                  className={prefixedCn(
+                    "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+                    className
+                  )}
                 >
-                  {processedChildren}
-                </Markdown>
-              </div>
-            </PrefixContext.Provider>
+                  <Markdown
+                    components={mergedComponents}
+                    rehypePlugins={mergedRehypePlugins}
+                    remarkPlugins={mergedRemarkPlugins}
+                    {...props}
+                  >
+                    {processedChildren}
+                  </Markdown>
+                </div>
+              </PrefixContext.Provider>
+            </IconProvider>
           </StreamdownContext.Provider>
         </PluginContext.Provider>
       );
@@ -633,44 +646,46 @@ export const Streamdown = memo(
     return (
       <PluginContext.Provider value={plugins ?? null}>
         <StreamdownContext.Provider value={contextValue}>
-          <PrefixContext.Provider value={prefixedCn}>
-            <div
-              className={prefixedCn(
-                "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
-                caret && !shouldHideCaret
-                  ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-[var(--streamdown-caret)]"
-                  : null,
-                className
-              )}
-              style={style}
-            >
-              {blocksToRender.length === 0 && caret && isAnimating && <span />}
-              {blocksToRender.map((block, index) => {
-                const isLastBlock = index === blocksToRender.length - 1;
-                const isIncomplete =
-                  isAnimating && isLastBlock && hasIncompleteCodeFence(block);
-                return (
-                  <BlockComponent
-                    animatePlugin={animatePlugin}
-                    components={mergedComponents}
-                    content={block}
-                    index={index}
-                    isIncomplete={isIncomplete}
-                    key={blockKeys[index]}
-                    rehypePlugins={mergedRehypePlugins}
-                    remarkPlugins={mergedRemarkPlugins}
-                    shouldNormalizeHtmlIndentation={
-                      shouldNormalizeHtmlIndentation
-                    }
-                    shouldParseIncompleteMarkdown={
-                      shouldParseIncompleteMarkdown
-                    }
-                    {...props}
-                  />
-                );
-              })}
-            </div>
-          </PrefixContext.Provider>
+          <IconProvider icons={iconOverrides}>
+            <PrefixContext.Provider value={prefixedCn}>
+              <div
+                className={prefixedCn(
+                  "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+                  caret && !shouldHideCaret
+                    ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-[var(--streamdown-caret)]"
+                    : null,
+                  className
+                )}
+                style={style}
+              >
+                {blocksToRender.length === 0 && caret && isAnimating && <span />}
+                {blocksToRender.map((block, index) => {
+                  const isLastBlock = index === blocksToRender.length - 1;
+                  const isIncomplete =
+                    isAnimating && isLastBlock && hasIncompleteCodeFence(block);
+                  return (
+                    <BlockComponent
+                      animatePlugin={animatePlugin}
+                      components={mergedComponents}
+                      content={block}
+                      index={index}
+                      isIncomplete={isIncomplete}
+                      key={blockKeys[index]}
+                      rehypePlugins={mergedRehypePlugins}
+                      remarkPlugins={mergedRemarkPlugins}
+                      shouldNormalizeHtmlIndentation={
+                        shouldNormalizeHtmlIndentation
+                      }
+                      shouldParseIncompleteMarkdown={
+                        shouldParseIncompleteMarkdown
+                      }
+                      {...props}
+                    />
+                  );
+                })}
+              </div>
+            </PrefixContext.Provider>
+          </IconProvider>
         </StreamdownContext.Provider>
       </PluginContext.Provider>
     );
