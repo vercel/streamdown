@@ -19,18 +19,18 @@
     "bump-deps": "npx npm-check-updates -u --deep -x \"recharts\" && pnpm i"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.2",
-    "@changesets/cli": "^2.29.8",
-    "turbo": "^2.7.3",
+    "@biomejs/biome": "2.4.5",
+    "@changesets/cli": "^2.30.0",
+    "turbo": "^2.8.13",
     "typescript": "5.9.3",
-    "ultracite": "7.2.3"
+    "ultracite": "7.2.4"
   },
   "pnpm": {
     "overrides": {
       "lodash-es": ">=4.17.23"
     }
   },
-  "packageManager": "pnpm@10.25.0",
+  "packageManager": "pnpm@10.30.3",
   "engines": {
     "node": ">=18"
   }
