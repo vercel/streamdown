@@ -11,7 +11,7 @@ related:
   - /docs/plugins
 ---
 
-The `renderers` field on `PluginConfig` lets you register custom React components for arbitrary code fence languages. Use this to render Vega-Lite charts, D2 diagrams, PlantUML, or any other visualization — without forking Streamdown.
+The `renderers` field on `PluginConfig` lets you register custom React components for arbitrary code fence languages. Use this to render Vega-Lite charts, AntV infographics, D2 diagrams, PlantUML, or any other visualization — without forking Streamdown.
 
 Custom renderers take priority over default code blocks. If a custom renderer matches a language, it renders instead of the default `CodeBlock`. You can even override mermaid by registering a renderer for the `"mermaid"` language.
 
@@ -22,22 +22,14 @@ Pass an array of `{ language, component }` objects to `plugins.renderers`:
 ```tsx title="chat.tsx" lineNumbers
 import { Streamdown } from "streamdown";
 import type { CustomRendererProps } from "streamdown";
-
-const VegaLiteChart = ({ code, language, isIncomplete }: CustomRendererProps) => {
-  if (isIncomplete) {
-    return <div className="animate-pulse h-48 bg-muted rounded-lg" />;
-  }
-
-  const spec = JSON.parse(code);
-  return <MyVegaRenderer spec={spec} />;
-};
+import { VegaLiteRenderer } from "./vega-lite-renderer";
 
 export default function Chat() {
   return (
     <Streamdown
       plugins={{
         renderers: [
-          { language: "vega-lite", component: VegaLiteChart },
+          { language: "vega-lite", component: VegaLiteRenderer },
         ],
       }}
     >
@@ -53,9 +45,9 @@ The `language` field accepts a string or an array of strings:
 
 ```tsx
 const renderers = [
-  { language: ["vega", "vega-lite"], component: VegaLiteChart },
-  { language: "d2", component: D2Diagram },
-  { language: "plantuml", component: PlantUMLDiagram },
+  { language: ["vega", "vega-lite"], component: VegaLiteRenderer },
+  { language: "infographic", component: InfographicRenderer },
+  { language: "d2", component: D2Renderer },
 ];
 
 <Streamdown plugins={{ renderers }}>{markdown}</Streamdown>
@@ -75,29 +67,59 @@ Every custom renderer receives these props:
 
 Streamdown exports its internal code block components so your custom renderers can reuse them for consistent styling:
 
-```tsx title="vega-renderer.tsx" lineNumbers
-import {
-  CodeBlockContainer,
-  CodeBlockHeader,
-  CodeBlockCopyButton,
-  CodeBlockDownloadButton,
-} from "streamdown";
+```tsx title="vega-lite-renderer.tsx" lineNumbers
+import { useEffect, useRef } from "react";
 import type { CustomRendererProps } from "streamdown";
+import { CodeBlockContainer, CodeBlockHeader } from "streamdown";
 
-const VegaLiteChart = ({ code, language, isIncomplete }: CustomRendererProps) => {
-  if (isIncomplete) {
-    return (
-      <CodeBlockContainer language={language} isIncomplete>
-        <CodeBlockHeader language={language} />
-        <div className="animate-pulse h-48 bg-muted rounded-lg" />
-      </CodeBlockContainer>
-    );
-  }
+export const VegaLiteRenderer = ({
+  code,
+  language,
+  isIncomplete,
+}: CustomRendererProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isIncomplete || !containerRef.current) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const render = async () => {
+      const spec = JSON.parse(code);
+      const vegaEmbed = (await import("vega-embed")).default;
+
+      if (cancelled || !containerRef.current) {
+        return;
+      }
+
+      containerRef.current.innerHTML = "";
+      await vegaEmbed(containerRef.current, spec, {
+        actions: false,
+        renderer: "svg",
+      });
+    };
+
+    render();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [code, isIncomplete]);
 
   return (
-    <CodeBlockContainer language={language}>
+    <CodeBlockContainer isIncomplete={isIncomplete} language={language}>
       <CodeBlockHeader language={language} />
-      <MyVegaRenderer spec={JSON.parse(code)} />
+      {isIncomplete ? (
+        <div className="flex h-48 items-center justify-center rounded-md bg-muted">
+          <span className="text-muted-foreground text-sm">
+            Loading chart...
+          </span>
+        </div>
+      ) : (
+        <div ref={containerRef} className="overflow-hidden rounded-md p-4" />
+      )}
     </CodeBlockContainer>
   );
 };
@@ -114,23 +136,226 @@ const VegaLiteChart = ({ code, language, isIncomplete }: CustomRendererProps) =>
 | `CodeBlockDownloadButton` | Download button |
 | `CodeBlockSkeleton` | Loading skeleton placeholder |
 
+## Examples
+
+### Vega-Lite charts
+
+[Vega-Lite](https://vega.github.io/vega-lite/) is a grammar for interactive graphics. Install `vega`, `vega-lite`, and `vega-embed`, then create a renderer that parses the JSON spec and calls `vegaEmbed`:
+
+```bash
+npm install vega vega-lite vega-embed
+```
+
+The renderer from the [reusing built-in components](#reusing-built-in-components) section above is a complete Vega-Lite implementation. Once registered, your AI can output charts like:
+
+````markdown
+```vega-lite
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "width": "container",
+  "height": 200,
+  "data": {
+    "values": [
+      {"month": "Jan", "revenue": 28},
+      {"month": "Feb", "revenue": 55},
+      {"month": "Mar", "revenue": 43}
+    ]
+  },
+  "mark": "bar",
+  "encoding": {
+    "x": {"field": "month", "type": "nominal"},
+    "y": {"field": "revenue", "type": "quantitative"}
+  }
+}
+```
+````
+
+### AntV Infographic
+
+[AntV Infographic](https://github.com/antvis/Infographic) renders rich infographic diagrams from a YAML-like DSL that supports streaming output. Install the package, then create a renderer:
+
+```bash
+npm install @antv/infographic
+```
+
+```tsx title="infographic-renderer.tsx" lineNumbers
+import { useEffect, useRef } from "react";
+import type { CustomRendererProps } from "streamdown";
+import { CodeBlockContainer, CodeBlockHeader } from "streamdown";
+
+export const InfographicRenderer = ({
+  code,
+  language,
+  isIncomplete,
+}: CustomRendererProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const render = async () => {
+      const { Infographic } = await import("@antv/infographic");
+
+      if (cancelled || !containerRef.current) {
+        return;
+      }
+
+      containerRef.current.innerHTML = "";
+      new Infographic({
+        container: containerRef.current,
+        text: code,
+      });
+    };
+
+    render();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [code]);
+
+  return (
+    <CodeBlockContainer isIncomplete={isIncomplete} language={language}>
+      <CodeBlockHeader language={language} />
+      <div ref={containerRef} className="overflow-hidden rounded-md" />
+    </CodeBlockContainer>
+  );
+};
+```
+
+Register it alongside other renderers:
+
+```tsx title="chat.tsx" lineNumbers
+import { Streamdown } from "streamdown";
+import { InfographicRenderer } from "./infographic-renderer";
+import { VegaLiteRenderer } from "./vega-lite-renderer";
+
+<Streamdown
+  plugins={{
+    renderers: [
+      { language: ["vega", "vega-lite"], component: VegaLiteRenderer },
+      { language: "infographic", component: InfographicRenderer },
+    ],
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+Your AI can then output infographics using the AntV DSL:
+
+````markdown
+```infographic
+infographic list-row-horizontal-icon-arrow
+data
+  title Product Development Lifecycle
+  desc Complete process from requirements to launch
+  items
+    - label Research
+      value 15
+      desc User interviews and competitive analysis
+      icon mdi/account-search
+    - label Design
+      value 42
+      desc Interaction prototype and visual design
+      icon mdi/palette
+    - label Development
+      value 65
+      desc Implementation and testing
+      icon mdi/code-tags
+    - label Launch
+      value 100
+      desc Official release and user feedback
+      icon mdi/rocket-launch
+```
+````
+
+Since AntV Infographic supports streaming natively, you can skip the `isIncomplete` guard and render progressively as the code fence streams in.
+
+### D2 diagrams
+
+[D2](https://d2lang.com/) is a declarative diagramming language. Since D2 compiles to SVG server-side, you can render it with an API call:
+
+```tsx title="d2-renderer.tsx" lineNumbers
+import { useEffect, useRef } from "react";
+import type { CustomRendererProps } from "streamdown";
+import { CodeBlockContainer, CodeBlockHeader } from "streamdown";
+
+export const D2Renderer = ({
+  code,
+  language,
+  isIncomplete,
+}: CustomRendererProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isIncomplete || !containerRef.current) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const render = async () => {
+      const response = await fetch("/api/d2", {
+        method: "POST",
+        body: code,
+      });
+
+      if (cancelled || !containerRef.current) {
+        return;
+      }
+
+      const svg = await response.text();
+      containerRef.current.innerHTML = svg;
+    };
+
+    render();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [code, isIncomplete]);
+
+  return (
+    <CodeBlockContainer isIncomplete={isIncomplete} language={language}>
+      <CodeBlockHeader language={language} />
+      {isIncomplete ? (
+        <div className="flex h-48 items-center justify-center rounded-md bg-muted">
+          <span className="text-muted-foreground text-sm">
+            Loading diagram...
+          </span>
+        </div>
+      ) : (
+        <div ref={containerRef} className="overflow-hidden rounded-md p-4" />
+      )}
+    </CodeBlockContainer>
+  );
+};
+```
+
 ## Streaming considerations
 
-During streaming, `isIncomplete` is `true` while the code fence is still being written. Use this to show a loading state and avoid parsing incomplete content:
+During streaming, `isIncomplete` is `true` while the code fence is still being written. For most renderers, show a loading placeholder and wait for the complete spec:
 
 ```tsx
-const VegaLiteChart = ({ code, isIncomplete }: CustomRendererProps) => {
+const MyRenderer = ({ code, isIncomplete }: CustomRendererProps) => {
   if (isIncomplete) {
     return (
-      <div className="animate-pulse h-48 bg-muted rounded-lg flex items-center justify-center">
-        <span className="text-muted-foreground">Loading chart...</span>
+      <div className="flex h-48 items-center justify-center rounded-md bg-muted">
+        <span className="text-muted-foreground text-sm">Loading...</span>
       </div>
     );
   }
 
-  return <MyVegaRenderer spec={JSON.parse(code)} />;
+  return <MyVisualization data={code} />;
 };
 ```
+
+Some libraries like AntV Infographic support progressive rendering — in those cases, you can render on every update and skip the `isIncomplete` guard.
 
 ## Combining with other plugins
 
@@ -149,7 +374,8 @@ import { code } from "@streamdown/code";
     code,
     mermaid,
     renderers: [
-      { language: "vega-lite", component: VegaLiteChart },
+      { language: "vega-lite", component: VegaLiteRenderer },
+      { language: "infographic", component: InfographicRenderer },
     ],
   }}
 >
