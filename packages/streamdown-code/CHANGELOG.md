@@ -1,5 +1,11 @@
 # @streamdown/code
 
+## 1.0.3
+
+### Patch Changes
+
+- c597336: Use JS engine
+
 ## 1.0.2
 
 ### Patch Changes

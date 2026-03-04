@@ -143,6 +143,44 @@ Streamdown supports all Shiki themes including:
 - `tokyo-night`, `slack-dark`, `slack-ochin`
 - And [many more](https://shiki.style/themes)
 
+### Custom theme objects
+
+The `shikiTheme` prop accepts `[ThemeInput, ThemeInput]` where `ThemeInput` is either a bundled theme name (`BundledTheme`) or a custom theme object (`ThemeRegistrationAny`). You can mix and match:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from "streamdown";
+import { code } from "@streamdown/code";
+import myCustomDarkTheme from "./my-dark-theme.json";
+
+export default function Page() {
+  return (
+    <Streamdown
+      plugins={{ code: code }}
+      shikiTheme={["github-light", myCustomDarkTheme]}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+<Callout type="info">
+  Bundled theme names (strings) load from Shiki's built-in registry. Custom theme objects follow the `ThemeRegistrationAny` format from Shiki — any VS Code `.tmTheme` or JSON theme file works.
+</Callout>
+
+## Custom start line
+
+Set the starting line number for a code block using `startLine=N` in the code fence meta:
+
+````markdown
+```typescript startLine=10
+const user = await getUser(id);
+const profile = await getProfile(user);
+```
+````
+
+Line numbers begin at the value you specify instead of 1. The value must be a positive integer (>= 1).
+
 ## Interactive Features
 
 ### Copy Button
@@ -210,6 +248,12 @@ function example() {
 ````
 
 The unterminated block parser ensures the code block renders properly even without the closing backticks.
+
+### Loading Behavior
+
+Code block shells render immediately with plain text content, then syntax colors are applied when highlighting resolves.
+
+This keeps code readable on first paint and improves visual stability during lazy highlight loading.
 
 ### Disabling Interactions During Streaming
 

@@ -6,12 +6,14 @@ import {
   NextResponse,
 } from "next/server";
 import { i18n } from "@/lib/geistdocs/i18n";
-import { trackMdRequest } from "@/lib/md-tracking";
+import { trackMdRequest } from "@/lib/geistdocs/md-tracking";
 
 const { rewrite: rewriteLLM } = rewritePath(
   "/docs/*path",
   `/${i18n.defaultLanguage}/llms.mdx/*path`
 );
+
+const MDX_EXTENSION_PATTERN = /\.mdx?$/;
 
 const internationalizer = createI18nMiddleware(i18n);
 
@@ -37,7 +39,7 @@ const proxy = (request: NextRequest, context: NextFetchEvent) => {
       pathname.startsWith("/docs/")) &&
     (pathname.endsWith(".md") || pathname.endsWith(".mdx"))
   ) {
-    const stripped = pathname.replace(/\.mdx?$/, "");
+    const stripped = pathname.replace(MDX_EXTENSION_PATTERN, "");
     const result =
       stripped === "/docs"
         ? `/${i18n.defaultLanguage}/llms.mdx`

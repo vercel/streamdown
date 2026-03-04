@@ -12,8 +12,8 @@ import { createSystemPrompt } from "./utils";
 export const maxDuration = 800;
 
 interface RequestBody {
-  messages: MyUIMessage[];
   currentRoute: string;
+  messages: MyUIMessage[];
   pageContext?: {
     title: string;
     url: string;

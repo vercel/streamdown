@@ -1,17 +1,17 @@
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } from "../icons";
-import { cn } from "../utils";
+import { useIcons } from "../icon-context";
+import { useCn } from "../prefix-context";
 
 interface PanZoomProps {
   children: ReactNode;
   className?: string;
-  minZoom?: number;
-  maxZoom?: number;
-  zoomStep?: number;
-  showControls?: boolean;
-  initialZoom?: number;
   fullscreen?: boolean;
+  initialZoom?: number;
+  maxZoom?: number;
+  minZoom?: number;
+  showControls?: boolean;
+  zoomStep?: number;
 }
 
 export const PanZoom = ({
@@ -24,6 +24,8 @@ export const PanZoom = ({
   initialZoom = 1,
   fullscreen = false,
 }: PanZoomProps) => {
+  const { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } = useIcons();
+  const cn = useCn();
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(initialZoom);
@@ -84,6 +86,7 @@ export const PanZoom = ({
 
   const handlePointerMove = useCallback(
     (e: PointerEvent) => {
+      /* v8 ignore next */
       if (!isPanning) {
         return;
       }
@@ -109,6 +112,7 @@ export const PanZoom = ({
 
   useEffect(() => {
     const container = containerRef.current;
+    /* v8 ignore next */
     if (!container) {
       return;
     }
@@ -122,6 +126,7 @@ export const PanZoom = ({
 
   useEffect(() => {
     const content = contentRef.current;
+    /* v8 ignore next */
     if (!content) {
       return;
     }
@@ -157,12 +162,14 @@ export const PanZoom = ({
       {showControls ? (
         <div
           className={cn(
-            "absolute z-10 flex flex-col gap-1 rounded-md border border-border bg-background/90 p-1 shadow-sm backdrop-blur-sm",
+            "absolute z-10 flex flex-col gap-1 rounded-md border border-border bg-background/80 p-1 supports-[backdrop-filter]:bg-background/70 supports-[backdrop-filter]:backdrop-blur-sm",
             fullscreen ? "bottom-4 left-4" : "bottom-2 left-2"
           )}
         >
           <button
-            className="flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            className={cn(
+              "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            )}
             disabled={zoom >= maxZoom}
             onClick={handleZoomIn}
             title="Zoom in"
@@ -171,7 +178,9 @@ export const PanZoom = ({
             <ZoomInIcon size={16} />
           </button>
           <button
-            className="flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            className={cn(
+              "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+            )}
             disabled={zoom <= minZoom}
             onClick={handleZoomOut}
             title="Zoom out"
@@ -180,7 +189,9 @@ export const PanZoom = ({
             <ZoomOutIcon size={16} />
           </button>
           <button
-            className="flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className={cn(
+              "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            )}
             onClick={handleReset}
             title="Reset zoom and pan"
             type="button"

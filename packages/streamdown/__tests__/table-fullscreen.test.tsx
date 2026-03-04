@@ -221,6 +221,46 @@ describe("TableFullscreenButton", () => {
     ).toBeTruthy();
   });
 
+  it("should close fullscreen overlay on backdrop click", () => {
+    const { container } = render(
+      <Streamdown>{markdownWithTable}</Streamdown>
+    );
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    expect(overlay).toBeTruthy();
+
+    fireEvent.click(overlay!);
+
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeFalsy();
+  });
+
+  it("should have aria attributes on fullscreen overlay", () => {
+    const { container } = render(
+      <Streamdown>{markdownWithTable}</Streamdown>
+    );
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    expect(overlay?.getAttribute("role")).toBe("dialog");
+    expect(overlay?.getAttribute("aria-modal")).toBe("true");
+    expect(overlay?.getAttribute("aria-label")).toBeTruthy();
+  });
+
   it("should hide copy in fullscreen when table copy is false", () => {
     const { container } = render(
       <Streamdown controls={{ table: { copy: false } }}>

@@ -166,6 +166,47 @@ describe("allowedTags prop", () => {
     expect(tag2?.textContent).toBe("second");
   });
 
+  it("should handle custom tags with blank lines in content", () => {
+    const Snippet = (props: CustomComponentProps) => (
+      <div data-testid={`snippet-${props.id}`}>
+        {props.children as React.ReactNode}
+      </div>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ snippet: ["id", "file", "index"] }}
+        components={{ snippet: Snippet }}
+        mode="static"
+      >
+        {`<snippet id="1" file="test.txt" index="1">
+Snippet 1
+
+Some more content on a new line
+</snippet>
+
+<snippet id="2" file="test.txt" index="2">
+Snippet 2
+
+Content for snippet 2
+</snippet>`}
+      </Streamdown>
+    );
+
+    // rehype-sanitize prefixes id attributes with "user-content-"
+    const snippet1 = container.querySelector(
+      '[data-testid="snippet-user-content-1"]'
+    );
+    const snippet2 = container.querySelector(
+      '[data-testid="snippet-user-content-2"]'
+    );
+    expect(snippet1).toBeTruthy();
+    expect(snippet2).toBeTruthy();
+    // Ensure snippet 2's content isn't absorbed into snippet 1
+    expect(snippet1?.textContent).not.toContain("Snippet 2");
+    expect(snippet2?.textContent).toContain("Snippet 2");
+  });
+
   it("should handle empty allowedTags object", () => {
     const { container } = render(
       <Streamdown allowedTags={{}} mode="static">
@@ -175,5 +216,126 @@ describe("allowedTags prop", () => {
 
     // Should render normally without errors
     expect(container.textContent).toContain("Hello world");
+  });
+});
+
+describe("literalTagContent prop", () => {
+  it("should render underscore content as plain text (not emphasis)", () => {
+    const Mention = (props: CustomComponentProps) => (
+      <span data-testid="mention">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ mention: ["user_id"] }}
+        components={{ mention: Mention }}
+        literalTagContent={["mention"]}
+        mode="static"
+      >
+        {'<mention user_id="123">_some_username_</mention>'}
+      </Streamdown>
+    );
+
+    const mention = container.querySelector('[data-testid="mention"]');
+    expect(mention).toBeTruthy();
+    // Children should be plain text, not an <em> element
+    expect(mention?.querySelector("em")).toBeNull();
+    expect(mention?.textContent).toBe("_some_username_");
+  });
+
+  it("should only apply literal mode to the specified tags", () => {
+    const Mention = (props: CustomComponentProps) => (
+      <span data-testid="mention">{props.children as React.ReactNode}</span>
+    );
+    const Note = (props: CustomComponentProps) => (
+      <span data-testid="note">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ mention: [], note: [] }}
+        components={{ mention: Mention, note: Note }}
+        literalTagContent={["mention"]}
+        mode="static"
+      >
+        {"<mention>_literal_</mention> <note>_parsed_</note>"}
+      </Streamdown>
+    );
+
+    const mention = container.querySelector('[data-testid="mention"]');
+    const note = container.querySelector('[data-testid="note"]');
+
+    // mention: no emphasis, raw underscores
+    expect(mention?.querySelector("em")).toBeNull();
+    expect(mention?.textContent).toBe("_literal_");
+
+    // note: emphasis IS parsed (not in literalTagContent)
+    expect(note?.querySelector("em")).toBeTruthy();
+  });
+
+  it("should render bold, inline code and other markdown as plain text", () => {
+    const Tag = (props: CustomComponentProps) => (
+      <span data-testid="tag">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ tag: [] }}
+        components={{ tag: Tag }}
+        literalTagContent={["tag"]}
+        mode="static"
+      >
+        {"<tag>**bold** and `code`</tag>"}
+      </Streamdown>
+    );
+
+    const tag = container.querySelector('[data-testid="tag"]');
+    expect(tag?.querySelector("strong")).toBeNull();
+    expect(tag?.querySelector("code")).toBeNull();
+    expect(tag?.textContent).toContain("**bold**");
+    expect(tag?.textContent).toContain("`code`");
+  });
+
+  it("should have no effect when literalTagContent is an empty array", () => {
+    const Mention = (props: CustomComponentProps) => (
+      <span data-testid="mention">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ mention: [] }}
+        components={{ mention: Mention }}
+        literalTagContent={[]}
+        mode="static"
+      >
+        {"<mention>_parsed_</mention>"}
+      </Streamdown>
+    );
+
+    const mention = container.querySelector('[data-testid="mention"]');
+    // Markdown IS still parsed (empty literalTagContent = no effect)
+    expect(mention?.querySelector("em")).toBeTruthy();
+  });
+
+  it("should work in streaming mode", () => {
+    const Mention = (props: CustomComponentProps) => (
+      <span data-testid="mention">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ mention: ["user_id"] }}
+        components={{ mention: Mention }}
+        literalTagContent={["mention"]}
+        mode="streaming"
+      >
+        {'Hello <mention user_id="42">_handle_</mention>'}
+      </Streamdown>
+    );
+
+    const mention = container.querySelector('[data-testid="mention"]');
+    expect(mention).toBeTruthy();
+    expect(mention?.querySelector("em")).toBeNull();
+    expect(mention?.textContent).toBe("_handle_");
   });
 });

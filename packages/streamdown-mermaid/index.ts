@@ -15,16 +15,16 @@ export interface MermaidInstance {
  * Plugin for diagram rendering (Mermaid)
  */
 export interface DiagramPlugin {
-  name: "mermaid";
-  type: "diagram";
-  /**
-   * Language identifier for code blocks
-   */
-  language: string;
   /**
    * Get the mermaid instance (initialized with optional config)
    */
   getMermaid: (config?: MermaidConfig) => MermaidInstance;
+  /**
+   * Language identifier for code blocks
+   */
+  language: string;
+  name: "mermaid";
+  type: "diagram";
 }
 
 /**

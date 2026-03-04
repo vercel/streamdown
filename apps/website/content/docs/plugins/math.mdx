@@ -1,0 +1,487 @@
+---
+title: "@streamdown/math"
+description: Render mathematical expressions using KaTeX.
+type: reference
+summary: KaTeX-powered LaTeX rendering for inline and block math expressions.
+prerequisites:
+  - /docs/plugins
+related:
+  - /docs/typography
+---
+
+The `@streamdown/math` plugin renders mathematical expressions using [KaTeX](https://katex.org/).
+
+- Fast LaTeX rendering (2-3x faster than MathJax)
+- Inline and block math support
+- MathML output for accessibility
+- Configurable error color and single-dollar syntax
+
+## Install
+
+```package-install
+npm install @streamdown/math
+```
+
+## Tailwind CSS
+
+### Tailwind v4
+
+Add the following `@source` directive to your `globals.css` or main CSS file:
+
+```css title="globals.css"
+@source "../node_modules/@streamdown/math/dist/*.js";
+```
+
+The path must be relative from your CSS file to the `node_modules` folder containing `@streamdown/math`. In a monorepo, adjust the number of `../` segments to reach the root `node_modules`.
+
+### Tailwind v3
+
+Add `@streamdown/math` to your `content` array in `tailwind.config.js`:
+
+```js title="tailwind.config.js"
+module.exports = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/@streamdown/math/dist/*.js",
+  ],
+  // ... rest of your config
+};
+```
+
+In a monorepo, adjust the path to reach the root `node_modules`:
+
+```js title="tailwind.config.js"
+module.exports = {
+  content: [
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "../../node_modules/@streamdown/math/dist/*.js",
+  ],
+  // ... rest of your config
+};
+```
+
+## Usage
+
+```tsx title="chat.tsx" lineNumbers
+import { math } from '@streamdown/math';
+import 'katex/dist/katex.min.css';
+
+<Streamdown plugins={{ math }}>
+  {markdown}
+</Streamdown>
+```
+
+## Syntax
+
+Streamdown uses double dollar signs (`$$`) to delimit mathematical expressions. Unlike traditional LaTeX, single dollar signs (`$`) are **not** used by default to avoid conflicts with currency symbols in regular text.
+
+### Inline Math
+
+Wrap inline mathematical expressions with `$$`:
+
+```markdown
+The quadratic formula is $$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$ for solving equations.
+```
+
+Renders as: The quadratic formula is $$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$ for solving equations.
+
+### Block Math
+
+For display-style equations, place `$$` delimiters on separate lines:
+
+```markdown
+$$
+E = mc^2
+$$
+```
+
+This renders the equation centered and larger:
+
+$$
+E = mc^2
+$$
+
+## Common Mathematical Expressions
+
+### Fractions
+
+```markdown
+$$\frac{numerator}{denominator}$$
+```
+
+Example: $$\frac{1}{2}$$, $$\frac{a + b}{c - d}$$
+
+### Square Roots
+
+```markdown
+$$\sqrt{x}$$ or $$\sqrt[n]{x}$$
+```
+
+Example: $$\sqrt{16} = 4$$, $$\sqrt[3]{27} = 3$$
+
+### Exponents and Subscripts
+
+```markdown
+$$x^2$$ or $$x_i$$ or $$x_i^2$$
+```
+
+Example: $$a^2 + b^2 = c^2$$, $$x_1, x_2, \ldots, x_n$$
+
+### Greek Letters
+
+```markdown
+$$\alpha, \beta, \gamma, \delta, \theta, \pi, \sigma, \omega$$
+$$\Gamma, \Delta, \Theta, \Pi, \Sigma, \Omega$$
+```
+
+Common letters: $$\alpha, \beta, \gamma, \delta, \epsilon, \pi, \sigma, \phi, \omega$$
+
+### Summations
+
+```markdown
+$$\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$$
+```
+
+The sum of first $$n$$ natural numbers: $$\sum_{i=1}^{n} i = \frac{n(n+1)}{2}$$
+
+### Integrals
+
+```markdown
+$$\int_{a}^{b} f(x) \, dx$$
+```
+
+Definite integral: $$\int_{0}^{1} x^2 \, dx = \frac{1}{3}$$
+
+### Limits
+
+```markdown
+$$\lim_{x \to \infty} \frac{1}{x} = 0$$
+```
+
+Example: $$\lim_{x \to 0} \frac{\sin x}{x} = 1$$
+
+### Matrices
+
+```markdown
+$$
+\begin{bmatrix}
+a & b \\
+c & d
+\end{bmatrix}
+$$
+```
+
+A 2×2 matrix:
+
+$$
+\begin{bmatrix}
+1 & 2 \\
+3 & 4
+\end{bmatrix}
+$$
+
+## Advanced Examples
+
+### The Quadratic Formula
+
+```markdown
+$$
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+```
+
+$$
+x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+$$
+
+### Euler's Identity
+
+```markdown
+$$
+e^{i\pi} + 1 = 0
+$$
+```
+
+$$
+e^{i\pi} + 1 = 0
+$$
+
+### Normal Distribution
+
+```markdown
+$$
+f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}
+$$
+```
+
+The probability density function:
+
+$$
+f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}
+$$
+
+### Taylor Series
+
+```markdown
+$$
+e^x = \sum_{n=0}^{\infty} \frac{x^n}{n!} = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \cdots
+$$
+```
+
+$$
+e^x = \sum_{n=0}^{\infty} \frac{x^n}{n!} = 1 + x + \frac{x^2}{2!} + \frac{x^3}{3!} + \cdots
+$$
+
+### Integration by Parts
+
+```markdown
+$$
+\int u \, dv = uv - \int v \, du
+$$
+```
+
+$$
+\int u \, dv = uv - \int v \, du
+$$
+
+## Special Operators and Symbols
+
+### Comparison Operators
+
+```markdown
+$$\leq$$ $$\geq$$ $$\neq$$ $$\approx$$ $$\equiv$$
+```
+
+$$x \leq y$$, $$a \geq b$$, $$x \neq 0$$, $$\pi \approx 3.14$$, $$a \equiv b \pmod{n}$$
+
+### Set Notation
+
+```markdown
+$$\in$$ $$\notin$$ $$\subset$$ $$\subseteq$$ $$\cup$$ $$\cap$$ $$\emptyset$$
+```
+
+$$x \in A$$, $$y \notin B$$, $$A \subset B$$, $$A \cup B$$, $$A \cap B$$, $$\emptyset$$
+
+### Logic Symbols
+
+```markdown
+$$\land$$ $$\lor$$ $$\neg$$ $$\implies$$ $$\iff$$ $$\forall$$ $$\exists$$
+```
+
+$$p \land q$$, $$p \lor q$$, $$\neg p$$, $$p \implies q$$, $$p \iff q$$, $$\forall x$$, $$\exists y$$
+
+### Calculus Notation
+
+```markdown
+$$\frac{dy}{dx}$$ $$\frac{\partial f}{\partial x}$$ $$\nabla$$ $$\infty$$
+```
+
+Derivative: $$\frac{dy}{dx}$$, Partial: $$\frac{\partial f}{\partial x}$$, Gradient: $$\nabla f$$, Infinity: $$\infty$$
+
+## Configuration
+
+### Custom Error Color
+
+Customize how errors are displayed using `createMathPlugin`:
+
+```tsx title="chat.tsx" lineNumbers
+import { Streamdown } from 'streamdown';
+import { createMathPlugin } from '@streamdown/math';
+import 'katex/dist/katex.min.css';
+
+const math = createMathPlugin({
+  errorColor: '#dc2626',
+});
+
+export default function Page() {
+  return (
+    <Streamdown plugins={{ math }}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+### Complete Configuration Example
+
+```tsx title="chat.tsx" lineNumbers
+import { Streamdown } from 'streamdown';
+import { createMathPlugin } from '@streamdown/math';
+import 'katex/dist/katex.min.css';
+
+const math = createMathPlugin({
+  singleDollarTextMath: true, // Enable $...$ syntax (default: false)
+  errorColor: '#dc2626',      // Custom error color (default: "var(--color-muted-foreground)")
+});
+
+export default function Page() {
+  return (
+    <Streamdown plugins={{ math }}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+### Get CSS Path
+
+Use `getStyles()` to get the CSS path programmatically:
+
+```tsx
+import { math } from '@streamdown/math';
+
+const cssPath = math.getStyles?.();
+// "katex/dist/katex.min.css"
+```
+
+## Streaming Considerations
+
+### Incomplete Equations
+
+Streamdown's unterminated block parser handles incomplete equations gracefully:
+
+```markdown
+$$
+E = mc^
+```
+
+During streaming, the parser detects the incomplete block-level equation and adds the closing `$$` delimiter, ensuring proper rendering even before the equation is complete.
+
+### Inline vs Block Detection
+
+The parser distinguishes between inline and block math:
+
+- **Inline**: $$E = mc^2$$ (same line)
+- **Block**: Separate lines with newlines
+
+```markdown
+This is inline $$E = mc^2$$ math.
+
+$$
+E = mc^2
+$$
+
+This is block math.
+```
+
+## Common Issues
+
+### Escaping Backslashes
+
+In JavaScript/TypeScript strings, backslashes need to be escaped:
+
+```tsx
+// ❌ Wrong
+const markdown = "$\frac{1}{2}$";
+
+// ✅ Correct
+const markdown = "$$\\frac{1}{2}$$";
+
+// ✅ Or use template literals
+const markdown = `$$\frac{1}{2}$$`;
+```
+
+### Currency vs Math
+
+Streamdown uses `$$` for math to avoid conflicts with currency:
+
+```markdown
+This item costs $5 and that one costs $10. (These are currency symbols)
+
+This equation $$x = 5$$ is mathematical notation. (This is math)
+```
+
+### Spacing in Equations
+
+Use `\,` for thin space, `\:` for medium space, `\;` for thick space:
+
+```markdown
+$$\int f(x) \, dx$$
+```
+
+Better spacing: $$\int f(x) \, dx$$
+
+## Accessibility
+
+Mathematical expressions rendered by KaTeX include:
+
+- **MathML** - Machine-readable math representation
+- **Title Attributes** - LaTeX source in tooltips
+- **Semantic HTML** - Proper structure for screen readers
+- **Scalable Typography** - Math scales with text size settings
+
+## Plugin Interface
+
+The Math plugin implements the `MathPlugin` interface:
+
+```tsx
+interface MathPlugin {
+  name: "katex";
+  type: "math";
+  remarkPlugin: Pluggable;  // remark-math for parsing
+  rehypePlugin: Pluggable;  // rehype-katex for rendering
+  getStyles?: () => string; // Returns "katex/dist/katex.min.css"
+}
+```
+
+## Best Practices
+
+### Keep Equations Readable
+
+Break complex equations into steps:
+
+```markdown
+Start with the equation:
+
+$$
+f(x) = ax^2 + bx + c
+$$
+
+Complete the square:
+
+$$
+f(x) = a\left(x + \frac{b}{2a}\right)^2 + c - \frac{b^2}{4a}
+$$
+```
+
+### Add Context
+
+Explain your equations:
+
+```markdown
+The Pythagorean theorem states that for a right triangle:
+
+$$
+a^2 + b^2 = c^2
+$$
+
+where $$a$$ and $$b$$ are the legs and $$c$$ is the hypotenuse.
+```
+
+### Use Block Math for Complex Expressions
+
+Reserve inline math for simple expressions:
+
+```markdown
+✅ Good: The slope is $$m = \frac{y_2 - y_1}{x_2 - x_1}$$
+
+❌ Avoid: $$\int_{-\infty}^{\infty} e^{-x^2} \, dx = \sqrt{\pi}$$ in the middle of text
+
+✅ Better:
+
+$$
+\int_{-\infty}^{\infty} e^{-x^2} \, dx = \sqrt{\pi}
+$$
+```
+
+## Resources
+
+- [KaTeX Documentation](https://katex.org/docs/supported.html) - Complete list of supported functions
+- [KaTeX Support Table](https://katex.org/docs/support_table.html) - Feature compatibility
+- [LaTeX Math Symbols](https://www.overleaf.com/learn/latex/List_of_Greek_letters_and_math_symbols) - Symbol reference
+
+## Related Features
+
+- [Typography](/docs/typography) - Text styling that complements mathematical content
+- [Unterminated Block Parsing](/docs/termination) - How streaming works with equations
+- [GitHub Flavored Markdown](/docs/gfm) - Extended Markdown features

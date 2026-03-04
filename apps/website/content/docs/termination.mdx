@@ -245,7 +245,7 @@ const jokeHandler: RemendHandler = {
     }
     return text;
   },
-  priority: 80, // Runs after most built-ins (0-70)
+  priority: 80, // Runs after most built-ins (-10 to 70)
 };
 
 const result = remend(content, { handlers: [jokeHandler] });
@@ -261,10 +261,12 @@ Each handler has three properties:
 
 #### Execution Order
 
-Built-in handlers use priorities 0-70:
+Built-in handlers use priorities -10 to 70:
 
 | Handler | Priority |
 |---------|----------|
+| `comparisonOperators` | -10 |
+| `htmlTags` | -5 |
 | `setextHeadings` | 0 |
 | `links` | 10 |
 | `boldItalic` | 20 |

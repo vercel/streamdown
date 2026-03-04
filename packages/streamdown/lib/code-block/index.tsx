@@ -1,14 +1,6 @@
-import {
-  type HTMLAttributes,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import type { BundledLanguage } from "shiki";
-import { StreamdownContext } from "../../index";
-import { useCodePlugin } from "../plugin-context";
+import { type HTMLAttributes, lazy, Suspense, useMemo } from "react";
 import type { HighlightResult } from "../plugin-types";
+import { useCn } from "../prefix-context";
 import { CodeBlockBody } from "./body";
 import { CodeBlockContainer } from "./container";
 import { CodeBlockContext } from "./context";
@@ -16,21 +8,31 @@ import { CodeBlockHeader } from "./header";
 
 const TRAILING_NEWLINES_REGEX = /\n+$/;
 
-type CodeBlockProps = HTMLAttributes<HTMLPreElement> & {
+type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: string;
+  /** Whether the code block is still being streamed (incomplete) */
+  isIncomplete?: boolean;
+  /** Custom starting line number for line numbering (default: 1) */
+  startLine?: number;
 };
+
+const HighlightedCodeBlockBody = lazy(() =>
+  import("./highlighted-body").then((mod) => ({
+    default: mod.HighlightedCodeBlockBody,
+  }))
+);
 
 export const CodeBlock = ({
   code,
   language,
   className,
   children,
+  isIncomplete = false,
+  startLine,
   ...rest
 }: CodeBlockProps) => {
-  const { shikiTheme } = useContext(StreamdownContext);
-  const codePlugin = useCodePlugin();
-
+  const cn = useCn();
   // Remove trailing newlines to prevent empty line at end of code blocks
   const trimmedCode = useMemo(
     () => code.replace(TRAILING_NEWLINES_REGEX, ""),
@@ -55,49 +57,46 @@ export const CodeBlock = ({
     [trimmedCode]
   );
 
-  // Use raw as initial state
-  const [result, setResult] = useState<HighlightResult>(raw);
-
-  // Try to get cached result or subscribe to highlighting
-  useEffect(() => {
-    // If no code plugin, just use raw tokens (plain text)
-    if (!codePlugin) {
-      setResult(raw);
-      return;
-    }
-
-    const cachedResult = codePlugin.highlight(
-      {
-        code: trimmedCode,
-        language: language as BundledLanguage,
-        themes: shikiTheme,
-      },
-      (highlightedResult) => {
-        setResult(highlightedResult);
-      }
-    );
-
-    if (cachedResult) {
-      // Already cached, use it immediately
-      setResult(cachedResult);
-      return;
-    }
-
-    // Not cached - reset to raw tokens while waiting for highlighting
-    // This is critical for streaming: ensures we show current code, not stale tokens
-    setResult(raw);
-  }, [trimmedCode, language, shikiTheme, codePlugin, raw]);
-
   return (
     <CodeBlockContext.Provider value={{ code }}>
-      <CodeBlockContainer language={language}>
-        <CodeBlockHeader language={language}>{children}</CodeBlockHeader>
-        <CodeBlockBody
-          className={className}
-          language={language}
-          result={result}
-          {...rest}
-        />
+      <CodeBlockContainer isIncomplete={isIncomplete} language={language}>
+        <CodeBlockHeader language={language} />
+        {children ? (
+          <div
+            className={cn(
+              "pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end"
+            )}
+          >
+            <div
+              className={cn(
+                "pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur"
+              )}
+              data-streamdown="code-block-actions"
+            >
+              {children}
+            </div>
+          </div>
+        ) : null}
+        <Suspense
+          fallback={
+            <CodeBlockBody
+              className={className}
+              language={language}
+              result={raw}
+              startLine={startLine}
+              {...rest}
+            />
+          }
+        >
+          <HighlightedCodeBlockBody
+            className={className}
+            code={trimmedCode}
+            language={language}
+            raw={raw}
+            startLine={startLine}
+            {...rest}
+          />
+        </Suspense>
       </CodeBlockContainer>
     </CodeBlockContext.Provider>
   );

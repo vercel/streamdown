@@ -1,14 +1,16 @@
 import { type ComponentProps, type CSSProperties, memo, useMemo } from "react";
 import type { HighlightResult } from "../plugin-types";
-import { cn, getTokenStyle } from "../utils";
+import { useCn } from "../prefix-context";
+import { cn as baseCn } from "../utils";
 
-type CodeBlockBodyProps = ComponentProps<"pre"> & {
+type CodeBlockBodyProps = ComponentProps<"div"> & {
   result: HighlightResult;
   language: string;
+  startLine?: number;
 };
 
-// Memoize line numbers class string since it's constant
-const LINE_NUMBER_CLASSES = cn(
+// Base line numbers class string (merged without prefix for memoization)
+const LINE_NUMBER_CLASSES_BASE = baseCn(
   "block",
   "before:content-[counter(line)]",
   "before:inline-block",
@@ -42,7 +44,19 @@ const parseRootStyle = (rootStyle: string): Record<string, string> => {
 };
 
 export const CodeBlockBody = memo(
-  ({ children, result, language, className, ...rest }: CodeBlockBodyProps) => {
+  ({
+    children,
+    result,
+    language,
+    className,
+    startLine,
+    ...rest
+  }: CodeBlockBodyProps) => {
+    const cn = useCn();
+
+    // Prefix the pre-computed line number classes
+    const lineNumberClasses = useMemo(() => cn(LINE_NUMBER_CLASSES_BASE), [cn]);
+
     // Use CSS custom properties instead of direct inline styles so that
     // dark-mode Tailwind classes can override without !important.
     // This is necessary because !important syntax differs between Tailwind v3 and v4.
@@ -65,46 +79,95 @@ export const CodeBlockBody = memo(
     }, [result.bg, result.fg, result.rootStyle]);
 
     return (
-      <pre
+      <div
         className={cn(
           className,
-          "p-4 text-sm",
-          "bg-[var(--sdm-bg,transparent)]",
-          "dark:bg-[var(--shiki-dark-bg,var(--sdm-bg,transparent))]"
+          "overflow-hidden rounded-md border border-border bg-background p-4 text-sm"
         )}
         data-language={language}
         data-streamdown="code-block-body"
-        style={preStyle}
         {...rest}
       >
-        <code className="[counter-increment:line_0] [counter-reset:line]">
-          {result.tokens.map((row, index) => (
-            <span
-              className={LINE_NUMBER_CLASSES}
-              // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
-              key={index}
-            >
-              {row.map((token, tokenIndex) => (
-                <span
-                  className={cn(
-                    "text-[var(--sdm-c,inherit)]",
-                    "dark:text-[var(--shiki-dark,var(--sdm-c,inherit))]",
-                    token.bgColor && "bg-[var(--sdm-tbg)]",
-                    token.bgColor &&
-                      "dark:bg-[var(--shiki-dark-bg,var(--sdm-tbg))]"
-                  )}
-                  // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
-                  key={tokenIndex}
-                  style={getTokenStyle(token)}
-                  {...token.htmlAttrs}
-                >
-                  {token.content}
-                </span>
-              ))}
-            </span>
-          ))}
-        </code>
-      </pre>
+        <pre
+          className={cn(
+            className,
+            "bg-[var(--sdm-bg,inherit]",
+            "dark:bg-[var(--shiki-dark-bg,var(--sdm-bg,inherit)]"
+          )}
+          style={preStyle}
+        >
+          <code
+            className={cn("[counter-increment:line_0] [counter-reset:line]")}
+            style={
+              startLine && startLine > 1
+                ? { counterReset: `line ${startLine - 1}` }
+                : undefined
+            }
+          >
+            {result.tokens.map((row, index) => (
+              <span
+                className={lineNumberClasses}
+                // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
+                key={index}
+              >
+                {row.length === 0 || (row.length === 1 && row[0].content === "")
+                  ? // Empty line: insert newline to preserve copy behavior
+                    "\n"
+                  : // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: dual-theme token style mapping
+                    row.map((token, tokenIndex) => {
+                      // Shiki dual-theme tokens put direct CSS properties (color,
+                      // background-color) into htmlStyle alongside CSS custom
+                      // properties (--shiki-dark, etc). Direct properties as inline
+                      // styles override the Tailwind class-based dark mode approach,
+                      // so we redirect them to CSS custom properties instead.
+                      const tokenStyle: Record<string, string> = {};
+                      let hasBg = Boolean(token.bgColor);
+
+                      if (token.color) {
+                        tokenStyle["--sdm-c"] = token.color;
+                      }
+                      if (token.bgColor) {
+                        tokenStyle["--sdm-tbg"] = token.bgColor;
+                      }
+
+                      if (token.htmlStyle) {
+                        for (const [key, value] of Object.entries(
+                          token.htmlStyle
+                        )) {
+                          if (key === "color") {
+                            tokenStyle["--sdm-c"] = value;
+                          } else if (key === "background-color") {
+                            tokenStyle["--sdm-tbg"] = value;
+                            hasBg = true;
+                          } else {
+                            tokenStyle[key] = value;
+                          }
+                        }
+                      }
+
+                      return (
+                        <span
+                          className={cn(
+                            "text-[var(--sdm-c,inherit)]",
+                            "dark:text-[var(--shiki-dark,var(--sdm-c,inherit))]",
+                            hasBg && "bg-[var(--sdm-tbg)]",
+                            hasBg &&
+                              "dark:bg-[var(--shiki-dark-bg,var(--sdm-tbg))]"
+                          )}
+                          // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
+                          key={tokenIndex}
+                          style={tokenStyle as CSSProperties}
+                          {...token.htmlAttrs}
+                        >
+                          {token.content}
+                        </span>
+                      );
+                    })}
+              </span>
+            ))}
+          </code>
+        </pre>
+      </div>
     );
   },
   (prevProps, nextProps) => {
@@ -112,7 +175,8 @@ export const CodeBlockBody = memo(
     return (
       prevProps.result === nextProps.result &&
       prevProps.language === nextProps.language &&
-      prevProps.className === nextProps.className
+      prevProps.className === nextProps.className &&
+      prevProps.startLine === nextProps.startLine
     );
   }
 );

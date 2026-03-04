@@ -1,5 +1,61 @@
 # streamdown
 
+## 2.3.0
+
+### Minor Changes
+
+- 3657e42: Add `useIsCodeFenceIncomplete` hook for detecting incomplete code fences during streaming
+
+  Custom components can now detect when the code fence in their block is still being streamed. This is useful for deferring expensive renders (syntax highlighting, Mermaid diagrams) until the code block is complete.
+
+  ```tsx
+  import { useIsCodeFenceIncomplete } from "streamdown";
+
+  const MyCodeBlock = ({ children }) => {
+    const isIncomplete = useIsCodeFenceIncomplete();
+
+    if (isIncomplete) {
+      return <div>Loading code...</div>;
+    }
+
+    return (
+      <pre>
+        <code>{children}</code>
+      </pre>
+    );
+  };
+  ```
+
+  The hook returns `true` when:
+
+  - Streaming is active (`isAnimating={true}`)
+  - The component is in the last block being streamed
+  - That block has an unclosed code fence
+
+  The default code block component now uses this hook to set a `data-incomplete` attribute when incomplete, enabling CSS-based loading states.
+
+- 32fb079: fix: hide download button on broken images and display a custom "Image not available" message instead
+- d73d7bb: Make the action buttons in code block header sticky.
+  Ensures copy buttons remain accessible for long code blocks.
+  Improves usability when viewing large snippets.
+- 15645da: Move code block lazy loading to the highlighting layer so block shells render immediately with plain text content before syntax colors resolve. This improves visual stability and removes the spinner fallback for standard code blocks.
+
+### Patch Changes
+
+- 0987479: fix: codeblock highlight flicker while streaming
+- 5d438ca: Add support for copying table data as Markdown in TableCopyDropdown.
+  Introduces a Markdown copy option alongside existing formats.
+  Allows users to quickly copy tables in valid Markdown format.
+- ce9b4c2: Fix syntax highlighting
+- ba03332: Redesign Mermaid diagram
+- 6e91867: fix nested same-tag HTML block parsing in parseMarkdownIntoBlocks
+- 7f9127b: Add `normalizeHtmlIndentation` prop to prevent indented HTML tags from being treated as code blocks
+- fdef60d: Bump rehype-harden to fix "can't access property "type", node is undefined"
+- 1abbf1e: Redesign table
+- fb9f97c: handle custom tags with blank lines in content
+- Updated dependencies [6374fbf]
+  - remend@1.2.1
+
 ## 2.2.0
 
 ### Minor Changes

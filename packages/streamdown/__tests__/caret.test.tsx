@@ -345,7 +345,7 @@ describe("Caret Feature", () => {
       expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ▋"');
     });
 
-    it("should work with code blocks", () => {
+    it("should work with complete code blocks", () => {
       const { container } = render(
         <Streamdown caret="circle" isAnimating={true}>
           {`\`\`\`javascript
@@ -357,6 +357,94 @@ const x = 1;
       const wrapper = container.firstElementChild;
       const style = (wrapper as HTMLElement)?.style;
       expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ●"');
+    });
+
+    it("should hide caret when last block has incomplete code fence", () => {
+      const { container } = render(
+        <Streamdown caret="block" isAnimating={true}>
+          {`\`\`\`javascript
+const x = 1;`}
+        </Streamdown>
+      );
+
+      const wrapper = container.firstElementChild;
+      const style = (wrapper as HTMLElement)?.style;
+      expect(style?.getPropertyValue("--streamdown-caret")).toBe("");
+
+      const className = wrapper?.className || "";
+      expect(className).not.toContain("*:last:after:inline");
+    });
+
+    it("should restore caret when code fence completes", () => {
+      const { container, rerender } = render(
+        <Streamdown caret="block" isAnimating={true}>
+          {`\`\`\`javascript
+const x = 1;`}
+        </Streamdown>
+      );
+
+      let wrapper = container.firstElementChild;
+      let style = (wrapper as HTMLElement)?.style;
+      expect(style?.getPropertyValue("--streamdown-caret")).toBe("");
+
+      rerender(
+        <Streamdown caret="block" isAnimating={true}>
+          {`\`\`\`javascript
+const x = 1;
+\`\`\``}
+        </Streamdown>
+      );
+
+      wrapper = container.firstElementChild;
+      style = (wrapper as HTMLElement)?.style;
+      expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ▋"');
+    });
+
+    it("should hide caret when last block contains a table", () => {
+      const { container } = render(
+        <Streamdown caret="block" isAnimating={true}>
+          {`| Name | Age |
+| --- | --- |
+| Alice | 30 |`}
+        </Streamdown>
+      );
+
+      const wrapper = container.firstElementChild;
+      const style = (wrapper as HTMLElement)?.style;
+      expect(style?.getPropertyValue("--streamdown-caret")).toBe("");
+
+      const className = wrapper?.className || "";
+      expect(className).not.toContain("*:last:after:inline");
+    });
+
+    it("should hide caret when streaming an incomplete table", () => {
+      const { container } = render(
+        <Streamdown caret="block" isAnimating={true}>
+          {`| Name | Age |
+| --- | --- |`}
+        </Streamdown>
+      );
+
+      const wrapper = container.firstElementChild;
+      const style = (wrapper as HTMLElement)?.style;
+      expect(style?.getPropertyValue("--streamdown-caret")).toBe("");
+    });
+
+    it("should show caret when table is followed by regular text", () => {
+      const { container } = render(
+        <Streamdown caret="block" isAnimating={true}>
+          {`| Name | Age |
+| --- | --- |
+| Alice | 30 |
+
+Here is some text after the table`}
+        </Streamdown>
+      );
+
+      const wrapper = container.firstElementChild;
+      const style = (wrapper as HTMLElement)?.style;
+      // The last block is regular text, not a table, so caret should show
+      expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ▋"');
     });
   });
 

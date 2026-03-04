@@ -1,16 +1,22 @@
 import type { MermaidConfig } from "mermaid";
-import type { BundledLanguage, BundledTheme } from "shiki";
+import type {
+  BundledLanguage,
+  BundledTheme,
+  ThemeRegistrationAny,
+} from "shiki";
 import type { Pluggable } from "unified";
+
+export type ThemeInput = BundledTheme | ThemeRegistrationAny;
 
 /**
  * A single token in a highlighted line
  */
 export interface HighlightToken {
-  content: string;
-  color?: string;
   bgColor?: string;
-  htmlStyle?: Record<string, string>;
+  color?: string;
+  content: string;
   htmlAttrs?: Record<string, string>;
+  htmlStyle?: Record<string, string>;
   offset?: number;
 }
 
@@ -18,10 +24,10 @@ export interface HighlightToken {
  * Result from code highlighting (compatible with shiki's TokensResult)
  */
 export interface HighlightResult {
-  tokens: HighlightToken[][];
-  fg?: string;
   bg?: string;
+  fg?: string;
   rootStyle?: string | false;
+  tokens: HighlightToken[][];
 }
 
 /**
@@ -30,15 +36,21 @@ export interface HighlightResult {
 export interface HighlightOptions {
   code: string;
   language: BundledLanguage;
-  themes: [string, string];
+  themes: [ThemeInput, ThemeInput];
 }
 
 /**
  * Plugin for code syntax highlighting (Shiki)
  */
 export interface CodeHighlighterPlugin {
-  name: "shiki";
-  type: "code-highlighter";
+  /**
+   * Get list of supported languages
+   */
+  getSupportedLanguages: () => BundledLanguage[];
+  /**
+   * Get the configured themes
+   */
+  getThemes: () => [ThemeInput, ThemeInput];
   /**
    * Highlight code and return tokens
    * Returns null if highlighting not ready yet (async loading)
@@ -48,18 +60,12 @@ export interface CodeHighlighterPlugin {
     options: HighlightOptions,
     callback?: (result: HighlightResult) => void
   ) => HighlightResult | null;
+  name: "shiki";
   /**
    * Check if language is supported
    */
   supportsLanguage: (language: BundledLanguage) => boolean;
-  /**
-   * Get list of supported languages
-   */
-  getSupportedLanguages: () => BundledLanguage[];
-  /**
-   * Get the configured themes
-   */
-  getThemes: () => [BundledTheme, BundledTheme];
+  type: "code-highlighter";
 }
 
 /**
@@ -74,36 +80,36 @@ export interface MermaidInstance {
  * Plugin for diagram rendering (Mermaid)
  */
 export interface DiagramPlugin {
-  name: "mermaid";
-  type: "diagram";
-  /**
-   * Language identifier for code blocks
-   */
-  language: string;
   /**
    * Get the mermaid instance (initialized with optional config)
    */
   getMermaid: (config?: MermaidConfig) => MermaidInstance;
+  /**
+   * Language identifier for code blocks
+   */
+  language: string;
+  name: "mermaid";
+  type: "diagram";
 }
 
 /**
  * Plugin for math rendering (KaTeX)
  */
 export interface MathPlugin {
-  name: "katex";
-  type: "math";
   /**
-   * Get remark plugin for parsing math syntax
+   * Get CSS styles for math rendering (injected into head)
    */
-  remarkPlugin: Pluggable;
+  getStyles?: () => string;
+  name: "katex";
   /**
    * Get rehype plugin for rendering math
    */
   rehypePlugin: Pluggable;
   /**
-   * Get CSS styles for math rendering (injected into head)
+   * Get remark plugin for parsing math syntax
    */
-  getStyles?: () => string;
+  remarkPlugin: Pluggable;
+  type: "math";
 }
 
 /**
@@ -111,22 +117,22 @@ export interface MathPlugin {
  */
 export interface CjkPlugin {
   name: "cjk";
-  type: "cjk";
   /**
-   * Remark plugins that must run BEFORE remarkGfm
-   * (e.g., remark-cjk-friendly which modifies emphasis handling)
+   * @deprecated Use remarkPluginsBefore and remarkPluginsAfter instead
+   * All remark plugins (for backwards compatibility)
    */
-  remarkPluginsBefore: Pluggable[];
+  remarkPlugins: Pluggable[];
   /**
    * Remark plugins that must run AFTER remarkGfm
    * (e.g., autolink boundary splitting, strikethrough enhancements)
    */
   remarkPluginsAfter: Pluggable[];
   /**
-   * @deprecated Use remarkPluginsBefore and remarkPluginsAfter instead
-   * All remark plugins (for backwards compatibility)
+   * Remark plugins that must run BEFORE remarkGfm
+   * (e.g., remark-cjk-friendly which modifies emphasis handling)
    */
-  remarkPlugins: Pluggable[];
+  remarkPluginsBefore: Pluggable[];
+  type: "cjk";
 }
 
 /**
@@ -142,8 +148,8 @@ export type StreamdownPlugin =
  * Plugin configuration passed to Streamdown
  */
 export interface PluginConfig {
-  code?: CodeHighlighterPlugin;
-  mermaid?: DiagramPlugin;
-  math?: MathPlugin;
   cjk?: CjkPlugin;
+  code?: CodeHighlighterPlugin;
+  math?: MathPlugin;
+  mermaid?: DiagramPlugin;
 }

@@ -212,6 +212,64 @@ Some notes:
     expect(result).not.toMatch(trailingDoubleUnderscorePattern);
   });
 
+  it("should not add stray * from [*] in mermaid code blocks", () => {
+    const input = `Here's a state diagram:
+
+\`\`\`mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Loading: fetch()
+    Loading --> Success: 200 OK
+    Loading --> Error: 4xx/5xx
+    Error --> Loading: retry()
+    Success --> Idle: reset()
+\`\`\``;
+
+    const result = remend(input);
+    expect(result).toBe(input);
+  });
+
+  it("should not add stray * from [*] in incomplete mermaid code blocks (streaming)", () => {
+    const input = `Here's a state diagram:
+
+\`\`\`mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Loading: fetch()`;
+
+    const result = remend(input);
+    expect(result).toBe(input);
+  });
+
+  it("should not add stray * when emphasis exists outside code block with [*] inside", () => {
+    const input = `*Note:* Here's a state diagram:
+
+\`\`\`mermaid
+stateDiagram-v2
+    [*] --> Idle
+\`\`\``;
+
+    const result = remend(input);
+    expect(result).toBe(input);
+  });
+
+  it("should still complete emphasis when * is only outside code blocks", () => {
+    const input = `\`\`\`mermaid
+stateDiagram-v2
+    [*] --> Idle
+\`\`\`
+
+Here is *incomplete italic`;
+
+    const result = remend(input);
+    expect(result).toBe(`\`\`\`mermaid
+stateDiagram-v2
+    [*] --> Idle
+\`\`\`
+
+Here is *incomplete italic*`);
+  });
+
   it("should handle incomplete markdown after code block (#302)", () => {
     const text = `\`\`\`css
 code here

@@ -8,20 +8,20 @@ import type { Pluggable } from "unified";
  * Plugin for math rendering (KaTeX)
  */
 export interface MathPlugin {
-  name: "katex";
-  type: "math";
   /**
-   * Remark plugin for parsing math syntax
+   * Get CSS styles path for math rendering
    */
-  remarkPlugin: Pluggable;
+  getStyles?: () => string;
+  name: "katex";
   /**
    * Rehype plugin for rendering math
    */
   rehypePlugin: Pluggable;
   /**
-   * Get CSS styles path for math rendering
+   * Remark plugin for parsing math syntax
    */
-  getStyles?: () => string;
+  remarkPlugin: Pluggable;
+  type: "math";
 }
 
 /**
@@ -29,15 +29,15 @@ export interface MathPlugin {
  */
 export interface MathPluginOptions {
   /**
-   * Enable single dollar sign for inline math ($...$)
-   * @default false
-   */
-  singleDollarTextMath?: boolean;
-  /**
    * KaTeX error color
    * @default "var(--color-muted-foreground)"
    */
   errorColor?: string;
+  /**
+   * Enable single dollar sign for inline math ($...$)
+   * @default false
+   */
+  singleDollarTextMath?: boolean;
 }
 
 /**

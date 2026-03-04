@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
 interface ColumnProps {
-  title: string;
   children: ReactNode;
+  title: string;
 }
 
 export const Column = ({ title, children }: ColumnProps) => (

@@ -1,17 +1,19 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
-import { CheckIcon, CopyIcon } from "../icons";
-import { cn } from "../utils";
+import { useIcons } from "../icon-context";
+import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 import {
   extractTableDataFromElement,
   tableDataToCSV,
+  tableDataToMarkdown,
   tableDataToTSV,
 } from "./utils";
 
 export interface TableCopyDropdownProps {
   children?: React.ReactNode;
   className?: string;
-  onCopy?: (format: "csv" | "tsv") => void;
+  onCopy?: (format: "csv" | "tsv" | "md") => void;
   onError?: (error: Error) => void;
   timeout?: number;
 }
@@ -23,13 +25,15 @@ export const TableCopyDropdown = ({
   onError,
   timeout = 2000,
 }: TableCopyDropdownProps) => {
+  const cn = useCn();
   const [isOpen, setIsOpen] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef(0);
   const { isAnimating } = useContext(StreamdownContext);
+  const t = useTranslations();
 
-  const copyTableData = async (format: "csv" | "tsv") => {
+  const copyTableData = async (format: "csv" | "tsv" | "md") => {
     if (typeof window === "undefined" || !navigator?.clipboard?.write) {
       onError?.(new Error("Clipboard API not available"));
       return;
@@ -49,10 +53,14 @@ export const TableCopyDropdown = ({
       }
 
       const tableData = extractTableDataFromElement(tableElement);
-      const content =
-        format === "csv"
-          ? tableDataToCSV(tableData)
-          : tableDataToTSV(tableData);
+
+      const formatters = {
+        csv: tableDataToCSV,
+        tsv: tableDataToTSV,
+        md: tableDataToMarkdown,
+      };
+      const formatter = formatters[format] || tableDataToMarkdown;
+      const content = formatter(tableData);
 
       const clipboardItemData = new ClipboardItem({
         "text/plain": new Blob([content], { type: "text/plain" }),
@@ -86,10 +94,11 @@ export const TableCopyDropdown = ({
     };
   }, []);
 
-  const Icon = isCopied ? CheckIcon : CopyIcon;
+  const icons = useIcons();
+  const Icon = isCopied ? icons.CheckIcon : icons.CopyIcon;
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className={cn("relative")} ref={dropdownRef}>
       <button
         className={cn(
           "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
@@ -97,28 +106,46 @@ export const TableCopyDropdown = ({
         )}
         disabled={isAnimating}
         onClick={() => setIsOpen(!isOpen)}
-        title="Copy table"
+        title={t.copyTable}
         type="button"
       >
-        {children ?? <Icon size={14} />}
+        {children ?? <Icon height={14} width={14} />}
       </button>
       {isOpen ? (
-        <div className="absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg">
+        <div
+          className={cn(
+            "absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg"
+          )}
+        >
           <button
-            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
-            onClick={() => copyTableData("csv")}
-            title="Copy table as CSV"
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
+            onClick={() => copyTableData("md")}
+            title={t.copyTableAsMarkdown}
             type="button"
           >
-            CSV
+            {t.tableFormatMarkdown}
           </button>
           <button
-            className="w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
-            onClick={() => copyTableData("tsv")}
-            title="Copy table as TSV"
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
+            onClick={() => copyTableData("csv")}
+            title={t.copyTableAsCsv}
             type="button"
           >
-            TSV
+            {t.tableFormatCsv}
+          </button>
+          <button
+            className={cn(
+              "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
+            )}
+            onClick={() => copyTableData("tsv")}
+            title={t.copyTableAsTsv}
+            type="button"
+          >
+            {t.tableFormatTsv}
           </button>
         </div>
       ) : null}

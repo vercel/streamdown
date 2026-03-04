@@ -275,3 +275,189 @@ And an incomplete [link
     expect(markdown?.textContent).toBe("Content");
   });
 });
+
+describe("animation callbacks", () => {
+  it("fires onAnimationStart when isAnimating transitions false → true", () => {
+    const onAnimationStart = vi.fn();
+    const { rerender } = render(
+      <Streamdown isAnimating={false} onAnimationStart={onAnimationStart}>
+        content
+      </Streamdown>
+    );
+    expect(onAnimationStart).not.toHaveBeenCalled();
+
+    rerender(
+      <Streamdown isAnimating={true} onAnimationStart={onAnimationStart}>
+        content
+      </Streamdown>
+    );
+    expect(onAnimationStart).toHaveBeenCalledTimes(1);
+  });
+
+  it("fires onAnimationEnd when isAnimating transitions true → false", () => {
+    const onAnimationEnd = vi.fn();
+    const { rerender } = render(
+      <Streamdown isAnimating={true} onAnimationEnd={onAnimationEnd}>
+        content
+      </Streamdown>
+    );
+    expect(onAnimationEnd).not.toHaveBeenCalled();
+
+    rerender(
+      <Streamdown isAnimating={false} onAnimationEnd={onAnimationEnd}>
+        content
+      </Streamdown>
+    );
+    expect(onAnimationEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it("fires onAnimationStart on initial mount when isAnimating={true}", () => {
+    const onAnimationStart = vi.fn();
+    render(
+      <Streamdown isAnimating={true} onAnimationStart={onAnimationStart}>
+        content
+      </Streamdown>
+    );
+    expect(onAnimationStart).toHaveBeenCalledTimes(1);
+  });
+
+  it("does NOT fire onAnimationEnd on initial mount when isAnimating={false}", () => {
+    const onAnimationEnd = vi.fn();
+    render(
+      <Streamdown isAnimating={false} onAnimationEnd={onAnimationEnd}>
+        content
+      </Streamdown>
+    );
+    expect(onAnimationEnd).not.toHaveBeenCalled();
+  });
+
+  it("does not fire callbacks when isAnimating is unchanged across re-renders", () => {
+    const onAnimationStart = vi.fn();
+    const onAnimationEnd = vi.fn();
+    const { rerender } = render(
+      <Streamdown
+        isAnimating={true}
+        onAnimationEnd={onAnimationEnd}
+        onAnimationStart={onAnimationStart}
+      >
+        content
+      </Streamdown>
+    );
+    onAnimationStart.mockClear();
+
+    rerender(
+      <Streamdown
+        isAnimating={true}
+        onAnimationEnd={onAnimationEnd}
+        onAnimationStart={onAnimationStart}
+      >
+        updated content
+      </Streamdown>
+    );
+    expect(onAnimationStart).not.toHaveBeenCalled();
+    expect(onAnimationEnd).not.toHaveBeenCalled();
+  });
+
+  it("fires callbacks correctly across multiple animation cycles", () => {
+    const onAnimationStart = vi.fn();
+    const onAnimationEnd = vi.fn();
+    const { rerender } = render(
+      <Streamdown
+        isAnimating={false}
+        onAnimationEnd={onAnimationEnd}
+        onAnimationStart={onAnimationStart}
+      >
+        content
+      </Streamdown>
+    );
+
+    rerender(
+      <Streamdown
+        isAnimating={true}
+        onAnimationEnd={onAnimationEnd}
+        onAnimationStart={onAnimationStart}
+      >
+        content
+      </Streamdown>
+    );
+    rerender(
+      <Streamdown
+        isAnimating={false}
+        onAnimationEnd={onAnimationEnd}
+        onAnimationStart={onAnimationStart}
+      >
+        content
+      </Streamdown>
+    );
+    rerender(
+      <Streamdown
+        isAnimating={true}
+        onAnimationEnd={onAnimationEnd}
+        onAnimationStart={onAnimationStart}
+      >
+        content
+      </Streamdown>
+    );
+    rerender(
+      <Streamdown
+        isAnimating={false}
+        onAnimationEnd={onAnimationEnd}
+        onAnimationStart={onAnimationStart}
+      >
+        content
+      </Streamdown>
+    );
+
+    expect(onAnimationStart).toHaveBeenCalledTimes(2);
+    expect(onAnimationEnd).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not throw when callbacks are not provided and isAnimating toggles", () => {
+    const { rerender } = render(
+      <Streamdown isAnimating={false}>content</Streamdown>
+    );
+    expect(() => {
+      rerender(<Streamdown isAnimating={true}>content</Streamdown>);
+      rerender(<Streamdown isAnimating={false}>content</Streamdown>);
+    }).not.toThrow();
+  });
+
+  it('suppresses callbacks in mode="static"', () => {
+    const onAnimationStart = vi.fn();
+    const onAnimationEnd = vi.fn();
+    const { rerender } = render(
+      <Streamdown
+        isAnimating={false}
+        mode="static"
+        onAnimationEnd={onAnimationEnd}
+        onAnimationStart={onAnimationStart}
+      >
+        content
+      </Streamdown>
+    );
+
+    rerender(
+      <Streamdown
+        isAnimating={true}
+        mode="static"
+        onAnimationEnd={onAnimationEnd}
+        onAnimationStart={onAnimationStart}
+      >
+        content
+      </Streamdown>
+    );
+    rerender(
+      <Streamdown
+        isAnimating={false}
+        mode="static"
+        onAnimationEnd={onAnimationEnd}
+        onAnimationStart={onAnimationStart}
+      >
+        content
+      </Streamdown>
+    );
+
+    expect(onAnimationStart).not.toHaveBeenCalled();
+    expect(onAnimationEnd).not.toHaveBeenCalled();
+  });
+});

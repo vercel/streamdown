@@ -1,8 +1,10 @@
 import { useContext, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
-import { Maximize2Icon, XIcon } from "../icons";
+import { useIcons } from "../icon-context";
+import { useCn } from "../prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
-import { cn } from "../utils";
+import { useTranslations } from "../translations-context";
 import { TableCopyDropdown } from "./copy-dropdown";
 import { TableDownloadDropdown } from "./download-dropdown";
 
@@ -19,11 +21,18 @@ export const TableFullscreenButton = ({
   showCopy = true,
   showDownload = true,
 }: TableFullscreenButtonProps) => {
+  const { Maximize2Icon, XIcon } = useIcons();
+  const cn = useCn();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { isAnimating } = useContext(StreamdownContext);
+  const t = useTranslations();
 
-  const handleToggle = () => {
-    setIsFullscreen(!isFullscreen);
+  const handleOpen = () => {
+    setIsFullscreen(true);
+  };
+
+  const handleClose = () => {
+    setIsFullscreen(false);
   };
 
   useEffect(() => {
@@ -52,42 +61,72 @@ export const TableFullscreenButton = ({
           className
         )}
         disabled={isAnimating}
-        onClick={handleToggle}
-        title="View fullscreen"
+        onClick={handleOpen}
+        title={t.viewFullscreen}
         type="button"
       >
         <Maximize2Icon size={14} />
       </button>
 
-      {isFullscreen ? (
-        <div
-          className="fixed inset-0 z-50 flex flex-col bg-background"
-          data-streamdown="table-fullscreen"
-        >
-          <div className="flex items-center justify-end gap-1 p-4">
-            {showCopy ? <TableCopyDropdown /> : null}
-            {showDownload ? <TableDownloadDropdown /> : null}
-            <button
-              className="rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
-              onClick={handleToggle}
-              title="Exit fullscreen"
-              type="button"
+      {isFullscreen
+        ? createPortal(
+            // biome-ignore lint/a11y/useSemanticElements: "div is used as a fullscreen overlay"
+            <div
+              aria-label={t.viewFullscreen}
+              aria-modal="true"
+              className={cn(
+                "fixed inset-0 z-50 flex flex-col bg-background"
+              )}
+              data-streamdown="table-fullscreen"
+              onClick={handleClose}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  handleClose();
+                }
+              }}
+              role="dialog"
+              tabIndex={0}
             >
-              <XIcon size={20} />
-            </button>
-          </div>
-          <div
-            className="flex-1 overflow-auto p-4 pt-0 [&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10"
-          >
-            <table
-              className="w-full border-collapse border border-border"
-              data-streamdown="table"
-            >
-              {children}
-            </table>
-          </div>
-        </div>
-      ) : null}
+              {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
+              <div
+                className={cn("flex h-full flex-col")}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                role="presentation"
+              >
+                <div className={cn("flex items-center justify-end gap-1 p-4")}>
+                  {showCopy ? <TableCopyDropdown /> : null}
+                  {showDownload ? <TableDownloadDropdown /> : null}
+                  <button
+                    className={cn(
+                      "rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+                    )}
+                    onClick={handleClose}
+                    title={t.exitFullscreen}
+                    type="button"
+                  >
+                    <XIcon size={20} />
+                  </button>
+                </div>
+                <div
+                  className={cn(
+                    "flex-1 overflow-auto p-4 pt-0 [&_thead]:sticky [&_thead]:top-0 [&_thead]:z-10"
+                  )}
+                >
+                  <table
+                    className={cn(
+                      "w-full border-collapse border border-border"
+                    )}
+                    data-streamdown="table"
+                  >
+                    {children}
+                  </table>
+                </div>
+              </div>
+            </div>,
+            document.body
+          )
+        : null}
     </>
   );
 };

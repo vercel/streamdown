@@ -265,6 +265,49 @@ describe("CJK autolink edge cases", () => {
   });
 });
 
+describe("CJK autolink boundary plugin direct AST tests", () => {
+  const getPluginTransform = () => {
+    const plugin = cjk.remarkPluginsAfter[0] as () => (tree: Root) => void;
+    return plugin();
+  };
+
+  it("should skip link nodes without parent (defensive guard)", () => {
+    const transform = getPluginTransform();
+
+    // When root itself is a link, visit calls back with parent=undefined
+    const tree = {
+      type: "link",
+      url: "https://example.com。test",
+      children: [{ type: "text", value: "https://example.com。test" }],
+    } as unknown as Root;
+
+    transform(tree);
+
+    // Should be unchanged — the guard returns early
+    expect((tree as unknown as Link).url).toBe("https://example.com。test");
+  });
+
+  it("should skip autolink literals without recognized URL prefix", () => {
+    const transform = getPluginTransform();
+
+    const tree: Root = {
+      type: "root",
+      children: [
+        {
+          type: "link",
+          url: "ftp://example.com。test",
+          children: [{ type: "text", value: "ftp://example.com。test" }],
+        } as Link,
+      ],
+    };
+
+    transform(tree);
+
+    // Should be unchanged — non-http/mailto/www URLs are skipped
+    expect((tree.children[0] as Link).url).toBe("ftp://example.com。test");
+  });
+});
+
 describe("CJK punctuation boundary characters", () => {
   const CJK_PUNCTUATION = [
     "。", // Ideographic full stop

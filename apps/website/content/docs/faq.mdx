@@ -24,7 +24,7 @@ When `parseIncompleteMarkdown` is enabled (default), Streamdown uses the [remend
 
 ## Is Streamdown compatible with all react-markdown plugins?
 
-Streamdown supports both remark and rehype plugins, making it compatible with most react-markdown plugins. It includes popular plugins like remarkGfm, remarkMath, and rehypeKatex by default, and you can add your own through the `remarkPlugins` and `rehypePlugins` props.
+Streamdown supports both remark and rehype plugins, making it compatible with most react-markdown plugins. It includes `remarkGfm` by default, and supports additional plugins like `@streamdown/math` and `@streamdown/mermaid` through the `plugins` prop. You can also add custom remark and rehype plugins through the `remarkPlugins` and `rehypePlugins` props.
 
 ## Why do I get a `Package shiki can't be external` warning?
 
@@ -62,6 +62,19 @@ Add a `@source` directive to your `globals.css` file with the path to Streamdown
 
 ```css title="globals.css"
 @source "../node_modules/streamdown/dist/*.js";
+```
+
+If you install optional plugins, add their matching `@source` lines only for packages you've installed. See the plugin pages for exact paths and examples:
+
+- Code: [/docs/plugins/code](/docs/plugins/code)
+- CJK: [/docs/plugins/cjk](/docs/plugins/cjk)
+- Math: [/docs/plugins/math](/docs/plugins/math)
+- Mermaid: [/docs/plugins/mermaid](/docs/plugins/mermaid)
+
+Example: to include the code plugin, add this to `globals.css` (adjust the relative path as needed):
+
+```css title="globals.css"
+@source "../node_modules/@streamdown/code/dist/*.js";
 ```
 
 ### Tailwind v3

@@ -48,9 +48,11 @@ describe("mixed formatting", () => {
   });
 
   it("should handle deeply nested incomplete formatting", () => {
-    // Formats are closed in the order they're processed
+    // Formats are closed in the order they're processed.
+    // The ~~ isn't closed because it ends up inside the completed inline code span (`code ~~strike`),
+    // so remend correctly leaves it alone.
     expect(remend("**bold *italic `code ~~strike")).toBe(
-      "**bold *italic `code ~~strike*`~~"
+      "**bold *italic `code ~~strike*`"
     );
   });
 

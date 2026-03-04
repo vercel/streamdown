@@ -46,8 +46,9 @@ const handleIncompleteUrl = (
 };
 
 // Helper to find the first incomplete [ (for text-only mode)
+// Always returns a valid index since callers guarantee text[maxPos] is an incomplete [
 const findFirstIncompleteBracket = (text: string, maxPos: number): number => {
-  for (let j = 0; j <= maxPos; j++) {
+  for (let j = 0; j < maxPos; j++) {
     if (text[j] === "[" && !isInsideCodeBlock(text, j)) {
       // Skip if it's an image
       if (j > 0 && text[j - 1] === "!") {
@@ -69,7 +70,8 @@ const findFirstIncompleteBracket = (text: string, maxPos: number): number => {
       }
     }
   }
-  return -1;
+  // Fallback: the bracket at maxPos is always incomplete by contract
+  return maxPos;
 };
 
 // Helper function to handle incomplete link text (unclosed brackets)
@@ -97,13 +99,9 @@ const handleIncompleteText = (
     if (linkMode === "text-only") {
       // Find the first incomplete [ and strip just that bracket
       const firstIncomplete = findFirstIncompleteBracket(text, i);
-      if (firstIncomplete !== -1) {
-        return (
-          text.substring(0, firstIncomplete) +
-          text.substring(firstIncomplete + 1)
-        );
-      }
-      return `${beforeLink}${afterOpen}`;
+      return (
+        text.substring(0, firstIncomplete) + text.substring(firstIncomplete + 1)
+      );
     }
     // Preserve the text and close the link with a placeholder URL
     return `${text}](streamdown:incomplete-link)`;
@@ -123,14 +121,9 @@ const handleIncompleteText = (
     if (linkMode === "text-only") {
       // Find the first incomplete [ and strip just that bracket
       const firstIncomplete = findFirstIncompleteBracket(text, i);
-      if (firstIncomplete !== -1) {
-        return (
-          text.substring(0, firstIncomplete) +
-          text.substring(firstIncomplete + 1)
-        );
-      }
-      const linkText = text.substring(i + 1);
-      return `${beforeLink}${linkText}`;
+      return (
+        text.substring(0, firstIncomplete) + text.substring(firstIncomplete + 1)
+      );
     }
     return `${text}](streamdown:incomplete-link)`;
   }

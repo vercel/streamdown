@@ -27,10 +27,16 @@ export default function Page() {
 }
 ```
 
-The component only re-renders when:
-- The `children` prop (markdown content) changes
-- The `shikiTheme` prop changes
-- The `isAnimating` prop changes
+The component only re-renders when one of these props changes:
+- `children` (markdown content)
+- `shikiTheme`
+- `isAnimating`
+- `animated`
+- `mode`
+- `plugins`
+- `className`
+- `linkSafety`
+- `normalizeHtmlIndentation`
 
 All other prop changes are ignored, ensuring optimal performance.
 

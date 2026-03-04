@@ -5,11 +5,14 @@
     "index",
     "getting-started",
     "usage",
+    "migrate",
+    "faq",
+    "---Customization---",
     "configuration",
-    "plugins",
     "styling",
     "components",
-    "faq",
+    "---Plugins---",
+    "...plugins",
     "---Features---",
     "..."
   ]

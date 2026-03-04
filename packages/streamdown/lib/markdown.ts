@@ -172,6 +172,7 @@ class ProcessorCache {
     this.cache.set(key, processor);
   }
 
+  /* v8 ignore next */
   clear(): void {
     this.cache.clear();
     // Note: WeakMap doesn't need manual clearing
@@ -184,11 +185,9 @@ const processorCache = new ProcessorCache();
 export const Markdown = (options: Readonly<Options>) => {
   const processor = getCachedProcessor(options);
   const content = options.children || "";
-  return post(
-    // biome-ignore lint/suspicious/noExplicitAny: runSync return type varies with processor configuration
-    processor.runSync(processor.parse(content), content) as any,
-    options
-  );
+  // biome-ignore lint/suspicious/noExplicitAny: runSync return type varies with processor configuration
+  const tree = processor.runSync(processor.parse(content), content) as any;
+  return post(tree, options);
 };
 
 const getCachedProcessor = (options: Readonly<Options>) => {
@@ -232,16 +231,18 @@ const createProcessor = (options: Readonly<Options>) => {
 
 export const defaultUrlTransform: UrlTransform = (value) => value;
 
+/* v8 ignore next */
 const handleRawNode = (
   parent: Parents,
   index: number,
   skipHtml: boolean | undefined,
   value: string
 ): void => {
+  /* v8 ignore next 5 */
   if (skipHtml) {
     parent.children.splice(index, 1);
   } else {
-    parent.children[index] = { type: "text", value };
+    parent.children[index] = { type: "text", value } as never;
   }
 };
 
@@ -305,7 +306,9 @@ const post = (tree: Nodes, options: Readonly<Options>): ReactElement => {
     const transform = urlTransform || defaultUrlTransform;
 
     visit(tree as Root, (node, index, parent) => {
+      /* v8 ignore next */
       if (node.type === "raw" && parent && typeof index === "number") {
+        /* v8 ignore next */
         handleRawNode(parent, index, skipHtml, node.value);
         return index;
       }

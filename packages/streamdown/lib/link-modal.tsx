@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { CheckIcon, CopyIcon, ExternalLinkIcon, XIcon } from "./icons";
+import { useIcons } from "./icon-context";
+import { useCn } from "./prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "./scroll-lock";
-import { cn } from "./utils";
+import { useTranslations } from "./translations-context";
 
 interface LinkSafetyModalProps {
-  url: string;
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
+  url: string;
 }
 
 export const LinkSafetyModal = ({
@@ -16,7 +17,10 @@ export const LinkSafetyModal = ({
   onClose,
   onConfirm,
 }: LinkSafetyModalProps) => {
+  const { CheckIcon, CopyIcon, ExternalLinkIcon, XIcon } = useIcons();
+  const cn = useCn();
   const [copied, setCopied] = useState(false);
+  const t = useTranslations();
 
   const handleCopy = useCallback(async () => {
     try {
@@ -58,7 +62,9 @@ export const LinkSafetyModal = ({
   return (
     // biome-ignore lint/a11y/useSemanticElements: "div is used as a backdrop overlay"
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm"
+      className={cn(
+        "fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-sm"
+      )}
       data-streamdown="link-safety-modal"
       onClick={onClose}
       onKeyDown={(e) => {
@@ -71,27 +77,31 @@ export const LinkSafetyModal = ({
     >
       {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
       <div
-        className="relative mx-4 flex w-full max-w-md flex-col gap-4 rounded-xl border bg-background p-6 shadow-lg"
+        className={cn(
+          "relative mx-4 flex w-full max-w-md flex-col gap-4 rounded-xl border bg-background p-6 shadow-lg"
+        )}
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => e.stopPropagation()}
         role="presentation"
       >
         <button
-          className="absolute top-4 right-4 rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+          className={cn(
+            "absolute top-4 right-4 rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+          )}
           onClick={onClose}
-          title="Close"
+          title={t.close}
           type="button"
         >
           <XIcon size={16} />
         </button>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 font-semibold text-lg">
+        <div className={cn("flex flex-col gap-2")}>
+          <div className={cn("flex items-center gap-2 font-semibold text-lg")}>
             <ExternalLinkIcon size={20} />
-            <span>Open external link?</span>
+            <span>{t.openExternalLink}</span>
           </div>
-          <p className="text-muted-foreground text-sm">
-            You're about to visit an external website.
+          <p className={cn("text-muted-foreground text-sm")}>
+            {t.externalLinkWarning}
           </p>
         </div>
 
@@ -104,31 +114,35 @@ export const LinkSafetyModal = ({
           {url}
         </div>
 
-        <div className="flex gap-2">
+        <div className={cn("flex gap-2")}>
           <button
-            className="flex flex-1 items-center justify-center gap-2 rounded-md border bg-background px-4 py-2 font-medium text-sm transition-all hover:bg-muted"
+            className={cn(
+              "flex flex-1 items-center justify-center gap-2 rounded-md border bg-background px-4 py-2 font-medium text-sm transition-all hover:bg-muted"
+            )}
             onClick={handleCopy}
             type="button"
           >
             {copied ? (
               <>
                 <CheckIcon size={14} />
-                <span>Copied</span>
+                <span>{t.copied}</span>
               </>
             ) : (
               <>
                 <CopyIcon size={14} />
-                <span>Copy link</span>
+                <span>{t.copyLink}</span>
               </>
             )}
           </button>
           <button
-            className="flex flex-1 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground text-sm transition-all hover:bg-primary/90"
+            className={cn(
+              "flex flex-1 items-center justify-center gap-2 rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground text-sm transition-all hover:bg-primary/90"
+            )}
             onClick={handleConfirm}
             type="button"
           >
             <ExternalLinkIcon size={14} />
-            <span>Open link</span>
+            <span>{t.openLink}</span>
           </button>
         </div>
       </div>

@@ -19,11 +19,11 @@
     "bump-deps": "npx npm-check-updates -u --deep -x \"recharts\" && pnpm i"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.11",
+    "@biomejs/biome": "2.4.2",
     "@changesets/cli": "^2.29.8",
     "turbo": "^2.7.3",
     "typescript": "5.9.3",
-    "ultracite": "7.0.8"
+    "ultracite": "7.2.3"
   },
   "pnpm": {
     "overrides": {

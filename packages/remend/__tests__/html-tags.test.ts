@@ -62,6 +62,18 @@ describe("incomplete HTML tag stripping", () => {
     expect(remend("<div>Hello</div> <span")).toBe("<div>Hello</div>");
   });
 
+  it("should not add trailing underscore for HTML attributes with underscores", () => {
+    expect(remend('<a target="_blank" href="https://link.com">word</a>')).toBe(
+      '<a target="_blank" href="https://link.com">word</a>'
+    );
+    expect(remend('<a target="_blank">link</a>')).toBe(
+      '<a target="_blank">link</a>'
+    );
+    expect(remend('<iframe src="x" sandbox="allow_scripts">')).toBe(
+      '<iframe src="x" sandbox="allow_scripts">'
+    );
+  });
+
   it("should be disabled when htmlTags option is false", () => {
     expect(remend("Hello <div", { htmlTags: false })).toBe("Hello <div");
   });

@@ -307,6 +307,26 @@ Customize code block appearance with Shiki themes:
 
 See the [Code Blocks](/docs/code-blocks) documentation for more details on syntax highlighting customization.
 
+## Tailwind CSS prefix
+
+If your project uses Tailwind v4's `prefix()` feature to namespace utility classes, pass the same prefix to Streamdown so its internal classes match:
+
+```tsx title="app/page.tsx"
+<Streamdown prefix="tw">{markdown}</Streamdown>
+```
+
+With the matching Tailwind config:
+
+```css title="app/globals.css"
+@import "tailwindcss" prefix(tw);
+```
+
+This transforms all internal utility classes from `flex` to `tw:flex`, `items-center` to `tw:items-center`, and so on.
+
+<Callout type="warn">
+  The prefix also applies to user-supplied `className` values. If you pass `className="prose max-w-none"`, Streamdown outputs `tw:prose tw:max-w-none`.
+</Callout>
+
 ## Best Practices
 
 When customizing Streamdown styles, consider these best practices:

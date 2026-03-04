@@ -20,8 +20,16 @@ export const nav = [
     href: "/docs",
   },
   {
-    label: "AI Elements",
-    href: "https://ai-sdk.dev/elements",
+    label: "Features",
+    href: "/docs/animation",
+  },
+  {
+    label: "Plugins",
+    href: "/docs/plugins",
+  },
+  {
+    label: "Playground",
+    href: "/playground",
   },
 ];
 
@@ -35,7 +43,7 @@ export const suggestions = [
 export const title = "Streamdown Documentation";
 
 export const prompt =
-  "You are a helpful assistant specializing in answering questions about Streamdown, a drop-in replacement for react-markdown, designed for AI-powered streaming.";
+  "You are a helpful assistant specializing in answering questions about Streamdown - a markdown renderer designed for streaming content from AI models that is highly interactive, customizable, and easy to use.";
 
 export const translations = {
   en: {
@@ -45,4 +53,4 @@ export const translations = {
 
 export const basePath: string | undefined = undefined;
 
-export const siteId: string | undefined = "streamdown"
+export const siteId: string | undefined = "streamdown";

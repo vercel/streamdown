@@ -1,0 +1,253 @@
+---
+title: Internationalization
+description: Override default English labels with your own translations.
+type: reference
+summary: Localize all UI labels in Streamdown controls and modals.
+prerequisites:
+  - /docs/getting-started
+related:
+  - /docs/configuration
+  - /docs/interactivity
+---
+
+Streamdown ships with English labels for all interactive controls — copy buttons, download menus, link modals, and more. Override any label via the `translations` prop.
+
+## Basic usage
+
+Pass a partial translations object to replace specific labels:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  translations={{
+    copyCode: "Copiar código",
+    close: "Cerrar",
+    openLink: "Abrir enlace",
+    downloadImage: "Descargar imagen",
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+## Available translation keys
+
+### Code block
+
+<TypeTable
+  type={{
+    copyCode: {
+      description: "Tooltip for the code copy button",
+      type: "string",
+      default: '"Copy Code"',
+    },
+    downloadFile: {
+      description: "Tooltip for the file download button",
+      type: "string",
+      default: '"Download file"',
+    },
+  }}
+/>
+
+### Mermaid diagrams
+
+<TypeTable
+  type={{
+    downloadDiagram: {
+      description: "Label for the diagram download button",
+      type: "string",
+      default: '"Download diagram"',
+    },
+    downloadDiagramAsSvg: {
+      description: "Download diagram as SVG option",
+      type: "string",
+      default: '"Download diagram as SVG"',
+    },
+    downloadDiagramAsPng: {
+      description: "Download diagram as PNG option",
+      type: "string",
+      default: '"Download diagram as PNG"',
+    },
+    downloadDiagramAsMmd: {
+      description: "Download diagram as MMD option",
+      type: "string",
+      default: '"Download diagram as MMD"',
+    },
+    viewFullscreen: {
+      description: "Toggle fullscreen button label",
+      type: "string",
+      default: '"View fullscreen"',
+    },
+    exitFullscreen: {
+      description: "Exit fullscreen button label",
+      type: "string",
+      default: '"Exit fullscreen"',
+    },
+    mermaidFormatSvg: {
+      description: "Short format label for SVG",
+      type: "string",
+      default: '"SVG"',
+    },
+    mermaidFormatPng: {
+      description: "Short format label for PNG",
+      type: "string",
+      default: '"PNG"',
+    },
+    mermaidFormatMmd: {
+      description: "Short format label for MMD",
+      type: "string",
+      default: '"MMD"',
+    },
+  }}
+/>
+
+### Table
+
+<TypeTable
+  type={{
+    copyTable: {
+      description: "Label for the table copy button",
+      type: "string",
+      default: '"Copy table"',
+    },
+    copyTableAsMarkdown: {
+      description: "Copy as Markdown option",
+      type: "string",
+      default: '"Copy table as Markdown"',
+    },
+    copyTableAsCsv: {
+      description: "Copy as CSV option",
+      type: "string",
+      default: '"Copy table as CSV"',
+    },
+    copyTableAsTsv: {
+      description: "Copy as TSV option",
+      type: "string",
+      default: '"Copy table as TSV"',
+    },
+    downloadTable: {
+      description: "Label for the table download button",
+      type: "string",
+      default: '"Download table"',
+    },
+    downloadTableAsCsv: {
+      description: "Download table as CSV option",
+      type: "string",
+      default: '"Download table as CSV"',
+    },
+    downloadTableAsMarkdown: {
+      description: "Download table as Markdown option",
+      type: "string",
+      default: '"Download table as Markdown"',
+    },
+    tableFormatMarkdown: {
+      description: "Short format label for Markdown",
+      type: "string",
+      default: '"Markdown"',
+    },
+    tableFormatCsv: {
+      description: "Short format label for CSV",
+      type: "string",
+      default: '"CSV"',
+    },
+    tableFormatTsv: {
+      description: "Short format label for TSV",
+      type: "string",
+      default: '"TSV"',
+    },
+  }}
+/>
+
+### Image
+
+<TypeTable
+  type={{
+    imageNotAvailable: {
+      description: "Fallback text for broken images",
+      type: "string",
+      default: '"Image not available"',
+    },
+    downloadImage: {
+      description: "Tooltip for the image download button",
+      type: "string",
+      default: '"Download image"',
+    },
+  }}
+/>
+
+### Link modal
+
+<TypeTable
+  type={{
+    openExternalLink: {
+      description: "Modal title for external links",
+      type: "string",
+      default: '"Open external link?"',
+    },
+    externalLinkWarning: {
+      description: "Warning text in the link modal",
+      type: "string",
+      default: '"You\'re about to visit an external website."',
+    },
+    close: {
+      description: "Close button label",
+      type: "string",
+      default: '"Close"',
+    },
+    copyLink: {
+      description: "Copy link button label",
+      type: "string",
+      default: '"Copy link"',
+    },
+    copied: {
+      description: "Label shown after copying",
+      type: "string",
+      default: '"Copied"',
+    },
+    openLink: {
+      description: "Open link button label",
+      type: "string",
+      default: '"Open link"',
+    },
+  }}
+/>
+
+## Partial overrides
+
+The `translations` prop accepts `Partial<StreamdownTranslations>`. Any key you omit falls back to the built-in English default:
+
+```tsx title="app/page.tsx"
+// Only override what you need — everything else stays English
+<Streamdown translations={{ copyCode: "コピー", close: "閉じる" }}>
+  {markdown}
+</Streamdown>
+```
+
+## Access translations in custom components
+
+Use the `useTranslations` hook inside custom components to read the active translations:
+
+```tsx title="app/page.tsx"
+import { useTranslations } from "streamdown";
+
+function CustomCodeBlock({ children }) {
+  const translations = useTranslations();
+
+  return (
+    <div>
+      <button>{translations.copyCode}</button>
+      <pre><code>{children}</code></pre>
+    </div>
+  );
+}
+```
+
+## Exported types and values
+
+```tsx
+import type { StreamdownTranslations } from "streamdown";
+import { defaultTranslations, useTranslations } from "streamdown";
+```
+
+- `StreamdownTranslations` — interface with all 37 translation keys
+- `defaultTranslations` — the built-in English defaults
+- `useTranslations()` — React hook returning the active translations object

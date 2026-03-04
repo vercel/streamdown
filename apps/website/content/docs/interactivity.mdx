@@ -29,13 +29,13 @@ All interactive controls:
 
 ### Download Images
 
-Every image rendered by Streamdown includes a download button that appears on hover. A download button will be shown for images in the bottom-right corner on hover. Streamdown will automatically detect the image format and save it with the correct extension. The image's alt text will be used as the default filename.
+Every image rendered by Streamdown includes a download button that appears on hover. A download button will be shown for images in the bottom-right corner on hover. Streamdown will automatically detect the image format and save it with the correct extension. The image's alt text will be used as the default filename. The download button only appears once the image has loaded successfully. If an image fails to load, the download button is hidden and "Image not available" text is displayed instead.
 
 ## Table Buttons
 
 ### Copy Tables
 
-Tables include a copy button that opens a dropdown menu allowing users to copy the table data in multiple formats. The copy button will be shown for tables in the top-right corner on hover. Users can choose to copy the table as CSV or TSV (tab-separated values). The table is also copied as HTML for rich pasting into applications that support it.
+Tables include a copy button that opens a dropdown menu allowing users to copy the table data in multiple formats. The copy button will be shown for tables in the top-right corner on hover. Users can choose to copy the table as Markdown, CSV, or TSV (tab-separated values). The table is also copied as HTML for rich pasting into applications that support it.
 
 ### Download Tables
 
@@ -60,6 +60,10 @@ Mermaid diagrams include a copy button that allows users to copy the diagram sou
 ### Download Diagrams
 
 Mermaid diagrams can be downloaded as SVG files. The download button will be shown for Mermaid diagrams in the top-right corner on hover. The download button will download the rendered diagram as an SVG file. It will use "diagram.svg" as the default filename.
+
+### Pan and Zoom
+
+Mermaid diagrams support pan and zoom controls for navigating large or detailed diagrams. Enable this with the `panZoom` option in the `controls` prop. When enabled, users can zoom in/out and pan around the diagram for closer inspection.
 
 ### Fullscreen View
 

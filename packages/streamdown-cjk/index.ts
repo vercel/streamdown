@@ -12,22 +12,22 @@ import { visit } from "unist-util-visit";
  */
 export interface CjkPlugin {
   name: "cjk";
-  type: "cjk";
   /**
-   * Remark plugins that must run BEFORE remarkGfm
-   * (e.g., remark-cjk-friendly which modifies emphasis handling)
+   * @deprecated Use remarkPluginsBefore and remarkPluginsAfter instead
+   * All remark plugins (for backwards compatibility)
    */
-  remarkPluginsBefore: Pluggable[];
+  remarkPlugins: Pluggable[];
   /**
    * Remark plugins that must run AFTER remarkGfm
    * (e.g., autolink boundary splitting, strikethrough enhancements)
    */
   remarkPluginsAfter: Pluggable[];
   /**
-   * @deprecated Use remarkPluginsBefore and remarkPluginsAfter instead
-   * All remark plugins (for backwards compatibility)
+   * Remark plugins that must run BEFORE remarkGfm
+   * (e.g., remark-cjk-friendly which modifies emphasis handling)
    */
-  remarkPlugins: Pluggable[];
+  remarkPluginsBefore: Pluggable[];
+  type: "cjk";
 }
 
 // CJK punctuation characters that should not be part of autolinks

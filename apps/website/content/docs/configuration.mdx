@@ -30,6 +30,12 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
       description: "Configure which Markdown completions remend should perform",
       type: "RemendOptions",
     },
+    normalizeHtmlIndentation: {
+      description:
+        'Normalize indentation in HTML blocks to prevent 4+ space indents from being treated as code blocks',
+      type: 'boolean',
+      default: 'false',
+    },
     isAnimating: {
       description:
         "Indicates if content is currently streaming (disables copy buttons)",
@@ -46,6 +52,11 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
       default: "streaming",
       options: ["streaming", "static"],
     },
+    dir: {
+      description:
+        "Text direction. 'auto' detects per-block using the first strong character algorithm.",
+      type: '"auto" | "ltr" | "rtl"',
+    },
   }}
 />
 
@@ -55,8 +66,8 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
   type={{
     shikiTheme: {
       description:
-        "Light and dark themes for code syntax highlighting. Any Shiki theme name can be used - bundled themes (github-light, github-dark) load instantly, others load from CDN.",
-      type: "[string, string]",
+        "Light and dark themes for code syntax highlighting. Accepts bundled theme names or custom theme objects (ThemeRegistrationAny).",
+      type: "[ThemeInput, ThemeInput]",
       default: "['github-light', 'github-dark']",
     },
     components: {
@@ -68,18 +79,15 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
         "Custom HTML tags to allow through sanitization, with their permitted attributes. Use with 'components' to render custom tags like <ref> or <mention>. Only works with default rehype plugins.",
       type: "Record<string, string[]>",
     },
-  }}
-/>
-
-## CDN Props
-
-<TypeTable
-  type={{
-    cdnUrl: {
+    literalTagContent: {
       description:
-        "Base URL for loading Shiki languages/themes, Mermaid, and KaTeX CSS. Set to null to disable CDN loading (only bundled languages/themes will work, Mermaid will not load). See Self-Hosting CDN for self-hosting.",
-      type: "string | null",
-      default: "'https://streamdown.ai/cdn'",
+        "Tags whose children are treated as plain text (no markdown parsing). Useful when tag children contain underscores or asterisks that would otherwise be formatted. Tags must also appear in allowedTags.",
+      type: "string[]",
+    },
+    prefix: {
+      description:
+        "Tailwind CSS prefix prepended to all utility classes. Enables Tailwind v4 prefix() support. User-supplied className values are also prefixed.",
+      type: "string",
     },
   }}
 />
@@ -111,7 +119,7 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
 
 - `remark-gfm` - GitHub Flavored Markdown
 
-Math rendering and CJK support require installing separate plugins. See [Mathematics](/docs/mathematics) and [CJK Language Support](/docs/cjk-support).
+Math rendering and CJK support require installing separate plugins. See [Mathematics](/docs/plugins/math) and [CJK Language Support](/docs/plugins/cjk).
 
 ## Feature-Specific Props
 
@@ -125,6 +133,41 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       description: "Control visibility of interactive buttons",
       type: "ControlsConfig",
       default: "true",
+    },
+    animated: {
+      description: "Enable character-by-character animation for streaming content. See [Animation](/docs/animation).",
+      type: "boolean | AnimateOptions",
+    },
+    linkSafety: {
+      description: "Configure link safety modals for external URLs. See [Link Safety](/docs/link-safety).",
+      type: "LinkSafetyConfig",
+      default: "{ enabled: true }",
+    },
+    plugins: {
+      description: "Plugin configuration for math, mermaid, code highlighting, and CJK support. See [Plugins](/docs/plugins).",
+      type: "PluginConfig",
+    },
+    icons: {
+      description:
+        "Custom icons to override the defaults used in controls. See the IconMap interface for available keys.",
+      type: "Partial<IconMap>",
+    },
+    translations: {
+      description:
+        "Override default English labels for controls and modals. See [Internationalization](/docs/internationalization).",
+      type: "Partial<StreamdownTranslations>",
+    },
+    caret: {
+      description: "Show a caret indicator at the end of streaming content. See [Carets](/docs/carets).",
+      type: '"block" | "circle"',
+    },
+    onAnimationStart: {
+      description: "Called when isAnimating transitions from false to true. Suppressed in static mode. Memoize with useCallback. See [Animation](/docs/animation).",
+      type: "() => void",
+    },
+    onAnimationEnd: {
+      description: "Called when isAnimating transitions from true to false. Suppressed in static mode. Memoize with useCallback. See [Animation](/docs/animation).",
+      type: "() => void",
     },
   }}
 />
@@ -321,6 +364,16 @@ The `remend` prop configures which Markdown completions are performed during str
     },
     setextHeadings: {
       description: "Handle incomplete setext headings",
+      type: "boolean",
+      default: "true",
+    },
+    comparisonOperators: {
+      description: "Escape > as comparison operators in list items",
+      type: "boolean",
+      default: "true",
+    },
+    htmlTags: {
+      description: "Strip incomplete HTML tags at end of streaming text",
       type: "boolean",
       default: "true",
     },

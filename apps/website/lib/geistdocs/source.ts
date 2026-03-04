@@ -37,8 +37,7 @@ export const getLLMText = async (page: InferPageType<typeof source>) => {
     summary && `summary: ${summary}`,
     prerequisites?.length &&
       `prerequisites:\n${prerequisites.map((p) => `  - ${p}`).join("\n")}`,
-    related?.length &&
-      `related:\n${related.map((r) => `  - ${r}`).join("\n")}`,
+    related?.length && `related:\n${related.map((r) => `  - ${r}`).join("\n")}`,
     "---",
   ]
     .filter(Boolean)

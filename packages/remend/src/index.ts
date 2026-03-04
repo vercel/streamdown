@@ -29,10 +29,10 @@ export {
  * Handler function that transforms text during streaming.
  */
 export interface RemendHandler {
-  /** Unique identifier for this handler */
-  name: string;
   /** Handler function: takes text, returns modified text */
   handle: (text: string) => string;
+  /** Unique identifier for this handler */
+  name: string;
   /** Priority (lower runs first). Built-in priorities: 0-100. Default: 100 */
   priority?: number;
 }
@@ -43,36 +43,36 @@ export interface RemendHandler {
  * Set an option to `false` to disable that specific completion.
  */
 export interface RemendOptions {
-  /** Complete links and images (e.g., `[text](url` → `[text](streamdown:incomplete-link)`) */
-  links?: boolean;
+  /** Complete bold formatting (e.g., `**text` → `**text**`) */
+  bold?: boolean;
+  /** Complete bold-italic formatting (e.g., `***text` → `***text***`) */
+  boldItalic?: boolean;
+  /** Escape > as comparison operators in list items (e.g., `- > 25` → `- \> 25`) */
+  comparisonOperators?: boolean;
+  /** Custom handlers to extend remend */
+  handlers?: RemendHandler[];
+  /** Strip incomplete HTML tags at end of streaming text (e.g., `text <custom` → `text`) */
+  htmlTags?: boolean;
   /** Complete images (e.g., `![alt](url` → removed) */
   images?: boolean;
+  /** Complete inline code formatting (e.g., `` `code `` → `` `code` ``) */
+  inlineCode?: boolean;
+  /** Complete italic formatting (e.g., `*text` → `*text*` or `_text` → `_text_`) */
+  italic?: boolean;
+  /** Complete block KaTeX math (e.g., `$$equation` → `$$equation$$`) */
+  katex?: boolean;
   /**
    * How to handle incomplete links:
    * - `'protocol'`: Use `streamdown:incomplete-link` placeholder URL (default)
    * - `'text-only'`: Display only the link text without any link markup
    */
   linkMode?: "protocol" | "text-only";
-  /** Complete bold formatting (e.g., `**text` → `**text**`) */
-  bold?: boolean;
-  /** Complete italic formatting (e.g., `*text` → `*text*` or `_text` → `_text_`) */
-  italic?: boolean;
-  /** Complete bold-italic formatting (e.g., `***text` → `***text***`) */
-  boldItalic?: boolean;
-  /** Complete inline code formatting (e.g., `` `code `` → `` `code` ``) */
-  inlineCode?: boolean;
-  /** Complete strikethrough formatting (e.g., `~~text` → `~~text~~`) */
-  strikethrough?: boolean;
-  /** Complete block KaTeX math (e.g., `$$equation` → `$$equation$$`) */
-  katex?: boolean;
+  /** Complete links and images (e.g., `[text](url` → `[text](streamdown:incomplete-link)`) */
+  links?: boolean;
   /** Handle incomplete setext headings to prevent misinterpretation */
   setextHeadings?: boolean;
-  /** Escape > as comparison operators in list items (e.g., `- > 25` → `- \> 25`) */
-  comparisonOperators?: boolean;
-  /** Strip incomplete HTML tags at end of streaming text (e.g., `text <custom` → `text`) */
-  htmlTags?: boolean;
-  /** Custom handlers to extend remend */
-  handlers?: RemendHandler[];
+  /** Complete strikethrough formatting (e.g., `~~text` → `~~text~~`) */
+  strikethrough?: boolean;
 }
 
 // Helper to check if an option is enabled (defaults to true)
@@ -254,10 +254,9 @@ const remend = (text: string, options?: RemendOptions): string => {
   }));
 
   // Merge and sort by priority
+  // Priority is always set: built-ins have explicit priority, customs get default at line 252
   const allHandlers = [...enabledBuiltIns, ...customHandlers].sort(
-    (a, b) =>
-      (a.handler.priority ?? PRIORITY.DEFAULT) -
-      (b.handler.priority ?? PRIORITY.DEFAULT)
+    (a, b) => (a.handler.priority ?? 0) - (b.handler.priority ?? 0)
   );
 
   // Execute handlers in priority order

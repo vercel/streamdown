@@ -1,0 +1,140 @@
+---
+title: Built-in Plugins
+description: Learn about Streamdown's plugin system for rendering and processing.
+type: reference
+summary: Extend Streamdown with remark and rehype plugins for custom Markdown processing.
+prerequisites:
+  - /docs/getting-started
+related:
+  - /docs/components
+  - /docs/configuration
+---
+
+Streamdown uses a plugin architecture for processing Markdown content. Built-in plugins handle core Markdown processing.
+
+Built-in plugins process Markdown through two stages: Remark (Markdown syntax) and Rehype (HTML output). These are included and configured by default.
+
+## Remark plugins
+
+Remark plugins process Markdown syntax before it's converted to HTML.
+
+### remark-gfm
+
+Adds support for GitHub Flavored Markdown (GFM) features:
+
+- Tables
+- Task lists
+- Strikethrough text
+- Autolinks
+- Footnotes
+
+**Example:**
+
+```markdown
+| Feature | Supported |
+|---------|-----------|
+| Tables  | ✓         |
+| Tasks   | ✓         |
+
+- [x] Completed task
+- [ ] Pending task
+
+~~Strikethrough text~~
+```
+
+## Rehype plugins
+
+Rehype plugins process HTML after Markdown has been converted.
+
+### rehype-raw
+
+Allows raw HTML elements in Markdown to be preserved and rendered. This enables you to use HTML tags directly in your Markdown content.
+
+**Example:**
+
+```markdown
+This is **Markdown** with <span style="color: red">raw HTML</span>.
+
+<details>
+  <summary>Click to expand</summary>
+  Hidden content here
+</details>
+```
+
+### rehype-sanitize
+
+Sanitizes HTML to prevent XSS attacks and ensure safe rendering of user-generated content.
+
+- Removes potentially dangerous HTML elements and attributes
+- Configurable allow/deny lists
+- Safe by default
+
+### rehype-harden
+
+Additional security hardening for links and images, with control over allowed protocols and URL prefixes.
+
+**Default configuration:**
+
+```tsx
+{
+  allowedImagePrefixes: ['*'],
+  allowedLinkPrefixes: ['*'],
+  allowedProtocols: ['*'],
+  defaultOrigin: undefined,
+  allowDataImages: true,
+}
+```
+
+**Options:**
+
+- `allowedImagePrefixes`: Array of allowed URL prefixes for images (default: all)
+- `allowedLinkPrefixes`: Array of allowed URL prefixes for links (default: all)
+- `allowedProtocols`: Array of allowed URL protocols (default: all)
+- `defaultOrigin`: Origin to use for relative URLs
+- `allowDataImages`: Whether to allow data URLs for images (default: `true`)
+
+## Customize built-in plugins
+
+You can customize or replace the default plugins by passing your own plugin arrays:
+
+```tsx title="app/page.tsx"
+import { Streamdown, defaultRemarkPlugins, defaultRehypePlugins } from 'streamdown';
+
+// Use all defaults
+<Streamdown>{markdown}</Streamdown>
+
+// Customize plugins
+<Streamdown
+  remarkPlugins={[...Object.values(defaultRemarkPlugins), myCustomPlugin]}
+  rehypePlugins={[...Object.values(defaultRehypePlugins), anotherPlugin]}
+>
+  {markdown}
+</Streamdown>
+```
+
+**Accessing defaults:**
+
+```tsx
+import {
+  defaultRemarkPlugins,
+  defaultRehypePlugins,
+} from 'streamdown';
+
+// defaultRemarkPlugins contains:
+// - gfm: [remarkGfm, {}]
+
+// defaultRehypePlugins contains:
+// - raw: rehypeRaw
+// - sanitize: [rehypeSanitize, {}]
+// - harden: [harden, { /* config */ }]
+```
+
+## Plugin performance
+
+The plugins are optimized for performance:
+
+- Built-in plugin arrays are created once at module level for better caching
+- Shiki languages are lazy-loaded only when needed
+- Token results are cached to avoid re-highlighting
+- KaTeX CSS is only loaded when math syntax is used
+- Animation is excluded from the pipeline when `isAnimating` is `false`

@@ -1,4 +1,5 @@
 import { render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 
 describe("RTL (Right-to-Left) Support", () => {
@@ -134,5 +135,76 @@ Mixed paragraph: Hello مرحبا World عالم.
     expect(container.textContent).toBe(
       "The price is 50 ريال for the العربية edition"
     );
+  });
+
+  describe("dir prop", () => {
+    it('applies dir="rtl" to wrapper in static mode', () => {
+      const { container } = render(
+        <Streamdown dir="rtl" mode="static">
+          Hello world
+        </Streamdown>
+      );
+      const wrapper = container.querySelector("[dir]");
+      expect(wrapper?.getAttribute("dir")).toBe("rtl");
+    });
+
+    it('applies dir="ltr" to wrapper in static mode', () => {
+      const { container } = render(
+        <Streamdown dir="ltr" mode="static">
+          {"مرحبا بالعالم"}
+        </Streamdown>
+      );
+      const wrapper = container.querySelector("[dir]");
+      expect(wrapper?.getAttribute("dir")).toBe("ltr");
+    });
+
+    it("auto-detects RTL in static mode", () => {
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {"مرحبا بالعالم"}
+        </Streamdown>
+      );
+      const wrapper = container.querySelector("[dir]");
+      expect(wrapper?.getAttribute("dir")).toBe("rtl");
+    });
+
+    it("auto-detects LTR in static mode", () => {
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          Hello world
+        </Streamdown>
+      );
+      const wrapper = container.querySelector("[dir]");
+      expect(wrapper?.getAttribute("dir")).toBe("ltr");
+    });
+
+    it('applies per-block dir in streaming mode with dir="auto"', () => {
+      const content = "مرحبا بالعالم\n\nHello world";
+      const { container } = render(
+        <Streamdown dir="auto" mode="streaming">
+          {content}
+        </Streamdown>
+      );
+      const dirElements = container.querySelectorAll("[dir]");
+      expect(dirElements.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("uses display:contents on block dir wrapper", () => {
+      const { container } = render(
+        <Streamdown dir="rtl">{"مرحبا بالعالم"}</Streamdown>
+      );
+      const dirDivs = container.querySelectorAll("[dir='rtl']");
+      for (const el of dirDivs) {
+        if (el.tagName === "DIV" && el.closest("[class]") !== el) {
+          expect(el.style.display).toBe("contents");
+        }
+      }
+    });
+
+    it("does not add dir wrapper when dir is undefined", () => {
+      const { container } = render(<Streamdown>Hello world</Streamdown>);
+      const dirElements = container.querySelectorAll("[dir]");
+      expect(dirElements.length).toBe(0);
+    });
   });
 });
