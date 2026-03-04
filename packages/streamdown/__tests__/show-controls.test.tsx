@@ -295,9 +295,7 @@ graph TD
       const fullscreenBtn = tableWrapper?.querySelector(
         'button[title="View fullscreen"]'
       );
-      const copyBtn = tableWrapper?.querySelector(
-        'button[title="Copy table"]'
-      );
+      const copyBtn = tableWrapper?.querySelector('button[title="Copy table"]');
       const downloadBtn = tableWrapper?.querySelector(
         'button[title="Download table"]'
       );
@@ -322,9 +320,7 @@ graph TD
       const fullscreenBtn = tableWrapper?.querySelector(
         'button[title="View fullscreen"]'
       );
-      const copyBtn = tableWrapper?.querySelector(
-        'button[title="Copy table"]'
-      );
+      const copyBtn = tableWrapper?.querySelector('button[title="Copy table"]');
       const downloadBtn = tableWrapper?.querySelector(
         'button[title="Download table"]'
       );
@@ -336,9 +332,7 @@ graph TD
 
     it("should show all table controls with empty object config", () => {
       const { container } = render(
-        <Streamdown controls={{ table: {} }}>
-          {markdownWithTable}
-        </Streamdown>
+        <Streamdown controls={{ table: {} }}>{markdownWithTable}</Streamdown>
       );
 
       const tableWrapper = container.querySelector(
@@ -347,9 +341,7 @@ graph TD
       const fullscreenBtn = tableWrapper?.querySelector(
         'button[title="View fullscreen"]'
       );
-      const copyBtn = tableWrapper?.querySelector(
-        'button[title="Copy table"]'
-      );
+      const copyBtn = tableWrapper?.querySelector('button[title="Copy table"]');
       const downloadBtn = tableWrapper?.querySelector(
         'button[title="Download table"]'
       );

@@ -70,13 +70,11 @@ export const TableFullscreenButton = ({
 
       {isFullscreen
         ? createPortal(
-            // biome-ignore lint/a11y/useSemanticElements: "div is used as a fullscreen overlay"
+            // biome-ignore lint/a11y/noNoninteractiveElementInteractions: "dialog overlay needs click-to-dismiss"
             <div
               aria-label={t.viewFullscreen}
               aria-modal="true"
-              className={cn(
-                "fixed inset-0 z-50 flex flex-col bg-background"
-              )}
+              className={cn("fixed inset-0 z-50 flex flex-col bg-background")}
               data-streamdown="table-fullscreen"
               onClick={handleClose}
               onKeyDown={(e) => {
@@ -85,7 +83,6 @@ export const TableFullscreenButton = ({
                 }
               }}
               role="dialog"
-              tabIndex={0}
             >
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
               <div

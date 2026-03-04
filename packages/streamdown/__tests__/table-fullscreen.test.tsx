@@ -1,6 +1,6 @@
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Streamdown, StreamdownContext } from "../index";
+import { Streamdown } from "../index";
 
 const markdownWithTable = `
 | Name | Age |
@@ -11,9 +11,7 @@ const markdownWithTable = `
 
 describe("TableFullscreenButton", () => {
   it("should render fullscreen button when controls are enabled", () => {
-    const { container } = render(
-      <Streamdown>{markdownWithTable}</Streamdown>
-    );
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector('button[title="View fullscreen"]');
     expect(btn).toBeTruthy();
@@ -40,9 +38,7 @@ describe("TableFullscreenButton", () => {
   });
 
   it("should open fullscreen overlay on click", () => {
-    const { container } = render(
-      <Streamdown>{markdownWithTable}</Streamdown>
-    );
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
       'button[title="View fullscreen"]'
@@ -58,9 +54,7 @@ describe("TableFullscreenButton", () => {
   });
 
   it("should close fullscreen overlay on close button click", () => {
-    const { container } = render(
-      <Streamdown>{markdownWithTable}</Streamdown>
-    );
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
       'button[title="View fullscreen"]'
@@ -81,9 +75,7 @@ describe("TableFullscreenButton", () => {
   });
 
   it("should close fullscreen overlay on Escape key", () => {
-    const { container } = render(
-      <Streamdown>{markdownWithTable}</Streamdown>
-    );
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
       'button[title="View fullscreen"]'
@@ -102,9 +94,7 @@ describe("TableFullscreenButton", () => {
   });
 
   it("should lock body scroll when fullscreen is open", () => {
-    const { container } = render(
-      <Streamdown>{markdownWithTable}</Streamdown>
-    );
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
       'button[title="View fullscreen"]'
@@ -134,9 +124,7 @@ describe("TableFullscreenButton", () => {
   });
 
   it("should render table content inside fullscreen overlay", () => {
-    const { container } = render(
-      <Streamdown>{markdownWithTable}</Streamdown>
-    );
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
       'button[title="View fullscreen"]'
@@ -151,9 +139,7 @@ describe("TableFullscreenButton", () => {
   });
 
   it("should show copy and download controls in fullscreen", () => {
-    const { container } = render(
-      <Streamdown>{markdownWithTable}</Streamdown>
-    );
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
       'button[title="View fullscreen"]'
@@ -172,9 +158,7 @@ describe("TableFullscreenButton", () => {
   });
 
   it("should not close fullscreen when clicking controls inside overlay", () => {
-    const { container } = render(
-      <Streamdown>{markdownWithTable}</Streamdown>
-    );
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
       'button[title="View fullscreen"]'
@@ -198,9 +182,7 @@ describe("TableFullscreenButton", () => {
   });
 
   it("should not close fullscreen when clicking table content", () => {
-    const { container } = render(
-      <Streamdown>{markdownWithTable}</Streamdown>
-    );
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
       'button[title="View fullscreen"]'
@@ -222,9 +204,7 @@ describe("TableFullscreenButton", () => {
   });
 
   it("should close fullscreen overlay on backdrop click", () => {
-    const { container } = render(
-      <Streamdown>{markdownWithTable}</Streamdown>
-    );
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
       'button[title="View fullscreen"]'
@@ -236,7 +216,9 @@ describe("TableFullscreenButton", () => {
     );
     expect(overlay).toBeTruthy();
 
-    fireEvent.click(overlay!);
+    if (overlay) {
+      fireEvent.click(overlay);
+    }
 
     expect(
       document.querySelector('[data-streamdown="table-fullscreen"]')
@@ -244,9 +226,7 @@ describe("TableFullscreenButton", () => {
   });
 
   it("should have aria attributes on fullscreen overlay", () => {
-    const { container } = render(
-      <Streamdown>{markdownWithTable}</Streamdown>
-    );
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
       'button[title="View fullscreen"]'
