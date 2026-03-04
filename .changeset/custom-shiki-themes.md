@@ -3,4 +3,4 @@
 "@streamdown/code": minor
 ---
 
-Support custom Shiki themes in code blocks
+Add support for custom Shiki themes via a `themes` option on `createCodePlugin`, accepting a `[light, dark]` pair of bundled theme names or full theme registration objects.

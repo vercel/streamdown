@@ -2,4 +2,4 @@
 "streamdown": minor
 ---
 
-Add fullscreen view for tables with granular controls
+Add a fullscreen overlay for tables with Escape/backdrop-click to close and scroll locking, controlled via `controls.table.fullscreen`. Copy and download controls remain available in the fullscreen view.

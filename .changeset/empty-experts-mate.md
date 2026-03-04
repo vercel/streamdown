@@ -2,4 +2,4 @@
 "streamdown": minor
 ---
 
-Add a new virtual `inlineCode` component for easier component overrides
+Add a virtual `inlineCode` key to the `components` prop, allowing inline code spans to be styled independently from fenced code blocks without manually detecting block vs. inline context.
