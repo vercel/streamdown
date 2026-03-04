@@ -1,5 +1,11 @@
 # @streamdown/code
 
+## 1.1.0
+
+### Minor Changes
+
+- 01d27e9: Add support for custom Shiki themes via a `themes` option on `createCodePlugin`, accepting a `[light, dark]` pair of bundled theme names or full theme registration objects.
+
 ## 1.0.3
 
 ### Patch Changes
