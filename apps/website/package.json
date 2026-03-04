@@ -49,6 +49,9 @@
     "tailwind-merge": "^3.4.0",
     "use-stick-to-bottom": "^1.1.1",
     "vaul": "^1.1.2",
+    "vega": "^6.2.0",
+    "vega-embed": "^7.1.0",
+    "vega-lite": "^6.4.2",
     "zod": "^4.1.13"
   },
   "devDependencies": {

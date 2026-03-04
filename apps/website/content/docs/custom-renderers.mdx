@@ -1,0 +1,178 @@
+---
+title: Custom renderers
+description: Register custom renderers for arbitrary code fence languages.
+type: reference
+summary: Map code fence languages to custom React components for rendering charts, diagrams, and more.
+prerequisites:
+  - /docs/configuration
+related:
+  - /docs/plugins/mermaid
+  - /docs/code-blocks
+  - /docs/plugins
+---
+
+The `renderers` field on `PluginConfig` lets you register custom React components for arbitrary code fence languages. Use this to render Vega-Lite charts, D2 diagrams, PlantUML, or any other visualization — without forking Streamdown.
+
+Custom renderers take priority over default code blocks. If a custom renderer matches a language, it renders instead of the default `CodeBlock`. You can even override mermaid by registering a renderer for the `"mermaid"` language.
+
+## Usage
+
+Pass an array of `{ language, component }` objects to `plugins.renderers`:
+
+```tsx title="chat.tsx" lineNumbers
+import { Streamdown } from "streamdown";
+import type { CustomRendererProps } from "streamdown";
+
+const VegaLiteChart = ({ code, language, isIncomplete }: CustomRendererProps) => {
+  if (isIncomplete) {
+    return <div className="animate-pulse h-48 bg-muted rounded-lg" />;
+  }
+
+  const spec = JSON.parse(code);
+  return <MyVegaRenderer spec={spec} />;
+};
+
+export default function Chat() {
+  return (
+    <Streamdown
+      plugins={{
+        renderers: [
+          { language: "vega-lite", component: VegaLiteChart },
+        ],
+      }}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+## Multiple languages
+
+The `language` field accepts a string or an array of strings:
+
+```tsx
+const renderers = [
+  { language: ["vega", "vega-lite"], component: VegaLiteChart },
+  { language: "d2", component: D2Diagram },
+  { language: "plantuml", component: PlantUMLDiagram },
+];
+
+<Streamdown plugins={{ renderers }}>{markdown}</Streamdown>
+```
+
+## Custom renderer props
+
+Every custom renderer receives these props:
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `code` | `string` | The raw text content inside the code fence |
+| `language` | `string` | The language identifier from the code fence |
+| `isIncomplete` | `boolean` | `true` while the code fence is still being streamed |
+
+## Reusing built-in components
+
+Streamdown exports its internal code block components so your custom renderers can reuse them for consistent styling:
+
+```tsx title="vega-renderer.tsx" lineNumbers
+import {
+  CodeBlockContainer,
+  CodeBlockHeader,
+  CodeBlockCopyButton,
+  CodeBlockDownloadButton,
+} from "streamdown";
+import type { CustomRendererProps } from "streamdown";
+
+const VegaLiteChart = ({ code, language, isIncomplete }: CustomRendererProps) => {
+  if (isIncomplete) {
+    return (
+      <CodeBlockContainer language={language} isIncomplete>
+        <CodeBlockHeader language={language} />
+        <div className="animate-pulse h-48 bg-muted rounded-lg" />
+      </CodeBlockContainer>
+    );
+  }
+
+  return (
+    <CodeBlockContainer language={language}>
+      <CodeBlockHeader language={language} />
+      <MyVegaRenderer spec={JSON.parse(code)} />
+    </CodeBlockContainer>
+  );
+};
+```
+
+### Exported components
+
+| Component | Description |
+|-----------|-------------|
+| `CodeBlock` | Full code block with syntax highlighting and controls |
+| `CodeBlockContainer` | Outer wrapper with border and styling |
+| `CodeBlockHeader` | Language label header |
+| `CodeBlockCopyButton` | Copy-to-clipboard button |
+| `CodeBlockDownloadButton` | Download button |
+| `CodeBlockSkeleton` | Loading skeleton placeholder |
+
+## Streaming considerations
+
+During streaming, `isIncomplete` is `true` while the code fence is still being written. Use this to show a loading state and avoid parsing incomplete content:
+
+```tsx
+const VegaLiteChart = ({ code, isIncomplete }: CustomRendererProps) => {
+  if (isIncomplete) {
+    return (
+      <div className="animate-pulse h-48 bg-muted rounded-lg flex items-center justify-center">
+        <span className="text-muted-foreground">Loading chart...</span>
+      </div>
+    );
+  }
+
+  return <MyVegaRenderer spec={JSON.parse(code)} />;
+};
+```
+
+## Combining with other plugins
+
+Custom renderers work alongside all other plugins. The rendering priority is:
+
+1. Custom renderers (checked first)
+2. Mermaid plugin (if configured)
+3. Default code block with syntax highlighting
+
+```tsx
+import { mermaid } from "@streamdown/mermaid";
+import { code } from "@streamdown/code";
+
+<Streamdown
+  plugins={{
+    code,
+    mermaid,
+    renderers: [
+      { language: "vega-lite", component: VegaLiteChart },
+    ],
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+## Type reference
+
+```tsx
+interface CustomRendererProps {
+  code: string;
+  language: string;
+  isIncomplete: boolean;
+}
+
+interface CustomRenderer {
+  language: string | string[];
+  component: React.ComponentType<CustomRendererProps>;
+}
+
+interface PluginConfig {
+  // ...existing fields
+  renderers?: CustomRenderer[];
+}
+```

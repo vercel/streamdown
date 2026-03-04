@@ -6,6 +6,7 @@ import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
 import { SettingsIcon } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
+import type { CustomRenderer } from "streamdown";
 import { Streamdown } from "streamdown";
 import {
   Conversation,
@@ -26,6 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { VegaLiteRenderer } from "./vega-lite-renderer";
 
 const defaultMarkdown = `# Streamdown Feature Showcase
 
@@ -237,6 +239,35 @@ stateDiagram-v2
 
 ---
 
+## Vega-Lite Charts (Custom Renderer)
+
+\`\`\`vega-lite
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "A bar chart showing monthly revenue.",
+  "width": "container",
+  "height": 200,
+  "data": {
+    "values": [
+      {"month": "Jan", "revenue": 28},
+      {"month": "Feb", "revenue": 55},
+      {"month": "Mar", "revenue": 43},
+      {"month": "Apr", "revenue": 91},
+      {"month": "May", "revenue": 81},
+      {"month": "Jun", "revenue": 53}
+    ]
+  },
+  "mark": {"type": "bar", "cornerRadiusTopLeft": 4, "cornerRadiusTopRight": 4},
+  "encoding": {
+    "x": {"field": "month", "type": "nominal", "axis": {"labelAngle": 0}},
+    "y": {"field": "revenue", "type": "quantitative", "title": "Revenue ($k)"},
+    "color": {"field": "month", "type": "nominal", "legend": null, "scale": {"scheme": "tableau10"}}
+  }
+}
+\`\`\`
+
+---
+
 ## CJK Support
 
 **Chinese:** **你好世界。** Streamdown 支持中文排版。
@@ -257,6 +288,10 @@ Three dashes create a horizontal rule:
 
 &copy; 2025 &mdash; Streamdown &bull; Built with &hearts;
 `;
+
+const renderers: CustomRenderer[] = [
+  { language: ["vega-lite", "vega"], component: VegaLiteRenderer },
+];
 
 const PlaygroundEditor = () => {
   const [markdown, setMarkdown] = useState(defaultMarkdown);
@@ -540,7 +575,7 @@ const PlaygroundEditor = () => {
                 caret={caret === "none" ? undefined : caret}
                 isAnimating={isStreaming}
                 mode={mode}
-                plugins={{ code, mermaid, math, cjk }}
+                plugins={{ code, mermaid, math, cjk, renderers }}
               >
                 {markdown}
               </Streamdown>

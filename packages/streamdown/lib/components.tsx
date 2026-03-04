@@ -25,7 +25,7 @@ import { LinkSafetyModal } from "./link-modal";
 import type { ExtraProps, Options } from "./markdown";
 import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
-import { useMermaidPlugin } from "./plugin-context";
+import { useCustomRenderer, useMermaidPlugin } from "./plugin-context";
 import { useCn } from "./prefix-context";
 import { Table } from "./table";
 
@@ -770,6 +770,10 @@ const CodeComponent = ({
   const mermaidPlugin = useMermaidPlugin();
   const isBlockIncomplete = useIsCodeFenceIncomplete();
 
+  const match = className?.match(LANGUAGE_REGEX);
+  const language = match?.at(1) ?? "";
+  const customRenderer = useCustomRenderer(language);
+
   if (inline) {
     return (
       <code
@@ -784,9 +788,6 @@ const CodeComponent = ({
       </code>
     );
   }
-
-  const match = className?.match(LANGUAGE_REGEX);
-  const language = match?.at(1) ?? "";
 
   // Parse startLine from the code fence meta string (e.g. ```js startLine=10)
   const metastring = node?.properties?.metastring;
@@ -811,6 +812,19 @@ const CodeComponent = ({
     code = children.props.children;
   } else if (typeof children === "string") {
     code = children;
+  }
+
+  if (customRenderer) {
+    const CustomComponent = customRenderer.component;
+    return (
+      <Suspense fallback={<CodeBlockSkeleton />}>
+        <CustomComponent
+          code={code}
+          isIncomplete={isBlockIncomplete}
+          language={language}
+        />
+      </Suspense>
+    );
   }
 
   if (language === "mermaid" && mermaidPlugin) {

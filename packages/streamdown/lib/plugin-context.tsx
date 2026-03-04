@@ -44,3 +44,20 @@ export const useCjkPlugin = () => {
   const plugins = usePlugins();
   return plugins?.cjk ?? null;
 };
+
+/**
+ * Hook to find a custom renderer for a given language
+ */
+export const useCustomRenderer = (language: string) => {
+  const plugins = usePlugins();
+  if (!(plugins?.renderers && language)) {
+    return null;
+  }
+  return (
+    plugins.renderers.find((r) =>
+      Array.isArray(r.language)
+        ? r.language.includes(language)
+        : r.language === language
+    ) ?? null
+  );
+};

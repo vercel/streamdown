@@ -5,6 +5,7 @@ import {
   PluginContext,
   useCjkPlugin,
   useCodePlugin,
+  useCustomRenderer,
   useMathPlugin,
   useMermaidPlugin,
   usePlugins,
@@ -97,6 +98,68 @@ describe("plugin-context hooks", () => {
         wrapper: wrapper({ cjk: cjkPlugin }),
       });
       expect(result.current).toBe(cjkPlugin);
+    });
+  });
+
+  describe("useCustomRenderer", () => {
+    const DummyComponent = () => null;
+
+    it("should return null when no plugins", () => {
+      const { result } = renderHook(() => useCustomRenderer("vega"), {
+        wrapper: wrapper(null),
+      });
+      expect(result.current).toBeNull();
+    });
+
+    it("should return null when no renderers configured", () => {
+      const { result } = renderHook(() => useCustomRenderer("vega"), {
+        wrapper: wrapper({}),
+      });
+      expect(result.current).toBeNull();
+    });
+
+    it("should return null for empty language", () => {
+      const renderer = { language: "vega", component: DummyComponent };
+      const { result } = renderHook(() => useCustomRenderer(""), {
+        wrapper: wrapper({ renderers: [renderer] }),
+      });
+      expect(result.current).toBeNull();
+    });
+
+    it("should match string language", () => {
+      const renderer = { language: "vega", component: DummyComponent };
+      const { result } = renderHook(() => useCustomRenderer("vega"), {
+        wrapper: wrapper({ renderers: [renderer] }),
+      });
+      expect(result.current).toBe(renderer);
+    });
+
+    it("should match array language", () => {
+      const renderer = {
+        language: ["vega", "vega-lite"],
+        component: DummyComponent,
+      };
+      const { result } = renderHook(() => useCustomRenderer("vega-lite"), {
+        wrapper: wrapper({ renderers: [renderer] }),
+      });
+      expect(result.current).toBe(renderer);
+    });
+
+    it("should return null for non-matching language", () => {
+      const renderer = { language: "vega", component: DummyComponent };
+      const { result } = renderHook(() => useCustomRenderer("d2"), {
+        wrapper: wrapper({ renderers: [renderer] }),
+      });
+      expect(result.current).toBeNull();
+    });
+
+    it("should return first matching renderer", () => {
+      const renderer1 = { language: "vega", component: DummyComponent };
+      const renderer2 = { language: "vega", component: () => null };
+      const { result } = renderHook(() => useCustomRenderer("vega"), {
+        wrapper: wrapper({ renderers: [renderer1, renderer2] }),
+      });
+      expect(result.current).toBe(renderer1);
     });
   });
 });

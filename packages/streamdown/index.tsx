@@ -53,6 +53,12 @@ export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimatePlugin } from "./lib/animate";
 export { useIsCodeFenceIncomplete } from "./lib/block-incomplete-context";
+export { CodeBlock } from "./lib/code-block";
+export { CodeBlockContainer } from "./lib/code-block/container";
+export { CodeBlockCopyButton } from "./lib/code-block/copy-button";
+export { CodeBlockDownloadButton } from "./lib/code-block/download-button";
+export { CodeBlockHeader } from "./lib/code-block/header";
+export { CodeBlockSkeleton } from "./lib/code-block/skeleton";
 export { detectTextDirection } from "./lib/detect-direction";
 export type { IconMap } from "./lib/icon-context";
 export type {
@@ -66,6 +72,8 @@ export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
   CjkPlugin,
   CodeHighlighterPlugin,
+  CustomRenderer,
+  CustomRendererProps,
   DiagramPlugin,
   HighlightOptions,
   MathPlugin,

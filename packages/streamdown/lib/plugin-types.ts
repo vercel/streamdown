@@ -1,4 +1,5 @@
 import type { MermaidConfig } from "mermaid";
+import type React from "react";
 import type {
   BundledLanguage,
   BundledTheme,
@@ -144,6 +145,17 @@ export type StreamdownPlugin =
   | MathPlugin
   | CjkPlugin;
 
+export interface CustomRendererProps {
+  code: string;
+  isIncomplete: boolean;
+  language: string;
+}
+
+export interface CustomRenderer {
+  component: React.ComponentType<CustomRendererProps>;
+  language: string | string[];
+}
+
 /**
  * Plugin configuration passed to Streamdown
  */
@@ -152,4 +164,5 @@ export interface PluginConfig {
   code?: CodeHighlighterPlugin;
   math?: MathPlugin;
   mermaid?: DiagramPlugin;
+  renderers?: CustomRenderer[];
 }
