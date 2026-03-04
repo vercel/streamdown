@@ -193,17 +193,21 @@ The copy button:
 - Provides visual feedback on successful copy
 - Is automatically disabled during streaming (when `isAnimating={true}`)
 
-### Disable Copy Button
+### Disable Controls
 
-You can disable the copy button using the `controls` prop:
+Disable individual code block buttons using the `controls` prop:
 
 ```tsx title="app/page.tsx"
+// Hide the download button, keep copy
+<Streamdown controls={{ code: { download: false } }}>{markdown}</Streamdown>
+
+// Hide the copy button, keep download
+<Streamdown controls={{ code: { copy: false } }}>{markdown}</Streamdown>
+
+// Hide all code block controls
 <Streamdown controls={{ code: false }}>{markdown}</Streamdown>
-```
 
-Or disable all controls:
-
-```tsx title="app/page.tsx"
+// Hide all controls across all block types
 <Streamdown controls={false}>{markdown}</Streamdown>
 ```
 

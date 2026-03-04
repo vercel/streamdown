@@ -371,6 +371,76 @@ graph TD
     });
   });
 
+  describe("granular code configuration", () => {
+    it("should hide only download when code.download is false", async () => {
+      const { container } = render(
+        <Streamdown controls={{ code: { download: false } }}>
+          {markdownWithCode}
+        </Streamdown>
+      );
+
+      await waitFor(() => {
+        const actions = container.querySelector(
+          '[data-streamdown="code-block-actions"]'
+        );
+        const copyBtn = actions?.querySelector('button[title="Copy Code"]');
+        const downloadBtn = actions?.querySelector(
+          'button[title="Download file"]'
+        );
+
+        expect(copyBtn).toBeTruthy();
+        expect(downloadBtn).toBeFalsy();
+      });
+    });
+
+    it("should hide only copy when code.copy is false", async () => {
+      const { container } = render(
+        <Streamdown controls={{ code: { copy: false } }}>
+          {markdownWithCode}
+        </Streamdown>
+      );
+
+      await waitFor(() => {
+        const actions = container.querySelector(
+          '[data-streamdown="code-block-actions"]'
+        );
+        const copyBtn = actions?.querySelector('button[title="Copy Code"]');
+        const downloadBtn = actions?.querySelector(
+          'button[title="Download file"]'
+        );
+
+        expect(copyBtn).toBeFalsy();
+        expect(downloadBtn).toBeTruthy();
+      });
+    });
+
+    it("should show all code controls with empty object config", async () => {
+      const { container } = render(
+        <Streamdown controls={{ code: {} }}>{markdownWithCode}</Streamdown>
+      );
+
+      await waitFor(() => {
+        const buttons = container.querySelectorAll(
+          '[data-streamdown="code-block-actions"] button'
+        );
+        expect(buttons?.length).toBe(2);
+      });
+    });
+
+    it("should hide all code buttons when both are false", () => {
+      const { container } = render(
+        <Streamdown controls={{ code: { copy: false, download: false } }}>
+          {markdownWithCode}
+        </Streamdown>
+      );
+
+      const buttons = container.querySelectorAll(
+        '[data-streamdown="code-block-actions"] button'
+      );
+      expect(buttons?.length).toBe(0);
+    });
+  });
+
   describe("with custom components", () => {
     it("should respect controls with custom component overrides", () => {
       const CustomParagraph = ({ children }: any) => (

@@ -302,8 +302,15 @@ The `controls` prop can be configured granularly:
 ```tsx title="app/page.tsx"
 <Streamdown
   controls={{
-    table: true, // Show table download button
-    code: true, // Show code copy button
+    table: {
+      copy: true, // Show table copy button
+      download: true, // Show table download button
+      fullscreen: true, // Show table fullscreen button
+    },
+    code: {
+      copy: true, // Show code copy button
+      download: true, // Show code download button
+    },
     mermaid: {
       download: true, // Show mermaid download button
       copy: true, // Show mermaid copy button

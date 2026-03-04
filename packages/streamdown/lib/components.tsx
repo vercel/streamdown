@@ -120,6 +120,27 @@ const shouldShowTableControl = (
   return tableConfig[controlType] !== false;
 };
 
+const shouldShowCodeControl = (
+  config: ControlsConfig,
+  controlType: "copy" | "download"
+): boolean => {
+  if (typeof config === "boolean") {
+    return config;
+  }
+
+  const codeConfig = config.code;
+
+  if (codeConfig === false) {
+    return false;
+  }
+
+  if (codeConfig === true || codeConfig === undefined) {
+    return true;
+  }
+
+  return codeConfig[controlType] !== false;
+};
+
 const shouldShowMermaidControl = (
   config: ControlsConfig,
   controlType: "download" | "copy" | "fullscreen" | "panZoom"
@@ -900,6 +921,8 @@ const CodeComponent = ({
   }
 
   const showCodeControls = shouldShowControls(controlsConfig, "code");
+  const showDownload = shouldShowCodeControl(controlsConfig, "download");
+  const showCopy = shouldShowCodeControl(controlsConfig, "copy");
 
   return (
     <CodeBlock
@@ -911,8 +934,10 @@ const CodeComponent = ({
     >
       {showCodeControls ? (
         <>
-          <CodeBlockDownloadButton code={code} language={language} />
-          <CodeBlockCopyButton />
+          {showDownload ? (
+            <CodeBlockDownloadButton code={code} language={language} />
+          ) : null}
+          {showCopy ? <CodeBlockCopyButton /> : null}
         </>
       ) : null}
     </CodeBlock>

@@ -139,7 +139,12 @@ export type ControlsConfig =
             download?: boolean;
             fullscreen?: boolean;
           };
-      code?: boolean;
+      code?:
+        | boolean
+        | {
+            copy?: boolean;
+            download?: boolean;
+          };
       mermaid?:
         | boolean
         | {
