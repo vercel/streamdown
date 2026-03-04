@@ -6,7 +6,6 @@ describe("inlineCode virtual component", () => {
   it("should render custom inlineCode for inline code spans", async () => {
     const { container } = render(
       <Streamdown
-        mode="static"
         components={{
           inlineCode: ({ children, ...props }) => (
             <span data-testid="custom-inline" {...props}>
@@ -14,6 +13,7 @@ describe("inlineCode virtual component", () => {
             </span>
           ),
         }}
+        mode="static"
       >
         {"Use `useState` for state"}
       </Streamdown>
@@ -31,7 +31,6 @@ describe("inlineCode virtual component", () => {
   it("should not affect block code rendering", async () => {
     const { container } = render(
       <Streamdown
-        mode="static"
         components={{
           inlineCode: ({ children, ...props }) => (
             <span data-testid="custom-inline" {...props}>
@@ -39,6 +38,7 @@ describe("inlineCode virtual component", () => {
             </span>
           ),
         }}
+        mode="static"
       >
         {"```js\nconst x = 1;\n```"}
       </Streamdown>
@@ -61,7 +61,6 @@ describe("inlineCode virtual component", () => {
   it("should allow overriding both code and inlineCode independently", async () => {
     const { container } = render(
       <Streamdown
-        mode="static"
         components={{
           code: ({ children, ...props }) => (
             <code data-testid="custom-block" {...props}>
@@ -74,6 +73,7 @@ describe("inlineCode virtual component", () => {
             </span>
           ),
         }}
+        mode="static"
       >
         {"Use `hook` here\n\n```js\nconst x = 1;\n```"}
       </Streamdown>

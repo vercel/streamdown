@@ -2,6 +2,7 @@
 
 import type { MermaidConfig } from "mermaid";
 import {
+  type ComponentProps,
   type CSSProperties,
   createContext,
   createElement,
@@ -641,7 +642,7 @@ export const Streamdown = memo(
 
       if (inlineCode) {
         const BlockCode = merged.code;
-        merged.code = (props: Record<string, unknown>) => {
+        merged.code = (props: ComponentProps<"code"> & ExtraProps) => {
           const isInline = !("data-block" in props);
           if (isInline) {
             return createElement(inlineCode, props);
