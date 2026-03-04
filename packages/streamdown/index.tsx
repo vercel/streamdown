@@ -30,7 +30,7 @@ import { components as defaultComponents } from "./lib/components";
 import { detectTextDirection } from "./lib/detect-direction";
 import { type IconMap, IconProvider } from "./lib/icon-context";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
-import { Markdown, type Options } from "./lib/markdown";
+import { type ExtraProps, Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
 import type { PluginConfig, ThemeInput } from "./lib/plugin-types";
@@ -63,6 +63,7 @@ export { CodeBlockHeader } from "./lib/code-block/header";
 export { CodeBlockSkeleton } from "./lib/code-block/skeleton";
 export { detectTextDirection } from "./lib/detect-direction";
 export type { IconMap } from "./lib/icon-context";
+
 export type {
   AllowElement,
   Components,
