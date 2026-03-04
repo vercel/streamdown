@@ -281,6 +281,104 @@ graph TD
     });
   });
 
+  describe("granular table configuration", () => {
+    it("should hide only fullscreen when table.fullscreen is false", () => {
+      const { container } = render(
+        <Streamdown controls={{ table: { fullscreen: false } }}>
+          {markdownWithTable}
+        </Streamdown>
+      );
+
+      const tableWrapper = container.querySelector(
+        '[data-streamdown="table-wrapper"]'
+      );
+      const fullscreenBtn = tableWrapper?.querySelector(
+        'button[title="View fullscreen"]'
+      );
+      const copyBtn = tableWrapper?.querySelector(
+        'button[title="Copy table"]'
+      );
+      const downloadBtn = tableWrapper?.querySelector(
+        'button[title="Download table"]'
+      );
+
+      expect(fullscreenBtn).toBeFalsy();
+      expect(copyBtn).toBeTruthy();
+      expect(downloadBtn).toBeTruthy();
+    });
+
+    it("should show only copy when download and fullscreen are false", () => {
+      const { container } = render(
+        <Streamdown
+          controls={{ table: { download: false, fullscreen: false } }}
+        >
+          {markdownWithTable}
+        </Streamdown>
+      );
+
+      const tableWrapper = container.querySelector(
+        '[data-streamdown="table-wrapper"]'
+      );
+      const fullscreenBtn = tableWrapper?.querySelector(
+        'button[title="View fullscreen"]'
+      );
+      const copyBtn = tableWrapper?.querySelector(
+        'button[title="Copy table"]'
+      );
+      const downloadBtn = tableWrapper?.querySelector(
+        'button[title="Download table"]'
+      );
+
+      expect(fullscreenBtn).toBeFalsy();
+      expect(downloadBtn).toBeFalsy();
+      expect(copyBtn).toBeTruthy();
+    });
+
+    it("should show all table controls with empty object config", () => {
+      const { container } = render(
+        <Streamdown controls={{ table: {} }}>
+          {markdownWithTable}
+        </Streamdown>
+      );
+
+      const tableWrapper = container.querySelector(
+        '[data-streamdown="table-wrapper"]'
+      );
+      const fullscreenBtn = tableWrapper?.querySelector(
+        'button[title="View fullscreen"]'
+      );
+      const copyBtn = tableWrapper?.querySelector(
+        'button[title="Copy table"]'
+      );
+      const downloadBtn = tableWrapper?.querySelector(
+        'button[title="Download table"]'
+      );
+
+      expect(fullscreenBtn).toBeTruthy();
+      expect(copyBtn).toBeTruthy();
+      expect(downloadBtn).toBeTruthy();
+    });
+
+    it("should hide all table controls when no sub-controls are visible", () => {
+      const { container } = render(
+        <Streamdown
+          controls={{
+            table: { copy: false, download: false, fullscreen: false },
+          }}
+        >
+          {markdownWithTable}
+        </Streamdown>
+      );
+
+      const tableWrapper = container.querySelector(
+        '[data-streamdown="table-wrapper"]'
+      );
+      const buttons = tableWrapper?.querySelectorAll("button");
+
+      expect(buttons?.length).toBe(0);
+    });
+  });
+
   describe("with custom components", () => {
     it("should respect controls with custom component overrides", () => {
       const CustomParagraph = ({ children }: any) => (

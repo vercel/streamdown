@@ -75,6 +75,7 @@ Target specific elements via `[data-streamdown="..."]`:
 [data-streamdown="table-row"] { }
 [data-streamdown="table-header-cell"] { }
 [data-streamdown="table-cell"] { }
+[data-streamdown="table-fullscreen"] { }
 
 /* Other */
 [data-streamdown="superscript"] { }

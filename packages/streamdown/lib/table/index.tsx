@@ -2,18 +2,30 @@ import type { ComponentProps } from "react";
 import { useCn } from "../prefix-context";
 import { TableCopyDropdown } from "./copy-dropdown";
 import { TableDownloadDropdown } from "./download-dropdown";
+import { TableFullscreenButton } from "./fullscreen-button";
 
 type TableProps = ComponentProps<"table"> & {
   showControls?: boolean;
+  showCopy?: boolean;
+  showDownload?: boolean;
+  showFullscreen?: boolean;
 };
 
 export const Table = ({
   children,
   className,
   showControls,
+  showCopy = true,
+  showDownload = true,
+  showFullscreen = true,
   ...props
 }: TableProps) => {
   const cn = useCn();
+  const hasCopy = showControls && showCopy;
+  const hasDownload = showControls && showDownload;
+  const hasFullscreen = showControls && showFullscreen;
+  const hasAnyControl = hasCopy || hasDownload || hasFullscreen;
+
   return (
     <div
       className={cn(
@@ -21,15 +33,23 @@ export const Table = ({
       )}
       data-streamdown="table-wrapper"
     >
-      {showControls ? (
+      {hasAnyControl ? (
         <div className={cn("flex items-center justify-end gap-1")}>
-          <TableCopyDropdown />
-          <TableDownloadDropdown />
+          {hasCopy ? <TableCopyDropdown /> : null}
+          {hasDownload ? <TableDownloadDropdown /> : null}
+          {hasFullscreen ? (
+            <TableFullscreenButton
+              showCopy={hasCopy}
+              showDownload={hasDownload}
+            >
+              {children}
+            </TableFullscreenButton>
+          ) : null}
         </div>
       ) : null}
       <div
         className={cn(
-          "border-collapse overflow-x-auto overscroll-y-auto rounded-md border border-border bg-background"
+          "border-collapse overflow-x-auto overflow-y-auto rounded-md border border-border bg-background"
         )}
       >
         <table

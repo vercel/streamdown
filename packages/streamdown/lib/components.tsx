@@ -14,7 +14,7 @@ import {
   useState,
 } from "react";
 // BundledLanguage type removed - we now support any language string
-import { StreamdownContext } from "../index";
+import { type ControlsConfig, StreamdownContext } from "../index";
 import { useIsCodeFenceIncomplete } from "./block-incomplete-context";
 import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
@@ -89,15 +89,7 @@ function sameClassAndNode(
 }
 
 const shouldShowControls = (
-  config:
-    | boolean
-    | {
-        table?: boolean;
-        code?: boolean;
-        mermaid?:
-          | boolean
-          | { download?: boolean; copy?: boolean; fullscreen?: boolean };
-      },
+  config: ControlsConfig,
   type: "table" | "code" | "mermaid"
 ) => {
   if (typeof config === "boolean") {
@@ -107,21 +99,29 @@ const shouldShowControls = (
   return config[type] !== false;
 };
 
+const shouldShowTableControl = (
+  config: ControlsConfig,
+  controlType: "copy" | "download" | "fullscreen"
+): boolean => {
+  if (typeof config === "boolean") {
+    return config;
+  }
+
+  const tableConfig = config.table;
+
+  if (tableConfig === false) {
+    return false;
+  }
+
+  if (tableConfig === true || tableConfig === undefined) {
+    return true;
+  }
+
+  return tableConfig[controlType] !== false;
+};
+
 const shouldShowMermaidControl = (
-  config:
-    | boolean
-    | {
-        table?: boolean;
-        code?: boolean;
-        mermaid?:
-          | boolean
-          | {
-              download?: boolean;
-              copy?: boolean;
-              fullscreen?: boolean;
-              panZoom?: boolean;
-            };
-      },
+  config: ControlsConfig,
   controlType: "download" | "copy" | "fullscreen" | "panZoom"
 ): boolean => {
   if (typeof config === "boolean") {
@@ -443,14 +443,24 @@ const MemoH6 = memo<HeadingProps<"h6">>(
 );
 MemoH6.displayName = "MarkdownH6";
 
-type TableProps = WithNode<JSX.IntrinsicElements["table"]>;
-const MemoTable = memo<TableProps>(
-  ({ children, className, node, ...props }: TableProps) => {
+type TableComponentProps = WithNode<JSX.IntrinsicElements["table"]>;
+const MemoTable = memo<TableComponentProps>(
+  ({ children, className, node, ...props }: TableComponentProps) => {
     const { controls: controlsConfig } = useContext(StreamdownContext);
     const showTableControls = shouldShowControls(controlsConfig, "table");
+    const showCopy = shouldShowTableControl(controlsConfig, "copy");
+    const showDownload = shouldShowTableControl(controlsConfig, "download");
+    const showFullscreen = shouldShowTableControl(controlsConfig, "fullscreen");
 
     return (
-      <Table className={className} showControls={showTableControls} {...props}>
+      <Table
+        className={className}
+        showControls={showTableControls}
+        showCopy={showCopy}
+        showDownload={showDownload}
+        showFullscreen={showFullscreen}
+        {...props}
+      >
         {children}
       </Table>
     );

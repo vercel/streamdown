@@ -4,25 +4,9 @@ import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
+import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
 import { useTranslations } from "../translations-context";
 import { Mermaid } from ".";
-
-// Track the number of active fullscreen modals to manage body scroll lock correctly
-let activeFullscreenCount = 0;
-
-const lockBodyScroll = () => {
-  activeFullscreenCount += 1;
-  if (activeFullscreenCount === 1) {
-    document.body.style.overflow = "hidden";
-  }
-};
-
-const unlockBodyScroll = () => {
-  activeFullscreenCount = Math.max(0, activeFullscreenCount - 1);
-  if (activeFullscreenCount === 0) {
-    document.body.style.overflow = "";
-  }
-};
 
 type MermaidFullscreenButtonProps = ComponentProps<"button"> & {
   chart: string;
