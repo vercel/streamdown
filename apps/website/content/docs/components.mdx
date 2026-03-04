@@ -90,6 +90,41 @@ For example, the default `h2` component applies `mt-6 mb-2 font-semibold text-2x
 </Streamdown>
 ```
 
+## Inline Code
+
+When you override `components.code`, you replace the entire code rendering pipeline — inline code, block code with syntax highlighting, mermaid diagrams, and custom renderers. To customize only inline code without affecting block code, use the `inlineCode` virtual component:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  components={{
+    inlineCode: ({ children }) => (
+      <code className="rounded bg-violet-100 px-1.5 py-0.5 text-violet-800 text-sm">
+        {children}
+      </code>
+    ),
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+Block code blocks, syntax highlighting, and mermaid diagrams continue to work normally. You can also combine `inlineCode` with a custom `code` component — `inlineCode` handles inline spans while `code` handles fenced code blocks:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  components={{
+    inlineCode: ({ children }) => (
+      <code className="bg-violet-100 text-violet-800 rounded px-1 text-sm">
+        {children}
+      </code>
+    ),
+    code: MyCustomCodeBlock,
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
 ## Streaming State
 
 When streaming markdown, custom components can detect if their code fence is still being streamed using the `useIsCodeFenceIncomplete` hook. This is useful for expensive-to-render components where you want to show a loading state until the code block is complete.

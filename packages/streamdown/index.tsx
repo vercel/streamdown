@@ -4,6 +4,7 @@ import type { MermaidConfig } from "mermaid";
 import {
   type CSSProperties,
   createContext,
+  createElement,
   memo,
   useEffect,
   useId,
@@ -630,13 +631,27 @@ export const Streamdown = memo(
     );
 
     // Memoize merged components to avoid recreating on every render
-    const mergedComponents = useMemo(
-      () => ({
+    const mergedComponents = useMemo(() => {
+      const { inlineCode, ...userComponents } = components ?? {};
+
+      const merged = {
         ...defaultComponents,
-        ...components,
-      }),
-      [components]
-    );
+        ...userComponents,
+      };
+
+      if (inlineCode) {
+        const BlockCode = merged.code;
+        merged.code = (props: Record<string, unknown>) => {
+          const isInline = !("data-block" in props);
+          if (isInline) {
+            return createElement(inlineCode, props);
+          }
+          return BlockCode ? createElement(BlockCode, props) : null;
+        };
+      }
+
+      return merged;
+    }, [components]);
 
     // Merge plugin remark plugins (math, cjk)
     // Order: CJK before -> default (remarkGfm) -> CJK after -> math

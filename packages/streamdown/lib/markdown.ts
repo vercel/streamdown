@@ -33,6 +33,7 @@ export type Components = {
     | ComponentType<JSX.IntrinsicElements[Key] & ExtraProps>
     | keyof JSX.IntrinsicElements;
 } & {
+  inlineCode?: ComponentType<JSX.IntrinsicElements["code"] & ExtraProps>;
   [key: string]:
     | ComponentType<Record<string, unknown> & ExtraProps>
     | keyof JSX.IntrinsicElements
