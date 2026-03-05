@@ -1,5 +1,80 @@
 # streamdown
 
+## 2.4.0
+
+### Minor Changes
+
+- 5edff75: Clarified Tailwind `@source` configuration for Streamdown and optional plugins.
+  Updated documentation to keep the global `@source` for core `streamdown` only, move plugin `@source` guidance to plugin docs with examples, and add a caveat to include plugin entries only if installed.
+- 57cd3b5: Add support for custom starting line numbers in code blocks via the `startLine` meta option.
+
+  Code blocks can now specify a starting line number in the meta string:
+
+  ````md
+  ```js startLine=10
+  const x = 1;
+  ```
+  ````
+
+  This renders line numbers beginning at 10 instead of the default 1. The feature works by parsing the `startLine=N` value from the fenced-code meta string and applying `counter-reset: line N-1` to the `<code>` element.
+
+- 57cd3b5: Add support for customizing icons via the `icons` prop on `<Streamdown>`.
+
+  Users can override any subset of the built-in icons (copy, download, zoom, etc.) by passing a `Partial<IconMap>`:
+
+  ```tsx
+  import { Streamdown, type IconMap } from "streamdown";
+
+  <Streamdown icons={{ CheckIcon: MyCheckIcon }}>{content}</Streamdown>;
+  ```
+
+  Unspecified icons fall back to defaults.
+
+- 01d27e9: Add support for custom Shiki themes via a `themes` option on `createCodePlugin`, accepting a `[light, dark]` pair of bundled theme names or full theme registration objects.
+- 2cf559d: Add a virtual `inlineCode` key to the `components` prop, allowing inline code spans to be styled independently from fenced code blocks without manually detecting block vs. inline context.
+- 27c7b03: Export table action components (`TableCopyDropdown`, `TableDownloadButton`, `TableDownloadDropdown`) and utilities (`extractTableDataFromElement`, `tableDataToCSV`, `tableDataToTSV`, `tableDataToMarkdown`, `escapeMarkdownTableCell`, `TableData`), enabling custom table overrides to preserve copy/download interactivity.
+- fb76275: Add a fullscreen overlay for tables with Escape/backdrop-click to close and scroll locking, controlled via `controls.table.fullscreen`. Copy and download controls remain available in the fullscreen view.
+- b392fbe: Add `literalTagContent` prop that accepts an array of custom HTML tag names (e.g. `['mention']`) whose children should be treated as plain text, escaping markdown metacharacters so user-supplied labels aren't interpreted as formatting.
+- c4c86fa: Add a `dir` prop that accepts `"ltr"`, `"rtl"`, or `"auto"`. When set to `"auto"`, each block's text direction is detected by scanning for the first strong Unicode character (Arabic, Hebrew, Thaana, etc.).
+- 00872f0: Add a `prefix` prop that prepends a namespace to all generated Tailwind utility classes (e.g. `flex` becomes `tw:flex`), enabling Tailwind v4's `prefix()` feature for projects that need to avoid class name collisions.
+- 401b901: Add support for custom renderers via `plugins.renderers`, allowing fenced code blocks with specific languages to be rendered by a custom component instead of the default `CodeBlock`.
+
+### Patch Changes
+
+- f398611: Add `onAnimationStart` and `onAnimationEnd` callback props that fire when streaming animation begins and completes, useful for coordinating UI state with the animation lifecycle.
+- f2a7e51: Fix empty lines in syntax-highlighted code blocks collapsing into nothing by rendering a newline character for empty token rows, preserving whitespace when copying.
+- 9ba8511: fix: prevent ordered list animation retrigger during streaming
+
+  When streaming content contains multiple ordered (or unordered) lists,
+  the Marked lexer merges them into a single block. As each new item appears
+  the block is re-processed through the rehype pipeline, re-creating all
+  `data-sd-animate` spans. This caused already-visible characters to re-run
+  their CSS entry animation.
+
+  Two changes address the root cause:
+
+  1. **Per-block `prevContentLength` tracking** – each `Block` component
+     now keeps a `useRef` with the content length from its previous render.
+     Before each render the `animatePlugin.setPrevContentLength(n)` method is
+     called so the rehype plugin can detect which text-node positions were
+     already rendered. Characters whose cumulative hast-text offset falls below
+     the previous raw-content length receive `--sd-duration:0ms`, making them
+     appear in their final state instantly rather than re-animating.
+
+  2. **Stable `animatePlugin` reference** – the `animatePlugin` `useMemo`
+     now uses value-based dependency comparison instead of reference equality
+     for the `animated` option object. This prevents the plugin from being
+     recreated on every parent re-render when the user passes an inline object
+     literal (e.g. `animated={{ animation: 'fadeIn' }}`). A stable reference
+     is required because the rehype processor cache uses the function name as
+     its key and always returns the first cached closure; only the original
+     `config` object is ever read by the processor.
+
+- 781178b: Add a granular `controls` prop that accepts a boolean to toggle all controls or an object with per-feature flags (`code`, `table`, `mermaid`) for fine-grained control over copy, download, fullscreen, and pan/zoom buttons.
+- e129f09: Add a `translations` prop for overriding all user-facing UI strings (copy/download button labels, modal text, image alt text, etc.), enabling full i18n support.
+- Updated dependencies [a725579]
+  - remend@1.2.2
+
 ## 2.3.0
 
 ### Minor Changes

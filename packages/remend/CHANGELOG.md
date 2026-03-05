@@ -1,5 +1,11 @@
 # remend
 
+## 1.2.2
+
+### Patch Changes
+
+- a725579: Fix emphasis completion handlers incorrectly closing bold/italic/strikethrough markers that appear inside complete inline code spans (e.g. `` `**bold` `` no longer gets a stray `**` appended outside the backticks).
+
 ## 1.2.1
 
 ### Patch Changes
