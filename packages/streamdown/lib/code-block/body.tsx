@@ -82,7 +82,7 @@ export const CodeBlockBody = memo(
       <div
         className={cn(
           className,
-          "overflow-hidden rounded-md border border-border bg-background p-4 text-sm"
+          "overflow-x-auto rounded-md border border-border bg-background p-4 text-sm"
         )}
         data-language={language}
         data-streamdown="code-block-body"
