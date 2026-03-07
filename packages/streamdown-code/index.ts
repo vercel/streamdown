@@ -206,8 +206,15 @@ export function createCodePlugin(
         subs.add(callback);
       }
 
+      // Resolve language to 'text' if not supported (e.g. truncated identifier)
+      const safeLanguage: BundledLanguage = languageNames.has(
+        resolvedLanguage as BundledLanguage,
+      )
+        ? (resolvedLanguage as BundledLanguage)
+        : 'text';
+
       // Start highlighting in background
-      getHighlighter(resolvedLanguage as BundledLanguage, themes)
+      getHighlighter(safeLanguage, themes)
         .then((highlighter) => {
           const availableLangs = highlighter.getLoadedLanguages();
           const langToUse = (
