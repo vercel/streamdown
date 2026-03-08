@@ -8,6 +8,7 @@ import { CodeBlockBody } from "./body";
 type HighlightedCodeBlockBodyProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
   language: string;
+  maxHeight?: number | string;
   raw: HighlightResult;
   startLine?: number;
 };
@@ -15,6 +16,7 @@ type HighlightedCodeBlockBodyProps = HTMLAttributes<HTMLDivElement> & {
 export const HighlightedCodeBlockBody = ({
   code,
   language,
+  maxHeight,
   raw,
   className,
   startLine,
@@ -50,6 +52,7 @@ export const HighlightedCodeBlockBody = ({
     <CodeBlockBody
       className={className}
       language={language}
+      maxHeight={maxHeight}
       result={result}
       startLine={startLine}
       {...rest}

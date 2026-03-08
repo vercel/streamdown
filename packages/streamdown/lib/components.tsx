@@ -467,7 +467,8 @@ MemoH6.displayName = "MarkdownH6";
 type TableComponentProps = WithNode<JSX.IntrinsicElements["table"]>;
 const MemoTable = memo<TableComponentProps>(
   ({ children, className, node, ...props }: TableComponentProps) => {
-    const { controls: controlsConfig } = useContext(StreamdownContext);
+    const { controls: controlsConfig, tableMaxHeight } =
+      useContext(StreamdownContext);
     const showTableControls = shouldShowControls(controlsConfig, "table");
     const showCopy = shouldShowTableControl(controlsConfig, "copy");
     const showDownload = shouldShowTableControl(controlsConfig, "download");
@@ -476,6 +477,7 @@ const MemoTable = memo<TableComponentProps>(
     return (
       <Table
         className={className}
+        maxHeight={tableMaxHeight}
         showControls={showTableControls}
         showCopy={showCopy}
         showDownload={showDownload}
