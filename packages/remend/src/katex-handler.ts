@@ -53,6 +53,12 @@ const countSingleDollars = (text: string): number => {
 
 // Helper function to add closing $$ with appropriate formatting
 const addClosingKatex = (text: string): string => {
+  // If the text already ends with a partial closing $ (but not $$),
+  // just append one more $ to complete the $$ marker.
+  if (text.endsWith("$") && !text.endsWith("$$")) {
+    return `${text}$`;
+  }
+
   const firstDollarIndex = text.indexOf("$$");
   const hasNewlineAfterStart =
     firstDollarIndex !== -1 && text.indexOf("\n", firstDollarIndex) !== -1;

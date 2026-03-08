@@ -25,6 +25,13 @@ describe("KaTeX block formatting ($$)", () => {
     expect(remend("$$x + y = z")).toBe("$$x + y = z$$");
   });
 
+  it("should complete partial closing $ without duplicating it", () => {
+    // Streaming $$formula$$ cut off mid-close: block katex should produce $$formula$$
+    // not $$formula$$$ (which would then cause inline katex to append another $)
+    expect(remend("$$formula$")).toBe("$$formula$$");
+    expect(remend("$$x = y$")).toBe("$$x = y$$");
+  });
+
   it("should handle multiline block KaTeX", () => {
     expect(remend("$$\nx = 1\ny = 2")).toBe("$$\nx = 1\ny = 2\n$$");
   });
@@ -159,6 +166,13 @@ describe("KaTeX inline formatting ($) — opt-in via inlineKatex: true", () => {
     expect(remend("$$block$$ then $x + y", opts)).toBe(
       "$$block$$ then $x + y$"
     );
+  });
+
+  it("should not produce extra $ when block katex and inline katex both run", () => {
+    // $$formula$ is streaming $$formula$$ cut off mid-close
+    // block katex should fix it to $$formula$$, inline katex should leave it unchanged
+    expect(remend("$$formula$", opts)).toBe("$$formula$$");
+    expect(remend("$$x = y$", opts)).toBe("$$x = y$$");
   });
 });
 
