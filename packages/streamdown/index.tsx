@@ -196,8 +196,10 @@ export type StreamdownProps = Options & {
   className?: string;
   shikiTheme?: [ThemeInput, ThemeInput];
   mermaid?: MermaidOptions;
+  codeBlockMaxHeight?: number | string;
   controls?: ControlsConfig;
   isAnimating?: boolean;
+  tableMaxHeight?: number | string;
   animated?: boolean | AnimateOptions;
   caret?: keyof typeof carets;
   plugins?: PluginConfig;
@@ -276,21 +278,25 @@ const carets = {
 
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
+  codeBlockMaxHeight: number | string;
   controls: ControlsConfig;
   isAnimating: boolean;
   linkSafety?: LinkSafetyConfig;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
   shikiTheme: [ThemeInput, ThemeInput];
+  tableMaxHeight: number | string;
 }
 
 const defaultStreamdownContext: StreamdownContextType = {
+  codeBlockMaxHeight: 400,
   shikiTheme: ["github-light", "github-dark"],
   controls: true,
   isAnimating: false,
   mode: "streaming",
   mermaid: undefined,
   linkSafety: { enabled: true },
+  tableMaxHeight: 300,
 };
 
 export const StreamdownContext = createContext<StreamdownContextType>(
@@ -431,8 +437,10 @@ export const Streamdown = memo(
     className,
     shikiTheme = defaultShikiTheme,
     mermaid,
+    codeBlockMaxHeight = 400,
     controls = true,
     isAnimating = false,
+    tableMaxHeight = 300,
     animated,
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
@@ -601,14 +609,17 @@ export const Streamdown = memo(
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
       () => ({
+        codeBlockMaxHeight,
         shikiTheme: plugins?.code?.getThemes() ?? shikiTheme,
         controls,
         isAnimating,
         mode,
         mermaid,
         linkSafety,
+        tableMaxHeight,
       }),
       [
+        codeBlockMaxHeight,
         shikiTheme,
         controls,
         isAnimating,
@@ -616,6 +627,7 @@ export const Streamdown = memo(
         mermaid,
         linkSafety,
         plugins?.code,
+        tableMaxHeight,
       ]
     );
 
