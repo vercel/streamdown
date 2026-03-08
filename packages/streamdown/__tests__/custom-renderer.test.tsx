@@ -7,11 +7,13 @@ const VegaRenderer = ({
   code,
   language,
   isIncomplete,
+  meta,
 }: CustomRendererProps) => (
   <div
     data-code={code}
     data-incomplete={isIncomplete}
     data-language={language}
+    data-meta={meta}
     data-testid="vega-renderer"
   >
     Vega Chart: {code}
@@ -128,6 +130,42 @@ describe("Custom Renderers", () => {
         '[data-testid="vega-renderer"]'
       );
       expect(renderers.length).toBe(2);
+    });
+  });
+
+  it("passes meta prop when metastring is present", async () => {
+    const { container } = render(
+      <Streamdown
+        plugins={{
+          renderers: [{ language: "vega-lite", component: VegaRenderer }],
+        }}
+      >
+        {"```vega-lite startLine=5\ntest-code\n```"}
+      </Streamdown>
+    );
+
+    await waitFor(() => {
+      const renderer = container.querySelector('[data-testid="vega-renderer"]');
+      expect(renderer).toBeTruthy();
+      expect(renderer?.getAttribute("data-meta")).toBe("startLine=5");
+    });
+  });
+
+  it("passes meta as undefined when no metastring is present", async () => {
+    const { container } = render(
+      <Streamdown
+        plugins={{
+          renderers: [{ language: "vega-lite", component: VegaRenderer }],
+        }}
+      >
+        {"```vega-lite\ntest-code\n```"}
+      </Streamdown>
+    );
+
+    await waitFor(() => {
+      const renderer = container.querySelector('[data-testid="vega-renderer"]');
+      expect(renderer).toBeTruthy();
+      expect(renderer?.getAttribute("data-meta")).toBeNull();
     });
   });
 

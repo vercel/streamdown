@@ -149,6 +149,7 @@ export interface CustomRendererProps {
   code: string;
   isIncomplete: boolean;
   language: string;
+  meta?: string;
 }
 
 export interface CustomRenderer {
