@@ -8,7 +8,10 @@ import {
 } from "./emphasis-handlers";
 import { handleIncompleteHtmlTag } from "./html-tag-handler";
 import { handleIncompleteInlineCode } from "./inline-code-handler";
-import { handleIncompleteBlockKatex } from "./katex-handler";
+import {
+  handleIncompleteBlockKatex,
+  handleIncompleteInlineKatex,
+} from "./katex-handler";
 import {
   handleIncompleteLinksAndImages,
   type LinkMode,
@@ -39,7 +42,7 @@ export interface RemendHandler {
 
 /**
  * Configuration options for the remend function.
- * All options default to `true` when not specified.
+ * Options default to `true` unless noted otherwise.
  * Set an option to `false` to disable that specific completion.
  */
 export interface RemendOptions {
@@ -57,6 +60,11 @@ export interface RemendOptions {
   images?: boolean;
   /** Complete inline code formatting (e.g., `` `code `` → `` `code` ``) */
   inlineCode?: boolean;
+  /**
+   * Complete inline KaTeX math (e.g., `$equation` → `$equation$`).
+   * Defaults to `false` — single `$` is ambiguous with currency symbols.
+   */
+  inlineKatex?: boolean;
   /** Complete italic formatting (e.g., `*text` → `*text*` or `_text` → `_text_`) */
   italic?: boolean;
   /** Complete block KaTeX math (e.g., `$$equation` → `$$equation$$`) */
@@ -78,6 +86,9 @@ export interface RemendOptions {
 // Helper to check if an option is enabled (defaults to true)
 const isEnabled = (option: boolean | undefined): boolean => option !== false;
 
+// Helper to check if an opt-in option is enabled (defaults to false)
+const isOptedIn = (option: boolean | undefined): boolean => option === true;
+
 // Built-in handler priorities (0-100)
 const PRIORITY = {
   COMPARISON_OPERATORS: -10,
@@ -92,6 +103,7 @@ const PRIORITY = {
   INLINE_CODE: 50,
   STRIKETHROUGH: 60,
   KATEX: 70,
+  INLINE_KATEX: 75,
   DEFAULT: 100,
 } as const;
 
@@ -198,6 +210,14 @@ const builtInHandlers: Array<{
     },
     optionKey: "katex",
   },
+  {
+    handler: {
+      name: "inlineKatex",
+      handle: handleIncompleteInlineKatex,
+      priority: PRIORITY.INLINE_KATEX,
+    },
+    optionKey: "inlineKatex",
+  },
 ];
 
 // Also enable links handler when images option is enabled
@@ -214,6 +234,10 @@ const getEnabledBuiltInHandlers = (
       // Special case: links handler is enabled by either links or images option
       if (handler.name === "links") {
         return isEnabled(options?.links) || isEnabled(options?.images);
+      }
+      // Special case: inlineKatex is opt-in (defaults to false, unlike other options)
+      if (handler.name === "inlineKatex") {
+        return isOptedIn(options?.inlineKatex);
       }
       return isEnabled(options?.[optionKey]);
     })

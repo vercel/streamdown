@@ -91,6 +91,77 @@ describe("KaTeX inline formatting ($)", () => {
   });
 });
 
+describe("KaTeX inline formatting ($) — opt-in via inlineKatex: true", () => {
+  const opts = { inlineKatex: true };
+
+  it("should complete incomplete inline math", () => {
+    expect(remend("Text with $formula", opts)).toBe("Text with $formula$");
+    expect(remend("$incomplete", opts)).toBe("$incomplete$");
+  });
+
+  it("should keep already-complete inline math unchanged", () => {
+    const text = "Text with $x^2 + y^2 = z^2$";
+    expect(remend(text, opts)).toBe(text);
+  });
+
+  it("should complete the third unpaired dollar sign", () => {
+    expect(remend("$first$ and $second", opts)).toBe("$first$ and $second$");
+  });
+
+  it("should complete inline $ but not affect complete block $$", () => {
+    expect(remend("$$block$$ and $inline", opts)).toBe(
+      "$$block$$ and $inline$"
+    );
+  });
+
+  it("should handle streaming chunks of inline math", () => {
+    const chunks = [
+      "The formula",
+      "The formula $E",
+      "The formula $E = mc",
+      "The formula $E = mc^2",
+      "The formula $E = mc^2$ shows",
+    ];
+
+    expect(remend(chunks[0], opts)).toBe(chunks[0]);
+    expect(remend(chunks[1], opts)).toBe("The formula $E$");
+    expect(remend(chunks[2], opts)).toBe("The formula $E = mc$");
+    expect(remend(chunks[3], opts)).toBe("The formula $E = mc^2$");
+    expect(remend(chunks[4], opts)).toBe(chunks[4]);
+  });
+
+  it("should not complete escaped dollar signs", () => {
+    const text = "Price is \\$100";
+    expect(remend(text, opts)).toBe(text);
+  });
+
+  it("should not complete $ inside inline code", () => {
+    const text = "Use `$var` for variables and $formula";
+    expect(remend(text, opts)).toBe("Use `$var` for variables and $formula$");
+  });
+
+  it("should handle multiple complete inline math expressions", () => {
+    const text = "$a = 1$ and $b = 2$";
+    expect(remend(text, opts)).toBe(text);
+  });
+
+  it("should handle mixed inline and block math", () => {
+    const text = "Inline $x$ and block $$y$$";
+    expect(remend(text, opts)).toBe(text);
+  });
+
+  it("should not complete $ inside a complete block math expression", () => {
+    const text = "$$x_1 + y_2 = z_3$$";
+    expect(remend(text, opts)).toBe(text);
+  });
+
+  it("should handle $$ followed by an unmatched $", () => {
+    expect(remend("$$block$$ then $x + y", opts)).toBe(
+      "$$block$$ then $x + y$"
+    );
+  });
+});
+
 describe("math blocks with underscores", () => {
   it("should not complete underscores within inline math blocks", () => {
     const text = "The variable $x_1$ represents the first element";
