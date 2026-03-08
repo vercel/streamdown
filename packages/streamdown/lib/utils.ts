@@ -33,7 +33,10 @@ export const createCn = (prefix?: string): CnFunction => {
 };
 
 export const save = (filename: string, content: string | Blob, mimeType: string) => {
-  const blob = typeof content === 'string' ? new Blob([content], { type: mimeType }) : content;
+  // Prepend UTF-8 BOM for CSV so Excel on Windows correctly detects the encoding.
+  // Without it, Excel falls back to the system ANSI codepage and corrupts non-ASCII text.
+  const bom = typeof content === 'string' && mimeType.startsWith('text/csv') ? '\uFEFF' : '';
+  const blob = typeof content === 'string' ? new Blob([bom + content], { type: mimeType }) : content;
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

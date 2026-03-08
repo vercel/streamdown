@@ -173,4 +173,72 @@ describe("save utility", () => {
     expect(clickOrder).toBeLessThan(removeOrder);
     expect(removeOrder).toBeLessThan(revokeOrder);
   });
+
+  describe("CSV UTF-8 BOM handling", () => {
+    const OriginalBlob = globalThis.Blob;
+    let BlobSpy: ReturnType<typeof vi.spyOn>;
+    let lastBlobParts: BlobPart[] | undefined;
+
+    beforeEach(() => {
+      lastBlobParts = undefined;
+      BlobSpy = vi.spyOn(globalThis, "Blob").mockImplementation(function (
+        parts?: BlobPart[],
+        opts?: BlobPropertyBag
+      ) {
+        lastBlobParts = parts;
+        return new OriginalBlob(parts, opts);
+      } as unknown as typeof Blob);
+    });
+
+    afterEach(() => {
+      BlobSpy.mockRestore();
+    });
+
+    it("should prepend UTF-8 BOM to CSV string content", () => {
+      const content = "Name,Value\nשלום,עולם";
+      save("data.csv", content, "text/csv");
+      expect(lastBlobParts).toBeDefined();
+      expect(lastBlobParts![0]).toBe("\uFEFF" + content);
+    });
+
+    it("should NOT prepend BOM for non-CSV mime types", () => {
+      const content = "plain text";
+      save("file.txt", content, "text/plain");
+      expect(lastBlobParts).toBeDefined();
+      expect(lastBlobParts![0]).toBe(content);
+    });
+
+    it("should NOT prepend BOM when content is already a Blob", () => {
+      // Create the blob before the spy so this construction doesn't count
+      const content = new OriginalBlob(["Name,Value\nשלום,עולם"], { type: "text/csv" });
+      BlobSpy.mockClear();
+      lastBlobParts = undefined;
+
+      save("data.csv", content, "text/csv");
+
+      // When a Blob is passed, it is used as-is — Blob constructor must not be called again
+      expect(BlobSpy).not.toHaveBeenCalled();
+      expect(createObjectURLSpy).toHaveBeenCalledWith(content);
+    });
+
+    it("should correctly include non-ASCII CSV content after the BOM", () => {
+      const content = "שם,ערך\nשלום,עולם";
+      save("hebrew.csv", content, "text/csv");
+      expect(lastBlobParts).toBeDefined();
+      expect(lastBlobParts![0]).toBe("\uFEFF" + content);
+    });
+
+    it("should prepend BOM for text/csv with charset parameter", () => {
+      const content = "Name,Value\nשלום,עולם";
+      save("data.csv", content, "text/csv; charset=utf-8");
+      expect(lastBlobParts).toBeDefined();
+      expect(lastBlobParts![0]).toBe("\uFEFF" + content);
+    });
+
+    it("should produce only BOM for empty CSV content", () => {
+      save("empty.csv", "", "text/csv");
+      expect(lastBlobParts).toBeDefined();
+      expect(lastBlobParts![0]).toBe("\uFEFF");
+    });
+  });
 });
