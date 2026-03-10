@@ -65,6 +65,44 @@ monorepo/
 
 Adjust the number of `../` segments based on where your CSS file lives relative to the root `node_modules`. If you install Streamdown plugins, add their respective `@source` entries only when those packages are installed.
 
+### CSS Custom Properties (Design Tokens)
+
+Streamdown components are built using shadcn/ui's design system and rely on CSS custom properties for colors, border radius, and spacing. Without these variables defined, components may render with missing backgrounds, borders, or incorrect spacing.
+
+If you are already using shadcn/ui, these variables are set up automatically. If not, add the following minimal set to your global CSS:
+
+```css
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --radius: 0.625rem;
+}
+```
+
+You can also use the shadcn/ui [theme generator](https://ui.shadcn.com/themes) to create a custom palette and copy the generated CSS variables directly into your project.
+
 ## Usage
 
 Here's how you can use Streamdown in your React application with the AI SDK:
