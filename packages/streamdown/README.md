@@ -65,6 +65,48 @@ monorepo/
 
 Adjust the number of `../` segments based on where your CSS file lives relative to the root `node_modules`. If you install Streamdown plugins, add their respective `@source` entries only when those packages are installed.
 
+### Tailwind v4 prefix
+
+If you use Tailwind v4's `prefix()` option (e.g. `prefix(tw)`), Tailwind's
+scanner cannot match unprefixed class names from Streamdown's dist files to the
+prefixed utilities it generates.  Use Tailwind's `@source inline()` directive
+to supply the correct prefixed class list instead.
+
+Streamdown exports a `getSourceInline` helper that generates the directive for
+you.  Run it once with a small build script and paste (or write) the output into
+your CSS file:
+
+```js
+// scripts/gen-streamdown-source.js
+import { getSourceInline } from "streamdown/tailwind";
+// Also import helpers from installed plugins, e.g.:
+// import { getSourceInline as codeSource } from "@streamdown/code/tailwind";
+
+process.stdout.write(getSourceInline("tw") + "
+");
+```
+
+```sh
+node scripts/gen-streamdown-source.js >> app/globals.css
+```
+
+Or copy the generated line directly into your CSS:
+
+```css
+@import "tailwindcss" prefix(tw);
+
+/* Replace 'tw' with your actual prefix: */
+@source inline("tw:{absolute,animate-spin,appearance-none,...}");
+```
+
+You can also import the raw class array and build your own tooling:
+
+```ts
+import { STREAMDOWN_CLASSES } from "streamdown/tailwind";
+// string[] of every Tailwind class used by streamdown
+```
+
+
 ## Usage
 
 Here's how you can use Streamdown in your React application with the AI SDK:
