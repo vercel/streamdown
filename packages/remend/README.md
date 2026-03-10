@@ -31,6 +31,7 @@ Remend intelligently completes the following incomplete Markdown patterns:
 - **Links**: `[text](url` → `[text](streamdown:incomplete-link)`
 - **Images**: `![alt](url` → removed (can't display partial images)
 - **Block math**: `$$formula` → `$$formula$$`
+- **Inline math**: `$formula` → `$formula$` (opt-in, see `inlineKatex`)
 
 ## Installation
 
@@ -56,7 +57,7 @@ const completed = remend(partialLink);
 
 ### Configuration
 
-You can selectively disable specific completions by passing an options object. All options default to `true`:
+You can selectively disable specific completions by passing an options object. Options default to `true` unless noted otherwise:
 
 ```typescript
 import remend from "remend";
@@ -80,6 +81,7 @@ Available options:
 | `inlineCode` | Complete inline code formatting (`` ` ``) |
 | `strikethrough` | Complete strikethrough formatting (`~~`) |
 | `katex` | Complete block KaTeX math (`$$`) |
+| `inlineKatex` | Complete inline KaTeX math (`$`) — defaults to `false` to avoid ambiguity with currency symbols |
 | `setextHeadings` | Handle incomplete setext headings |
 | `handlers` | Custom handlers to extend remend |
 
@@ -118,7 +120,7 @@ interface RemendHandler {
 
 #### Built-in Priorities
 
-Built-in handlers use priorities 0-70. Custom handlers default to 100 (run after built-ins):
+Built-in handlers use priorities 0-75. Custom handlers default to 100 (run after built-ins):
 
 | Handler | Priority |
 |---------|----------|
@@ -130,6 +132,7 @@ Built-in handlers use priorities 0-70. Custom handlers default to 100 (run after
 | `inlineCode` | 50 |
 | `strikethrough` | 60 |
 | `katex` | 70 |
+| `inlineKatex` | 75 |
 | Custom (default) | 100 |
 
 #### Exported Utilities
