@@ -843,6 +843,7 @@ const CodeComponent = ({
           code={code}
           isIncomplete={isBlockIncomplete}
           language={language}
+          meta={metastring}
         />
       </Suspense>
     );

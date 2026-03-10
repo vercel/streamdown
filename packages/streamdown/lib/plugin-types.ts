@@ -149,6 +149,10 @@ export interface CustomRendererProps {
   code: string;
   isIncomplete: boolean;
   language: string;
+  /** Raw metastring from the code fence (everything after the language identifier).
+   * e.g. ```rust {1} title="foo"  →  meta = '{1} title="foo"'
+   * Undefined when no metastring is present. */
+  meta?: string;
 }
 
 export interface CustomRenderer {
