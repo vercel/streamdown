@@ -756,7 +756,8 @@ export const Streamdown = memo(
                 <PrefixContext.Provider value={prefixedCn}>
                   <div
                     className={prefixedCn(
-                      "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+                      // Use [&>*] arbitrary variant syntax for Tailwind v3 + v4 compat (v3 lacks the *: variant)
+                      "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
                       className
                     )}
                     dir={
@@ -791,9 +792,10 @@ export const Streamdown = memo(
               <PrefixContext.Provider value={prefixedCn}>
                 <div
                   className={prefixedCn(
-                    "space-y-4 whitespace-normal *:first:mt-0 *:last:mb-0",
+                    // Use [&>*] arbitrary variant syntax for Tailwind v3 + v4 compat (v3 lacks the *: variant)
+                    "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
                     caret && !shouldHideCaret
-                      ? "*:last:after:inline *:last:after:align-baseline *:last:after:content-[var(--streamdown-caret)]"
+                      ? "[&>*:last-child]:after:inline [&>*:last-child]:after:align-baseline [&>*:last-child]:after:content-[var(--streamdown-caret)]"
                       : null,
                     className
                   )}
