@@ -53,7 +53,7 @@ export const preprocessCustomTags = (
 
         // A blank line after the close tag terminates the HTML block so
         // subsequent markdown (headings, paragraphs, etc.) is not absorbed.
-        return open + paddedContent + close + "\n\n";
+        return `${open}${paddedContent}${close}\n\n`;
       }
     );
   }
