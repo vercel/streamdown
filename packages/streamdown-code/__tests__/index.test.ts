@@ -223,6 +223,30 @@ describe("code", () => {
       expect(result).toHaveProperty("tokens");
     });
 
+    it("should fall back to text for unknown/truncated language identifiers", async () => {
+      const callback = vi.fn();
+      const plugin = createCodePlugin();
+
+      plugin.highlight(
+        {
+          code: "const x = 1;",
+          language: "javas" as BundledLanguage, // truncated "javascript"
+          themes: ["github-light", "github-dark"],
+        },
+        callback
+      );
+
+      await vi.waitFor(
+        () => {
+          expect(callback).toHaveBeenCalled();
+        },
+        { timeout: 5000 }
+      );
+
+      const result = callback.mock.calls[0][0];
+      expect(result).toHaveProperty("tokens");
+    });
+
     it("should highlight language aliases using bundled grammars", async () => {
       const callback = vi.fn();
       const result = code.highlight(
