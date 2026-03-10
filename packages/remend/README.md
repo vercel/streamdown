@@ -32,6 +32,7 @@ Remend intelligently completes the following incomplete Markdown patterns:
 - **Images**: `![alt](url` → removed (can't display partial images)
 - **Block math**: `$$formula` → `$$formula$$`
 - **Inline math**: `$formula` → `$formula$` (opt-in, see `inlineKatex`)
+- **Single tilde escape**: `20~25` → `20\~25` (prevents false strikethrough)
 
 ## Installation
 
@@ -79,6 +80,7 @@ Available options:
 | `italic` | Complete italic formatting (`*` and `_`) |
 | `boldItalic` | Complete bold-italic formatting (`***`) |
 | `inlineCode` | Complete inline code formatting (`` ` ``) |
+| `singleTilde` | Escape single `~` between word characters to prevent false strikethrough (e.g. `20~25`) |
 | `strikethrough` | Complete strikethrough formatting (`~~`) |
 | `katex` | Complete block KaTeX math (`$$`) |
 | `inlineKatex` | Complete inline KaTeX math (`$`) — defaults to `false` to avoid ambiguity with currency symbols |
@@ -120,10 +122,13 @@ interface RemendHandler {
 
 #### Built-in Priorities
 
-Built-in handlers use priorities 0-75. Custom handlers default to 100 (run after built-ins):
+Built-in handlers use priorities -15 to 75. Custom handlers default to 100 (run after built-ins):
 
 | Handler | Priority |
 |---------|----------|
+| `singleTilde` | -15 |
+| `comparisonOperators` | -10 |
+| `htmlTags` | -5 |
 | `setextHeadings` | 0 |
 | `links` | 10 |
 | `boldItalic` | 20 |

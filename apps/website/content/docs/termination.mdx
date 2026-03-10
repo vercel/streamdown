@@ -78,6 +78,14 @@ Incomplete inline code blocks are closed with a backtick.
 
 Strikethrough formatting is completed automatically.
 
+#### Single Tilde Escape (`20~25`)
+
+```markdown
+20~25°C
+```
+
+Single `~` characters between word characters (letters, numbers) are escaped to prevent GFM from misinterpreting them as strikethrough markers. For example, `20~25°C` renders as `20~25°C` instead of applying strikethrough to the text between the tildes. This does not affect intentional `~~double tilde~~` strikethrough syntax.
+
 #### Links (`[text](url)`)
 
 Streamdown handles several link scenarios:
@@ -261,10 +269,11 @@ Each handler has three properties:
 
 #### Execution Order
 
-Built-in handlers use priorities -10 to 70:
+Built-in handlers use priorities -15 to 75:
 
 | Handler | Priority |
 |---------|----------|
+| `singleTilde` | -15 |
 | `comparisonOperators` | -10 |
 | `htmlTags` | -5 |
 | `setextHeadings` | 0 |
@@ -370,6 +379,16 @@ E = m \times c^2
 x_i = y_j
 $$
 ```
+
+### Single Tilde Protection
+
+Single `~` characters between word characters are escaped so that GFM does not treat them as strikethrough:
+
+```markdown
+20~25°C
+```
+
+This prevents text like temperature ranges or numeric expressions from being rendered with strikethrough styling, while `~~double tilde~~` strikethrough still works as expected.
 
 ### Word-Internal Characters
 

@@ -17,6 +17,7 @@ import {
   type LinkMode,
 } from "./link-image-handler";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
+import { handleSingleTildeEscape } from "./single-tilde-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
 
 export type { LinkMode } from "./link-image-handler";
@@ -79,6 +80,8 @@ export interface RemendOptions {
   links?: boolean;
   /** Handle incomplete setext headings to prevent misinterpretation */
   setextHeadings?: boolean;
+  /** Escape single ~ between word characters to prevent false strikethrough (e.g., `20~25` → `20\~25`) */
+  singleTilde?: boolean;
   /** Complete strikethrough formatting (e.g., `~~text` → `~~text~~`) */
   strikethrough?: boolean;
 }
@@ -91,6 +94,7 @@ const isOptedIn = (option: boolean | undefined): boolean => option === true;
 
 // Built-in handler priorities (0-100)
 const PRIORITY = {
+  SINGLE_TILDE: -15,
   COMPARISON_OPERATORS: -10,
   HTML_TAGS: -5,
   SETEXT_HEADINGS: 0,
@@ -113,6 +117,14 @@ const builtInHandlers: Array<{
   optionKey: keyof Omit<RemendOptions, "handlers" | "linkMode">;
   earlyReturn?: (result: string) => boolean;
 }> = [
+  {
+    handler: {
+      name: "singleTilde",
+      handle: handleSingleTildeEscape,
+      priority: PRIORITY.SINGLE_TILDE,
+    },
+    optionKey: "singleTilde",
+  },
   {
     handler: {
       name: "comparisonOperators",
