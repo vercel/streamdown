@@ -6,7 +6,13 @@ import { CodeBlockContainer } from "./container";
 import { CodeBlockContext } from "./context";
 import { CodeBlockHeader } from "./header";
 
-const TRAILING_NEWLINES_REGEX = /\n+$/;
+const trimTrailingNewlines = (str: string): string => {
+  let end = str.length;
+  while (end > 0 && str[end - 1] === "\n") {
+    end--;
+  }
+  return str.slice(0, end);
+};
 
 type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
@@ -35,7 +41,7 @@ export const CodeBlock = ({
   const cn = useCn();
   // Remove trailing newlines to prevent empty line at end of code blocks
   const trimmedCode = useMemo(
-    () => code.replace(TRAILING_NEWLINES_REGEX, ""),
+    () => trimTrailingNewlines(code),
     [code]
   );
 
