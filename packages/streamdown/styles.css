@@ -31,5 +31,5 @@
 
 [data-sd-animate] {
   animation: var(--sd-animation, sd-fadeIn) var(--sd-duration, 150ms)
-    var(--sd-easing, ease) both;
+    var(--sd-easing, ease) var(--sd-delay, 0ms) both;
 }

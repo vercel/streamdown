@@ -25,6 +25,7 @@ export interface AnimateOptions {
   duration?: number;
   easing?: string;
   sep?: "word" | "char";
+  stagger?: number;
 }
 
 const WHITESPACE_RE = /\s/;
@@ -92,24 +93,30 @@ const makeSpan = (
   animation: string,
   duration: number,
   easing: string,
-  skipAnimation?: boolean
-): Element => ({
-  type: "element",
-  tagName: "span",
-  properties: {
-    "data-sd-animate": true,
-    style: skipAnimation
-      ? `--sd-animation:sd-${animation};--sd-duration:0ms;--sd-easing:${easing}`
-      : `--sd-animation:sd-${animation};--sd-duration:${duration}ms;--sd-easing:${easing}`,
-  },
-  children: [{ type: "text", value: word }],
-});
+  skipAnimation?: boolean,
+  delay?: number
+): Element => {
+  let style = `--sd-animation:sd-${animation};--sd-duration:${skipAnimation ? 0 : duration}ms;--sd-easing:${easing}`;
+  if (delay) {
+    style += `;--sd-delay:${delay}ms`;
+  }
+  return {
+    type: "element",
+    tagName: "span",
+    properties: {
+      "data-sd-animate": true,
+      style,
+    },
+    children: [{ type: "text", value: word }],
+  };
+};
 
 interface AnimateConfig {
   animation: string;
   duration: number;
   easing: string;
   sep: "word" | "char";
+  stagger: number;
 }
 
 /**
@@ -128,7 +135,7 @@ const processTextNode = (
   ancestors: Node[],
   config: AnimateConfig,
   renderState: AnimateRenderState,
-  charCounter: { count: number }
+  charCounter: { count: number; newIndex: number }
 ): number | typeof SKIP | undefined => {
   const ancestor = ancestors.at(-1);
   /* v8 ignore next */
@@ -163,12 +170,14 @@ const processTextNode = (
       return { type: "text", value: part } as Text;
     }
     const skipAnimation = prevLen > 0 && partStart < prevLen;
+    const delay = skipAnimation ? 0 : charCounter.newIndex++ * config.stagger;
     return makeSpan(
       part,
       config.animation,
       config.duration,
       config.easing,
-      skipAnimation
+      skipAnimation,
+      delay
     );
   });
 
@@ -188,6 +197,7 @@ export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
     duration: options?.duration ?? 150,
     easing: options?.easing ?? "ease",
     sep: options?.sep ?? "word",
+    stagger: options?.stagger ?? 40,
   };
 
   // Mutable render state — the rehype closure and the plugin API methods
@@ -199,7 +209,7 @@ export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
 
   const id = instanceId++;
   const rehypeAnimate = () => (tree: Root) => {
-    const charCounter = { count: 0 };
+    const charCounter = { count: 0, newIndex: 0 };
     visitParents(tree, "text", (node: Text, ancestors) =>
       processTextNode(node, ancestors, config, renderState, charCounter)
     );

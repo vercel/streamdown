@@ -227,4 +227,58 @@ describe("animate plugin", () => {
       expect(spans.some((s) => s.includes("150ms"))).toBe(true);
     });
   });
+
+  describe("stagger delay", () => {
+    it("should apply incremental delay to each word", async () => {
+      const plugin = createAnimatePlugin({ stagger: 50 });
+      const result = await processHtml("<p>Hello world foo</p>", plugin);
+      const delays = result.match(/--sd-delay:\d+ms/g) ?? [];
+      // First word has delay 0 (omitted), second has 50ms, third has 100ms
+      expect(delays).toEqual(["--sd-delay:50ms", "--sd-delay:100ms"]);
+    });
+
+    it("should apply incremental delay to each char", async () => {
+      const plugin = createAnimatePlugin({ stagger: 20, sep: "char" });
+      const result = await processHtml("<p>Hi there</p>", plugin);
+      const delays = result.match(/--sd-delay:\d+ms/g) ?? [];
+      // H=0ms(omitted), i=20ms, t=40ms, h=60ms, e=80ms, r=100ms, e=120ms
+      expect(delays).toEqual([
+        "--sd-delay:20ms",
+        "--sd-delay:40ms",
+        "--sd-delay:60ms",
+        "--sd-delay:80ms",
+        "--sd-delay:100ms",
+        "--sd-delay:120ms",
+      ]);
+    });
+
+    it("should not apply delay to skipped (already-rendered) words", async () => {
+      const plugin = createAnimatePlugin({ stagger: 50 });
+      await processHtml("<p>Hello</p>", plugin);
+      const prevCount = plugin.getLastRenderCharCount();
+
+      plugin.setPrevContentLength(prevCount);
+      const result = await processHtml("<p>Hello world foo</p>", plugin);
+
+      // "Hello" is skipped (duration:0ms, no delay)
+      // "world" is first new word → delay 0 (omitted)
+      // "foo" is second new word → delay 50ms
+      const delays = result.match(/--sd-delay:\d+ms/g) ?? [];
+      expect(delays).toEqual(["--sd-delay:50ms"]);
+    });
+
+    it("should default stagger to 40ms", async () => {
+      const plugin = createAnimatePlugin();
+      const result = await processHtml("<p>Hello world</p>", plugin);
+      const delays = result.match(/--sd-delay:\d+ms/g) ?? [];
+      expect(delays).toEqual(["--sd-delay:40ms"]);
+    });
+
+    it("should support stagger of 0 to disable delay", async () => {
+      const plugin = createAnimatePlugin({ stagger: 0 });
+      const result = await processHtml("<p>Hello world foo</p>", plugin);
+      const delays = result.match(/--sd-delay:\d+ms/g) ?? [];
+      expect(delays).toEqual([]);
+    });
+  });
 });
