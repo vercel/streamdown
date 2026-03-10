@@ -181,13 +181,14 @@ describe("save utility", () => {
 
     beforeEach(() => {
       lastBlobParts = undefined;
-      BlobSpy = vi.spyOn(globalThis, "Blob").mockImplementation(((
+      BlobSpy = vi.spyOn(globalThis, "Blob").mockImplementation(function (
+        this: Blob,
         parts?: BlobPart[],
         opts?: BlobPropertyBag
-      ) => {
+      ) {
         lastBlobParts = parts;
         return new OriginalBlob(parts, opts);
-      }) as unknown as typeof Blob);
+      } as unknown as typeof Blob);
     });
 
     afterEach(() => {
