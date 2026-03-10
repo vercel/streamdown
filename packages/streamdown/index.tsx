@@ -284,13 +284,22 @@ export interface StreamdownContextType {
   shikiTheme: [ThemeInput, ThemeInput];
 }
 
+const defaultShikiTheme: [ThemeInput, ThemeInput] = [
+  "github-light",
+  "github-dark",
+];
+
+const defaultLinkSafetyConfig: LinkSafetyConfig = {
+  enabled: true,
+};
+
 const defaultStreamdownContext: StreamdownContextType = {
-  shikiTheme: ["github-light", "github-dark"],
+  shikiTheme: defaultShikiTheme,
   controls: true,
   isAnimating: false,
   mode: "streaming",
   mermaid: undefined,
-  linkSafety: { enabled: true },
+  linkSafety: defaultLinkSafetyConfig,
 };
 
 export const StreamdownContext = createContext<StreamdownContextType>(
@@ -413,11 +422,6 @@ export const Block = memo(
 
 Block.displayName = "Block";
 
-const defaultShikiTheme: [ThemeInput, ThemeInput] = [
-  "github-light",
-  "github-dark",
-];
-
 export const Streamdown = memo(
   ({
     children,
@@ -439,9 +443,7 @@ export const Streamdown = memo(
     caret,
     plugins,
     remend: remendOptions,
-    linkSafety = {
-      enabled: true,
-    },
+    linkSafety = defaultLinkSafetyConfig,
     allowedTags,
     literalTagContent,
     translations,
