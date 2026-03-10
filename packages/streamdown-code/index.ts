@@ -208,10 +208,10 @@ export function createCodePlugin(
 
       // Resolve language to 'text' if not supported (e.g. truncated identifier)
       const safeLanguage: BundledLanguage | SpecialLanguage = languageNames.has(
-        resolvedLanguage as BundledLanguage,
+        resolvedLanguage as BundledLanguage
       )
         ? (resolvedLanguage as BundledLanguage)
-        : 'text';
+        : "text";
 
       // Start highlighting in background
       getHighlighter(safeLanguage, themes)
