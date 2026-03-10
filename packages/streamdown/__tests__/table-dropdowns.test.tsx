@@ -191,7 +191,7 @@ describe("TableDownloadDropdown", () => {
 
 describe("TableDownloadButton with format='markdown'", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
   });
 
   it("should download as markdown format", () => {
