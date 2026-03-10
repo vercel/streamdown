@@ -111,7 +111,7 @@ const getThemeName = (theme: ThemeInput): string =>
   typeof theme === "string" ? theme : (theme.name ?? "custom");
 
 const getHighlighterCacheKey = (
-  language: BundledLanguage,
+  language: BundledLanguage | SpecialLanguage,
   themes: [ThemeInput, ThemeInput]
 ) => `${language}-${getThemeName(themes[0])}-${getThemeName(themes[1])}`;
 
@@ -126,7 +126,7 @@ const getTokensCacheKey = (
 };
 
 const getHighlighter = (
-  language: BundledLanguage,
+  language: BundledLanguage | SpecialLanguage,
   themes: [ThemeInput, ThemeInput]
 ): Promise<HighlighterGeneric<BundledLanguage, BundledTheme>> => {
   const cacheKey = getHighlighterCacheKey(language, themes);
@@ -206,8 +206,15 @@ export function createCodePlugin(
         subs.add(callback);
       }
 
+      // Resolve language to 'text' if not supported (e.g. truncated identifier)
+      const safeLanguage: BundledLanguage | SpecialLanguage = languageNames.has(
+        resolvedLanguage as BundledLanguage
+      )
+        ? (resolvedLanguage as BundledLanguage)
+        : "text";
+
       // Start highlighting in background
-      getHighlighter(resolvedLanguage as BundledLanguage, themes)
+      getHighlighter(safeLanguage, themes)
         .then((highlighter) => {
           const availableLangs = highlighter.getLoadedLanguages();
           const langToUse = (
