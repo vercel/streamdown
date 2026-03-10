@@ -23,8 +23,8 @@
     "react": "^18.0.0 || ^19.0.0"
   },
   "dependencies": {
-    "remark-cjk-friendly": "^1.2.3",
-    "remark-cjk-friendly-gfm-strikethrough": "^1.2.3",
+    "remark-cjk-friendly": "^2.0.1",
+    "remark-cjk-friendly-gfm-strikethrough": "^2.0.1",
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
