@@ -94,13 +94,13 @@ const isOptedIn = (option: boolean | undefined): boolean => option === true;
 
 // Built-in handler priorities (0-100)
 const PRIORITY = {
-  SINGLE_TILDE: -15,
-  COMPARISON_OPERATORS: -10,
-  HTML_TAGS: -5,
-  SETEXT_HEADINGS: 0,
-  LINKS: 10,
-  BOLD_ITALIC: 20,
-  BOLD: 30,
+  SINGLE_TILDE: 0,
+  COMPARISON_OPERATORS: 5,
+  HTML_TAGS: 10,
+  SETEXT_HEADINGS: 15,
+  LINKS: 20,
+  BOLD_ITALIC: 30,
+  BOLD: 35,
   ITALIC_DOUBLE_UNDERSCORE: 40,
   ITALIC_SINGLE_ASTERISK: 41,
   ITALIC_SINGLE_UNDERSCORE: 42,

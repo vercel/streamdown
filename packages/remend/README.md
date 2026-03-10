@@ -122,17 +122,17 @@ interface RemendHandler {
 
 #### Built-in Priorities
 
-Built-in handlers use priorities -15 to 75. Custom handlers default to 100 (run after built-ins):
+Built-in handlers use priorities 0-75. Custom handlers default to 100 (run after built-ins):
 
 | Handler | Priority |
 |---------|----------|
-| `singleTilde` | -15 |
-| `comparisonOperators` | -10 |
-| `htmlTags` | -5 |
-| `setextHeadings` | 0 |
-| `links` | 10 |
-| `boldItalic` | 20 |
-| `bold` | 30 |
+| `singleTilde` | 0 |
+| `comparisonOperators` | 5 |
+| `htmlTags` | 10 |
+| `setextHeadings` | 15 |
+| `links` | 20 |
+| `boldItalic` | 30 |
+| `bold` | 35 |
 | `italic` | 40-42 |
 | `inlineCode` | 50 |
 | `strikethrough` | 60 |
