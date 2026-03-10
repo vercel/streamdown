@@ -10,12 +10,17 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles.css": "./styles.css"
+    "./styles.css": "./styles.css",
+    "./tailwind": {
+      "types": "./dist/tailwind.d.ts",
+      "import": "./dist/tailwind.js"
+    }
   },
   "files": [
     "dist",
     "styles.css",
-    "README.md"
+    "README.md",
+    "dist"
   ],
   "homepage": "https://streamdown.ai",
   "repository": {
