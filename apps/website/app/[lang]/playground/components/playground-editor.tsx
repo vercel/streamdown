@@ -295,6 +295,7 @@ const renderers: CustomRenderer[] = [
 
 const PlaygroundEditor = () => {
   const [markdown, setMarkdown] = useState(defaultMarkdown);
+  const [markdownOutput, setMarkdownOutput] = useState(defaultMarkdown)
   const [mode, setMode] = useState<"static" | "streaming">("static");
   const [isStreaming, setIsStreaming] = useState(false);
   const [animated, setAnimated] = useState(false);
@@ -309,8 +310,8 @@ const PlaygroundEditor = () => {
   const streamRef = useRef<ReturnType<typeof setInterval>>(null);
   const indexRef = useRef(0);
   const tokens = useMemo(
-    () => defaultMarkdown.split(" ").map((token) => `${token} `),
-    []
+    () => markdown.split(" ").map((token) => `${token} `),
+    [markdown]
   );
 
   const stopStreaming = useCallback(() => {
@@ -323,7 +324,7 @@ const PlaygroundEditor = () => {
 
   const simulateStreaming = useCallback(() => {
     stopStreaming();
-    setMarkdown("");
+    // setMarkdown("");
     setMode("streaming");
     indexRef.current = 0;
     setIsStreaming(true);
@@ -332,14 +333,14 @@ const PlaygroundEditor = () => {
 
     streamRef.current = setInterval(() => {
       if (indexRef.current >= tokens.length) {
-        setMarkdown(defaultMarkdown);
+        setMarkdown(markdown);
         stopStreaming();
         return;
       }
 
       currentContent += tokens[indexRef.current];
       indexRef.current += 1;
-      setMarkdown(currentContent);
+      setMarkdownOutput(currentContent);
     }, streamSpeed);
   }, [stopStreaming, tokens, streamSpeed]);
 
@@ -577,7 +578,7 @@ const PlaygroundEditor = () => {
                 mode={mode}
                 plugins={{ code, mermaid, math, cjk, renderers }}
               >
-                {markdown}
+                {markdownOutput}
               </Streamdown>
             </ConversationContent>
           </Conversation>
