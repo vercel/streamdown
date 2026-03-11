@@ -338,4 +338,26 @@ describe("literalTagContent prop", () => {
     expect(mention?.querySelector("em")).toBeNull();
     expect(mention?.textContent).toBe("_handle_");
   });
+  it("should render entire content when literalTagContent tag has double newlines", () => {
+    const AiThinking = (props: CustomComponentProps) => (
+      <div data-testid="ai-thinking">{props.children as React.ReactNode}</div>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ "ai-thinking": [] }}
+        components={{ "ai-thinking": AiThinking }}
+        literalTagContent={["ai-thinking"]}
+        mode="static"
+      >
+        {"<ai-thinking>first part\n\nsecond part</ai-thinking>"}
+      </Streamdown>
+    );
+
+    const el = container.querySelector("[data-testid=\"ai-thinking\"]");
+    expect(el).toBeTruthy();
+    expect(el?.textContent).toContain("first part");
+    expect(el?.textContent).toContain("second part");
+  });
+
 });
