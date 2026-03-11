@@ -324,7 +324,7 @@ const PlaygroundEditor = () => {
 
   const simulateStreaming = useCallback(() => {
     stopStreaming();
-    // setMarkdown("");
+    setMarkdownOutput("");
     setMode("streaming");
     indexRef.current = 0;
     setIsStreaming(true);
@@ -333,7 +333,6 @@ const PlaygroundEditor = () => {
 
     streamRef.current = setInterval(() => {
       if (indexRef.current >= tokens.length) {
-        setMarkdown(markdown);
         stopStreaming();
         return;
       }
@@ -578,7 +577,7 @@ const PlaygroundEditor = () => {
                 mode={mode}
                 plugins={{ code, mermaid, math, cjk, renderers }}
               >
-                {markdownOutput}
+                {isStreaming ? markdownOutput : markdown}
               </Streamdown>
             </ConversationContent>
           </Conversation>
