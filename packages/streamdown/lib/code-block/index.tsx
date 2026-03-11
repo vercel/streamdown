@@ -40,10 +40,7 @@ export const CodeBlock = ({
 }: CodeBlockProps) => {
   const cn = useCn();
   // Remove trailing newlines to prevent empty line at end of code blocks
-  const trimmedCode = useMemo(
-    () => trimTrailingNewlines(code),
-    [code]
-  );
+  const trimmedCode = useMemo(() => trimTrailingNewlines(code), [code]);
 
   // Memoize the raw fallback tokens to avoid recomputing on every render
   const raw: HighlightResult = useMemo(

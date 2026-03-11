@@ -80,7 +80,7 @@ describe("IconProvider rerender / shallowEqual coverage", () => {
     const AltCheckIcon = (props: SVGProps<SVGSVGElement>) => (
       <svg data-testid="alt-check" {...props}>
         <title>Alt check</title>
-        <rect width="10" height="10" />
+        <rect height="10" width="10" />
       </svg>
     );
 
@@ -164,13 +164,17 @@ describe("IconProvider rerender / shallowEqual coverage", () => {
 
     // Rerender with different key count → triggers keysA.length !== keysB.length
     rerender(
-      <IconProvider icons={{ CheckIcon: CustomCheckIcon, CopyIcon: AnotherIcon }}>
+      <IconProvider
+        icons={{ CheckIcon: CustomCheckIcon, CopyIcon: AnotherIcon }}
+      >
         <IconConsumer iconName="CopyIcon" />
       </IconProvider>
     );
 
     // CopyIcon is now overridden
-    expect(container.querySelector("[data-testid='rendered-icon']")).toBeTruthy();
+    expect(
+      container.querySelector("[data-testid='rendered-icon']")
+    ).toBeTruthy();
   });
 
   it("preserves memoized value when same icons reference is passed", () => {

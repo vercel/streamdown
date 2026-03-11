@@ -256,7 +256,9 @@ describe("copy-button onError path", () => {
   beforeEach(() => {
     Object.defineProperty(navigator, "clipboard", {
       value: {
-        writeText: vi.fn().mockRejectedValue(new Error("Clipboard write failed")),
+        writeText: vi
+          .fn()
+          .mockRejectedValue(new Error("Clipboard write failed")),
       },
       writable: true,
       configurable: true,
@@ -282,8 +284,10 @@ describe("copy-button onError path", () => {
     const button = container.querySelector("button");
     expect(button).toBeTruthy();
 
-    await act(async () => {
-      fireEvent.click(button!);
+    await act(() => {
+      if (button) {
+        fireEvent.click(button);
+      }
     });
 
     expect(onError).toHaveBeenCalledWith(expect.any(Error));
