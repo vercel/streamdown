@@ -250,6 +250,47 @@ describe("copy-button timeout", () => {
   });
 });
 
+describe("copy-button onError path", () => {
+  const originalClipboard = navigator.clipboard;
+
+  beforeEach(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: vi.fn().mockRejectedValue(new Error("Clipboard write failed")),
+      },
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: originalClipboard,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it("should call onError when clipboard.writeText rejects", async () => {
+    const onError = vi.fn();
+    const { container } = render(
+      <CodeBlock code="test code" language="text">
+        <CodeBlockCopyButton onError={onError} />
+      </CodeBlock>
+    );
+
+    const button = container.querySelector("button");
+    expect(button).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(button!);
+    });
+
+    expect(onError).toHaveBeenCalledWith(expect.any(Error));
+    expect(onError.mock.calls[0][0].message).toBe("Clipboard write failed");
+  });
+});
+
 describe("table/download-dropdown remaining coverage", () => {
   it("should handle download with markdown format error", () => {
     // The TableDownloadDropdown requires being inside a table-wrapper

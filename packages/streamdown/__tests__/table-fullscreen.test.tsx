@@ -241,6 +241,55 @@ describe("TableFullscreenButton", () => {
     expect(overlay?.getAttribute("aria-label")).toBeTruthy();
   });
 
+  it("should close fullscreen on Escape keyDown on the dialog element itself", () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    expect(overlay).toBeTruthy();
+
+    // Fire keyDown directly on the dialog element (covers onKeyDown handler lines 80-83)
+    if (overlay) {
+      fireEvent.keyDown(overlay, { key: "Escape" });
+    }
+
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeFalsy();
+  });
+
+  it("should not close fullscreen on keyDown inside inner presentation div", () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    expect(overlay).toBeTruthy();
+
+    // Fire keyDown on the inner presentation div (covers line 91 stopPropagation)
+    const innerDiv = overlay?.querySelector('[role="presentation"]');
+    expect(innerDiv).toBeTruthy();
+    if (innerDiv) {
+      fireEvent.keyDown(innerDiv, { key: "Escape" });
+    }
+
+    // Should still be open because stopPropagation prevents it from reaching the dialog
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeTruthy();
+  });
+
   it("should hide copy in fullscreen when table copy is false", () => {
     const { container } = render(
       <Streamdown controls={{ table: { copy: false } }}>
