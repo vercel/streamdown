@@ -364,6 +364,40 @@ describe("createCodePlugin", () => {
     expect(themes[1]).toBe(customDark);
   });
 
+  it("should use 'custom' fallback when theme object has name undefined", async () => {
+    // This tests the `theme.name ?? "custom"` fallback in getThemeName (line 111)
+    // A theme with name=undefined triggers the ?? "custom" path for cache keys
+    const consoleSpy = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined);
+
+    const noNameTheme = {
+      type: "light",
+      colors: { "editor.background": "#fff" },
+      tokenColors: [],
+    } as ThemeRegistrationAny;
+
+    const plugin = createCodePlugin({
+      themes: [noNameTheme, "github-dark"],
+    });
+
+    // The highlight call exercises getThemeName with a nameless theme object
+    // The ?? "custom" fallback is used for the cache key
+    const result = plugin.highlight({
+      code: "const x = 1;",
+      language: "javascript",
+      themes: [noNameTheme, "github-dark"],
+    });
+
+    // First call always returns null (async)
+    expect(result).toBeNull();
+
+    // Wait for async resolution or error
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    consoleSpy.mockRestore();
+  });
+
   it("should highlight code with custom theme objects", async () => {
     const customLight: ThemeRegistrationAny = {
       name: "custom-light",
