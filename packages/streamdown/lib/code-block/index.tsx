@@ -21,6 +21,8 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   isIncomplete?: boolean;
   /** Custom starting line number for line numbering (default: 1) */
   startLine?: number;
+  /** Show line numbers in code blocks. @default true */
+  lineNumbers?: boolean;
 };
 
 const HighlightedCodeBlockBody = lazy(() =>
@@ -36,14 +38,12 @@ export const CodeBlock = ({
   children,
   isIncomplete = false,
   startLine,
+  lineNumbers,
   ...rest
 }: CodeBlockProps) => {
   const cn = useCn();
   // Remove trailing newlines to prevent empty line at end of code blocks
-  const trimmedCode = useMemo(
-    () => trimTrailingNewlines(code),
-    [code]
-  );
+  const trimmedCode = useMemo(() => trimTrailingNewlines(code), [code]);
 
   // Memoize the raw fallback tokens to avoid recomputing on every render
   const raw: HighlightResult = useMemo(
@@ -88,6 +88,7 @@ export const CodeBlock = ({
             <CodeBlockBody
               className={className}
               language={language}
+              lineNumbers={lineNumbers}
               result={raw}
               startLine={startLine}
               {...rest}
@@ -98,6 +99,7 @@ export const CodeBlock = ({
             className={className}
             code={trimmedCode}
             language={language}
+            lineNumbers={lineNumbers}
             raw={raw}
             startLine={startLine}
             {...rest}

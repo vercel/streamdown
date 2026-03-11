@@ -227,6 +227,8 @@ export type StreamdownProps = Options & {
   icons?: Partial<IconMap>;
   /** Tailwind CSS prefix to prepend to all utility classes (e.g. `"tw"` produces `tw:flex` instead of `flex`). Enables Tailwind v4's `prefix()` support. Note: user-supplied `className` values are also prefixed. */
   prefix?: string;
+  /** Show line numbers in code blocks. @default true */
+  lineNumbers?: boolean;
   /** Called when isAnimating transitions from false to true. Suppressed in mode="static". */
   onAnimationStart?: () => void;
   /** Called when isAnimating transitions from true to false. Suppressed in mode="static". */
@@ -278,6 +280,8 @@ const carets = {
 export interface StreamdownContextType {
   controls: ControlsConfig;
   isAnimating: boolean;
+  /** Show line numbers in code blocks. @default true */
+  lineNumbers: boolean;
   linkSafety?: LinkSafetyConfig;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
@@ -297,6 +301,7 @@ const defaultStreamdownContext: StreamdownContextType = {
   shikiTheme: defaultShikiTheme,
   controls: true,
   isAnimating: false,
+  lineNumbers: true,
   mode: "streaming",
   mermaid: undefined,
   linkSafety: defaultLinkSafetyConfig,
@@ -444,6 +449,7 @@ export const Streamdown = memo(
     plugins,
     remend: remendOptions,
     linkSafety = defaultLinkSafetyConfig,
+    lineNumbers = true,
     allowedTags,
     literalTagContent,
     translations,
@@ -606,6 +612,7 @@ export const Streamdown = memo(
         shikiTheme: plugins?.code?.getThemes() ?? shikiTheme,
         controls,
         isAnimating,
+        lineNumbers,
         mode,
         mermaid,
         linkSafety,
@@ -614,6 +621,7 @@ export const Streamdown = memo(
         shikiTheme,
         controls,
         isAnimating,
+        lineNumbers,
         mode,
         mermaid,
         linkSafety,
@@ -851,6 +859,7 @@ export const Streamdown = memo(
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
+    prevProps.lineNumbers === nextProps.lineNumbers &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
     prevProps.literalTagContent === nextProps.literalTagContent &&
     JSON.stringify(prevProps.translations) ===

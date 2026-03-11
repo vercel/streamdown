@@ -30,6 +30,7 @@ import { useCn } from "./prefix-context";
 import { Table } from "./table";
 
 const START_LINE_PATTERN = /startLine=(\d+)/;
+const NO_LINE_NUMBERS_PATTERN = /\bnoLineNumbers\b/;
 
 // Lazy load heavy components
 const Mermaid = lazy(() =>
@@ -786,8 +787,11 @@ const CodeComponent = ({
   // A code element is block-level when it was inside a <pre> element.
   // The custom pre component marks its children with data-block.
   const inline = !("data-block" in props);
-  const { mermaid: mermaidContext, controls: controlsConfig } =
-    useContext(StreamdownContext);
+  const {
+    mermaid: mermaidContext,
+    controls: controlsConfig,
+    lineNumbers: contextLineNumbers,
+  } = useContext(StreamdownContext);
   const mermaidPlugin = useMermaidPlugin();
   const isBlockIncomplete = useIsCodeFenceIncomplete();
 
@@ -820,6 +824,12 @@ const CodeComponent = ({
     parsedStartLine !== undefined && parsedStartLine >= 1
       ? parsedStartLine
       : undefined;
+
+  // Parse noLineNumbers from meta string and derive effective lineNumbers
+  const metaNoLineNumbers = metastring
+    ? NO_LINE_NUMBERS_PATTERN.test(metastring)
+    : false;
+  const showLineNumbers = !metaNoLineNumbers && contextLineNumbers !== false;
 
   // Extract code content from children safely
   let code = "";
@@ -931,6 +941,7 @@ const CodeComponent = ({
       code={code}
       isIncomplete={isBlockIncomplete}
       language={language}
+      lineNumbers={showLineNumbers}
       startLine={startLine}
     >
       {showCodeControls ? (

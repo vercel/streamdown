@@ -7,6 +7,8 @@ type CodeBlockBodyProps = ComponentProps<"div"> & {
   result: HighlightResult;
   language: string;
   startLine?: number;
+  /** Show line numbers in code blocks. @default true */
+  lineNumbers?: boolean;
 };
 
 // Base line numbers class string (merged without prefix for memoization)
@@ -50,6 +52,7 @@ export const CodeBlockBody = memo(
     language,
     className,
     startLine,
+    lineNumbers = true,
     ...rest
   }: CodeBlockBodyProps) => {
     const cn = useCn();
@@ -97,16 +100,20 @@ export const CodeBlockBody = memo(
           style={preStyle}
         >
           <code
-            className={cn("[counter-increment:line_0] [counter-reset:line]")}
+            className={
+              lineNumbers
+                ? cn("[counter-increment:line_0] [counter-reset:line]")
+                : undefined
+            }
             style={
-              startLine && startLine > 1
+              lineNumbers && startLine && startLine > 1
                 ? { counterReset: `line ${startLine - 1}` }
                 : undefined
             }
           >
             {result.tokens.map((row, index) => (
               <span
-                className={lineNumberClasses}
+                className={lineNumbers ? lineNumberClasses : undefined}
                 // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
                 key={index}
               >
@@ -176,7 +183,8 @@ export const CodeBlockBody = memo(
       prevProps.result === nextProps.result &&
       prevProps.language === nextProps.language &&
       prevProps.className === nextProps.className &&
-      prevProps.startLine === nextProps.startLine
+      prevProps.startLine === nextProps.startLine &&
+      prevProps.lineNumbers === nextProps.lineNumbers
     );
   }
 );
