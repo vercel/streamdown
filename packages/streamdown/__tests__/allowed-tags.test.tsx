@@ -354,10 +354,9 @@ describe("literalTagContent prop", () => {
       </Streamdown>
     );
 
-    const el = container.querySelector("[data-testid=\"ai-thinking\"]");
+    const el = container.querySelector('[data-testid="ai-thinking"]');
     expect(el).toBeTruthy();
     expect(el?.textContent).toContain("first part");
     expect(el?.textContent).toContain("second part");
   });
-
 });

@@ -70,7 +70,9 @@ describe("preprocessLiteralTagContent", () => {
   it("should replace double newlines with HTML entities to prevent paragraph splits", () => {
     const md = "<ai-thinking>first part\n\nsecond part</ai-thinking>";
     const result = preprocessLiteralTagContent(md, ["ai-thinking"]);
-    expect(result).toBe("<ai-thinking>first part&#10;&#10;second part</ai-thinking>");
+    expect(result).toBe(
+      "<ai-thinking>first part&#10;&#10;second part</ai-thinking>"
+    );
   });
 
   it("should handle multiple double newlines within tag content", () => {
