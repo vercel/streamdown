@@ -114,7 +114,7 @@ export const TableCopyDropdown = ({
       {isOpen ? (
         <div
           className={cn(
-            "absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg z-20"
+            "absolute top-full right-0 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg z-20"
           )}
         >
           <button
