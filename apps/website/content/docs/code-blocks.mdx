@@ -168,7 +168,32 @@ export default function Page() {
   Bundled theme names (strings) load from Shiki's built-in registry. Custom theme objects follow the `ThemeRegistrationAny` format from Shiki — any VS Code `.tmTheme` or JSON theme file works.
 </Callout>
 
-## Custom start line
+## Line Numbers
+
+Line numbers are shown by default on all code blocks.
+
+### Disable globally
+
+Turn off line numbers for every code block with the `lineNumbers` prop:
+
+```tsx title="app/page.tsx"
+<Streamdown lineNumbers={false}>{markdown}</Streamdown>
+```
+
+### Disable per block
+
+Add `noLineNumbers` to the code fence meta to hide line numbers on a single block:
+
+````markdown
+```typescript noLineNumbers
+const user = await getUser(id);
+const profile = await getProfile(user);
+```
+````
+
+When `lineNumbers` is set to `false` globally, all blocks hide line numbers regardless of the meta string.
+
+### Custom start line
 
 Set the starting line number for a code block using `startLine=N` in the code fence meta:
 

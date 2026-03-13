@@ -134,6 +134,11 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       type: "ControlsConfig",
       default: "true",
     },
+    lineNumbers: {
+      description: "Show line numbers in code blocks. Can be overridden per block with the noLineNumbers meta string.",
+      type: "boolean",
+      default: "true",
+    },
     animated: {
       description: "Enable character-by-character animation for streaming content. See [Animation](/docs/animation).",
       type: "boolean | AnimateOptions",
