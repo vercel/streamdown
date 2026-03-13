@@ -295,7 +295,7 @@ const renderers: CustomRenderer[] = [
 
 const PlaygroundEditor = () => {
   const [markdown, setMarkdown] = useState(defaultMarkdown);
-  const [markdownOutput, setMarkdownOutput] = useState(defaultMarkdown)
+  const [markdownOutput, setMarkdownOutput] = useState(defaultMarkdown);
   const [mode, setMode] = useState<"static" | "streaming">("static");
   const [isStreaming, setIsStreaming] = useState(false);
   const [animated, setAnimated] = useState(false);
