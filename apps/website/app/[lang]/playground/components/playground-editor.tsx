@@ -543,7 +543,7 @@ const PlaygroundEditor = () => {
           <Conversation>
             <ConversationContent className="h-full">
               <Textarea
-                className="min-h-0 flex-1 resize-none rounded-none border-0 font-mono text-sm leading-relaxed shadow-none [field-sizing:fixed] focus-visible:ring-0"
+                className="field-sizing-fixed min-h-0 flex-1 resize-none rounded-none border-0 font-mono text-sm leading-relaxed shadow-none focus-visible:ring-0"
                 onChange={(e) => setMarkdown(e.target.value)}
                 placeholder="Type your markdown here..."
                 spellCheck={false}
