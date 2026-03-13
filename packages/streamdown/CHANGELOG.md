@@ -1,5 +1,37 @@
 # streamdown
 
+## 2.5.0
+
+### Minor Changes
+
+- d6666b6: Add `lineNumbers` prop to disable line numbers in code blocks
+- d4ec6c0: Add `meta` prop to `CustomRendererProps`. Custom renderers now receive the raw metastring from the code fence (everything after the language identifier, e.g. ` ```rust {1} title="foo" ` → `meta = '{1} title="foo"'`). The prop is optional (`meta?: string`) and is `undefined` when no metastring is present. Existing custom renderers are unaffected.
+
+### Patch Changes
+
+- ac8d839: Add staggered `animation-delay` to streaming word/character animations so new content cascades in sequentially instead of all animating simultaneously. Configurable via the new `stagger` option (default 40ms). Set `stagger: 0` to restore the previous behavior.
+- add5374: Enable horizontal scrolling on code blocks so long lines are accessible instead of being clipped by `overflow-hidden`.
+- 75845c0: Fix unnecessary re-renders of code blocks during streaming updates.
+
+  **Problem:** In streaming mode, when new content arrives (e.g. a paragraph is appended), completed code blocks that haven't changed were still re-rendering. This happened because the `Streamdown` component used inline object literals as default parameter values for `linkSafety` (`{ enabled: true }`). Every time `children` changed and `Streamdown` re-rendered, these inline defaults created new references, which caused the `contextValue` useMemo to recompute a new `StreamdownContext` object. Since React propagates context changes through `memo` boundaries, any context consumer inside a memoized `Block` (such as `CodeBlock`) would re-render even though the block's own props were unchanged.
+
+  **Fix:** Extract the inline default values for `linkSafety` into module-level constants (`defaultLinkSafetyConfig`). This ensures referential stability across renders, so `contextValue` only recomputes when the actual values change — not just because `children` updated.
+
+- 8b1c262: fix: prepend UTF-8 BOM to CSV downloads for Excel compatibility
+
+  - `save()` now prepends `\uFEFF` for `text/csv` string content so Excel on
+    Windows detects UTF-8 encoding instead of falling back to ANSI.
+  - `TableDownloadButton` refactored to use `save()` instead of inline Blob
+    creation, ensuring the public API also gets the BOM fix.
+
+- b105c64: Fix custom tag content being prematurely split when content follows the opening tag on the same line and contains double newlines (`\n\n`). The preprocessor now ensures proper HTML block structure so the parser treats the entire tag as a single unit.
+- 9e6f991: Increase dropdown z-index for table copy and download menus to prevent clipping by surrounding elements.
+- 9c18748: docs: document required CSS custom properties (shadcn/ui design tokens) in README
+- 7b62e9a: Replace Tailwind v4-only `*:last:` and `*:first:` variant syntax with `[&>*:last-child]:` and `[&>*:first-child]:` arbitrary variants for compatibility with both Tailwind CSS v3 and v4. Fixes caret rendering on every line instead of only the last child in v3.
+- Updated dependencies [e50b0c4]
+- Updated dependencies [716a5f0]
+  - remend@1.3.0
+
 ## 2.4.0
 
 ### Minor Changes
