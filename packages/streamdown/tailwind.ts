@@ -1,1 +1,1 @@
-export { STREAMDOWN_CLASSES, getSourceInline } from "./lib/tailwind-classes";
+export { getSourceInline, STREAMDOWN_CLASSES } from "./lib/tailwind-classes";
