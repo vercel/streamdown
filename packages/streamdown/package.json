@@ -19,8 +19,7 @@
   "files": [
     "dist",
     "styles.css",
-    "README.md",
-    "dist"
+    "README.md"
   ],
   "homepage": "https://streamdown.ai",
   "repository": {
