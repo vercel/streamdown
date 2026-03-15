@@ -49,7 +49,6 @@
     "@vitejs/plugin-react": "^5.1.2",
     "@vitest/coverage-v8": "^4.0.15",
     "jsdom": "^27.3.0",
-    "mermaid": "^11.12.2",
     "react-markdown": "^10.1.0",
     "rehype-parse": "^9.0.1",
     "rehype-stringify": "^10.0.1",
@@ -75,6 +74,7 @@
     "remend": "workspace:*",
     "tailwind-merge": "^3.4.0",
     "unified": "^11.0.5",
+    "mermaid": "^11.12.2",
     "unist-util-visit": "^5.0.0",
     "unist-util-visit-parents": "^6.0.0"
   }
