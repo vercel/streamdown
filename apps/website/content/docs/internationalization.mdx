@@ -31,6 +31,38 @@ Pass a partial translations object to replace specific labels:
 
 ## Available translation keys
 
+### Admonition
+
+<TypeTable
+  type={{
+    admonitionCaution: {
+      description: "Title text for caution admonitions",
+      type: "string",
+      default: '"Caution"',
+    },
+    admonitionImportant: {
+      description: "Title text for important admonitions",
+      type: "string",
+      default: '"Important"',
+    },
+    admonitionNote: {
+      description: "Title text for note admonitions",
+      type: "string",
+      default: '"Note"',
+    },
+    admonitionTip: {
+      description: "Title text for tip admonitions",
+      type: "string",
+      default: '"Tip"',
+    },
+    admonitionWarning: {
+      description: "Title text for warning admonitions",
+      type: "string",
+      default: '"Warning"',
+    },
+  }}
+/>
+
 ### Code block
 
 <TypeTable
@@ -248,6 +280,6 @@ import type { StreamdownTranslations } from "streamdown";
 import { defaultTranslations, useTranslations } from "streamdown";
 ```
 
-- `StreamdownTranslations` — interface with all 37 translation keys
+- `StreamdownTranslations` — interface with all 42 translation keys
 - `defaultTranslations` — the built-in English defaults
 - `useTranslations()` — React hook returning the active translations object
