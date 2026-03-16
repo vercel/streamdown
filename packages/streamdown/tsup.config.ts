@@ -2,7 +2,7 @@ import { defineConfig } from "tsup";
 
 export default defineConfig({
   dts: true,
-  entry: ["index.tsx", "tailwind.ts"],
+  entry: ["index.tsx", "lib/tailwind-classes.ts"],
   format: ["esm"],
   minify: true,
   outDir: "dist",

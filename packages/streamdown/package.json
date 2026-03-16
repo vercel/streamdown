@@ -12,8 +12,8 @@
     },
     "./styles.css": "./styles.css",
     "./tailwind": {
-      "types": "./dist/tailwind.d.ts",
-      "import": "./dist/tailwind.js"
+      "types": "./dist/tailwind-classes.d.ts",
+      "import": "./dist/tailwind-classes.js"
     }
   },
   "files": [
