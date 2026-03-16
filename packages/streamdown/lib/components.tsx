@@ -15,12 +15,12 @@ import {
 } from "react";
 // BundledLanguage type removed - we now support any language string
 import { type ControlsConfig, StreamdownContext } from "../index";
+import { MemoAdmonition } from "./admonition";
 import { useIsCodeFenceIncomplete } from "./block-incomplete-context";
 import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
 import { CodeBlockSkeleton } from "./code-block/skeleton";
-import { MemoAdmonition } from "./admonition";
 import { ImageComponent } from "./image";
 import { LinkSafetyModal } from "./link-modal";
 import type { ExtraProps, Options } from "./markdown";

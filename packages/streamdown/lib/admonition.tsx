@@ -21,7 +21,10 @@ type AdmonitionProps = {
   dataAdmonitionType?: string;
 } & JSX.IntrinsicElements["div"];
 
-const ADMONITION_STYLES: Record<string, { border: string; bg: string; text: string }> = {
+const ADMONITION_STYLES: Record<
+  string,
+  { border: string; bg: string; text: string }
+> = {
   note: {
     border: "border-blue-500",
     bg: "bg-blue-500/10",
@@ -97,15 +100,16 @@ export const MemoAdmonition = memo<AdmonitionProps>(
         {...props}
       >
         <div
-          className={cn("mb-2 flex items-center gap-2 font-semibold", style.text)}
+          className={cn(
+            "mb-2 flex items-center gap-2 font-semibold",
+            style.text
+          )}
           data-streamdown="admonition-title"
         >
           <IconComponent height={16} width={16} />
           <span>{titleText}</span>
         </div>
-        <div data-streamdown="admonition-content">
-          {children}
-        </div>
+        <div data-streamdown="admonition-content">{children}</div>
       </div>
     );
   },

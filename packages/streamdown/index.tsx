@@ -63,9 +63,7 @@ export { CodeBlockDownloadButton } from "./lib/code-block/download-button";
 export { CodeBlockHeader } from "./lib/code-block/header";
 export { CodeBlockSkeleton } from "./lib/code-block/skeleton";
 export { detectTextDirection } from "./lib/detect-direction";
-export { remarkAdmonition } from "./lib/remark/admonition";
 export type { IconMap } from "./lib/icon-context";
-
 export type {
   AllowElement,
   Components,
@@ -85,6 +83,7 @@ export type {
   PluginConfig,
   ThemeInput,
 } from "./lib/plugin-types";
+export { remarkAdmonition } from "./lib/remark/admonition";
 export {
   TableCopyDropdown,
   type TableCopyDropdownProps,
