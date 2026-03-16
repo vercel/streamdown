@@ -1,6 +1,12 @@
-import type { Blockquote, Paragraph, Root, Text } from "mdast";
 import type { Plugin } from "unified";
 import { visit } from "unist-util-visit";
+
+interface MdastNode {
+  children?: MdastNode[];
+  data?: Record<string, unknown>;
+  type: string;
+  value?: string;
+}
 
 const ADMONITION_TYPES = new Set([
   "note",
@@ -12,20 +18,18 @@ const ADMONITION_TYPES = new Set([
 
 const ADMONITION_REGEX = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*\n?/i;
 
-function detectAdmonitionType(node: Blockquote): string | undefined {
-  const firstChild = node.children[0];
+function detectAdmonitionType(node: MdastNode): string | undefined {
+  const firstChild = node.children?.[0];
   if (!firstChild || firstChild.type !== "paragraph") {
     return undefined;
   }
 
-  const paragraph = firstChild as Paragraph;
-  const firstInline = paragraph.children[0];
-  if (!firstInline || firstInline.type !== "text") {
+  const firstInline = firstChild.children?.[0];
+  if (!firstInline || firstInline.type !== "text" || !firstInline.value) {
     return undefined;
   }
 
-  const textNode = firstInline as Text;
-  const match = textNode.value.match(ADMONITION_REGEX);
+  const match = firstInline.value.match(ADMONITION_REGEX);
   if (!match) {
     return undefined;
   }
@@ -38,9 +42,13 @@ function detectAdmonitionType(node: Blockquote): string | undefined {
   return type;
 }
 
-function stripMarker(node: Blockquote): void {
-  const paragraph = node.children[0] as Paragraph;
-  const textNode = paragraph.children[0] as Text;
+function stripMarker(node: MdastNode): void {
+  const paragraph = node.children?.[0];
+  const textNode = paragraph?.children?.[0];
+  if (!textNode?.value) {
+    return;
+  }
+
   const match = textNode.value.match(ADMONITION_REGEX);
   if (!match) {
     return;
@@ -50,15 +58,15 @@ function stripMarker(node: Blockquote): void {
 
   if (remaining.length > 0) {
     textNode.value = remaining;
-  } else if (paragraph.children.length > 1) {
+  } else if (paragraph?.children && paragraph.children.length > 1) {
     paragraph.children.splice(0, 1);
-  } else {
+  } else if (node.children) {
     node.children.splice(0, 1);
   }
 }
 
-export const remarkAdmonition: Plugin<[], Root> = () => (tree) => {
-  visit(tree, "blockquote", (node: Blockquote) => {
+export const remarkAdmonition: Plugin = () => (tree) => {
+  visit(tree, "blockquote", (node: MdastNode) => {
     const type = detectAdmonitionType(node);
     if (!type) {
       return;
