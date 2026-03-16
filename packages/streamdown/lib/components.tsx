@@ -20,6 +20,7 @@ import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
 import { CodeBlockSkeleton } from "./code-block/skeleton";
+import { MemoAdmonition } from "./admonition";
 import { ImageComponent } from "./image";
 import { LinkSafetyModal } from "./link-modal";
 import type { ExtraProps, Options } from "./markdown";
@@ -1035,6 +1036,7 @@ export const components: Options["components"] = {
   tr: MemoTr,
   th: MemoTh,
   td: MemoTd,
+  admonition: MemoAdmonition,
   blockquote: MemoBlockquote,
   code: MemoCode,
   img: MemoImg,

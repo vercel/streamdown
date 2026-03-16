@@ -38,6 +38,7 @@ import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
+import { remarkAdmonition } from "./lib/remark/admonition";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
 import {
   defaultTranslations,
@@ -62,6 +63,7 @@ export { CodeBlockDownloadButton } from "./lib/code-block/download-button";
 export { CodeBlockHeader } from "./lib/code-block/header";
 export { CodeBlockSkeleton } from "./lib/code-block/skeleton";
 export { detectTextDirection } from "./lib/detect-direction";
+export { remarkAdmonition } from "./lib/remark/admonition";
 export type { IconMap } from "./lib/icon-context";
 
 export type {
@@ -237,12 +239,14 @@ export type StreamdownProps = Options & {
 
 const defaultSanitizeSchema = {
   ...defaultSchema,
+  tagNames: [...(defaultSchema.tagNames ?? []), "admonition"],
   protocols: {
     ...defaultSchema.protocols,
     href: [...(defaultSchema.protocols?.href ?? []), "tel"],
   },
   attributes: {
     ...defaultSchema.attributes,
+    admonition: ["data-admonition-type", "dataAdmonitionType"],
     code: [...(defaultSchema.attributes?.code ?? []), "metastring"],
   },
 };
@@ -265,6 +269,7 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
   gfm: [remarkGfm, {}],
   codeMeta: remarkCodeMeta,
+  admonition: remarkAdmonition,
 } as const;
 
 // Stable plugin arrays for cache efficiency - created once at module level
