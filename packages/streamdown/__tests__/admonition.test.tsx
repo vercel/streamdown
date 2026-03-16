@@ -5,12 +5,12 @@ import { Streamdown } from "../index";
 describe("admonition - remark plugin", () => {
   it("should render > [!NOTE] as an admonition", () => {
     const { container } = render(
-      <Streamdown mode="static">
-        {"> [!NOTE]\n> This is a note."}
-      </Streamdown>
+      <Streamdown mode="static">{"> [!NOTE]\n> This is a note."}</Streamdown>
     );
 
-    const admonition = container.querySelector('[data-streamdown="admonition"]');
+    const admonition = container.querySelector(
+      '[data-streamdown="admonition"]'
+    );
     expect(admonition).toBeTruthy();
     expect(admonition?.getAttribute("data-admonition-type")).toBe("note");
     expect(admonition?.textContent).toContain("This is a note.");
@@ -25,34 +25,40 @@ describe("admonition - remark plugin", () => {
         </Streamdown>
       );
 
-      const admonition = container.querySelector('[data-streamdown="admonition"]');
+      const admonition = container.querySelector(
+        '[data-streamdown="admonition"]'
+      );
       expect(admonition).toBeTruthy();
-      expect(admonition?.getAttribute("data-admonition-type")).toBe(type.toLowerCase());
+      expect(admonition?.getAttribute("data-admonition-type")).toBe(
+        type.toLowerCase()
+      );
     }
   });
 
   it("should preserve normal blockquotes", () => {
     const { container } = render(
-      <Streamdown mode="static">
-        {"> This is a normal quote."}
-      </Streamdown>
+      <Streamdown mode="static">{"> This is a normal quote."}</Streamdown>
     );
 
-    const admonition = container.querySelector('[data-streamdown="admonition"]');
+    const admonition = container.querySelector(
+      '[data-streamdown="admonition"]'
+    );
     expect(admonition).toBeNull();
 
-    const blockquote = container.querySelector('[data-streamdown="blockquote"]');
+    const blockquote = container.querySelector(
+      '[data-streamdown="blockquote"]'
+    );
     expect(blockquote).toBeTruthy();
   });
 
   it("should handle multi-line content", () => {
     const { container } = render(
-      <Streamdown mode="static">
-        {"> [!NOTE]\n> Line 1\n> Line 2"}
-      </Streamdown>
+      <Streamdown mode="static">{"> [!NOTE]\n> Line 1\n> Line 2"}</Streamdown>
     );
 
-    const admonition = container.querySelector('[data-streamdown="admonition"]');
+    const admonition = container.querySelector(
+      '[data-streamdown="admonition"]'
+    );
     expect(admonition).toBeTruthy();
     expect(admonition?.textContent).toContain("Line 1");
     expect(admonition?.textContent).toContain("Line 2");
@@ -60,12 +66,12 @@ describe("admonition - remark plugin", () => {
 
   it("should handle empty body (streaming scenario)", () => {
     const { container } = render(
-      <Streamdown mode="static">
-        {"> [!NOTE]"}
-      </Streamdown>
+      <Streamdown mode="static">{"> [!NOTE]"}</Streamdown>
     );
 
-    const admonition = container.querySelector('[data-streamdown="admonition"]');
+    const admonition = container.querySelector(
+      '[data-streamdown="admonition"]'
+    );
     expect(admonition).toBeTruthy();
     expect(admonition?.getAttribute("data-admonition-type")).toBe("note");
   });
@@ -73,12 +79,12 @@ describe("admonition - remark plugin", () => {
   it("should be case insensitive", () => {
     for (const variant of ["[!note]", "[!Note]", "[!NOTE]"]) {
       const { container } = render(
-        <Streamdown mode="static">
-          {`> ${variant}\n> Content`}
-        </Streamdown>
+        <Streamdown mode="static">{`> ${variant}\n> Content`}</Streamdown>
       );
 
-      const admonition = container.querySelector('[data-streamdown="admonition"]');
+      const admonition = container.querySelector(
+        '[data-streamdown="admonition"]'
+      );
       expect(admonition).toBeTruthy();
       expect(admonition?.getAttribute("data-admonition-type")).toBe("note");
     }
@@ -86,38 +92,40 @@ describe("admonition - remark plugin", () => {
 
   it("should leave invalid types as normal blockquotes", () => {
     const { container } = render(
-      <Streamdown mode="static">
-        {"> [!INVALID]\n> Content"}
-      </Streamdown>
+      <Streamdown mode="static">{"> [!INVALID]\n> Content"}</Streamdown>
     );
 
-    const admonition = container.querySelector('[data-streamdown="admonition"]');
+    const admonition = container.querySelector(
+      '[data-streamdown="admonition"]'
+    );
     expect(admonition).toBeNull();
 
-    const blockquote = container.querySelector('[data-streamdown="blockquote"]');
+    const blockquote = container.querySelector(
+      '[data-streamdown="blockquote"]'
+    );
     expect(blockquote).toBeTruthy();
   });
 
   it("should preserve inline text after type marker", () => {
     const { container } = render(
-      <Streamdown mode="static">
-        {"> [!NOTE] Some inline text"}
-      </Streamdown>
+      <Streamdown mode="static">{"> [!NOTE] Some inline text"}</Streamdown>
     );
 
-    const admonition = container.querySelector('[data-streamdown="admonition"]');
+    const admonition = container.querySelector(
+      '[data-streamdown="admonition"]'
+    );
     expect(admonition).toBeTruthy();
     expect(admonition?.textContent).toContain("Some inline text");
   });
 
   it("should work in streaming mode", () => {
     const { container } = render(
-      <Streamdown mode="streaming">
-        {"> [!WARNING]\n> Be careful!"}
-      </Streamdown>
+      <Streamdown mode="streaming">{"> [!WARNING]\n> Be careful!"}</Streamdown>
     );
 
-    const admonition = container.querySelector('[data-streamdown="admonition"]');
+    const admonition = container.querySelector(
+      '[data-streamdown="admonition"]'
+    );
     expect(admonition).toBeTruthy();
     expect(admonition?.getAttribute("data-admonition-type")).toBe("warning");
   });
@@ -135,12 +143,12 @@ describe("admonition - component features", () => {
 
     for (const [type, expectedTitle] of Object.entries(expectedTitles)) {
       const { container } = render(
-        <Streamdown mode="static">
-          {`> [!${type}]\n> Content`}
-        </Streamdown>
+        <Streamdown mode="static">{`> [!${type}]\n> Content`}</Streamdown>
       );
 
-      const title = container.querySelector('[data-streamdown="admonition-title"]');
+      const title = container.querySelector(
+        '[data-streamdown="admonition-title"]'
+      );
       expect(title?.textContent).toContain(expectedTitle);
     }
   });
@@ -150,12 +158,12 @@ describe("admonition - component features", () => {
 
     for (const type of ["NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION"]) {
       const { container } = render(
-        <Streamdown mode="static">
-          {`> [!${type}]\n> Content`}
-        </Streamdown>
+        <Streamdown mode="static">{`> [!${type}]\n> Content`}</Streamdown>
       );
 
-      const title = container.querySelector('[data-streamdown="admonition-title"]');
+      const title = container.querySelector(
+        '[data-streamdown="admonition-title"]'
+      );
       const svg = title?.querySelector("svg");
       expect(svg).toBeTruthy();
       svgContents.push(svg?.innerHTML ?? "");
@@ -172,7 +180,9 @@ describe("admonition - component features", () => {
       </Streamdown>
     );
 
-    const title = container.querySelector('[data-streamdown="admonition-title"]');
+    const title = container.querySelector(
+      '[data-streamdown="admonition-title"]'
+    );
     expect(title?.textContent).toContain("Nota");
   });
 
@@ -193,7 +203,9 @@ describe("admonition - component features", () => {
     expect(custom).toBeTruthy();
     expect(custom?.textContent).toContain("Custom content");
 
-    const defaultAdmonition = container.querySelector('[data-streamdown="admonition"]');
+    const defaultAdmonition = container.querySelector(
+      '[data-streamdown="admonition"]'
+    );
     expect(defaultAdmonition).toBeNull();
   });
 });
