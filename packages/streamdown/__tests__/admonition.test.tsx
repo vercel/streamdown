@@ -122,3 +122,60 @@ describe("admonition - remark plugin", () => {
     expect(admonition?.getAttribute("data-admonition-type")).toBe("warning");
   });
 });
+
+describe("admonition - component features", () => {
+  it("should render the title text from translations", () => {
+    const { container } = render(
+      <Streamdown mode="static">
+        {"> [!NOTE]\n> Content"}
+      </Streamdown>
+    );
+
+    const title = container.querySelector('[data-streamdown="admonition-title"]');
+    expect(title?.textContent).toContain("Note");
+  });
+
+  it("should render an icon in the title", () => {
+    const { container } = render(
+      <Streamdown mode="static">
+        {"> [!NOTE]\n> Content"}
+      </Streamdown>
+    );
+
+    const title = container.querySelector('[data-streamdown="admonition-title"]');
+    const svg = title?.querySelector("svg");
+    expect(svg).toBeTruthy();
+  });
+
+  it("should support custom translations", () => {
+    const { container } = render(
+      <Streamdown mode="static" translations={{ admonitionNote: "Nota" }}>
+        {"> [!NOTE]\n> Content"}
+      </Streamdown>
+    );
+
+    const title = container.querySelector('[data-streamdown="admonition-title"]');
+    expect(title?.textContent).toContain("Nota");
+  });
+
+  it("should support component override", () => {
+    const CustomAdmonition = (props: Record<string, unknown>) => (
+      <div data-testid="custom-admonition">
+        {props.children as React.ReactNode}
+      </div>
+    );
+
+    const { container } = render(
+      <Streamdown components={{ admonition: CustomAdmonition }} mode="static">
+        {"> [!NOTE]\n> Custom content"}
+      </Streamdown>
+    );
+
+    const custom = container.querySelector('[data-testid="custom-admonition"]');
+    expect(custom).toBeTruthy();
+    expect(custom?.textContent).toContain("Custom content");
+
+    const defaultAdmonition = container.querySelector('[data-streamdown="admonition"]');
+    expect(defaultAdmonition).toBeNull();
+  });
+});

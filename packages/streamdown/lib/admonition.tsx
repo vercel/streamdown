@@ -1,6 +1,10 @@
 import type { JSX } from "react";
 import { memo } from "react";
+import type { IconMap } from "./icon-context";
+import { useIcons } from "./icon-context";
 import { useCn } from "./prefix-context";
+import type { StreamdownTranslations } from "./translations-context";
+import { useTranslations } from "./translations-context";
 
 interface MarkdownNode {
   position?: {
@@ -47,6 +51,22 @@ const ADMONITION_STYLES: Record<string, { border: string; bg: string; text: stri
 
 const DEFAULT_STYLE = ADMONITION_STYLES.note;
 
+const ICON_MAP: Record<string, keyof IconMap> = {
+  note: "AdmonitionNoteIcon",
+  tip: "AdmonitionTipIcon",
+  important: "AdmonitionImportantIcon",
+  warning: "AdmonitionWarningIcon",
+  caution: "AdmonitionCautionIcon",
+};
+
+const TRANSLATION_MAP: Record<string, keyof StreamdownTranslations> = {
+  note: "admonitionNote",
+  tip: "admonitionTip",
+  important: "admonitionImportant",
+  warning: "admonitionWarning",
+  caution: "admonitionCaution",
+};
+
 export const MemoAdmonition = memo<AdmonitionProps>(
   ({
     children,
@@ -59,6 +79,10 @@ export const MemoAdmonition = memo<AdmonitionProps>(
     const cn = useCn();
     const type = dataAttr ?? dataAdmonitionType ?? "note";
     const style = ADMONITION_STYLES[type] ?? DEFAULT_STYLE;
+    const icons = useIcons();
+    const translations = useTranslations();
+    const IconComponent = icons[ICON_MAP[type] ?? "AdmonitionNoteIcon"];
+    const titleText = translations[TRANSLATION_MAP[type] ?? "admonitionNote"];
 
     return (
       <div
@@ -76,7 +100,8 @@ export const MemoAdmonition = memo<AdmonitionProps>(
           className={cn("mb-2 flex items-center gap-2 font-semibold", style.text)}
           data-streamdown="admonition-title"
         >
-          <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span>
+          <IconComponent height={16} width={16} />
+          <span>{titleText}</span>
         </div>
         <div data-streamdown="admonition-content">
           {children}
