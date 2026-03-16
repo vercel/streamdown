@@ -124,27 +124,45 @@ describe("admonition - remark plugin", () => {
 });
 
 describe("admonition - component features", () => {
-  it("should render the title text from translations", () => {
-    const { container } = render(
-      <Streamdown mode="static">
-        {"> [!NOTE]\n> Content"}
-      </Streamdown>
-    );
+  it("should render the correct title text for all 5 types", () => {
+    const expectedTitles: Record<string, string> = {
+      NOTE: "Note",
+      TIP: "Tip",
+      IMPORTANT: "Important",
+      WARNING: "Warning",
+      CAUTION: "Caution",
+    };
 
-    const title = container.querySelector('[data-streamdown="admonition-title"]');
-    expect(title?.textContent).toContain("Note");
+    for (const [type, expectedTitle] of Object.entries(expectedTitles)) {
+      const { container } = render(
+        <Streamdown mode="static">
+          {`> [!${type}]\n> Content`}
+        </Streamdown>
+      );
+
+      const title = container.querySelector('[data-streamdown="admonition-title"]');
+      expect(title?.textContent).toContain(expectedTitle);
+    }
   });
 
-  it("should render an icon in the title", () => {
-    const { container } = render(
-      <Streamdown mode="static">
-        {"> [!NOTE]\n> Content"}
-      </Streamdown>
-    );
+  it("should render a distinct icon for each type", () => {
+    const svgContents: string[] = [];
 
-    const title = container.querySelector('[data-streamdown="admonition-title"]');
-    const svg = title?.querySelector("svg");
-    expect(svg).toBeTruthy();
+    for (const type of ["NOTE", "TIP", "IMPORTANT", "WARNING", "CAUTION"]) {
+      const { container } = render(
+        <Streamdown mode="static">
+          {`> [!${type}]\n> Content`}
+        </Streamdown>
+      );
+
+      const title = container.querySelector('[data-streamdown="admonition-title"]');
+      const svg = title?.querySelector("svg");
+      expect(svg).toBeTruthy();
+      svgContents.push(svg?.innerHTML ?? "");
+    }
+
+    const uniqueSvgs = new Set(svgContents);
+    expect(uniqueSvgs.size).toBe(5);
   });
 
   it("should support custom translations", () => {
