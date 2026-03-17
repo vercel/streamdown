@@ -308,4 +308,27 @@ describe("TableFullscreenButton", () => {
     const copyBtn = overlay?.querySelector('button[title="Copy table"]');
     expect(copyBtn).toBeFalsy();
   });
+
+  it('should have data-streamdown="table-wrapper" inside fullscreen overlay so copy/download can find the table', () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    // The inner wrapper must have data-streamdown="table-wrapper" so that
+    // TableCopyDropdown and TableDownloadDropdown can call .closest() to find the table
+    const tableWrapper = overlay?.querySelector(
+      '[data-streamdown="table-wrapper"]'
+    );
+    expect(tableWrapper).toBeTruthy();
+
+    // And the actual table must be queryable from within the wrapper
+    const table = tableWrapper?.querySelector('[data-streamdown="table"]');
+    expect(table).toBeTruthy();
+  });
 });
