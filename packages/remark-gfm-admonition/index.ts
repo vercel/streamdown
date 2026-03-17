@@ -18,6 +18,10 @@ const ADMONITION_TYPES = new Set([
 
 const ADMONITION_REGEX = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*\n?/i;
 
+function toTitleCase(type: string): string {
+  return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+}
+
 function detectAdmonitionType(node: MdastNode): string | undefined {
   const firstChild = node.children?.[0];
   if (!firstChild || firstChild.type !== "paragraph") {
@@ -65,7 +69,18 @@ function stripMarker(node: MdastNode): void {
   }
 }
 
-export const remarkAdmonition: Plugin = () => (tree) => {
+function createTitleNode(type: string): MdastNode {
+  return {
+    type: "paragraph",
+    children: [{ type: "text", value: toTitleCase(type) }],
+    data: {
+      hName: "p",
+      hProperties: { class: "markdown-alert-title" },
+    },
+  };
+}
+
+const remarkGfmAdmonition: Plugin = () => (tree) => {
   visit(tree, "blockquote", (node: MdastNode) => {
     const type = detectAdmonitionType(node);
     if (!type) {
@@ -74,12 +89,19 @@ export const remarkAdmonition: Plugin = () => (tree) => {
 
     stripMarker(node);
 
+    // Inject title paragraph as first child
+    const titleNode = createTitleNode(type);
+    node.children = node.children ?? [];
+    node.children.unshift(titleNode);
+
+    // Transform blockquote to div with GitHub-compatible classes
     node.data = node.data ?? {};
-    node.data.hName = "admonition";
+    node.data.hName = "div";
     node.data.hProperties = {
-      ...((node.data.hProperties as Record<string, unknown>) ?? {}),
-      "data-admonition-type": type,
-      dataAdmonitionType: type,
+      class: `markdown-alert markdown-alert-${type}`,
     };
   });
 };
+
+export default remarkGfmAdmonition;
+export { remarkGfmAdmonition };

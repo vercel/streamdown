@@ -1,0 +1,43 @@
+{
+  "name": "remark-gfm-admonition",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Remark plugin to support GitHub-flavored admonition blockquotes",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage run"
+  },
+  "dependencies": {
+    "unist-util-visit": "^5.0.0"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.15",
+    "rehype-stringify": "^10.0.0",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.0.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "unified": "^11.0.5",
+    "vitest": "^4.0.15"
+  },
+  "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vercel/streamdown.git",
+    "directory": "packages/remark-gfm-admonition"
+  }
+}

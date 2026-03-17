@@ -70,6 +70,7 @@
     "rehype-raw": "^7.0.0",
     "rehype-sanitize": "^6.0.0",
     "remark-gfm": "^4.0.1",
+    "remark-gfm-admonition": "workspace:*",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
     "remend": "workspace:*",
