@@ -106,7 +106,9 @@ describe("multiple incomplete links", () => {
 
   it("should handle one complete and one incomplete link", () => {
     const result = remend("[first](url1) and [second");
-    expect(result).toBe("[first](url1) and [second](streamdown:incomplete-link)");
+    expect(result).toBe(
+      "[first](url1) and [second](streamdown:incomplete-link)"
+    );
   });
 
   it("should handle nested incomplete brackets", () => {
@@ -250,9 +252,7 @@ describe("KaTeX with complex content", () => {
   });
 
   it("should close inline katex when enabled", () => {
-    expect(remend("$x^2 + y^2", { inlineKatex: true })).toBe(
-      "$x^2 + y^2$"
-    );
+    expect(remend("$x^2 + y^2", { inlineKatex: true })).toBe("$x^2 + y^2$");
   });
 
   it("should not treat currency as katex without inlineKatex", () => {
@@ -493,9 +493,7 @@ describe("disabled handlers via options", () => {
   });
 
   it("should close italic even when bold is disabled", () => {
-    expect(remend("**bold *italic", { bold: false })).toBe(
-      "**bold *italic*"
-    );
+    expect(remend("**bold *italic", { bold: false })).toBe("**bold *italic*");
   });
 
   it("should not close anything when all are disabled", () => {
@@ -512,9 +510,7 @@ describe("disabled handlers via options", () => {
   it("should not close bold when asterisk in content blocks pattern (italic disabled)", () => {
     // Bold pattern can't match when * appears in content; italic is disabled
     // So nothing closes
-    expect(remend("**bold *italic", { italic: false })).toBe(
-      "**bold *italic"
-    );
+    expect(remend("**bold *italic", { italic: false })).toBe("**bold *italic");
   });
 
   it("should close strikethrough but not bold when bold is disabled", () => {
@@ -598,8 +594,8 @@ describe("real-world AI streaming patterns", () => {
   });
 
   it("should handle link with incomplete formatting after it", () => {
-    expect(
-      remend("[click here](https://example.com) for **more")
-    ).toBe("[click here](https://example.com) for **more**");
+    expect(remend("[click here](https://example.com) for **more")).toBe(
+      "[click here](https://example.com) for **more**"
+    );
   });
 });
