@@ -1,5 +1,12 @@
 # remend
 
+## 1.3.0
+
+### Minor Changes
+
+- e50b0c4: Add opt-in inline KaTeX completion (`$formula` → `$formula$`) via a new `inlineKatex` option that defaults to `false` to avoid ambiguity with currency symbols. Also fixes block KaTeX completion when streaming produces a partial closing `$`.
+- 716a5f0: Escape single `~` between word characters to prevent false strikethrough rendering (e.g. `20~25°C` no longer renders as strikethrough). Adds a new `singleTilde` option (enabled by default) that can be disabled via `{ singleTilde: false }`.
+
 ## 1.2.2
 
 ### Patch Changes
