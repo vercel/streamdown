@@ -153,7 +153,7 @@ export const PanZoom = ({
     <div
       className={cn(
         "relative flex flex-col",
-        fullscreen ? "h-full w-full" : "min-h-28 w-full",
+        fullscreen ? "h-full w-full" : "min-h-48 w-full",
         className
       )}
       ref={containerRef}
