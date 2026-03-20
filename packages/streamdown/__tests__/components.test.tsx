@@ -433,6 +433,7 @@ describe("Markdown Components", () => {
       const table = tableWrapper?.querySelector("table");
       expect(table).toBeTruthy();
       expect(table?.className).toContain("w-full");
+      expect(table?.className).toContain("table-fixed");
       expect(table?.className).toContain("divide-y");
       expect(table?.className).toContain("divide-border");
     });
