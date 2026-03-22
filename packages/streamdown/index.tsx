@@ -347,6 +347,10 @@ export const Block = memo(
     if (animatePluginProp) {
       const prevCount = animatePluginProp.getLastRenderCharCount();
       animatePluginProp.setPrevContentLength(prevCount);
+      // When the block has an incomplete code fence, animate code block
+      // content incrementally instead of skipping it. This gives visual
+      // feedback that code is streaming in token-by-token.
+      animatePluginProp.setAnimateCodeBlocks(isIncomplete);
     }
 
     // Note: remend is already applied to the entire markdown before parsing into blocks
