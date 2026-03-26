@@ -6,8 +6,11 @@ import { useCn } from "../prefix-context";
 interface PanZoomProps {
   children: ReactNode;
   className?: string;
+  contentSize?: { height: number; width: number } | null;
+  fitKey?: string;
   fullscreen?: boolean;
   initialZoom?: number;
+  isAutoFit?: boolean;
   maxZoom?: number;
   minZoom?: number;
   showControls?: boolean;
@@ -17,31 +20,41 @@ interface PanZoomProps {
 export const PanZoom = ({
   children,
   className,
+  contentSize,
+  fitKey,
   minZoom = 0.5,
   maxZoom = 3,
   zoomStep = 0.1,
   showControls = true,
   initialZoom = 1,
+  isAutoFit = false,
   fullscreen = false,
 }: PanZoomProps) => {
   const { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } = useIcons();
   const cn = useCn();
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [baseZoom, setBaseZoom] = useState(initialZoom);
+  const [effectiveMinZoom, setEffectiveMinZoom] = useState(minZoom);
   const [zoom, setZoom] = useState(initialZoom);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [panStartPosition, setPanStartPosition] = useState({ x: 0, y: 0 });
 
   const handleZoom = useCallback(
     (delta: number) => {
       setZoom((prevZoom) => {
-        const newZoom = Math.max(minZoom, Math.min(maxZoom, prevZoom + delta));
+        const newZoom = Math.max(
+          effectiveMinZoom,
+          Math.min(maxZoom, prevZoom + delta)
+        );
         return newZoom;
       });
+      setHasUserInteracted(true);
     },
-    [minZoom, maxZoom]
+    [effectiveMinZoom, maxZoom]
   );
 
   const handleZoomIn = useCallback(() => {
@@ -53,9 +66,10 @@ export const PanZoom = ({
   }, [handleZoom, zoomStep]);
 
   const handleReset = useCallback(() => {
-    setZoom(initialZoom);
+    setZoom(baseZoom);
     setPan({ x: 0, y: 0 });
-  }, [initialZoom]);
+    setHasUserInteracted(false);
+  }, [baseZoom]);
 
   const handleWheel = useCallback(
     (e: WheelEvent) => {
@@ -73,6 +87,7 @@ export const PanZoom = ({
         return;
       }
       setIsPanning(true);
+      setHasUserInteracted(true);
       setPanStart({ x: e.clientX, y: e.clientY });
       setPanStartPosition(pan);
       // Capture the pointer to track it even outside the element
@@ -109,6 +124,58 @@ export const PanZoom = ({
       target.releasePointerCapture(e.pointerId);
     }
   }, []);
+
+  useEffect(() => {
+    setEffectiveMinZoom(minZoom);
+    if (!isAutoFit) {
+      setBaseZoom(initialZoom);
+      setZoom(initialZoom);
+    }
+  }, [initialZoom, isAutoFit, minZoom]);
+
+  useEffect(() => {
+    if (!isAutoFit || !contentSize) {
+      return;
+    }
+
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
+
+    if (!(containerWidth > 0 && containerHeight > 0)) {
+      return;
+    }
+
+    const fitZoom = Math.min(
+      containerWidth / contentSize.width,
+      containerHeight / contentSize.height,
+      1
+    );
+
+    if (!(fitZoom > 0) || Number.isNaN(fitZoom)) {
+      return;
+    }
+
+    setBaseZoom(fitZoom);
+    setEffectiveMinZoom(Math.min(minZoom, fitZoom));
+
+    if (!hasUserInteracted) {
+      setZoom(fitZoom);
+      setPan({ x: 0, y: 0 });
+    }
+  }, [contentSize, hasUserInteracted, isAutoFit, minZoom]);
+
+  useEffect(() => {
+    if (!isAutoFit) {
+      return;
+    }
+
+    setHasUserInteracted(false);
+  }, [fitKey, isAutoFit]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -181,7 +248,7 @@ export const PanZoom = ({
             className={cn(
               "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             )}
-            disabled={zoom <= minZoom}
+            disabled={zoom <= effectiveMinZoom}
             onClick={handleZoomOut}
             title="Zoom out"
             type="button"
