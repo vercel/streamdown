@@ -1,5 +1,5 @@
 import { act, fireEvent, render, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { PanZoom } from "../lib/mermaid/pan-zoom";
 
 describe("PanZoom", () => {
@@ -294,5 +294,31 @@ describe("PanZoom", () => {
 
     // Check the actual style property, not the attribute string
     expect(content?.style.touchAction).toBe("none");
+  });
+
+  it("should auto-fit large content to width and height", async () => {
+    const widthSpy = vi
+      .spyOn(HTMLElement.prototype, "clientWidth", "get")
+      .mockReturnValue(500);
+    const heightSpy = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockReturnValue(250);
+
+    try {
+      const { container } = render(
+        <PanZoom contentSize={{ height: 1000, width: 1000 }} isAutoFit={true}>
+          <div>Content</div>
+        </PanZoom>
+      );
+
+      await waitFor(() => {
+        const content = container.querySelector('[role="application"]');
+        const transform = content?.getAttribute("style") ?? "";
+        expect(transform).toContain("scale(0.25)");
+      });
+    } finally {
+      widthSpy.mockRestore();
+      heightSpy.mockRestore();
+    }
   });
 });
