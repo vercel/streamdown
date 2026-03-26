@@ -35,10 +35,16 @@ export const preprocessCustomTags = (
     result = result.replace(
       pattern,
       (_match, open: string, content: string, close: string) => {
-        // Only restructure when content contains blank lines that would
-        // split the HTML block. Tags without blank lines work fine as
-        // inline HTML and don't need restructuring.
-        if (!content.includes("\n\n")) {
+        // Restructure when:
+        // 1. Content has blank lines (\n\n) — these would split the HTML block, or
+        // 2. Content starts inline (not preceded by \n) and contains any newline —
+        //    a newline inside inline content can introduce block-level elements like
+        //    ATX headings (# title) that the parser would treat as a new block,
+        //    prematurely terminating the custom tag scope.
+        const hasBlankLines = content.includes("\n\n");
+        const isInlineContent = !content.startsWith("\n");
+        const hasNewline = content.includes("\n");
+        if (!(hasBlankLines || (isInlineContent && hasNewline))) {
           return open + content + close;
         }
 

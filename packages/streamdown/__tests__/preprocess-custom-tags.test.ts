@@ -51,9 +51,23 @@ describe("preprocessCustomTags", () => {
     expect(preprocessCustomTags(md, ["custom"])).toBe(md);
   });
 
-  it("should not modify content without blank lines", () => {
+  it("should not modify content without blank lines (no newline)", () => {
+    // Single-line content without any newlines is fine as inline HTML
     const md = "<custom>Hello World</custom>";
     expect(preprocessCustomTags(md, ["custom"])).toBe(md);
+  });
+
+  it("should restructure inline content with a newline followed by ATX heading", () => {
+    // A heading inside inline content would prematurely terminate the custom tag
+    const md = "<ai-thinking> hi\n # yes</ai-thinking>";
+    const result = preprocessCustomTags(md, ["ai-thinking"]);
+    expect(result).toBe("<ai-thinking>\n hi\n # yes\n</ai-thinking>\n\n");
+  });
+
+  it("should restructure inline content with any newline (prevents block element splitting)", () => {
+    const md = "<custom>hello\nworld</custom>";
+    const result = preprocessCustomTags(md, ["custom"]);
+    expect(result).toBe("<custom>\nhello\nworld\n</custom>\n\n");
   });
 
   it("should not modify tags where content already starts on own line without blank lines", () => {
