@@ -175,7 +175,7 @@ export const PanZoom = ({
             title="Zoom in"
             type="button"
           >
-            <ZoomInIcon size={16} />
+            <ZoomInIcon aria-hidden={true} size={16} />
           </button>
           <button
             className={cn(
@@ -186,7 +186,7 @@ export const PanZoom = ({
             title="Zoom out"
             type="button"
           >
-            <ZoomOutIcon size={16} />
+            <ZoomOutIcon aria-hidden={true} size={16} />
           </button>
           <button
             className={cn(
@@ -196,7 +196,7 @@ export const PanZoom = ({
             title="Reset zoom and pan"
             type="button"
           >
-            <RotateCcwIcon size={16} />
+            <RotateCcwIcon aria-hidden={true} size={16} />
           </button>
         </div>
       ) : null}
