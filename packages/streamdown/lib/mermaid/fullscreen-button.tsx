@@ -87,8 +87,9 @@ export const MermaidFullscreenButton = ({
         title={t.viewFullscreen}
         type="button"
         {...props}
+        aria-label={t.viewFullscreen}
       >
-        <Maximize2Icon size={14} />
+        <Maximize2Icon size={14} aria-hidden="true"/>
       </button>
 
       {isFullscreen
@@ -114,8 +115,9 @@ export const MermaidFullscreenButton = ({
                 onClick={handleToggle}
                 title={t.exitFullscreen}
                 type="button"
+                aria-label={t.exitFullscreen}
               >
-                <XIcon size={20} />
+                <XIcon size={20} aria-hidden="true" />
               </button>
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
               <div
