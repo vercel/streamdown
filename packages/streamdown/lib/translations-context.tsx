@@ -20,6 +20,9 @@ export interface StreamdownTranslations {
   downloadDiagramAsPng: string;
   downloadDiagramAsSvg: string;
   downloadFile: string;
+  zoomIn: string;
+  zoomOut: string;
+  resetView: string;
   // Image
   downloadImage: string;
   downloadTable: string;
@@ -53,6 +56,9 @@ export const defaultTranslations: StreamdownTranslations = {
   mermaidFormatSvg: "SVG",
   mermaidFormatPng: "PNG",
   mermaidFormatMmd: "MMD",
+  zoomIn: "Zoom in",
+  zoomOut: "Zoom out",
+  resetView: "Reset zoom and pan",
   // Table
   copyTable: "Copy table",
   copyTableAsMarkdown: "Copy table as Markdown",
