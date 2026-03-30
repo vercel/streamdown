@@ -169,6 +169,7 @@ export const PanZoom = ({
           )}
         >
           <button
+            aria-label={t.zoomIn}
             className={cn(
               "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             )}
@@ -176,11 +177,11 @@ export const PanZoom = ({
             onClick={handleZoomIn}
             title={t.zoomIn}
             type="button"
-            aria-label={t.zoomIn}
           >
-            <ZoomInIcon size={16} aria-hidden="true" />
+            <ZoomInIcon aria-hidden="true" size={16} />
           </button>
           <button
+            aria-label={t.zoomOut}
             className={cn(
               "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             )}
@@ -188,20 +189,19 @@ export const PanZoom = ({
             onClick={handleZoomOut}
             title={t.zoomOut}
             type="button"
-            aria-label={t.zoomOut}
           >
-            <ZoomOutIcon size={16} aria-hidden="true" />
+            <ZoomOutIcon aria-hidden="true" size={16} />
           </button>
           <button
+            aria-label={t.resetView}
             className={cn(
               "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             )}
             onClick={handleReset}
             title={t.resetView}
             type="button"
-            aria-label={t.resetView}
           >
-            <RotateCcwIcon size={16} aria-hidden="true" />
+            <RotateCcwIcon aria-hidden="true" size={16} />
           </button>
         </div>
       ) : null}

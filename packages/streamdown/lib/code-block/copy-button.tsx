@@ -67,6 +67,7 @@ export const CodeBlockCopyButton = ({
 
   return (
     <button
+      aria-label={t.copyCode}
       className={cn(
         "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className
@@ -75,11 +76,10 @@ export const CodeBlockCopyButton = ({
       disabled={isAnimating}
       onClick={copyToClipboard}
       title={t.copyCode}
-      aria-label={t.copyCode}
       type="button"
       {...props}
     >
-      {children ?? <Icon size={14} aria-hidden="true" />}
+      {children ?? <Icon aria-hidden="true" size={14} />}
     </button>
   );
 };
