@@ -107,6 +107,7 @@ export const MermaidDownloadDropdown = ({
   return (
     <div className={cn("relative")} ref={dropdownRef}>
       <button
+        aria-label={t.downloadDiagram}
         className={cn(
           "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className
@@ -116,7 +117,7 @@ export const MermaidDownloadDropdown = ({
         title={t.downloadDiagram}
         type="button"
       >
-        {children ?? <icons.DownloadIcon size={14} />}
+        {children ?? <icons.DownloadIcon aria-hidden="true" size={14} />}
       </button>
       {isOpen ? (
         <div
@@ -125,6 +126,7 @@ export const MermaidDownloadDropdown = ({
           )}
         >
           <button
+            aria-label={t.downloadDiagramAsSvg}
             className={cn(
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}
@@ -135,6 +137,7 @@ export const MermaidDownloadDropdown = ({
             {t.mermaidFormatSvg}
           </button>
           <button
+            aria-label={t.downloadDiagramAsPng}
             className={cn(
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}
@@ -145,6 +148,7 @@ export const MermaidDownloadDropdown = ({
             {t.mermaidFormatPng}
           </button>
           <button
+            aria-label={t.downloadDiagramAsMmd}
             className={cn(
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}
