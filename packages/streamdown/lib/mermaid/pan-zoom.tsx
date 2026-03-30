@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 
 interface PanZoomProps {
   children: ReactNode;
@@ -26,6 +27,7 @@ export const PanZoom = ({
 }: PanZoomProps) => {
   const { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } = useIcons();
   const cn = useCn();
+  const t = useTranslations();
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(initialZoom);
@@ -172,9 +174,9 @@ export const PanZoom = ({
             )}
             disabled={zoom >= maxZoom}
             onClick={handleZoomIn}
-            title="Zoom in"
+            title={t.zoomIn}
             type="button"
-            aria-label="Zoom in"
+            aria-label={t.zoomIn}
           >
             <ZoomInIcon size={16} aria-hidden="true" />
           </button>
@@ -184,22 +186,22 @@ export const PanZoom = ({
             )}
             disabled={zoom <= minZoom}
             onClick={handleZoomOut}
-            title="Zoom out"
+            title={t.zoomOut}
             type="button"
-            aria-label="Zoom out"
+            aria-label={t.zoomOut}
           >
-            <ZoomOutIcon size={16} aria-hidden="true"/>
+            <ZoomOutIcon size={16} aria-hidden="true" />
           </button>
           <button
             className={cn(
               "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             )}
             onClick={handleReset}
-            title="Reset zoom and pan"
+            title={t.resetView}
             type="button"
-            aria-label="Reset zoom and pan"
+            aria-label={t.resetView}
           >
-            <RotateCcwIcon size={16} aria-hidden="true"/>
+            <RotateCcwIcon size={16} aria-hidden="true" />
           </button>
         </div>
       ) : null}
