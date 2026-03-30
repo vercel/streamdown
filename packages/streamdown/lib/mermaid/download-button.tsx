@@ -115,8 +115,9 @@ export const MermaidDownloadDropdown = ({
         onClick={() => setIsOpen(!isOpen)}
         title={t.downloadDiagram}
         type="button"
+        aria-label={t.downloadDiagram}
       >
-        {children ?? <icons.DownloadIcon size={14} />}
+        {children ?? <icons.DownloadIcon size={14} aria-hidden="true"/>}
       </button>
       {isOpen ? (
         <div
@@ -131,6 +132,7 @@ export const MermaidDownloadDropdown = ({
             onClick={() => downloadMermaid("svg")}
             title={t.downloadDiagramAsSvg}
             type="button"
+            aria-label={t.downloadDiagramAsSvg}
           >
             {t.mermaidFormatSvg}
           </button>
@@ -141,6 +143,7 @@ export const MermaidDownloadDropdown = ({
             onClick={() => downloadMermaid("png")}
             title={t.downloadDiagramAsPng}
             type="button"
+            aria-label={t.downloadDiagramAsPng}
           >
             {t.mermaidFormatPng}
           </button>
@@ -151,6 +154,7 @@ export const MermaidDownloadDropdown = ({
             onClick={() => downloadMermaid("mmd")}
             title={t.downloadDiagramAsMmd}
             type="button"
+            aria-label={t.downloadDiagramAsMmd}
           >
             {t.mermaidFormatMmd}
           </button>
