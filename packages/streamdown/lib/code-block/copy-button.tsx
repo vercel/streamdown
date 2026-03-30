@@ -79,7 +79,7 @@ export const CodeBlockCopyButton = ({
       type="button"
       {...props}
     >
-      {children ?? <Icon size={14} aria-hidden="true"/>}
+      {children ?? <Icon size={14} aria-hidden="true" />}
     </button>
   );
 };

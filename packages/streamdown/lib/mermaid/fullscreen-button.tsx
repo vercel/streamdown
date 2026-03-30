@@ -89,7 +89,7 @@ export const MermaidFullscreenButton = ({
         {...props}
         aria-label={t.viewFullscreen}
       >
-        <Maximize2Icon size={14} aria-hidden="true"/>
+        <Maximize2Icon size={14} aria-hidden="true" />
       </button>
 
       {isFullscreen
