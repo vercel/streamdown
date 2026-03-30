@@ -75,10 +75,11 @@ export const CodeBlockCopyButton = ({
       disabled={isAnimating}
       onClick={copyToClipboard}
       title={t.copyCode}
+      aria-label={t.copyCode}
       type="button"
       {...props}
     >
-      {children ?? <Icon size={14} />}
+      {children ?? <Icon size={14} aria-hidden="true"/>}
     </button>
   );
 };
