@@ -18,6 +18,7 @@ import { harden } from "rehype-harden";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
+import remarkGfmAdmonition from "remark-gfm-admonition";
 import remend, { type RemendOptions } from "remend";
 import type { Pluggable } from "unified";
 import {
@@ -38,6 +39,7 @@ import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
+import { remarkAdmonitionStreamdown } from "./lib/remark/admonition-streamdown";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
 import {
   defaultTranslations,
@@ -46,13 +48,14 @@ import {
 } from "./lib/translations-context";
 import { createCn } from "./lib/utils";
 
+// biome-ignore lint/performance/noBarrelFile: "required"
+export { default as remarkAdmonition } from "remark-gfm-admonition";
 export type {
   BundledLanguage,
   BundledTheme,
   ThemeRegistrationAny,
 } from "shiki";
 export type { AnimateOptions } from "./lib/animate";
-// biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimatePlugin } from "./lib/animate";
 export { useIsCodeFenceIncomplete } from "./lib/block-incomplete-context";
 export { CodeBlock } from "./lib/code-block";
@@ -63,7 +66,6 @@ export { CodeBlockHeader } from "./lib/code-block/header";
 export { CodeBlockSkeleton } from "./lib/code-block/skeleton";
 export { detectTextDirection } from "./lib/detect-direction";
 export type { IconMap } from "./lib/icon-context";
-
 export type {
   AllowElement,
   Components,
@@ -83,6 +85,7 @@ export type {
   PluginConfig,
   ThemeInput,
 } from "./lib/plugin-types";
+export { remarkAdmonitionStreamdown } from "./lib/remark/admonition-streamdown";
 export {
   TableCopyDropdown,
   type TableCopyDropdownProps,
@@ -237,12 +240,14 @@ export type StreamdownProps = Options & {
 
 const defaultSanitizeSchema = {
   ...defaultSchema,
+  tagNames: [...(defaultSchema.tagNames ?? []), "admonition"],
   protocols: {
     ...defaultSchema.protocols,
     href: [...(defaultSchema.protocols?.href ?? []), "tel"],
   },
   attributes: {
     ...defaultSchema.attributes,
+    admonition: ["data-admonition-type", "dataAdmonitionType"],
     code: [...(defaultSchema.attributes?.code ?? []), "metastring"],
   },
 };
@@ -265,6 +270,8 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
   gfm: [remarkGfm, {}],
   codeMeta: remarkCodeMeta,
+  admonition: remarkGfmAdmonition,
+  admonitionStreamdown: remarkAdmonitionStreamdown,
 } as const;
 
 // Stable plugin arrays for cache efficiency - created once at module level

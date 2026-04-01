@@ -15,6 +15,7 @@ import {
 } from "react";
 // BundledLanguage type removed - we now support any language string
 import { type ControlsConfig, StreamdownContext } from "../index";
+import { MemoAdmonition } from "./admonition";
 import { useIsCodeFenceIncomplete } from "./block-incomplete-context";
 import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
@@ -1035,6 +1036,7 @@ export const components: Options["components"] = {
   tr: MemoTr,
   th: MemoTh,
   td: MemoTd,
+  admonition: MemoAdmonition,
   blockquote: MemoBlockquote,
   code: MemoCode,
   img: MemoImg,

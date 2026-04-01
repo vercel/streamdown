@@ -2,6 +2,11 @@
 
 import { createContext, type SVGProps, useContext, useRef } from "react";
 import {
+  AdmonitionCautionIcon,
+  AdmonitionImportantIcon,
+  AdmonitionNoteIcon,
+  AdmonitionTipIcon,
+  AdmonitionWarningIcon,
   CheckIcon,
   CopyIcon,
   DownloadIcon,
@@ -19,6 +24,11 @@ export type IconComponent = React.ComponentType<
 >;
 
 export interface IconMap {
+  AdmonitionCautionIcon: IconComponent;
+  AdmonitionImportantIcon: IconComponent;
+  AdmonitionNoteIcon: IconComponent;
+  AdmonitionTipIcon: IconComponent;
+  AdmonitionWarningIcon: IconComponent;
   CheckIcon: IconComponent;
   CopyIcon: IconComponent;
   DownloadIcon: IconComponent;
@@ -32,6 +42,11 @@ export interface IconMap {
 }
 
 export const defaultIcons: IconMap = {
+  AdmonitionCautionIcon,
+  AdmonitionImportantIcon,
+  AdmonitionNoteIcon,
+  AdmonitionTipIcon,
+  AdmonitionWarningIcon,
   CheckIcon,
   CopyIcon,
   DownloadIcon,
