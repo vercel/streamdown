@@ -181,6 +181,35 @@ describe("Mermaid Component", () => {
     });
   });
 
+  it("should apply responsive sizing classes to chart container", async () => {
+    const { container } = renderWithContext(<Mermaid chart={simpleChart} />);
+
+    await waitFor(() => {
+      const chartContainer = container.querySelector(
+        '[aria-label="Mermaid chart"]'
+      );
+      expect(chartContainer).toBeTruthy();
+      expect(chartContainer?.className).toContain("w-full");
+      expect(chartContainer?.className).toContain("min-w-0");
+      expect(chartContainer?.className).toContain("items-start");
+    });
+  });
+
+  it("should apply fullscreen alignment to chart container", async () => {
+    const { container } = renderWithContext(
+      <Mermaid chart={simpleChart} fullscreen={true} />
+    );
+
+    await waitFor(() => {
+      const chartContainer = container.querySelector(
+        '[aria-label="Mermaid chart"]'
+      );
+      expect(chartContainer).toBeTruthy();
+      expect(chartContainer?.className).toContain("items-center");
+      expect(chartContainer?.className).toContain("size-full");
+    });
+  });
+
   it("should pass config to mermaid getMermaid", async () => {
     const mockPlugin = createMockMermaidPlugin();
 

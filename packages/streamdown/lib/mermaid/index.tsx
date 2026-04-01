@@ -179,8 +179,9 @@ export const Mermaid = ({
         <div
           aria-label="Mermaid chart"
           className={cn(
-            "flex justify-center",
-            fullscreen ? "size-full items-center" : null
+            "flex w-full min-w-0 justify-center",
+            fullscreen ? "size-full items-center" : "items-start",
+            "[&_svg]:max-w-full [&_svg]:h-auto [&_svg]:w-full"
           )}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
           dangerouslySetInnerHTML={{ __html: displaySvg }}
