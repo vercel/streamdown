@@ -116,7 +116,7 @@ export const MermaidDownloadDropdown = ({
         title={t.downloadDiagram}
         type="button"
       >
-        {children ?? <icons.DownloadIcon size={14} />}
+        {children ?? <icons.DownloadIcon aria-hidden={true} size={14} />}
       </button>
       {isOpen ? (
         <div
