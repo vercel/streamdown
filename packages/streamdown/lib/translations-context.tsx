@@ -33,10 +33,13 @@ export interface StreamdownTranslations {
   mermaidFormatSvg: string;
   openExternalLink: string;
   openLink: string;
+  resetView: string;
   tableFormatCsv: string;
   tableFormatMarkdown: string;
   tableFormatTsv: string;
   viewFullscreen: string;
+  zoomIn: string;
+  zoomOut: string;
 }
 
 export const defaultTranslations: StreamdownTranslations = {
@@ -53,6 +56,9 @@ export const defaultTranslations: StreamdownTranslations = {
   mermaidFormatSvg: "SVG",
   mermaidFormatPng: "PNG",
   mermaidFormatMmd: "MMD",
+  zoomIn: "Zoom in",
+  zoomOut: "Zoom out",
+  resetView: "Reset zoom and pan",
   // Table
   copyTable: "Copy table",
   copyTableAsMarkdown: "Copy table as Markdown",
