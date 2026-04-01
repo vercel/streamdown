@@ -10,6 +10,8 @@ const createContextValue = (
   shikiTheme: ["github-light", "github-dark"],
   controls: true,
   isAnimating: false,
+  lineNumbers: true,
+  listStyle: "hierarchical",
   mode: "streaming",
   mermaid: undefined,
   linkSafety,
@@ -83,7 +85,7 @@ describe("Node Attribute Fix", () => {
 
       // ✅ Verify correct attributes ARE present
       expect(ul?.getAttribute("data-streamdown")).toBe("unordered-list");
-      expect(ul?.className).toContain("list-disc");
+      expect(ul?.className).toContain("list-inside");
     });
 
     it("should NOT render node attribute in LI element", () => {

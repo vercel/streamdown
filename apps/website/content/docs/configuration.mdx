@@ -70,6 +70,11 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
       type: "[ThemeInput, ThemeInput]",
       default: "['github-light', 'github-dark']",
     },
+    listStyle: {
+      description: "Bullet style preset for nested unordered lists. 'hierarchical' cycles through disc → circle → square based on nesting depth. 'flat' uses disc at all levels.",
+      type: '"hierarchical" | "flat"',
+      default: '"hierarchical"',
+    },
     components: {
       description: "Custom component overrides for Markdown elements",
       type: "object",

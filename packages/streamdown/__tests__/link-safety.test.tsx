@@ -14,6 +14,8 @@ describe("Link Safety Modal", () => {
     shikiTheme: ["github-light", "github-dark"],
     controls: true,
     isAnimating: false,
+    lineNumbers: true,
+    listStyle: "hierarchical",
     mode: "streaming",
     mermaid: undefined,
     linkSafety,
