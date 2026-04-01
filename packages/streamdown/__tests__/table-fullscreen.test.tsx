@@ -136,6 +136,7 @@ describe("TableFullscreenButton", () => {
     );
     const table = overlay?.querySelector('[data-streamdown="table"]');
     expect(table).toBeTruthy();
+    expect(table?.className).toContain("table-fixed");
   });
 
   it("should show copy and download controls in fullscreen", () => {

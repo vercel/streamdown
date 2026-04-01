@@ -53,7 +53,7 @@ export const Table = ({
         )}
       >
         <table
-          className={cn("w-full divide-y divide-border", className)}
+          className={cn("table-fixed w-full divide-y divide-border", className)}
           data-streamdown="table"
           {...props}
         >
