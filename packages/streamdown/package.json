@@ -10,7 +10,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./styles.css": "./styles.css"
+    "./styles.css": "./styles.css",
+    "./tailwind": {
+      "types": "./dist/tailwind-classes.d.ts",
+      "import": "./dist/tailwind-classes.js"
+    }
   },
   "files": [
     "dist",
