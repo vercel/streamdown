@@ -63,6 +63,7 @@ export { CodeBlockHeader } from "./lib/code-block/header";
 export { CodeBlockSkeleton } from "./lib/code-block/skeleton";
 export { detectTextDirection } from "./lib/detect-direction";
 export type { IconMap } from "./lib/icon-context";
+export { defaultComponents };
 
 export type {
   AllowElement,
