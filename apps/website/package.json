@@ -17,6 +17,7 @@
     "@streamdown/code": "workspace:*",
     "@streamdown/math": "workspace:*",
     "@streamdown/mermaid": "workspace:*",
+    "@vercel/agent-readability": "^0.2.1",
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^1.3.1",
     "ai": "^5.0.106",
