@@ -2,7 +2,11 @@ import rehypeParse from "rehype-parse";
 import rehypeStringify from "rehype-stringify";
 import { unified } from "unified";
 import { describe, expect, it } from "vitest";
-import { animate, createAnimatePlugin } from "../lib/animate";
+import {
+  animate,
+  createAnimateCursor,
+  createAnimatePlugin,
+} from "../lib/animate";
 
 const SPAN_GAP_RE = /<\/span>\s+<span/;
 const CODE_CONTENT_RE = /<code>([^<]*)<\/code>/;
@@ -279,6 +283,73 @@ describe("animate plugin", () => {
       const result = await processHtml("<p>Hello world foo</p>", plugin);
       const delays = result.match(/--sd-delay:\d+ms/g) ?? [];
       expect(delays).toEqual([]);
+    });
+  });
+
+  describe("shared cursor (cross-block chaining)", () => {
+    it("should chain delays across sibling blocks", async () => {
+      const cursor = createAnimateCursor();
+      const block0 = createAnimatePlugin({ stagger: 50, cursor });
+      const block1 = createAnimatePlugin({ stagger: 50, cursor });
+
+      // Simulate a render pass: reset cursor, then render block0, block1
+      cursor.current = 0;
+      const result0 = await processHtml("<p>Hello world</p>", block0);
+      const result1 = await processHtml("<p>foo bar</p>", block1);
+
+      // block0: "Hello"=0ms (omitted), "world"=50ms
+      // block1: "foo"=100ms, "bar"=150ms  (cursor was 2 after block0)
+      const delays0 = result0.match(/--sd-delay:\d+ms/g) ?? [];
+      const delays1 = result1.match(/--sd-delay:\d+ms/g) ?? [];
+
+      expect(delays0).toEqual(["--sd-delay:50ms"]);
+      expect(delays1).toEqual(["--sd-delay:100ms", "--sd-delay:150ms"]);
+    });
+
+    it("should reset delays when cursor is reset to 0", async () => {
+      const cursor = createAnimateCursor();
+      const block0 = createAnimatePlugin({ stagger: 50, cursor });
+      const block1 = createAnimatePlugin({ stagger: 50, cursor });
+
+      // First render pass
+      cursor.current = 0;
+      await processHtml("<p>Hello world</p>", block0);
+
+      // Second render pass — reset cursor so block1 starts from 0 again
+      cursor.current = 0;
+      await processHtml("<p>Hello world</p>", block0);
+      const result1 = await processHtml("<p>foo bar</p>", block1);
+
+      // block1 should chain after block0's 2 new words: "foo"=100ms, "bar"=150ms
+      const delays1 = result1.match(/--sd-delay:\d+ms/g) ?? [];
+      expect(delays1).toEqual(["--sd-delay:100ms", "--sd-delay:150ms"]);
+    });
+
+    it("cursor.current advances by the number of newly animated words", async () => {
+      const cursor = createAnimateCursor();
+      const block0 = createAnimatePlugin({ stagger: 50, cursor });
+
+      cursor.current = 0;
+      await processHtml("<p>Hello world foo</p>", block0);
+      // block0 animated 3 words → cursor should be 3
+      expect(cursor.current).toBe(3);
+    });
+
+    it("cursor should not advance for skipped (already-rendered) words", async () => {
+      const cursor = createAnimateCursor();
+      const block0 = createAnimatePlugin({ stagger: 50, cursor });
+
+      // First render: 3 words
+      cursor.current = 0;
+      await processHtml("<p>Hello world foo</p>", block0);
+      const prevCount = block0.getLastRenderCharCount();
+
+      // Second render: mark first render's content as already visible
+      cursor.current = 0;
+      block0.setPrevContentLength(prevCount);
+      await processHtml("<p>Hello world foo bar</p>", block0);
+      // Only "bar" is new → cursor should be 1
+      expect(cursor.current).toBe(1);
     });
   });
 });
