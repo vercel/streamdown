@@ -609,7 +609,7 @@ export const Streamdown = memo(
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
       () => ({
-        shikiTheme: plugins?.code?.getThemes() ?? shikiTheme,
+        shikiTheme: shikiTheme ?? plugins?.code?.getThemes(),
         controls,
         isAnimating,
         lineNumbers,
