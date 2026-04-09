@@ -1,7 +1,7 @@
 import type { MermaidConfig } from "mermaid";
 import { type ComponentProps, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { StreamdownContext } from "../../index";
+import { type MermaidOptions, StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
@@ -15,6 +15,19 @@ type MermaidFullscreenButtonProps = ComponentProps<"button"> & {
   onExit?: () => void;
 };
 
+function resolveMermaidFullscreenPortalContainer(
+  mermaidOptions: MermaidOptions | undefined
+): HTMLElement {
+  const configured = mermaidOptions?.fullscreenPortalContainer;
+  if (configured === undefined || configured === null) {
+    return document.body;
+  }
+  if (typeof configured === "function") {
+    return configured() ?? document.body;
+  }
+  return configured;
+}
+
 export const MermaidFullscreenButton = ({
   chart,
   config,
@@ -26,8 +39,11 @@ export const MermaidFullscreenButton = ({
   const { Maximize2Icon, XIcon } = useIcons();
   const cn = useCn();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { isAnimating, controls: controlsConfig } =
-    useContext(StreamdownContext);
+  const {
+    isAnimating,
+    controls: controlsConfig,
+    mermaid: mermaidOptions,
+  } = useContext(StreamdownContext);
   const t = useTranslations();
   const showPanZoomControls = (() => {
     if (typeof controlsConfig === "boolean") {
@@ -133,7 +149,7 @@ export const MermaidFullscreenButton = ({
                 />
               </div>
             </div>,
-            document.body
+            resolveMermaidFullscreenPortalContainer(mermaidOptions)
           )
         : null}
     </>

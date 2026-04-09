@@ -192,6 +192,11 @@ The `mermaid` prop accepts an object with the following properties:
         "Custom React component for handling Mermaid rendering errors",
       type: "React.ComponentType<MermaidErrorComponentProps>",
     },
+    fullscreenPortalContainer: {
+      description:
+        "Optional DOM node (or getter) used as the React portal target for the Mermaid fullscreen overlay. Defaults to document.body. Set this to an element inside your app shell when using scoped or prefixed CSS (e.g. micro-frontends, Tailwind prefix) so the overlay stays in the same stacking context and receives the same utilities. Memoize the element or use a function if the node is mounted after first render.",
+      type: "HTMLElement | null | (() => HTMLElement | null)",
+    },
   }}
 />
 

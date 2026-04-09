@@ -180,6 +180,12 @@ export interface MermaidErrorComponentProps {
 export interface MermaidOptions {
   config?: MermaidConfig;
   errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
+  /**
+   * DOM node for the Mermaid fullscreen overlay (`createPortal` target).
+   * Use a container inside your app root when using scoped CSS or prefixed Tailwind so `fixed` / z-index utilities apply.
+   * @default document.body
+   */
+  fullscreenPortalContainer?: HTMLElement | null | (() => HTMLElement | null);
 }
 
 export type AllowedTags = Record<string, string[]>;
@@ -859,6 +865,7 @@ export const Streamdown = memo(
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
+    prevProps.mermaid === nextProps.mermaid &&
     prevProps.lineNumbers === nextProps.lineNumbers &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
     prevProps.literalTagContent === nextProps.literalTagContent &&
