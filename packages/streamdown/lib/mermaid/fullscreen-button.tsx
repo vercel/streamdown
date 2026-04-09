@@ -1,7 +1,7 @@
 import type { MermaidConfig } from "mermaid";
 import { type ComponentProps, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { StreamdownContext } from "../../index";
+import { type MermaidOptions, StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
@@ -14,6 +14,19 @@ type MermaidFullscreenButtonProps = ComponentProps<"button"> & {
   onFullscreen?: () => void;
   onExit?: () => void;
 };
+
+function resolveMermaidFullscreenPortalContainer(
+  mermaidOptions: MermaidOptions | undefined
+): HTMLElement {
+  const configured = mermaidOptions?.fullscreenPortalContainer;
+  if (configured === undefined || configured === null) {
+    return document.body;
+  }
+  if (typeof configured === "function") {
+    return configured() ?? document.body;
+  }
+  return configured;
+}
 
 export const MermaidFullscreenButton = ({
   chart,
@@ -49,17 +62,6 @@ export const MermaidFullscreenButton = ({
   const handleToggle = () => {
     setIsFullscreen(!isFullscreen);
   };
-
-  const portalContainer = (() => {
-    const configured = mermaidOptions?.fullscreenPortalContainer;
-    if (configured === undefined || configured === null) {
-      return document.body;
-    }
-    if (typeof configured === "function") {
-      return configured() ?? document.body;
-    }
-    return configured;
-  })();
 
   // Manage scroll lock and keyboard events
   useEffect(() => {
@@ -147,7 +149,7 @@ export const MermaidFullscreenButton = ({
                 />
               </div>
             </div>,
-            portalContainer
+            resolveMermaidFullscreenPortalContainer(mermaidOptions)
           )
         : null}
     </>
