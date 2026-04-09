@@ -26,8 +26,11 @@ export const MermaidFullscreenButton = ({
   const { Maximize2Icon, XIcon } = useIcons();
   const cn = useCn();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { isAnimating, controls: controlsConfig } =
-    useContext(StreamdownContext);
+  const {
+    isAnimating,
+    controls: controlsConfig,
+    mermaid: mermaidOptions,
+  } = useContext(StreamdownContext);
   const t = useTranslations();
   const showPanZoomControls = (() => {
     if (typeof controlsConfig === "boolean") {
@@ -46,6 +49,17 @@ export const MermaidFullscreenButton = ({
   const handleToggle = () => {
     setIsFullscreen(!isFullscreen);
   };
+
+  const portalContainer = (() => {
+    const configured = mermaidOptions?.fullscreenPortalContainer;
+    if (configured === undefined || configured === null) {
+      return document.body;
+    }
+    if (typeof configured === "function") {
+      return configured() ?? document.body;
+    }
+    return configured;
+  })();
 
   // Manage scroll lock and keyboard events
   useEffect(() => {
@@ -133,7 +147,7 @@ export const MermaidFullscreenButton = ({
                 />
               </div>
             </div>,
-            document.body
+            portalContainer
           )
         : null}
     </>
