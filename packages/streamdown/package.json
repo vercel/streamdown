@@ -74,7 +74,6 @@
     "remend": "workspace:*",
     "tailwind-merge": "^3.4.0",
     "unified": "^11.0.5",
-    "mermaid": "^11.12.2",
     "unist-util-visit": "^5.0.0",
     "unist-util-visit-parents": "^6.0.0"
   }

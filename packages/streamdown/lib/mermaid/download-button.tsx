@@ -1,8 +1,8 @@
-import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
 import { useMermaidPlugin } from "../plugin-context";
+import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
 import { save } from "../utils";
