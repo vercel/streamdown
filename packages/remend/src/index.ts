@@ -57,7 +57,7 @@ export interface RemendOptions {
   handlers?: RemendHandler[];
   /** Strip incomplete HTML tags at end of streaming text (e.g., `text <custom` → `text`) */
   htmlTags?: boolean;
-  /** Complete images (e.g., `![alt](url` → removed) */
+  /** Complete images (e.g., `![alt](url` → `![alt](streamdown:incomplete-image)`) */
   images?: boolean;
   /** Complete inline code formatting (e.g., `` `code `` → `` `code` ``) */
   inlineCode?: boolean;
@@ -156,7 +156,9 @@ const builtInHandlers: Array<{
       priority: PRIORITY.LINKS,
     },
     optionKey: "links",
-    earlyReturn: (result) => result.endsWith("](streamdown:incomplete-link)"),
+    earlyReturn: (result) =>
+      result.endsWith("](streamdown:incomplete-link)") ||
+      result.endsWith("](streamdown:incomplete-image)"),
   },
   {
     handler: {
