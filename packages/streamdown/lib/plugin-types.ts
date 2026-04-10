@@ -1,4 +1,12 @@
-import type { MermaidConfig } from "mermaid";
+/**
+ * Structural type for Mermaid configuration.
+ * Avoids a hard dependency on the "mermaid" package in the core bundle.
+ * Users who need full type safety can import MermaidConfig from "mermaid"
+ * directly — it is structurally compatible with this type.
+ */
+// biome-ignore lint/suspicious/noExplicitAny: structural pass-through for mermaid config
+export type MermaidConfig = Record<string, any>;
+
 import type React from "react";
 import type {
   BundledLanguage,
