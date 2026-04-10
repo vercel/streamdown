@@ -32,17 +32,19 @@ const handleIncompleteUrl = (
   // Extract everything before this link/image
   const beforeLink = text.substring(0, startIndex);
 
+  // Extract the text between [ and ] (alt text for images, link text for links)
+  const altOrLinkText = text.substring(openBracketIndex + 1, lastParenIndex);
+
   if (isImage) {
-    // For images with incomplete URLs, remove them entirely
-    return beforeLink;
+    // For images with incomplete URLs, replace with placeholder marker
+    return `${beforeLink}![${altOrLinkText}](streamdown:incomplete-image)`;
   }
 
   // For links with incomplete URLs, handle based on linkMode
-  const linkText = text.substring(openBracketIndex + 1, lastParenIndex);
   if (linkMode === "text-only") {
-    return `${beforeLink}${linkText}`;
+    return `${beforeLink}${altOrLinkText}`;
   }
-  return `${beforeLink}[${linkText}](streamdown:incomplete-link)`;
+  return `${beforeLink}[${altOrLinkText}](streamdown:incomplete-link)`;
 };
 
 // Helper to find the first incomplete [ (for text-only mode)
@@ -91,8 +93,9 @@ const handleIncompleteText = (
     const beforeLink = text.substring(0, openIndex);
 
     if (isImage) {
-      // For images, we remove them as they can't show skeleton
-      return beforeLink;
+      // For images with incomplete alt text, replace with placeholder marker
+      const altText = text.substring(i + 1);
+      return `${beforeLink}![${altText}](streamdown:incomplete-image)`;
     }
 
     // For links, handle based on linkMode
@@ -115,7 +118,9 @@ const handleIncompleteText = (
     const beforeLink = text.substring(0, openIndex);
 
     if (isImage) {
-      return beforeLink;
+      // For images with no matching closing bracket, replace with placeholder marker
+      const altText = text.substring(i + 1);
+      return `${beforeLink}![${altText}](streamdown:incomplete-image)`;
     }
 
     if (linkMode === "text-only") {

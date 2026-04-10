@@ -118,6 +118,25 @@ export const ImageComponent = ({
     return null;
   }
 
+  const isIncomplete = src === "streamdown:incomplete-image";
+
+  if (isIncomplete) {
+    return (
+      <div
+        className={cn("group relative my-4 inline-block")}
+        data-incomplete="true"
+        data-streamdown="image-wrapper"
+      >
+        <div
+          className={cn(
+            "h-24 w-48 animate-pulse rounded-lg bg-muted"
+          )}
+          data-streamdown="image-placeholder"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn("group relative my-4 inline-block")}
