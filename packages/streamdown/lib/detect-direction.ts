@@ -20,8 +20,11 @@ const LETTER_PATTERN = /\p{L}/u;
  * @returns "rtl" if first strong char is RTL, "ltr" otherwise
  */
 export function detectTextDirection(text: string): "ltr" | "rtl" {
-  // Strip common markdown syntax to get to actual text content
+  // Strip common markdown syntax to get to actual text content.
+  // Fenced code blocks must be stripped first (before inline code)
+  // so that code content does not influence direction detection.
   const stripped = text
+    .replace(/```[\s\S]*?```/g, "") // fenced code blocks
     .replace(/^#{1,6}\s+/gm, "") // headings
     .replace(/(\*{1,3}|_{1,3})/g, "") // bold/italic
     .replace(/`[^`]*`/g, "") // inline code

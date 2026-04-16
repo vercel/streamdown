@@ -306,6 +306,7 @@ const PlaygroundEditor = () => {
   const [animationEasing, setAnimationEasing] = useState("ease");
   const [animationSep, setAnimationSep] = useState<"word" | "char">("word");
   const [caret, setCaret] = useState<"block" | "circle" | "none">("block");
+  const [dir, setDir] = useState<"auto" | "ltr" | "rtl">("auto");
   const [streamSpeed, setStreamSpeed] = useState(30);
   const streamRef = useRef<ReturnType<typeof setInterval>>(null);
   const indexRef = useRef(0);
@@ -491,6 +492,24 @@ const PlaygroundEditor = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground text-sm">Dir</span>
+                    <Select
+                      onValueChange={(value) =>
+                        setDir(value as "auto" | "ltr" | "rtl")
+                      }
+                      value={dir}
+                    >
+                      <SelectTrigger className="w-24" size="sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="auto">Auto</SelectItem>
+                        <SelectItem value="ltr">LTR</SelectItem>
+                        <SelectItem value="rtl">RTL</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <p className="font-medium text-sm">Streaming</p>
                 <div className="grid gap-3">
@@ -573,6 +592,7 @@ const PlaygroundEditor = () => {
                     : false
                 }
                 caret={caret === "none" ? undefined : caret}
+                dir={dir}
                 isAnimating={isStreaming}
                 mode={mode}
                 plugins={{ code, mermaid, math, cjk, renderers }}
