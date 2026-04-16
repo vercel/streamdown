@@ -89,6 +89,7 @@ export const CodeBlockBody = memo(
         )}
         data-language={language}
         data-streamdown="code-block-body"
+        dir="ltr"
         {...rest}
       >
         <pre

@@ -361,7 +361,7 @@ export const Block = memo(
     return (
       <BlockIncompleteContext.Provider value={isIncomplete}>
         {dir ? (
-          <div dir={dir} style={{ display: "contents" }}>
+          <div dir={dir} style={{ unicodeBidi: "isolate" }}>
             {inner}
           </div>
         ) : (
@@ -756,6 +756,49 @@ export const Streamdown = memo(
 
     // Static mode: simple rendering without streaming features
     if (mode === "static") {
+      // When dir="auto", render per-block with individual direction detection
+      // (same approach as streaming mode) so mixed RTL/LTR content renders correctly.
+      if (dir === "auto") {
+        return (
+          <TranslationsContext.Provider value={translationsValue}>
+            <PluginContext.Provider value={plugins ?? null}>
+              <StreamdownContext.Provider value={contextValue}>
+                <IconProvider icons={iconOverrides}>
+                  <PrefixContext.Provider value={prefixedCn}>
+                    <div
+                      className={prefixedCn(
+                        "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+                        className
+                      )}
+                    >
+                      {blocksToRender.map((block, index) => (
+                        <BlockComponent
+                          components={mergedComponents}
+                          content={block}
+                          dir={blockDirections?.[index]}
+                          index={index}
+                          isIncomplete={false}
+                          key={blockKeys[index]}
+                          rehypePlugins={mergedRehypePlugins}
+                          remarkPlugins={mergedRemarkPlugins}
+                          shouldNormalizeHtmlIndentation={
+                            shouldNormalizeHtmlIndentation
+                          }
+                          shouldParseIncompleteMarkdown={
+                            shouldParseIncompleteMarkdown
+                          }
+                          {...props}
+                        />
+                      ))}
+                    </div>
+                  </PrefixContext.Provider>
+                </IconProvider>
+              </StreamdownContext.Provider>
+            </PluginContext.Provider>
+          </TranslationsContext.Provider>
+        );
+      }
+
       return (
         <TranslationsContext.Provider value={translationsValue}>
           <PluginContext.Provider value={plugins ?? null}>
@@ -768,11 +811,7 @@ export const Streamdown = memo(
                       "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
                       className
                     )}
-                    dir={
-                      dir === "auto"
-                        ? detectTextDirection(processedChildren)
-                        : dir
-                    }
+                    dir={dir}
                   >
                     <Markdown
                       components={mergedComponents}

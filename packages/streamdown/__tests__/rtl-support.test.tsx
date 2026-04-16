@@ -189,14 +189,14 @@ Mixed paragraph: Hello مرحبا World عالم.
       expect(dirElements.length).toBeGreaterThanOrEqual(1);
     });
 
-    it("uses display:contents on block dir wrapper", () => {
+    it("uses unicodeBidi:isolate on block dir wrapper", () => {
       const { container } = render(
         <Streamdown dir="rtl">{"مرحبا بالعالم"}</Streamdown>
       );
       const dirDivs = container.querySelectorAll("[dir='rtl']");
       for (const el of dirDivs) {
         if (el.tagName === "DIV" && el.closest("[class]") !== el) {
-          expect(el.style.display).toBe("contents");
+          expect(el.style.unicodeBidi).toBe("isolate");
         }
       }
     });
@@ -205,6 +205,60 @@ Mixed paragraph: Hello مرحبا World عالم.
       const { container } = render(<Streamdown>Hello world</Streamdown>);
       const dirElements = container.querySelectorAll("[dir]");
       expect(dirElements.length).toBe(0);
+    });
+  });
+
+  describe("static mode per-block direction", () => {
+    it("applies per-block direction in static mode with dir=auto", () => {
+      const content = `# שלום עולם
+
+## Installation Steps`;
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {content}
+        </Streamdown>
+      );
+      const dirElements = container.querySelectorAll("[dir]");
+      const dirs = Array.from(dirElements).map((el) => el.getAttribute("dir"));
+      expect(dirs).toContain("rtl");
+      expect(dirs).toContain("ltr");
+    });
+
+    it("renders Hebrew block as RTL and English block as LTR in static mode", () => {
+      const content = `שלום עולם
+
+Hello world`;
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {content}
+        </Streamdown>
+      );
+      const dirElements = container.querySelectorAll("[dir]");
+      const rtlBlocks = Array.from(dirElements).filter(
+        (el) => el.getAttribute("dir") === "rtl"
+      );
+      const ltrBlocks = Array.from(dirElements).filter(
+        (el) => el.getAttribute("dir") === "ltr"
+      );
+      expect(rtlBlocks.length).toBeGreaterThanOrEqual(1);
+      expect(ltrBlocks.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("forces code blocks to LTR regardless of parent direction", () => {
+      const content = `שלום
+
+\`\`\`powershell
+$env:PATH = "test"
+\`\`\``;
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {content}
+        </Streamdown>
+      );
+      const codeBlockBody = container.querySelector(
+        "[data-streamdown='code-block-body']"
+      );
+      expect(codeBlockBody?.getAttribute("dir")).toBe("ltr");
     });
   });
 });

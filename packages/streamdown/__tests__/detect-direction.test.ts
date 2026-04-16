@@ -49,4 +49,28 @@ describe("detectTextDirection", () => {
   it("handles inline code", () => {
     expect(detectTextDirection("`code` مرحبا")).toBe("rtl");
   });
+
+  it("strips fenced code blocks before detection", () => {
+    const block = `\`\`\`python
+print("hello")
+\`\`\`
+
+שלום עולם`;
+    expect(detectTextDirection(block)).toBe("rtl");
+  });
+
+  it("strips fenced code blocks with language tag", () => {
+    const block = `\`\`\`powershell
+uv python install
+\`\`\``;
+    expect(detectTextDirection(block)).toBe("ltr");
+  });
+
+  it("detects direction from prose when block has Hebrew + code", () => {
+    const block = `התקנת Python
+\`\`\`powershell
+uv python install
+\`\`\``;
+    expect(detectTextDirection(block)).toBe("rtl");
+  });
 });
