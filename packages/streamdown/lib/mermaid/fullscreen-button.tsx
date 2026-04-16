@@ -93,19 +93,21 @@ export const MermaidFullscreenButton = ({
 
       {isFullscreen
         ? createPortal(
-            // biome-ignore lint/a11y/useSemanticElements: "div is used as a backdrop overlay, not a button"
+            // biome-ignore lint/a11y/noNoninteractiveElementInteractions: "div is used as a backdrop overlay, not a button"
             <div
+              aria-label={t.viewFullscreen}
+              aria-modal="true"
               className={cn(
                 "fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
               )}
+              data-streamdown="mermaid-fullscreen"
               onClick={handleToggle}
               onKeyDown={(e) => {
                 if (e.key === "Escape") {
                   handleToggle();
                 }
               }}
-              role="button"
-              tabIndex={0}
+              role="dialog"
             >
               <button
                 className={cn(
