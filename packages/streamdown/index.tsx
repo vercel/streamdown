@@ -21,8 +21,10 @@ import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
 import type { Pluggable } from "unified";
 import {
+  type AnimateCursor,
   type AnimateOptions,
   type AnimatePlugin,
+  createAnimateCursor,
   createAnimatePlugin,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
@@ -53,7 +55,7 @@ export type {
 } from "shiki";
 export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
-export { createAnimatePlugin } from "./lib/animate";
+export { createAnimateCursor, createAnimatePlugin } from "./lib/animate";
 export { useIsCodeFenceIncomplete } from "./lib/block-incomplete-context";
 export { CodeBlock } from "./lib/code-block";
 export { CodeBlockContainer } from "./lib/code-block/container";
@@ -550,9 +552,8 @@ export const Streamdown = memo(
     const [displayBlocks, setDisplayBlocks] = useState<string[]>(blocks);
 
     // Use transition for block updates in streaming mode to avoid blocking UI
-    // biome-ignore lint/correctness/useExhaustiveDependencies: animatePlugin checked but not a dep
     useEffect(() => {
-      if (mode === "streaming" && !animatePlugin) {
+      if (mode === "streaming" && !animateCursorRef.current) {
         startTransition(() => {
           setDisplayBlocks(blocks);
         });
@@ -595,16 +596,59 @@ export const Streamdown = memo(
       return "";
     }, [animated]);
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: keyed by animatedKey for value equality
-    const animatePlugin = useMemo(() => {
-      if (!animatedKey) {
-        return null;
+    // Shared cursor resets to 0 at the start of every render pass and is
+    // incremented by each block's rehype plugin as it runs, so sibling
+    // blocks automatically chain their stagger delays in render order.
+    const animateCursorRef = useRef<AnimateCursor | null>(null);
+    // Stable array of per-block animate plugins — one plugin per block so
+    // each block independently tracks its own prevContentLength while the
+    // shared cursor serialises the stagger delays across all blocks.
+    const blockAnimatePluginsRef = useRef<AnimatePlugin[]>([]);
+    // Stable arrays of per-block merged rehype plugins (base + per-block animate).
+    // Keyed by block index; rebuilt only when mergedRehypePlugins changes.
+    const blockRehypePluginsRef = useRef<Pluggable[][]>([]);
+    const prevMergedRehypePluginsRef = useRef<Pluggable[] | null>(null);
+
+    // Keep track of the resolved options key so we can recreate plugins
+    // when the animation options change.
+    const prevAnimatedKeyRef = useRef<string>("");
+
+    // Derive the per-block animate plugin for a given index.  Creates a
+    // new plugin lazily when needed; recreates all plugins when the options
+    // key changes.
+    if (animatedKey) {
+      // (Re)create cursor when options change.
+      if (prevAnimatedKeyRef.current !== animatedKey) {
+        prevAnimatedKeyRef.current = animatedKey;
+        animateCursorRef.current = createAnimateCursor();
+        blockAnimatePluginsRef.current = [];
+        blockRehypePluginsRef.current = [];
       }
-      if (animatedKey === "true") {
-        return createAnimatePlugin();
+      // Reset cursor to 0 at the start of this render pass.
+      if (animateCursorRef.current) {
+        animateCursorRef.current.current = 0;
       }
-      return createAnimatePlugin(animated as AnimateOptions);
-    }, [animatedKey]);
+    } else {
+      // Animation disabled — clear any cached plugins and cursor.
+      animateCursorRef.current = null;
+      blockAnimatePluginsRef.current = [];
+      blockRehypePluginsRef.current = [];
+    }
+
+    // Provide a stable single-plugin reference for external consumers that
+    // still use the animatePlugin prop (e.g. custom BlockComponent).
+    // Internal rendering uses blockAnimatePluginsRef directly.
+    const _animatePlugin = animateCursorRef.current
+      ? (blockAnimatePluginsRef.current[0] ??
+        (() => {
+          const p = createAnimatePlugin({
+            ...(animatedKey !== "true" ? (animated as AnimateOptions) : {}),
+            cursor: animateCursorRef.current ?? undefined,
+          });
+          blockAnimatePluginsRef.current[0] = p;
+          return p;
+        })())
+      : null;
 
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
@@ -722,19 +766,8 @@ export const Streamdown = memo(
         result = [...result, plugins.math.rehypePlugin];
       }
 
-      if (animatePlugin && isAnimating) {
-        result = [...result, animatePlugin.rehypePlugin];
-      }
-
       return result;
-    }, [
-      rehypePlugins,
-      plugins?.math,
-      animatePlugin,
-      isAnimating,
-      allowedTags,
-      literalTagContent,
-    ]);
+    }, [rehypePlugins, plugins?.math, allowedTags, literalTagContent]);
 
     const shouldHideCaret = useMemo(() => {
       if (!isAnimating || blocksToRender.length === 0) {
@@ -753,6 +786,44 @@ export const Streamdown = memo(
           : undefined,
       [caret, isAnimating, shouldHideCaret]
     );
+
+    // Helper: lazily create a per-block animate plugin and return the
+    // combined rehype plugins array for a given block index.  Extracted
+    // from the render map to keep cognitive complexity within biome limits.
+    const getBlockPlugins = (
+      index: number
+    ): {
+      blockAnimatePlugin: AnimatePlugin | null;
+      blockRehypePlugins: Pluggable[];
+    } => {
+      let blockAnimatePlugin: AnimatePlugin | null = null;
+      if (animateCursorRef.current && isAnimating) {
+        if (!blockAnimatePluginsRef.current[index]) {
+          blockAnimatePluginsRef.current[index] = createAnimatePlugin({
+            ...(animatedKey !== "true" ? (animated as AnimateOptions) : {}),
+            cursor: animateCursorRef.current,
+          });
+        }
+        blockAnimatePlugin = blockAnimatePluginsRef.current[index];
+      }
+      // Rebuild per-block rehypePlugins only when the base set changes, so the
+      // Block memo's reference-equality check doesn't force unnecessary re-renders.
+      if (prevMergedRehypePluginsRef.current !== mergedRehypePlugins) {
+        blockRehypePluginsRef.current = [];
+        prevMergedRehypePluginsRef.current = mergedRehypePlugins;
+      }
+      if (blockAnimatePlugin && !blockRehypePluginsRef.current[index]) {
+        blockRehypePluginsRef.current[index] = [
+          ...mergedRehypePlugins,
+          blockAnimatePlugin.rehypePlugin,
+        ];
+      }
+      const blockRehypePlugins =
+        blockAnimatePlugin && blockRehypePluginsRef.current[index]
+          ? blockRehypePluginsRef.current[index]
+          : mergedRehypePlugins;
+      return { blockAnimatePlugin, blockRehypePlugins };
+    };
 
     // Static mode: simple rendering without streaming features
     if (mode === "static") {
@@ -818,9 +889,11 @@ export const Streamdown = memo(
                       isAnimating &&
                       isLastBlock &&
                       hasIncompleteCodeFence(block);
+                    const { blockAnimatePlugin, blockRehypePlugins } =
+                      getBlockPlugins(index);
                     return (
                       <BlockComponent
-                        animatePlugin={animatePlugin}
+                        animatePlugin={blockAnimatePlugin}
                         components={mergedComponents}
                         content={block}
                         dir={
@@ -830,7 +903,7 @@ export const Streamdown = memo(
                         index={index}
                         isIncomplete={isIncomplete}
                         key={blockKeys[index]}
-                        rehypePlugins={mergedRehypePlugins}
+                        rehypePlugins={blockRehypePlugins}
                         remarkPlugins={mergedRemarkPlugins}
                         shouldNormalizeHtmlIndentation={
                           shouldNormalizeHtmlIndentation

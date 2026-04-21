@@ -2,6 +2,21 @@ import type { Element, Node, Parent, Root, Text } from "hast";
 import type { Pluggable } from "unified";
 import { SKIP, visitParents } from "unist-util-visit-parents";
 
+/**
+ * Shared cursor used to chain stagger delays across sibling blocks in a
+ * single render pass.  Create one instance per Streamdown component and
+ * reset `cursor.current = 0` before each React render so that block 0
+ * starts at index 0 and each subsequent block continues from where the
+ * previous one left off.
+ */
+export interface AnimateCursor {
+  current: number;
+}
+
+export function createAnimateCursor(): AnimateCursor {
+  return { current: 0 };
+}
+
 export interface AnimatePlugin {
   /**
    * Returns the total HAST text node character count from the last
@@ -9,6 +24,12 @@ export interface AnimatePlugin {
    * setPrevContentLength on the next render.
    */
   getLastRenderCharCount: () => number;
+  /**
+   * Returns the number of newly-animated words from the last rehype run,
+   * then resets to 0. Pass this value to setStartIndex() on the next
+   * sibling block so its stagger delays chain after ours.
+   */
+  getLastRenderNewWordCount: () => number;
   name: "animate";
   rehypePlugin: Pluggable;
   /**
@@ -17,11 +38,27 @@ export interface AnimatePlugin {
    * re-animation of already-visible content during streaming updates.
    */
   setPrevContentLength: (length: number) => void;
+  /**
+   * Set the animation word index to start from. Used when no shared
+   * cursor is provided. Use the value returned by
+   * getLastRenderNewWordCount() from the previous sibling block to
+   * ensure that a new block's stagger delays begin after the previous
+   * block's animation is still completing, preventing concurrent reveals.
+   */
+  setStartIndex: (index: number) => void;
   type: "animate";
 }
 
 export interface AnimateOptions {
   animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {});
+  /**
+   * Shared cursor for automatic cross-block stagger chaining.  When
+   * provided the plugin reads `cursor.current` as the start index and
+   * increments it by the number of newly animated words after each run,
+   * so sibling blocks automatically pick up where the previous one left
+   * off without any manual `setStartIndex` calls.
+   */
+  cursor?: AnimateCursor;
   duration?: number;
   easing?: string;
   sep?: "word" | "char";
@@ -113,6 +150,7 @@ const makeSpan = (
 
 interface AnimateConfig {
   animation: string;
+  cursor?: AnimateCursor;
   duration: number;
   easing: string;
   sep: "word" | "char";
@@ -127,7 +165,9 @@ interface AnimateConfig {
  */
 interface AnimateRenderState {
   lastRenderCharCount: number;
+  lastRenderNewWordCount: number;
   prevContentLength: number;
+  startIndex: number;
 }
 
 const processTextNode = (
@@ -170,7 +210,9 @@ const processTextNode = (
       return { type: "text", value: part } as Text;
     }
     const skipAnimation = prevLen > 0 && partStart < prevLen;
-    const delay = skipAnimation ? 0 : charCounter.newIndex++ * config.stagger;
+    const delay = skipAnimation
+      ? 0
+      : (renderState.startIndex + charCounter.newIndex++) * config.stagger;
     return makeSpan(
       part,
       config.animation,
@@ -194,6 +236,7 @@ let instanceId = 0;
 export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
   const config: AnimateConfig = {
     animation: options?.animation ?? "fadeIn",
+    cursor: options?.cursor,
     duration: options?.duration ?? 150,
     easing: options?.easing ?? "ease",
     sep: options?.sep ?? "word",
@@ -205,15 +248,28 @@ export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
   const renderState: AnimateRenderState = {
     prevContentLength: 0,
     lastRenderCharCount: 0,
+    lastRenderNewWordCount: 0,
+    startIndex: 0,
   };
 
   const id = instanceId++;
   const rehypeAnimate = () => (tree: Root) => {
     const charCounter = { count: 0, newIndex: 0 };
+    // When a shared cursor is provided, read the current cumulative word
+    // index from it so this block's stagger delays continue after all
+    // preceding sibling blocks.
+    if (config.cursor) {
+      renderState.startIndex = config.cursor.current;
+    }
     visitParents(tree, "text", (node: Text, ancestors) =>
       processTextNode(node, ancestors, config, renderState, charCounter)
     );
     renderState.lastRenderCharCount = charCounter.count;
+    renderState.lastRenderNewWordCount = charCounter.newIndex;
+    // Advance the shared cursor so the next sibling block starts after us.
+    if (config.cursor) {
+      config.cursor.current += charCounter.newIndex;
+    }
     // Self-reset so sibling blocks don't inherit this block's value.
     // React renders depth-first: this runs after the current block's
     // Markdown but before the next sibling block's Markdown.
@@ -233,9 +289,17 @@ export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
     setPrevContentLength(length: number) {
       renderState.prevContentLength = length;
     },
+    setStartIndex(index: number) {
+      renderState.startIndex = index;
+    },
     getLastRenderCharCount() {
       const count = renderState.lastRenderCharCount;
       renderState.lastRenderCharCount = 0;
+      return count;
+    },
+    getLastRenderNewWordCount() {
+      const count = renderState.lastRenderNewWordCount;
+      renderState.lastRenderNewWordCount = 0;
       return count;
     },
   };
