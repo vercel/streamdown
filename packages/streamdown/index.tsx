@@ -156,6 +156,7 @@ export type ControlsConfig =
             fullscreen?: boolean;
             panZoom?: boolean;
           };
+      image?: boolean | { download?: boolean };
     };
 
 export interface LinkSafetyModalProps {
