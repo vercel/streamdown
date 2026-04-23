@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 
@@ -438,6 +438,138 @@ graph TD
         '[data-streamdown="code-block-actions"] button'
       );
       expect(buttons?.length).toBe(0);
+    });
+  });
+
+  describe("image controls", () => {
+    const markdownWithImage = "![alt text](https://example.com/image.png)";
+
+    it("controls={false} hides image overlay and download button", async () => {
+      const { container } = render(
+        <Streamdown controls={false}>{markdownWithImage}</Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const buttons = wrapper?.querySelectorAll("button");
+        const overlay = wrapper?.querySelector(
+          '[data-streamdown="image-overlay"]'
+        );
+        expect(buttons?.length).toBe(0);
+        expect(overlay).toBeFalsy();
+      });
+    });
+
+    it("controls={{ image: false }} hides image controls", async () => {
+      const { container } = render(
+        <Streamdown controls={{ image: false }}>{markdownWithImage}</Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const buttons = wrapper?.querySelectorAll("button");
+        const overlay = wrapper?.querySelector(
+          '[data-streamdown="image-overlay"]'
+        );
+        expect(buttons?.length).toBe(0);
+        expect(overlay).toBeFalsy();
+      });
+    });
+
+    it("controls={{ image: true }} shows image download button after load", async () => {
+      const { container } = render(
+        <Streamdown controls={{ image: true }}>{markdownWithImage}</Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const button = wrapper?.querySelector('button[title="Download image"]');
+        expect(button).toBeTruthy();
+      });
+    });
+
+    it("controls={{ image: { download: false } }} hides only download button but keeps overlay", async () => {
+      const { container } = render(
+        <Streamdown controls={{ image: { download: false } }}>
+          {markdownWithImage}
+        </Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const button = wrapper?.querySelector('button[title="Download image"]');
+        const overlay = wrapper?.querySelector(
+          '[data-streamdown="image-overlay"]'
+        );
+        expect(button).toBeFalsy();
+        expect(overlay).toBeTruthy();
+      });
+    });
+
+    it("unspecified image key defaults to showing controls", async () => {
+      const { container } = render(
+        <Streamdown controls={{ code: false }}>{markdownWithImage}</Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const button = wrapper?.querySelector('button[title="Download image"]');
+        expect(button).toBeTruthy();
+      });
+    });
+
+    it("controls={true} shows image controls by default", async () => {
+      const { container } = render(
+        <Streamdown controls={true}>{markdownWithImage}</Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const button = wrapper?.querySelector('button[title="Download image"]');
+        expect(button).toBeTruthy();
+      });
     });
   });
 

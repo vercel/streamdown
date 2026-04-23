@@ -414,3 +414,76 @@ describe("ImageComponent", () => {
     expect(img?.getAttribute("data-testid")).toBe("custom-image");
   });
 });
+
+describe("ImageComponent control props", () => {
+  beforeEach(() => {
+    vi.spyOn(console, "error").mockImplementation(() => {
+      // Intentionally empty
+    });
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("showDownloadControl={false} hides download button after load", () => {
+    const { container } = render(
+      <ImageComponent
+        alt="Test"
+        node={null as any}
+        showDownloadControl={false}
+        src="https://example.com/image.png"
+      />
+    );
+
+    const img = container.querySelector('img[data-streamdown="image"]');
+    if (img) {
+      fireEvent.load(img);
+    }
+
+    const button = container.querySelector('button[title="Download image"]');
+    expect(button).toBeFalsy();
+  });
+
+  it("showControls={false} hides both overlay and download button", () => {
+    const { container } = render(
+      <ImageComponent
+        alt="Test"
+        node={null as any}
+        showControls={false}
+        src="https://example.com/image.png"
+      />
+    );
+
+    const img = container.querySelector('img[data-streamdown="image"]');
+    if (img) {
+      fireEvent.load(img);
+    }
+
+    const overlay = container.querySelector(
+      '[data-streamdown="image-overlay"]'
+    );
+    const button = container.querySelector('button[title="Download image"]');
+    expect(overlay).toBeFalsy();
+    expect(button).toBeFalsy();
+  });
+
+  it("showControls={true} (default) shows download button after load", () => {
+    const { container } = render(
+      <ImageComponent
+        alt="Test"
+        node={null as any}
+        showControls={true}
+        src="https://example.com/image.png"
+      />
+    );
+
+    const img = container.querySelector('img[data-streamdown="image"]');
+    if (img) {
+      fireEvent.load(img);
+    }
+
+    const button = container.querySelector('button[title="Download image"]');
+    expect(button).toBeTruthy();
+  });
+});
