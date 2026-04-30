@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { svgToPngBlob } from "../lib/mermaid/utils";
+import { sanitizeSvgForExport, svgToPngBlob } from "../lib/mermaid/utils";
 
 const BASE64_SVG_DATA_URL_REGEX = /^data:image\/svg\+xml;base64,/;
 
@@ -131,5 +131,37 @@ describe("svgToPngBlob", () => {
   it("should encode SVG as base64 data URL", () => {
     svgToPngBlob("<svg><text>Hello</text></svg>");
     expect(mockImage.src).toMatch(BASE64_SVG_DATA_URL_REGEX);
+  });
+});
+describe("sanitizeSvgForExport", () => {
+  it("should return the original string when no SVG element is found", () => {
+    expect(sanitizeSvgForExport("not an svg")).toBe("not an svg");
+  });
+
+  it("should re-serialize a valid SVG string", () => {
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg"><text>Hello</text></svg>';
+    const result = sanitizeSvgForExport(svg);
+    expect(result).toContain("<svg");
+    expect(result).toContain("</svg>");
+    expect(result).toContain("Hello");
+  });
+
+  it("should convert bare <br> elements to self-closing form", () => {
+    // Mermaid SVGs rendered via innerHTML can contain <br> which is invalid XML
+    const svgWithBr =
+      '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><br></foreignObject></svg>';
+    const result = sanitizeSvgForExport(svgWithBr);
+    // XMLSerializer must not emit a bare (non-self-closing) <br>
+    expect(result).not.toContain("<br>");
+    expect(result).toContain("<svg");
+  });
+
+  it("should preserve SVG content when sanitizing", () => {
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10"/><text>Test</text></svg>';
+    const result = sanitizeSvgForExport(svg);
+    expect(result).toContain("rect");
+    expect(result).toContain("Test");
   });
 });

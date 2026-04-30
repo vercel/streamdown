@@ -49,3 +49,30 @@ export const svgToPngBlob = (
     img.src = encoded;
   });
 };
+
+/**
+ * Re-serialize an SVG string as valid XML using the browser's DOMParser and
+ * XMLSerializer. Mermaid renders diagrams via innerHTML, which can produce
+ * HTML-normalized elements such as `<br>` (non-self-closing) that are invalid
+ * inside SVG/XML. XMLSerializer converts them back to self-closing form so the
+ * saved file is valid and can be loaded as an image.
+ *
+ * Falls back to the original string when running outside a browser or if
+ * parsing fails.
+ */
+export const sanitizeSvgForExport = (svgString: string): string => {
+  if (typeof document === "undefined") {
+    return svgString;
+  }
+  try {
+    const container = document.createElement("div");
+    container.innerHTML = svgString;
+    const svgElement = container.querySelector("svg");
+    if (!svgElement) {
+      return svgString;
+    }
+    return new XMLSerializer().serializeToString(svgElement);
+  } catch {
+    return svgString;
+  }
+};
