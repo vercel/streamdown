@@ -1,4 +1,26 @@
 /**
+ * Mermaid render output may be HTML-serialized. Serialize the SVG node as XML
+ * before downloading so embedded HTML like <br> becomes valid SVG markup.
+ */
+export const serializeSvgForDownload = (svgString: string): string => {
+  if (
+    typeof DOMParser === "undefined" ||
+    typeof XMLSerializer === "undefined"
+  ) {
+    return svgString;
+  }
+
+  const doc = new DOMParser().parseFromString(svgString, "text/html");
+  const svg = doc.querySelector("svg");
+
+  if (!svg) {
+    return svgString;
+  }
+
+  return new XMLSerializer().serializeToString(svg);
+};
+
+/**
  * Convert SVG string to PNG blob for export
  */
 export const svgToPngBlob = (

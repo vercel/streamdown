@@ -570,7 +570,7 @@ describe("Mermaid", () => {
       await waitFor(() => {
         expect(saveMock).toHaveBeenCalledWith(
           "diagram.svg",
-          "<svg>Test SVG</svg>",
+          expect.stringContaining("Test SVG"),
           "image/svg+xml"
         );
       });

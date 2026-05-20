@@ -6,7 +6,7 @@ import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
 import { save } from "../utils";
-import { svgToPngBlob } from "./utils";
+import { serializeSvgForDownload, svgToPngBlob } from "./utils";
 
 interface MermaidDownloadDropdownProps {
   chart: string;
@@ -69,17 +69,19 @@ export const MermaidDownloadDropdown = ({
         return;
       }
 
+      const serializedSvg = serializeSvgForDownload(svg);
+
       if (format === "svg") {
         const filename = "diagram.svg";
         const mimeType = "image/svg+xml";
-        save(filename, svg, mimeType);
+        save(filename, serializedSvg, mimeType);
         setIsOpen(false);
         onDownload?.(format);
         return;
       }
 
       if (format === "png") {
-        const blob = await svgToPngBlob(svg);
+        const blob = await svgToPngBlob(serializedSvg);
         save("diagram.png", blob, "image/png");
         onDownload?.(format);
         setIsOpen(false);
