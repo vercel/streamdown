@@ -37,6 +37,9 @@ jobs:
           git config --global user.email "streamdown-bot[bot]@users.noreply.github.com"
           git config --global user.name "streamdown-bot[bot]"
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -45,9 +48,6 @@ jobs:
       # Ensure npm 11.5.1 or later is installed
       - name: Update npm
         run: npm install -g npm@latest
-
-      - name: Enable Corepack
-        run: corepack enable pnpm
 
       - name: Install Dependencies
         run: pnpm i
