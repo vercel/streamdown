@@ -2,6 +2,8 @@ packages:
   - "apps/*"
   - "packages/*"
 
+minimumReleaseAge: 2880
+
 onlyBuiltDependencies:
   - '@vercel/speed-insights'
   - esbuild
