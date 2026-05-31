@@ -9,7 +9,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
 
   it("should call onClose when Escape key is pressed on backdrop", () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <LinkSafetyModal
         isOpen={true}
         onClose={onClose}
@@ -18,7 +18,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
       />
     );
 
-    const backdrop = container.querySelector(
+    const backdrop = document.querySelector(
       '[data-streamdown="link-safety-modal"]'
     );
     expect(backdrop).toBeTruthy();
@@ -30,7 +30,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
 
   it("should not call onClose for non-Escape keys on backdrop", () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <LinkSafetyModal
         isOpen={true}
         onClose={onClose}
@@ -39,7 +39,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
       />
     );
 
-    const backdrop = container.querySelector(
+    const backdrop = document.querySelector(
       '[data-streamdown="link-safety-modal"]'
     );
     // biome-ignore lint/style/noNonNullAssertion: test assertion
@@ -50,7 +50,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
 
   it("should stop propagation when clicking inner modal content", () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <LinkSafetyModal
         isOpen={true}
         onClose={onClose}
@@ -60,7 +60,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
     );
 
     // Click the inner content area (role=presentation)
-    const innerContent = container.querySelector('[role="presentation"]');
+    const innerContent = document.querySelector('[role="presentation"]');
     expect(innerContent).toBeTruthy();
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.click(innerContent!);
@@ -71,7 +71,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
 
   it("should stop key propagation on inner content", () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <LinkSafetyModal
         isOpen={true}
         onClose={onClose}
@@ -80,7 +80,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
       />
     );
 
-    const innerContent = container.querySelector('[role="presentation"]');
+    const innerContent = document.querySelector('[role="presentation"]');
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.keyDown(innerContent!, { key: "Escape" });
 
@@ -89,7 +89,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
   });
 
   it("should return null when not open", () => {
-    const { container } = render(
+    render(
       <LinkSafetyModal
         isOpen={false}
         onClose={vi.fn()}
@@ -99,7 +99,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
     );
 
     expect(
-      container.querySelector('[data-streamdown="link-safety-modal"]')
+      document.querySelector('[data-streamdown="link-safety-modal"]')
     ).toBeNull();
   });
 
@@ -133,7 +133,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
   it("should call onConfirm and onClose when Open link is clicked", () => {
     const onClose = vi.fn();
     const onConfirm = vi.fn();
-    const { container } = render(
+    render(
       <LinkSafetyModal
         isOpen={true}
         onClose={onClose}
@@ -142,7 +142,9 @@ describe("LinkSafetyModal keyboard and interaction", () => {
       />
     );
 
-    const buttons = container.querySelectorAll("button");
+    const buttons = document.querySelectorAll(
+      '[data-streamdown="link-safety-modal"] button'
+    );
     const openButton = Array.from(buttons).find((btn) =>
       btn.textContent?.includes("Open link")
     );
@@ -164,7 +166,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
       configurable: true,
     });
 
-    const { container } = render(
+    render(
       <LinkSafetyModal
         isOpen={true}
         onClose={vi.fn()}
@@ -173,7 +175,9 @@ describe("LinkSafetyModal keyboard and interaction", () => {
       />
     );
 
-    const buttons = container.querySelectorAll("button");
+    const buttons = document.querySelectorAll(
+      '[data-streamdown="link-safety-modal"] button'
+    );
     const copyButton = Array.from(buttons).find((btn) =>
       btn.textContent?.includes("Copy link")
     );
@@ -193,7 +197,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
 
   it("should show long URL with scrollable container", () => {
     const longUrl = `https://example.com/${"a".repeat(150)}`;
-    const { container } = render(
+    render(
       <LinkSafetyModal
         isOpen={true}
         onClose={vi.fn()}
@@ -203,7 +207,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
     );
 
     // URL display should have overflow class for long URLs
-    const urlDisplay = container.querySelector(".break-all");
+    const urlDisplay = document.querySelector(".break-all");
     expect(urlDisplay).toBeTruthy();
     expect(urlDisplay?.className).toContain("max-h-32");
     expect(urlDisplay?.className).toContain("overflow-y-auto");
