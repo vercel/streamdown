@@ -7,12 +7,11 @@ import {
   createContext,
   createElement,
   memo,
+  useDeferredValue,
   useEffect,
   useId,
   useMemo,
   useRef,
-  useState,
-  useTransition,
 } from "react";
 import { harden } from "rehype-harden";
 import rehypeRaw from "rehype-raw";
@@ -461,7 +460,6 @@ export const Streamdown = memo(
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
     const generatedId = useId();
-    const [_isPending, startTransition] = useTransition();
 
     const prefixedCn = useMemo(() => createCn(prefix), [prefix]);
 
@@ -545,42 +543,6 @@ export const Streamdown = memo(
       [processedChildren, parseMarkdownIntoBlocksFn]
     );
 
-    // Initialize displayBlocks with blocks to avoid hydration mismatch
-    // Previously initialized as [] which caused content to flicker on hydration
-    const [displayBlocks, setDisplayBlocks] = useState<string[]>(blocks);
-
-    // Use transition for block updates in streaming mode to avoid blocking UI
-    // biome-ignore lint/correctness/useExhaustiveDependencies: animatePlugin checked but not a dep
-    useEffect(() => {
-      if (mode === "streaming" && !animatePlugin) {
-        startTransition(() => {
-          setDisplayBlocks(blocks);
-        });
-      } else {
-        setDisplayBlocks(blocks);
-      }
-    }, [blocks, mode]);
-
-    // Use displayBlocks for rendering to leverage useTransition
-    const blocksToRender = mode === "streaming" ? displayBlocks : blocks;
-
-    // Pre-compute per-block text directions when dir="auto" so detection
-    // runs once per block change rather than on every render pass.
-    const blockDirections = useMemo(
-      () =>
-        dir === "auto" ? blocksToRender.map(detectTextDirection) : undefined,
-      [blocksToRender, dir]
-    );
-
-    // Generate stable keys based on index only
-    // Don't use content hash - that causes unmount/remount when content changes
-    // React will handle content updates via props changes and memo comparison
-    // biome-ignore lint/correctness/useExhaustiveDependencies: "we're using the blocksToRender length"
-    const blockKeys = useMemo(
-      () => blocksToRender.map((_block, idx) => `${generatedId}-${idx}`),
-      [blocksToRender.length, generatedId]
-    );
-
     // Stable key derived from animated option values. This prevents the
     // plugin from being recreated when the user passes an inline object
     // literal (e.g. animated={{ animation: 'fadeIn' }}) whose reference
@@ -605,6 +567,33 @@ export const Streamdown = memo(
       }
       return createAnimatePlugin(animated as AnimateOptions);
     }, [animatedKey]);
+
+    // Defer the blocks reference during streaming so React can drop intermediate
+    // values under load. Replaces the previous useState+useEffect+startTransition
+    // dance, which fired setDisplayBlocks on every render where `blocks` was a new
+    // ref and could exceed React's 50-nested-update limit (React #185) when SSE
+    // tokens arrived in bursts faster than commit time. animatePlugin path keeps
+    // the synchronous path because the plugin reads block content per-render.
+    const deferredBlocks = useDeferredValue(blocks);
+    const blocksToRender =
+      mode === "streaming" && !animatePlugin ? deferredBlocks : blocks;
+
+    // Pre-compute per-block text directions when dir="auto" so detection
+    // runs once per block change rather than on every render pass.
+    const blockDirections = useMemo(
+      () =>
+        dir === "auto" ? blocksToRender.map(detectTextDirection) : undefined,
+      [blocksToRender, dir]
+    );
+
+    // Generate stable keys based on index only
+    // Don't use content hash - that causes unmount/remount when content changes
+    // React will handle content updates via props changes and memo comparison
+    // biome-ignore lint/correctness/useExhaustiveDependencies: "we're using the blocksToRender length"
+    const blockKeys = useMemo(
+      () => blocksToRender.map((_block, idx) => `${generatedId}-${idx}`),
+      [blocksToRender.length, generatedId]
+    );
 
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
