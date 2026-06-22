@@ -6,6 +6,10 @@ import { animate, createAnimatePlugin } from "../lib/animate";
 
 const SPAN_GAP_RE = /<\/span>\s+<span/;
 const CODE_CONTENT_RE = /<code>([^<]*)<\/code>/;
+const INPUT_TAG_RE = /<input[^>]*>/;
+const INPUT_TAG_GLOBAL_RE = /<input[^>]*>/g;
+const IMG_TAG_RE = /<img[^>]*>/;
+const HR_TAG_RE = /<hr[^>]*>/;
 
 const processHtml = async (html: string, plugin = animate) => {
   const processor = unified()
@@ -279,6 +283,162 @@ describe("animate plugin", () => {
       const result = await processHtml("<p>Hello world foo</p>", plugin);
       const delays = result.match(/--sd-delay:\d+ms/g) ?? [];
       expect(delays).toEqual([]);
+    });
+  });
+
+  describe("list marker", () => {
+    it("should stamp marker animation vars on the list item", async () => {
+      const result = await processHtml("<ul><li>Hello world</li></ul>");
+      expect(result).toContain("data-sd-animate-marker");
+      expect(result).toContain("--sd-marker-duration:150ms");
+      expect(result).toContain("--sd-marker-delay:0ms");
+      expect(result).toContain("--sd-marker-easing:ease");
+    });
+
+    it("should sync marker delay with the item's first word", async () => {
+      const plugin = createAnimatePlugin({ stagger: 40 });
+      const result = await processHtml(
+        "<ul><li>Hello world</li><li>Foo bar</li></ul>",
+        plugin
+      );
+      const delays = result.match(/--sd-marker-delay:\d+ms/g) ?? [];
+      // First item's first word has delay 0; second item's first word is the
+      // third animated word in the block → 2 * 40ms.
+      expect(delays).toEqual([
+        "--sd-marker-delay:0ms",
+        "--sd-marker-delay:80ms",
+      ]);
+    });
+
+    it("should respect custom duration and easing", async () => {
+      const plugin = createAnimatePlugin({ duration: 300, easing: "ease-out" });
+      const result = await processHtml("<ul><li>Hello</li></ul>", plugin);
+      expect(result).toContain("--sd-marker-duration:300ms");
+      expect(result).toContain("--sd-marker-easing:ease-out");
+    });
+
+    it("should not re-animate the marker of an already-rendered item", async () => {
+      const plugin = createAnimatePlugin();
+      await processHtml("<ul><li>Hello</li></ul>", plugin);
+      const prevCount = plugin.getLastRenderCharCount();
+
+      plugin.setPrevContentLength(prevCount);
+      const result = await processHtml(
+        "<ul><li>Hello</li><li>World</li></ul>",
+        plugin
+      );
+
+      const durations = result.match(/--sd-marker-duration:\d+ms/g) ?? [];
+      // First (already-shown) item → 0ms; newly added item → 150ms.
+      expect(durations).toEqual([
+        "--sd-marker-duration:0ms",
+        "--sd-marker-duration:150ms",
+      ]);
+    });
+
+    it("should not stamp marker vars on non-list content", async () => {
+      const result = await processHtml("<p>Hello world</p>");
+      expect(result).not.toContain("data-sd-animate-marker");
+    });
+  });
+
+  describe("task-list checkbox", () => {
+    const TASK_ITEM =
+      '<ul><li class="task-list-item"><input type="checkbox" disabled=""/> Hello world</li></ul>';
+
+    it("should tag the checkbox with data-sd-animate and timing", async () => {
+      const result = await processHtml(TASK_ITEM);
+      const input = result.match(INPUT_TAG_RE)?.[0] ?? "";
+      expect(input).toContain("data-sd-animate");
+      expect(input).toContain("--sd-animation:sd-fadeIn");
+      expect(input).toContain("--sd-duration:150ms");
+      expect(input).toContain("--sd-delay:0ms");
+    });
+
+    it("should sync the checkbox with the configured animation", async () => {
+      const plugin = createAnimatePlugin({ animation: "slideUp" });
+      const result = await processHtml(TASK_ITEM, plugin);
+      const input = result.match(INPUT_TAG_RE)?.[0] ?? "";
+      expect(input).toContain("--sd-animation:sd-slideUp");
+    });
+
+    it("should not re-animate the checkbox of an already-rendered item", async () => {
+      const plugin = createAnimatePlugin();
+      await processHtml(TASK_ITEM, plugin);
+      const prevCount = plugin.getLastRenderCharCount();
+
+      plugin.setPrevContentLength(prevCount);
+      const result = await processHtml(TASK_ITEM, plugin);
+      const input = result.match(INPUT_TAG_RE)?.[0] ?? "";
+      expect(input).toContain("--sd-duration:0ms");
+    });
+
+    it("should not tag inputs outside of list items", async () => {
+      const result = await processHtml(
+        '<p><input type="checkbox"/> Hello world</p>'
+      );
+      const input = result.match(INPUT_TAG_RE)?.[0] ?? "";
+      expect(input).not.toContain("data-sd-animate");
+    });
+
+    it("should not let a parent item capture a nested item's checkbox", async () => {
+      // A regular outer item containing a task sub-item: the outer item has no
+      // checkbox of its own and must not stamp the nested one.
+      const result = await processHtml(
+        '<ul><li>Outer item<ul><li class="task-list-item">' +
+          '<input type="checkbox"/> Nested task</li></ul></li></ul>'
+      );
+      const inputs = result.match(INPUT_TAG_GLOBAL_RE) ?? [];
+      expect(inputs).toHaveLength(1);
+      // The lone checkbox should be tagged once, with the nested item's own
+      // delay. It is the 3rd animated word ("Outer"=0, "item"=40, "Nested"=80).
+      expect(inputs[0]).toContain("data-sd-animate");
+      expect(inputs[0]).toContain("--sd-delay:80ms");
+    });
+  });
+
+  describe("void elements (img / hr)", () => {
+    it("should tag an image with data-sd-animate and timing", async () => {
+      const result = await processHtml('<p><img src="x.png" alt="x"/></p>');
+      const img = result.match(IMG_TAG_RE)?.[0] ?? "";
+      expect(img).toContain("data-sd-animate");
+      expect(img).toContain("--sd-animation:sd-fadeIn");
+      expect(img).toContain("--sd-duration:150ms");
+    });
+
+    it("should tag a horizontal rule with data-sd-animate", async () => {
+      const result = await processHtml("<hr/>");
+      const hr = result.match(HR_TAG_RE)?.[0] ?? "";
+      expect(hr).toContain("data-sd-animate");
+      expect(hr).toContain("--sd-animation:sd-fadeIn");
+    });
+
+    it("should use the configured animation type", async () => {
+      const plugin = createAnimatePlugin({ animation: "blurIn" });
+      const result = await processHtml('<p><img src="x.png"/></p>', plugin);
+      const img = result.match(IMG_TAG_RE)?.[0] ?? "";
+      expect(img).toContain("--sd-animation:sd-blurIn");
+    });
+
+    it("should preserve an existing inline style", async () => {
+      const result = await processHtml('<img src="x.png" style="width:10px"/>');
+      const img = result.match(IMG_TAG_RE)?.[0] ?? "";
+      expect(img).toContain("width:10px");
+      expect(img).toContain("--sd-animation");
+    });
+
+    it("should not animate void elements inside skip tags", async () => {
+      const result = await processHtml('<pre><img src="x.png"/></pre>');
+      const img = result.match(IMG_TAG_RE)?.[0] ?? "";
+      expect(img).not.toContain("data-sd-animate");
+    });
+
+    it("should advance the stagger sequence alongside words", async () => {
+      const plugin = createAnimatePlugin({ stagger: 50 });
+      const result = await processHtml("<p>Hello</p><hr/><p>World</p>", plugin);
+      // Hello=word0(delay 0), hr=slot1(delay 50), World=word2(delay 100)
+      expect(result).toContain("--sd-delay:50ms");
+      expect(result).toContain("--sd-delay:100ms");
     });
   });
 });
