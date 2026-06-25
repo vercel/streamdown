@@ -52,7 +52,7 @@ export const MermaidDownloadDropdown = ({
         return;
       }
 
-      const renderConfig = format === "mmd" ? config : (exportConfig ?? config);
+      const renderConfig = exportConfig ?? config;
       const mermaid = mermaidPlugin.getMermaid(renderConfig);
 
       // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
