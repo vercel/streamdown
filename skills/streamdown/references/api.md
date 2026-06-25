@@ -181,6 +181,7 @@ interface LinkSafetyModalProps {
 ```tsx
 interface MermaidOptions {
   config?: MermaidConfig;
+  exportConfig?: MermaidConfig;
   errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
 }
 

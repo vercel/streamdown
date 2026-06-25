@@ -366,6 +366,22 @@ Customize specific diagram types:
 </Streamdown>
 ```
 
+### Separate export theme
+
+Use `mermaid.exportConfig` when you want downloaded SVG/PNG files to use a different Mermaid theme than on-screen diagrams:
+
+```tsx
+<Streamdown
+  plugins={{ mermaid }}
+  mermaid={{
+    config: { theme: "dark" }, // Display theme
+    exportConfig: { theme: "default" }, // Download theme (SVG/PNG)
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
 ### Factory Function
 
 For advanced configuration, use `createMermaidPlugin`:

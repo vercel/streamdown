@@ -907,6 +907,7 @@ const CodeComponent = ({
                   <MermaidDownloadDropdown
                     chart={code}
                     config={mermaidContext?.config}
+                    exportConfig={mermaidContext?.exportConfig}
                   />
                 ) : null}
                 {showCopy ? <CodeBlockCopyButton code={code} /> : null}

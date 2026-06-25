@@ -187,6 +187,11 @@ The `mermaid` prop accepts an object with the following properties:
       description: "Custom configuration for Mermaid diagrams",
       type: "MermaidConfig",
     },
+    exportConfig: {
+      description:
+        "Optional Mermaid configuration used only for SVG/PNG downloads. Falls back to config when omitted.",
+      type: "MermaidConfig",
+    },
     errorComponent: {
       description:
         "Custom React component for handling Mermaid rendering errors",

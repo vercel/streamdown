@@ -13,6 +13,7 @@ interface MermaidDownloadDropdownProps {
   children?: React.ReactNode;
   className?: string;
   config?: MermaidConfig;
+  exportConfig?: MermaidConfig;
   onDownload?: (format: "mmd" | "png" | "svg") => void;
   onError?: (error: Error) => void;
 }
@@ -23,6 +24,7 @@ export const MermaidDownloadDropdown = ({
   className,
   onDownload,
   config,
+  exportConfig,
   onError,
 }: MermaidDownloadDropdownProps) => {
   const cn = useCn();
@@ -50,7 +52,8 @@ export const MermaidDownloadDropdown = ({
         return;
       }
 
-      const mermaid = mermaidPlugin.getMermaid(config);
+      const renderConfig = format === "mmd" ? config : (exportConfig ?? config);
+      const mermaid = mermaidPlugin.getMermaid(renderConfig);
 
       // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
       const chartHash = chart.split("").reduce((acc, char) => {

@@ -179,6 +179,8 @@ export interface MermaidErrorComponentProps {
 
 export interface MermaidOptions {
   config?: MermaidConfig;
+  /** Optional config used only for SVG/PNG downloads. Falls back to `config` when omitted. */
+  exportConfig?: MermaidConfig;
   errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
 }
 

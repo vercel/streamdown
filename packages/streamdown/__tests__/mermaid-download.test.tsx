@@ -138,6 +138,31 @@ describe("MermaidDownloadDropdown", () => {
     });
   });
 
+  it("should use exportConfig for image downloads", async () => {
+    const plugin = createMockPlugin();
+    const config = { theme: "dark" as const };
+    const exportConfig = { theme: "default" as const };
+    const { container } = renderWithContext(
+      { chart: "graph TD; A-->B", config, exportConfig },
+      plugin
+    );
+
+    // Open dropdown
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(container.querySelector("button")!);
+
+    // Click SVG option
+    const svgButton = Array.from(container.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "SVG"
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(svgButton!);
+
+    await waitFor(() => {
+      expect(plugin.getMermaid).toHaveBeenCalledWith(exportConfig);
+    });
+  });
+
   it("should download as PNG format", async () => {
     const { save } = await import("../lib/utils");
     const { svgToPngBlob } = await import("../lib/mermaid/utils");
