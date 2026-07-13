@@ -40,8 +40,22 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background-200 text-foreground;
   }
+}
+
+/*
+ * Homepage navbar: the sticky navbar has no bottom border at the top of the
+ * page and reveals it on scroll. `data-home-page` is server-rendered by the
+ * home layout (no flash); `data-scrolled` is toggled on <body> by
+ * NavbarScrollBorder while scrolling.
+ */
+body:has([data-home-page]) header.sticky {
+  transition: border-color 0.2s ease;
+}
+
+body:has([data-home-page]):not([data-scrolled]) header.sticky {
+  border-bottom-color: transparent;
 }
 
 .bg-dashed {
