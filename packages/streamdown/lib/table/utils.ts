@@ -3,6 +3,26 @@ export interface TableData {
   rows: string[][];
 }
 
+function extractCellText(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent ?? "";
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return "";
+  }
+
+  const element = node as HTMLElement;
+
+  if (element.tagName === "BR") {
+    return "\n";
+  }
+
+  return Array.from(element.childNodes)
+    .map(extractCellText)
+    .join("");
+}
+
 export const extractTableDataFromElement = (
   tableElement: HTMLElement
 ): TableData => {
@@ -12,7 +32,7 @@ export const extractTableDataFromElement = (
   // Extract headers
   const headerCells = tableElement.querySelectorAll("thead th");
   for (const cell of headerCells) {
-    headers.push(cell.textContent?.trim() || "");
+    headers.push(extractCellText(cell).trim());
   }
 
   // Extract rows
@@ -21,7 +41,7 @@ export const extractTableDataFromElement = (
     const rowData: string[] = [];
     const cells = row.querySelectorAll("td");
     for (const cell of cells) {
-      rowData.push(cell.textContent?.trim() || "");
+      rowData.push(extractCellText(cell).trim());
     }
     rows.push(rowData);
   }
@@ -139,7 +159,7 @@ export const escapeMarkdownTableCell = (cell: string): string => {
   // OPTIMIZATION: Fast path for cells that don't need escaping - check chars directly
   let needsEscaping = false;
   for (const char of cell) {
-    if (char === "\\" || char === "|") {
+    if (char === "\\" || char === "|" || char === "\n") {
       needsEscaping = true;
       break;
     }
@@ -149,13 +169,14 @@ export const escapeMarkdownTableCell = (cell: string): string => {
     return cell;
   }
 
-  // OPTIMIZATION: Use array building instead of string concatenation for better performance
   const parts: string[] = [];
   for (const char of cell) {
     if (char === "\\") {
       parts.push("\\\\");
     } else if (char === "|") {
       parts.push("\\|");
+    } else if (char === "\n") {
+      parts.push("<br>");
     } else {
       parts.push(char);
     }
