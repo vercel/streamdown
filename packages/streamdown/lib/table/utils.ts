@@ -18,9 +18,7 @@ function extractCellText(node: Node): string {
     return "\n";
   }
 
-  return Array.from(element.childNodes)
-    .map(extractCellText)
-    .join("");
+  return Array.from(element.childNodes).map(extractCellText).join("");
 }
 
 export const extractTableDataFromElement = (
