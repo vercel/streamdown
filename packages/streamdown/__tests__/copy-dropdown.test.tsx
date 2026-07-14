@@ -623,8 +623,7 @@ describe("TableCopyDropdown", () => {
 
     const getClipboardPlainText = (): string => {
       const plainTextParts = blobPartsByType["text/plain"];
-      expect(plainTextParts).toBeDefined();
-      return String(plainTextParts[0] ?? "");
+      return String(plainTextParts?.[0] ?? "");
     };
 
     beforeEach(() => {
@@ -642,19 +641,19 @@ describe("TableCopyDropdown", () => {
       } as unknown as typeof Blob);
 
       mockTable.innerHTML = `
-        <thead>
-          <tr>
-            <th>Description</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Paragraph one.<br>Paragraph two.</td>
-            <td>Line A<br>Line B<br>Line C</td>
-          </tr>
-        </tbody>
-      `;
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Paragraph one.<br>Paragraph two.</td>
+          <td>Line A<br>Line B<br>Line C</td>
+        </tr>
+      </tbody>
+    `;
     });
 
     afterEach(() => {
@@ -690,6 +689,8 @@ describe("TableCopyDropdown", () => {
       await waitFor(() => {
         expect(navigator.clipboard.write).toHaveBeenCalled();
       });
+
+      expect(blobPartsByType["text/plain"]).toBeDefined();
 
       expect(getClipboardPlainText()).toBe(
         "| Description | Notes |\n| --- | --- |\n| Paragraph one.<br>Paragraph two. | Line A<br>Line B<br>Line C |"
@@ -728,6 +729,8 @@ describe("TableCopyDropdown", () => {
         expect(navigator.clipboard.write).toHaveBeenCalled();
       });
 
+      expect(blobPartsByType["text/plain"]).toBeDefined();
+
       expect(getClipboardPlainText()).toBe(
         'Description,Notes\n"Paragraph one.\nParagraph two.","Line A\nLine B\nLine C"'
       );
@@ -764,6 +767,8 @@ describe("TableCopyDropdown", () => {
       await waitFor(() => {
         expect(navigator.clipboard.write).toHaveBeenCalled();
       });
+
+      expect(blobPartsByType["text/plain"]).toBeDefined();
 
       expect(getClipboardPlainText()).toBe(
         "Description\tNotes\nParagraph one.\\nParagraph two.\tLine A\\nLine B\\nLine C"
@@ -810,12 +815,14 @@ describe("TableCopyDropdown", () => {
       }
 
       fireEvent.click(getByText("CSV"));
-
       await waitFor(() => {
         expect(navigator.clipboard.write).toHaveBeenCalled();
       });
 
+      expect(blobPartsByType["text/plain"]).toBeDefined();
+
       const plainText = getClipboardPlainText();
+
       expect(plainText).not.toContain("Paragraph one.Paragraph two.");
       expect(plainText).toContain("Paragraph one.\nParagraph two.");
 
