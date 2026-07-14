@@ -3,6 +3,30 @@ export interface TableData {
   rows: string[][];
 }
 
+/**
+ * Convert a cell's DOM content to text, preserving <br> as newlines.
+ * `textContent` collapses `<br>` tags into nothing, so we walk the DOM
+ * and insert a newline for each <br> element.
+ */
+const getCellText = (cell: Element): string => {
+  const parts: string[] = [];
+
+  const walk = (node: Node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      parts.push(node.textContent ?? "");
+    } else if (node.nodeName === "BR") {
+      parts.push("\n");
+    } else if (node.childNodes) {
+      for (const child of node.childNodes) {
+        walk(child);
+      }
+    }
+  };
+
+  walk(cell);
+  return parts.join("").trim();
+};
+
 export const extractTableDataFromElement = (
   tableElement: HTMLElement
 ): TableData => {
@@ -12,7 +36,7 @@ export const extractTableDataFromElement = (
   // Extract headers
   const headerCells = tableElement.querySelectorAll("thead th");
   for (const cell of headerCells) {
-    headers.push(cell.textContent?.trim() || "");
+    headers.push(getCellText(cell));
   }
 
   // Extract rows
@@ -21,7 +45,7 @@ export const extractTableDataFromElement = (
     const rowData: string[] = [];
     const cells = row.querySelectorAll("td");
     for (const cell of cells) {
-      rowData.push(cell.textContent?.trim() || "");
+      rowData.push(getCellText(cell));
     }
     rows.push(rowData);
   }

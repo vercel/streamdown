@@ -119,6 +119,66 @@ describe("Table Utils", () => {
       expect(result.headers).toEqual([]);
       expect(result.rows).toEqual([["Data"]]);
     });
+
+    it("should preserve line breaks from <br> tags in cells", () => {
+      tableElement.innerHTML = `
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Example</td>
+            <td>Paragraph one.<br>Paragraph two.</td>
+          </tr>
+        </tbody>
+      `;
+
+      const result = extractTableDataFromElement(tableElement);
+
+      expect(result.headers).toEqual(["Name", "Description"]);
+      expect(result.rows).toEqual([["Example", "Paragraph one.\nParagraph two."]]);
+    });
+
+    it("should preserve multiple <br> tags in cells", () => {
+      tableElement.innerHTML = `
+        <thead>
+          <tr>
+            <th>Content</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Line 1<br><br>Line 3</td>
+          </tr>
+        </tbody>
+      `;
+
+      const result = extractTableDataFromElement(tableElement);
+
+      expect(result.rows).toEqual([["Line 1\n\nLine 3"]]);
+    });
+
+    it("should preserve <br> tags in header cells", () => {
+      tableElement.innerHTML = `
+        <thead>
+          <tr>
+            <th>Header<br>Subtitle</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Value</td>
+          </tr>
+        </tbody>
+      `;
+
+      const result = extractTableDataFromElement(tableElement);
+
+      expect(result.headers).toEqual(["Header\nSubtitle"]);
+    });
   });
 
   describe("tableDataToCSV", () => {
