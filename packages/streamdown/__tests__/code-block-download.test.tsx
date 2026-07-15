@@ -194,10 +194,7 @@ describe("CodeBlockDownloadButton", () => {
         }}
       >
         <CodeBlock code="some data" language="unknown">
-          <CodeBlockDownloadButton
-            code="some data"
-            language="unknown"
-          />
+          <CodeBlockDownloadButton code="some data" language="unknown" />
         </CodeBlock>
       </StreamdownContext.Provider>
     );
@@ -215,11 +212,7 @@ describe("CodeBlockDownloadButton", () => {
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.click(button!);
 
-    expect(save).toHaveBeenCalledWith(
-      "output.txt",
-      "some data",
-      "text/plain"
-    );
+    expect(save).toHaveBeenCalledWith("output.txt", "some data", "text/plain");
   });
 
   it("should fall back to default filename when codeDownload is undefined", async () => {
@@ -236,10 +229,7 @@ describe("CodeBlockDownloadButton", () => {
         }}
       >
         <CodeBlock code="python code" language="python">
-          <CodeBlockDownloadButton
-            code="python code"
-            language="python"
-          />
+          <CodeBlockDownloadButton code="python code" language="python" />
         </CodeBlock>
       </StreamdownContext.Provider>
     );
@@ -257,11 +247,7 @@ describe("CodeBlockDownloadButton", () => {
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.click(button!);
 
-    expect(save).toHaveBeenCalledWith(
-      "file.py",
-      "python code",
-      "text/plain"
-    );
+    expect(save).toHaveBeenCalledWith("file.py", "python code", "text/plain");
   });
 
   it("should fall back to default filename when baseFileName is not set", async () => {
@@ -278,10 +264,7 @@ describe("CodeBlockDownloadButton", () => {
         }}
       >
         <CodeBlock code="rust code" language="rust">
-          <CodeBlockDownloadButton
-            code="rust code"
-            language="rust"
-          />
+          <CodeBlockDownloadButton code="rust code" language="rust" />
         </CodeBlock>
       </StreamdownContext.Provider>
     );
@@ -299,11 +282,7 @@ describe("CodeBlockDownloadButton", () => {
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.click(button!);
 
-    expect(save).toHaveBeenCalledWith(
-      "file.rs",
-      "rust code",
-      "text/plain"
-    );
+    expect(save).toHaveBeenCalledWith("file.rs", "rust code", "text/plain");
   });
 
   it("should handle special characters in custom baseFileName", async () => {
@@ -320,10 +299,7 @@ describe("CodeBlockDownloadButton", () => {
         }}
       >
         <CodeBlock code="config data" language="json">
-          <CodeBlockDownloadButton
-            code="config data"
-            language="json"
-          />
+          <CodeBlockDownloadButton code="config data" language="json" />
         </CodeBlock>
       </StreamdownContext.Provider>
     );
