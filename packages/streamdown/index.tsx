@@ -237,6 +237,12 @@ export type StreamdownProps = Options & {
 
 const defaultSanitizeSchema = {
   ...defaultSchema,
+  // remark-rehype already prefixes footnote ids and backref hrefs with
+  // `user-content-` (its default `clobberPrefix`). hast-util-sanitize's default
+  // `clobberPrefix` is also `user-content-`, which would double-prefix ids like
+  // `user-content-user-content-fn-1` while leaving the (already-prefixed) href
+  // pointing at the un-doubled anchor. Disable it here to avoid the mismatch.
+  clobberPrefix: "",
   protocols: {
     ...defaultSchema.protocols,
     href: [...(defaultSchema.protocols?.href ?? []), "tel"],
