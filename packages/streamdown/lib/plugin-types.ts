@@ -1,11 +1,17 @@
 import type { MermaidConfig } from "mermaid";
 import type React from "react";
+import type { Pluggable } from "unified";
 import type {
   BundledLanguage,
   BundledTheme,
   ThemeRegistrationAny,
-} from "shiki";
-import type { Pluggable } from "unified";
+} from "./shiki-types";
+
+export type {
+  BundledLanguage,
+  BundledTheme,
+  ThemeRegistrationAny,
+} from "./shiki-types";
 
 export type ThemeInput = BundledTheme | ThemeRegistrationAny;
 
@@ -42,30 +48,34 @@ export interface HighlightOptions {
 
 /**
  * Plugin for code syntax highlighting (Shiki)
+ *
+ * Method syntax is intentional: parameter types stay bivariant so plugins
+ * from `@streamdown/code` (which use Shiki's narrower language/theme unions)
+ * remain assignable without requiring a `shiki` type dependency here.
  */
 export interface CodeHighlighterPlugin {
   /**
    * Get list of supported languages
    */
-  getSupportedLanguages: () => BundledLanguage[];
+  getSupportedLanguages(): BundledLanguage[];
   /**
    * Get the configured themes
    */
-  getThemes: () => [ThemeInput, ThemeInput];
+  getThemes(): [ThemeInput, ThemeInput];
   /**
    * Highlight code and return tokens
    * Returns null if highlighting not ready yet (async loading)
    * Use callback for async result
    */
-  highlight: (
+  highlight(
     options: HighlightOptions,
     callback?: (result: HighlightResult) => void
-  ) => HighlightResult | null;
+  ): HighlightResult | null;
   name: "shiki";
   /**
    * Check if language is supported
    */
-  supportsLanguage: (language: BundledLanguage) => boolean;
+  supportsLanguage(language: BundledLanguage): boolean;
   type: "code-highlighter";
 }
 
