@@ -36,7 +36,9 @@ export const TableDownloadButton = ({
     try {
       // Find the closest table element
       const button = event.currentTarget;
-      const tableWrapper = button.closest('[data-streamdown="table-wrapper"], [data-streamdown="table-fullscreen"]');
+      const tableWrapper = button.closest(
+        '[data-streamdown="table-wrapper"], [data-streamdown="table-fullscreen"]'
+      );
       const tableElement = tableWrapper?.querySelector(
         "table"
       ) as HTMLTableElement;
