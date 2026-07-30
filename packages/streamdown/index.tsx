@@ -200,6 +200,8 @@ export type StreamdownProps = Options & {
   isAnimating?: boolean;
   animated?: boolean | AnimateOptions;
   caret?: keyof typeof carets;
+  /** Bullet style cycling for nested unordered lists. @default "hierarchical" */
+  listStyle?: ListStylePreset;
   plugins?: PluginConfig;
   remend?: RemendOptions;
   linkSafety?: LinkSafetyConfig;
@@ -276,6 +278,13 @@ const carets = {
   circle: " ●",
 };
 
+/**
+ * Built-in list bullet style presets for nested unordered lists.
+ * - `"flat"` — all levels use disc (default, current behavior)
+ * - `"hierarchical"` — disc → circle → square, cycling
+ */
+export type ListStylePreset = "flat" | "hierarchical";
+
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
   controls: ControlsConfig;
@@ -283,6 +292,8 @@ export interface StreamdownContextType {
   /** Show line numbers in code blocks. @default true */
   lineNumbers: boolean;
   linkSafety?: LinkSafetyConfig;
+  /** Bullet style cycling for nested unordered lists. @default "hierarchical" */
+  listStyle: ListStylePreset;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
   shikiTheme: [ThemeInput, ThemeInput];
@@ -302,6 +313,7 @@ const defaultStreamdownContext: StreamdownContextType = {
   controls: true,
   isAnimating: false,
   lineNumbers: true,
+  listStyle: "hierarchical",
   mode: "streaming",
   mermaid: undefined,
   linkSafety: defaultLinkSafetyConfig,
@@ -446,6 +458,7 @@ export const Streamdown = memo(
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     caret,
+    listStyle = "hierarchical",
     plugins,
     remend: remendOptions,
     linkSafety = defaultLinkSafetyConfig,
@@ -613,6 +626,7 @@ export const Streamdown = memo(
         controls,
         isAnimating,
         lineNumbers,
+        listStyle,
         mode,
         mermaid,
         linkSafety,
@@ -622,6 +636,7 @@ export const Streamdown = memo(
         controls,
         isAnimating,
         lineNumbers,
+        listStyle,
         mode,
         mermaid,
         linkSafety,

@@ -11,6 +11,8 @@ const createContextValue = (
   shikiTheme: ["github-light", "github-dark"],
   controls: true,
   isAnimating: false,
+  lineNumbers: true,
+  listStyle: "hierarchical",
   mode: "streaming",
   mermaid: undefined,
   linkSafety,
@@ -54,7 +56,6 @@ describe("Markdown Components", () => {
       const ul = container.querySelector("ul");
       expect(ul).toBeTruthy();
       expect(ul?.className).toContain("list-inside");
-      expect(ul?.className).toContain("list-disc");
       expect(ul?.className).toContain("whitespace-normal");
     });
 

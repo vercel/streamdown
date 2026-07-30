@@ -1,5 +1,6 @@
 import {
   cloneElement,
+  createContext,
   type DetailedHTMLProps,
   type HTMLAttributes,
   type ImgHTMLAttributes,
@@ -11,10 +12,11 @@ import {
   Suspense,
   useCallback,
   useContext,
+  useMemo,
   useState,
 } from "react";
 // BundledLanguage type removed - we now support any language string
-import { type ControlsConfig, StreamdownContext } from "../index";
+import { type ControlsConfig, StreamdownContext, type ListStylePreset } from "../index";
 import { useIsCodeFenceIncomplete } from "./block-incomplete-context";
 import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
@@ -163,10 +165,35 @@ const shouldShowMermaidControl = (
   return mermaidConfig[controlType] !== false;
 };
 
+interface ListContextValue {
+  /** Total list nesting depth (ul + ol combined) */
+  depth: number;
+  /** Unordered list nesting depth only */
+  ulDepth: number;
+  /** Whether the immediate parent list is a <ul> */
+  isUnordered: boolean;
+}
+
+const ListContext = createContext<ListContextValue>({
+  depth: 0,
+  ulDepth: 0,
+  isUnordered: false,
+});
+
+const LI_BULLET_STYLES: Record<ListStylePreset, string[]> = {
+  flat: ["list-disc"],
+  hierarchical: ["list-disc", "list-[circle]", "list-[square]"],
+};
+
 type OlProps = WithNode<JSX.IntrinsicElements["ol"]>;
 const MemoOl = memo<OlProps>(
   ({ children, className, node, ...props }: OlProps) => {
     const cn = useCn();
+    const { depth, ulDepth } = useContext(ListContext);
+    const ctxValue = useMemo(
+      () => ({ depth: depth + 1, ulDepth, isUnordered: false }),
+      [depth, ulDepth]
+    );
     return (
       <ol
         className={cn(
@@ -174,9 +201,12 @@ const MemoOl = memo<OlProps>(
           className
         )}
         data-streamdown="ordered-list"
+        data-depth={depth}
         {...props}
       >
-        {children}
+        <ListContext.Provider value={ctxValue}>
+          {children}
+        </ListContext.Provider>
       </ol>
     );
   },
@@ -189,10 +219,18 @@ type LiProps = WithNode<JSX.IntrinsicElements["li"]>;
 const MemoLi = memo<LiProps>(
   ({ children, className, node, ...props }: LiProps) => {
     const cn = useCn();
+    const { depth, ulDepth, isUnordered } = useContext(ListContext);
+    const { listStyle } = useContext(StreamdownContext);
+    const bulletStyles = LI_BULLET_STYLES[listStyle];
+    const bulletClass =
+      isUnordered && ulDepth > 0
+        ? bulletStyles[(ulDepth - 1) % bulletStyles.length]
+        : undefined;
     return (
       <li
-        className={cn("py-1 [&>p]:inline", className)}
+        className={cn("py-1 [&>p]:inline", bulletClass, className)}
         data-streamdown="list-item"
+        data-depth={depth > 0 ? depth - 1 : 0}
         {...props}
       >
         {children}
@@ -207,16 +245,24 @@ type UlProps = WithNode<JSX.IntrinsicElements["ul"]>;
 const MemoUl = memo<UlProps>(
   ({ children, className, node, ...props }: UlProps) => {
     const cn = useCn();
+    const { depth, ulDepth } = useContext(ListContext);
+    const ctxValue = useMemo(
+      () => ({ depth: depth + 1, ulDepth: ulDepth + 1, isUnordered: true }),
+      [depth, ulDepth]
+    );
     return (
       <ul
         className={cn(
-          "list-inside list-disc whitespace-normal [li_&]:pl-6",
+          "list-inside whitespace-normal [li_&]:pl-6",
           className
         )}
         data-streamdown="unordered-list"
+        data-depth={depth}
         {...props}
       >
-        {children}
+        <ListContext.Provider value={ctxValue}>
+          {children}
+        </ListContext.Provider>
       </ul>
     );
   },
