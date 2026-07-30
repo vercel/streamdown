@@ -40,6 +40,7 @@ import type {
 import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
+import { rehypeBlockDirection } from "./lib/rehype/block-direction";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
 import {
@@ -735,6 +736,10 @@ export const Streamdown = memo(
         result = [...result, animatePlugin.rehypePlugin];
       }
 
+      if (dir === "auto" && mode === "static") {
+        result = [...result, rehypeBlockDirection];
+      }
+
       return result;
     }, [
       rehypePlugins,
@@ -743,6 +748,8 @@ export const Streamdown = memo(
       isAnimating,
       allowedTags,
       literalTagContent,
+      dir,
+      mode,
     ]);
 
     const shouldHideCaret = useMemo(() => {
@@ -777,11 +784,7 @@ export const Streamdown = memo(
                       "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
                       className
                     )}
-                    dir={
-                      dir === "auto"
-                        ? detectTextDirection(processedChildren)
-                        : dir
-                    }
+                    dir={dir === "auto" ? undefined : dir}
                   >
                     <Markdown
                       components={mergedComponents}
