@@ -199,6 +199,27 @@ describe("Markdown Components", () => {
       expect(link?.textContent).toBe("Incomplete link text");
     });
 
+    it("should render incomplete image placeholder when src is streamdown:incomplete-image", () => {
+      const Img = components.img;
+      if (!Img) {
+        throw new Error("Img component not found");
+      }
+      const { container } = render(
+        <Img
+          alt="loading"
+          node={null as any}
+          src="streamdown:incomplete-image"
+        />
+      );
+      const placeholder = container.querySelector(
+        '[data-streamdown="image-placeholder"]'
+      );
+      expect(placeholder).toBeTruthy();
+
+      const wrapper = container.querySelector('[data-streamdown="image-wrapper"]');
+      expect(wrapper?.getAttribute("data-incomplete")).toBe("true");
+    });
+
     it("should render blockquote with correct classes", () => {
       const Blockquote = components.blockquote;
       if (!Blockquote) {

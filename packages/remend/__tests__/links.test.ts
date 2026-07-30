@@ -127,10 +127,13 @@ describe("link handling with linkMode: text-only", () => {
     );
   });
 
-  it("should still remove incomplete images", () => {
-    // Images should still be removed entirely, regardless of linkMode
-    // Note: the space before the image is preserved
-    expect(remend("Text ![incomplete image", textOnlyOptions)).toBe("Text ");
-    expect(remend("Text ![alt](http://partial", textOnlyOptions)).toBe("Text ");
+  it("should still use placeholder for incomplete images regardless of linkMode", () => {
+    // Images use placeholder even in text-only mode (images can't show text-only)
+    expect(remend("Text ![incomplete image", textOnlyOptions)).toBe(
+      "Text ![incomplete image](streamdown:incomplete-image)"
+    );
+    expect(remend("Text ![alt](http://partial", textOnlyOptions)).toBe(
+      "Text ![alt](streamdown:incomplete-image)"
+    );
   });
 });
