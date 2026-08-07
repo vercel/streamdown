@@ -3,11 +3,30 @@ import {
   isWithinCompleteInlineCode,
 } from "./code-block-utils";
 import {
-  doubleTildeGlobalPattern,
   halfCompleteTildePattern,
   strikethroughPattern,
   whitespaceOrMarkersPattern,
 } from "./patterns";
+import { getScan, REGION } from "./scan";
+
+// Counts ~~ pairs outside code regions. Tilde runs that open or close a
+// fence are painted as fence regions by the scanner, so a line-start ~~~
+// fence never counts as strikethrough while a mid-line tilde run still does.
+const countDoubleTildes = (text: string): number => {
+  const scan = getScan(text);
+  let count = 0;
+
+  for (let i = 0; i < text.length; i += 1) {
+    if (scan.regions[i] !== REGION.PROSE) {
+      continue;
+    }
+    if (text[i] === "~" && i + 1 < text.length && text[i + 1] === "~") {
+      count += 1;
+      i += 1;
+    }
+  }
+  return count;
+};
 
 // Completes incomplete strikethrough formatting (~~)
 export const handleIncompleteStrikethrough = (text: string): string => {
@@ -34,9 +53,7 @@ export const handleIncompleteStrikethrough = (text: string): string => {
       return text;
     }
 
-    // doubleTildeGlobalPattern always matches when strikethroughPattern matched
-    const tildePairs = text.match(doubleTildeGlobalPattern)?.length;
-    if (tildePairs % 2 === 1) {
+    if (countDoubleTildes(text) % 2 === 1) {
       return `${text}~~`;
     }
   } else {
@@ -52,9 +69,7 @@ export const handleIncompleteStrikethrough = (text: string): string => {
       ) {
         return text;
       }
-      // doubleTildeGlobalPattern always matches when halfCompleteTildePattern matched
-      const tildePairs = text.match(doubleTildeGlobalPattern)?.length;
-      if (tildePairs % 2 === 1) {
+      if (countDoubleTildes(text) % 2 === 1) {
         return `${text}~`;
       }
     }
