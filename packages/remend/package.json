@@ -34,6 +34,7 @@
   "description": "Self-healing markdown. Intelligently parses and styles incomplete Markdown blocks.",
   "devDependencies": {
     "@vitest/coverage-v8": "^4.0.15",
+    "fast-check": "^4.9.0",
     "mdast-util-from-markdown": "^2.0.2",
     "tsup": "^8.5.1",
     "vitest": "^4.0.15"

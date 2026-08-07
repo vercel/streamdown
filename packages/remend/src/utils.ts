@@ -1,4 +1,5 @@
 import { letterNumberUnderscorePattern } from "./patterns";
+import { getScan, inHtmlTagAt, inLinkUrlAt, inMathAt, isFenceAt } from "./scan";
 
 // OPTIMIZATION: Precompute which characters are word characters
 // Using ASCII fast path before falling back to Unicode regex
@@ -20,20 +21,9 @@ export const isWordChar = (char: string): boolean => {
   return letterNumberUnderscorePattern.test(char);
 };
 
-// Check if a position is within a code block (between ``` markers)
-export const isWithinCodeBlock = (text: string, position: number): boolean => {
-  let inCodeBlock = false;
-
-  for (let i = 0; i < position; i += 1) {
-    // Check for triple backticks
-    if (text[i] === "`" && text[i + 1] === "`" && text[i + 2] === "`") {
-      inCodeBlock = !inCodeBlock;
-      i += 2; // Skip the next two backticks
-    }
-  }
-
-  return inCodeBlock;
-};
+// Check if a position is within a fenced code block
+export const isWithinCodeBlock = (text: string, position: number): boolean =>
+  isFenceAt(getScan(text), position);
 
 // Helper function to find the matching opening bracket for a closing bracket
 // Handles nested brackets correctly by searching backwards
@@ -76,101 +66,20 @@ export const findMatchingClosingBracket = (
 };
 
 // Check if a position is within a math block (between $ or $$)
-export const isWithinMathBlock = (text: string, position: number): boolean => {
-  // Count dollar signs before this position
-  let inInlineMath = false;
-  let inBlockMath = false;
-
-  for (let i = 0; i < text.length && i < position; i += 1) {
-    // Skip escaped dollar signs
-    if (text[i] === "\\" && text[i + 1] === "$") {
-      i += 1; // Skip the next character
-      continue;
-    }
-
-    if (text[i] === "$") {
-      // Check for block math ($$)
-      if (text[i + 1] === "$") {
-        inBlockMath = !inBlockMath;
-        i += 1; // Skip the second $
-        inInlineMath = false; // Block math takes precedence
-      } else if (!inBlockMath) {
-        // Only toggle inline math if not in block math
-        inInlineMath = !inInlineMath;
-      }
-    }
-  }
-
-  return inInlineMath || inBlockMath;
-};
-
-// Helper to check if position is before closing paren on same line
-const isBeforeClosingParen = (text: string, position: number): boolean => {
-  for (let j = position; j < text.length; j += 1) {
-    if (text[j] === ")") {
-      return true;
-    }
-    if (text[j] === "\n") {
-      return false;
-    }
-  }
-  return false;
-};
+export const isWithinMathBlock = (text: string, position: number): boolean =>
+  inMathAt(getScan(text), position);
 
 // Check if a position is within a link or image URL
 // Links and images have the format [text](url) or ![alt](url)
 export const isWithinLinkOrImageUrl = (
   text: string,
   position: number
-): boolean => {
-  // Search backwards from position to find if we're inside a (url) part
-  for (let i = position - 1; i >= 0; i -= 1) {
-    if (text[i] === ")") {
-      return false;
-    }
-    if (text[i] === "(") {
-      // Check if there's a ] immediately before the (
-      if (i > 0 && text[i - 1] === "]") {
-        // We're potentially inside a link/image URL
-        // Check if we're before the closing )
-        return isBeforeClosingParen(text, position);
-      }
-      return false;
-    }
-    if (text[i] === "\n") {
-      return false;
-    }
-  }
-
-  return false;
-};
+): boolean => inLinkUrlAt(getScan(text), position);
 
 // Check if a position is within an HTML tag (between < and >)
 // e.g. <a target="_blank"> — the underscore in _blank is inside the tag
-export const isWithinHtmlTag = (text: string, position: number): boolean => {
-  // Search backwards from position to find < or >
-  for (let i = position - 1; i >= 0; i -= 1) {
-    if (text[i] === ">") {
-      return false; // Found closing > first — we're outside a tag
-    }
-    if (text[i] === "<") {
-      // Found opening < — check it starts a valid tag (followed by letter or /)
-      const nextChar = i + 1 < text.length ? text[i + 1] : "";
-      if (
-        (nextChar >= "a" && nextChar <= "z") ||
-        (nextChar >= "A" && nextChar <= "Z") ||
-        nextChar === "/"
-      ) {
-        return true;
-      }
-      return false;
-    }
-    if (text[i] === "\n") {
-      return false; // Tags don't span lines in this context
-    }
-  }
-  return false;
-};
+export const isWithinHtmlTag = (text: string, position: number): boolean =>
+  inHtmlTagAt(getScan(text), position);
 
 // Check if a marker sequence appears to be a horizontal rule
 // Horizontal rules must be on their own line with optional leading/trailing whitespace

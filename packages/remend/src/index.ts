@@ -305,6 +305,13 @@ const remend = (text: string, options?: RemendOptions): string => {
     }
   }
 
+  // A handler that removes a trailing fragment can expose a trailing space
+  // (e.g. dropping an incomplete image). Strip it the same way the input
+  // was stripped, so healed output re-heals to itself.
+  if (result.endsWith(" ") && !result.endsWith("  ")) {
+    return result.slice(0, -1);
+  }
+
   return result;
 };
 

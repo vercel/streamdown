@@ -115,10 +115,12 @@ describe("link handling with linkMode: text-only", () => {
   });
 
   it("should handle nested brackets without matching closing bracket", () => {
+    // Healing runs to a fixed point, so every unmatched bracket is resolved
+    // in one call rather than one per call
     expect(remend("Text [outer [inner", textOnlyOptions)).toBe(
-      "Text outer [inner"
+      "Text outer inner"
     );
-    expect(remend("[foo [bar [baz", textOnlyOptions)).toBe("foo [bar [baz");
+    expect(remend("[foo [bar [baz", textOnlyOptions)).toBe("foo bar baz");
     expect(remend("Text [outer [inner]", textOnlyOptions)).toBe(
       "Text outer [inner]"
     );
@@ -128,9 +130,10 @@ describe("link handling with linkMode: text-only", () => {
   });
 
   it("should still remove incomplete images", () => {
-    // Images should still be removed entirely, regardless of linkMode
-    // Note: the space before the image is preserved
-    expect(remend("Text ![incomplete image", textOnlyOptions)).toBe("Text ");
-    expect(remend("Text ![alt](http://partial", textOnlyOptions)).toBe("Text ");
+    // Images should still be removed entirely, regardless of linkMode.
+    // The space exposed by the removal is stripped like any other single
+    // trailing space.
+    expect(remend("Text ![incomplete image", textOnlyOptions)).toBe("Text");
+    expect(remend("Text ![alt](http://partial", textOnlyOptions)).toBe("Text");
   });
 });

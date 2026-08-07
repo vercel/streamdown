@@ -131,11 +131,8 @@ const handleIncompleteText = (
   return null;
 };
 
-// Handles incomplete links and images by preserving them with a special marker
-export const handleIncompleteLinksAndImages = (
-  text: string,
-  linkMode: LinkMode = "protocol"
-): string => {
+// One healing step over the trailing incomplete link or image, if any
+const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
   // Look for patterns like [text]( or ![text]( at the end of text
   // We need to handle nested brackets in the link text
 
@@ -160,4 +157,26 @@ export const handleIncompleteLinksAndImages = (
   }
 
   return text;
+};
+
+// Handles incomplete links and images by preserving them with a special marker
+export const handleIncompleteLinksAndImages = (
+  text: string,
+  linkMode: LinkMode = "protocol"
+): string => {
+  let current = text;
+
+  // Removing a trailing incomplete image can expose another incomplete
+  // construct that ended immediately before it (an input ending in "![!["
+  // heals to "![", which is itself incomplete). Iterate until healed text
+  // re-heals to itself, so healing is idempotent. A step that grows the text
+  // has completed the construct, and truncating steps strictly shorten,
+  // so the loop terminates.
+  for (;;) {
+    const next = healTrailingLinkOrImage(current, linkMode);
+    if (next.length >= current.length) {
+      return next;
+    }
+    current = next;
+  }
 };
