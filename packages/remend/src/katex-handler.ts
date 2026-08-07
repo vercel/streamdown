@@ -1,6 +1,5 @@
 import { getScan, REGION } from "./scan";
 
-// Helper function to count $$ pairs outside code regions
 const countDollarPairs = (text: string): number => {
   const scan = getScan(text);
   let dollarPairs = 0;
@@ -18,7 +17,7 @@ const countDollarPairs = (text: string): number => {
   return dollarPairs;
 };
 
-// Helper function to count single $ signs (excluding $$) outside code regions
+// Excludes $$ pairs and any $ inside code regions.
 const countSingleDollars = (text: string): number => {
   const scan = getScan(text);
   let count = 0;
