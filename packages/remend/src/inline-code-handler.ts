@@ -1,61 +1,45 @@
-import { countSingleBackticks } from "./code-block-utils";
-import {
-  inlineCodePattern,
-  inlineTripleBacktickPattern,
-  whitespaceOrMarkersPattern,
-} from "./patterns";
+import { whitespaceOrMarkersPattern } from "./patterns";
+import { getScan } from "./scan";
 
-// Helper function to check for incomplete inline triple backticks
-const handleInlineTripleBackticks = (text: string): string | null => {
-  const inlineTripleBacktickMatch = text.match(inlineTripleBacktickPattern);
-  if (!inlineTripleBacktickMatch || text.includes("\n")) {
-    return null;
-  }
-
-  // Check if it ends with exactly 2 backticks (incomplete)
-  if (text.endsWith("``") && !text.endsWith("```")) {
-    return `${text}\``;
-  }
-  // Already complete inline triple backticks
-  return text;
-};
-
-// Helper function to check if we're inside an incomplete code block
-const isInsideIncompleteCodeBlock = (text: string): boolean => {
-  const allTripleBackticks = (text.match(/```/g) || []).length;
-  return allTripleBackticks % 2 === 1;
-};
-
-// Completes incomplete inline code formatting (`)
-// Avoids completing if inside an incomplete code block
+// Completes an unclosed inline code span (`)
+//
+// A span opened by a run of N backticks closes only on a run of exactly N,
+// so the completion appends whatever remains of the closing run. If the text
+// already ends with a partial closing run of k < N backticks, only N - k are
+// appended.
 export const handleIncompleteInlineCode = (text: string): string => {
-  // Check if we have inline triple backticks (starts with ``` and should end with ```)
-  // This pattern should ONLY match truly inline code (no newlines)
-  // Examples: ```code``` or ```python code```
-  const inlineResult = handleInlineTripleBackticks(text);
-  if (inlineResult !== null) {
-    return inlineResult;
+  const scan = getScan(text);
+
+  // Inside an unterminated fenced code block, backticks are content and the
+  // block is left for the renderer to display as streaming code
+  if (scan.openFence) {
+    return text;
   }
 
-  const inlineCodeMatch = text.match(inlineCodePattern);
-
-  if (inlineCodeMatch && !isInsideIncompleteCodeBlock(text)) {
-    // Don't close if there's no meaningful content after the opening marker
-    // inlineCodeMatch[2] contains the content after `
-    // Check if content is only whitespace or other emphasis markers
-    const contentAfterMarker = inlineCodeMatch[2];
-    if (
-      !contentAfterMarker ||
-      whitespaceOrMarkersPattern.test(contentAfterMarker)
-    ) {
-      return text;
-    }
-
-    const singleBacktickCount = countSingleBackticks(text);
-    if (singleBacktickCount % 2 === 1) {
-      return `${text}\``;
-    }
+  const span = scan.openSpan;
+  if (!span) {
+    return text;
   }
 
-  return text;
+  // Don't close if there's no meaningful content after the opening run
+  const content = text.slice(span.start + span.runLength);
+  if (!content || whitespaceOrMarkersPattern.test(content)) {
+    return text;
+  }
+
+  // A trailing backtick run is the closing run being streamed
+  let trailingRun = 0;
+  let i = text.length - 1;
+  while (i >= 0 && text[i] === "`") {
+    trailingRun += 1;
+    i -= 1;
+  }
+
+  // A trailing run at least as long as the opener is a literal run inside
+  // the span. Appending backticks would only extend it, never close the span.
+  if (trailingRun >= span.runLength) {
+    return text;
+  }
+
+  return text + "`".repeat(span.runLength - trailingRun);
 };
