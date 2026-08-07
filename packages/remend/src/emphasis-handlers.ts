@@ -110,8 +110,6 @@ const shouldCountSingleAsterisk = (
   return { count: false };
 };
 
-// Counts asterisks that can serve as single-emphasis delimiters, applying
-// the skip rules in shouldSkipAsterisk and excluding code regions
 export const countSingleAsterisks = (text: string): number => {
   const scan = getScan(text);
   let count = 0;
@@ -189,8 +187,6 @@ const shouldSkipUnderscore = (
   return false;
 };
 
-// Counts underscores that can serve as single-emphasis delimiters, applying
-// the skip rules in shouldSkipUnderscore and excluding code regions
 export const countSingleUnderscores = (text: string): number => {
   const scan = getScan(text);
   let count = 0;
@@ -239,7 +235,6 @@ export const countTripleAsterisks = (text: string): number => {
   return count;
 };
 
-// Counts ** pairs outside code regions
 const countDoubleAsterisks = (text: string): number => {
   const scan = getScan(text);
   let count = 0;
@@ -257,7 +252,7 @@ const countDoubleAsterisks = (text: string): number => {
 };
 
 // Whether the text has an unmatched __ delimiter, counted per maximal
-// underscore run rather than per raw __ occurrence.
+// underscore run.
 //
 // Counting raw occurrences misreads identifiers: a name like snake__case
 // contains __ but cannot open or close emphasis, and counting it either
@@ -513,7 +508,7 @@ export const handleIncompleteDoubleUnderscoreItalic = (
   return text;
 };
 
-// Helper function to find the first single asterisk index (skips code regions)
+// Skips code regions when locating the asterisk.
 const findFirstSingleAsteriskIndex = (text: string): number => {
   const scan = getScan(text);
 
@@ -602,7 +597,6 @@ export const handleIncompleteSingleAsteriskItalic = (text: string): string => {
   return text;
 };
 
-// Helper function to find the first single underscore index (skips code regions)
 const findFirstSingleUnderscoreIndex = (text: string): number => {
   const scan = getScan(text);
 
