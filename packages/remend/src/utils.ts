@@ -21,7 +21,6 @@ export const isWordChar = (char: string): boolean => {
   return letterNumberUnderscorePattern.test(char);
 };
 
-// Check if a position is within a fenced code block
 export const isWithinCodeBlock = (text: string, position: number): boolean =>
   isFenceAt(getScan(text), position);
 

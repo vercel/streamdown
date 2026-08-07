@@ -126,10 +126,10 @@ describe("streaming properties", () => {
 });
 
 describe("exhaustive prefix sweep", () => {
-  // Every prefix of a fixed corpus, deterministically. The corpus mixes the
-  // constructs whose interactions have bitten before: identifiers with
-  // double underscores next to real emphasis, fences of both characters,
-  // spans with multi-backtick runs, and half-typed closers.
+  // Every prefix of a fixed corpus, deterministically. The corpus mixes
+  // constructs that interact: identifiers with double underscores next to
+  // real emphasis, fences of both characters, spans with multi-backtick runs,
+  // and half-typed closers.
   const corpus = [
     "Use snake__case for names and __bold text__ throughout.",
     "The `obj__attr` field pairs with **bold** and _italic_ text.",

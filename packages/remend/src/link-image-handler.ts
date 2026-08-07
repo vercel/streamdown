@@ -159,7 +159,7 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
   return text;
 };
 
-// Handles incomplete links and images by preserving them with a special marker
+// Preserves incomplete links and images with a special marker.
 export const handleIncompleteLinksAndImages = (
   text: string,
   linkMode: LinkMode = "protocol"

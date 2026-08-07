@@ -14,8 +14,7 @@ describe("image handling", () => {
   });
 
   it("should preserve a hard-break double space before a removed image", () => {
-    // Only a single exposed space is stripped. A double space is a markdown
-    // hard break and survives, matching the input-side rule.
+    // Only a single exposed space is stripped. A double space is a markdown hard break and survives.
     expect(remend("line one  ![partial")).toBe("line one  ");
   });
 

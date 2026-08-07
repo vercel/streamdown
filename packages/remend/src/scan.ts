@@ -24,7 +24,6 @@ export const REGION = {
   FENCE_MARKER: 1,
   /** The info string on a fence opener line. Neither prose nor code body. */
   FENCE_INFO: 2,
-  /** Content of a fenced code block */
   FENCE_BODY: 3,
   /** A complete inline code span, including its backtick markers */
   CODE_SPAN: 4,
@@ -62,7 +61,6 @@ export interface TextScan {
 
 const FENCE_OPENER_PATTERN = /^( {0,3})(`{3,}|~{3,})(.*)$/;
 
-// Marks the fence regions of one opener line and returns the open fence state
 const paintFenceOpener = (
   regions: Uint8Array,
   lineStart: number,
@@ -72,7 +70,7 @@ const paintFenceOpener = (
 ): void => {
   const markerStart = lineStart + indentLength;
   regions.fill(REGION.FENCE_MARKER, markerStart, markerStart + markerLength);
-  // Info string plus the line terminator belong to the fence, not to prose
+  // Info string plus the line terminator belong to the fence.
   regions.fill(
     REGION.FENCE_INFO,
     markerStart + markerLength,
@@ -115,7 +113,6 @@ const isFenceCloser = (
   return true;
 };
 
-// First pass: paint fenced code blocks line by line
 const paintFences = (text: string, regions: Uint8Array): OpenFence | null => {
   const n = text.length;
   let openFence: OpenFence | null = null;
@@ -246,7 +243,7 @@ export const getScan = (text: string): TextScan => {
   return scan;
 };
 
-/** Whether the position is inside any code construct (fence or span) */
+/** A code construct here means a fence or inline span. */
 export const isCodeAt = (scan: TextScan, position: number): boolean => {
   if (position >= scan.regions.length) {
     return scan.openFence !== null || scan.openSpan !== null;
@@ -273,12 +270,10 @@ export const isFenceAt = (scan: TextScan, position: number): boolean => {
   );
 };
 
-/** Whether the position is inside a complete inline code span */
 export const isCompleteSpanAt = (scan: TextScan, position: number): boolean =>
   scan.regions[position] === REGION.CODE_SPAN;
 
-// Math mask: for each position, whether it is inside $...$ or $$...$$,
-// mirroring the sequential toggle semantics the per-position helper used
+// Math mask: for each position, whether it is inside $...$ or $$...$$
 const buildMathMask = (text: string): Uint8Array => {
   const n = text.length;
   const mask = new Uint8Array(n);

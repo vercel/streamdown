@@ -1,6 +1,6 @@
 import { getScan, isCodeAt, isCompleteSpanAt } from "./scan";
 
-// Check if a position is inside a code construct (fenced block or inline span)
+// A code construct here means a fenced block or an inline code span.
 export const isInsideCodeBlock = (text: string, position: number): boolean =>
   isCodeAt(getScan(text), position);
 
