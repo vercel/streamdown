@@ -94,10 +94,8 @@ describe("link handler edge cases", () => {
   });
 
   it("should remove incomplete images in text-only mode", () => {
-    // The inner bracket is stripped first, exposing the incomplete image,
-    // which is removed like any other incomplete image. Previously the image
-    // survived one call only to be removed by the next, so healed output did
-    // not re-heal to itself.
+    // Stripping the inner bracket exposes an incomplete image, which is
+    // removed like any other
     expect(remend("![img [text", { linkMode: "text-only" })).toBe("");
   });
 
@@ -202,12 +200,8 @@ describe("double underscore half-complete in code block", () => {
 
 describe("double underscore half-complete with word-internal run", () => {
   it("should complete the opener left unmatched by a word-internal run", () => {
-    // The __ in b__content sits between word characters, so it is part of an
-    // identifier and cannot close emphasis. That leaves the __ before b as
-    // an unmatched opener, and the trailing _ as a half-typed closer to
-    // complete. Counting raw __ occurrences instead would pair the
-    // word-internal run against the opener and leave the underscores
-    // unhealed as literal text.
+    // b__content is word-internal, so the __ before b is an unmatched
+    // opener and the trailing _ is its half-typed closer
     expect(remend("__a__ __b__content_")).toBe("__a__ __b__content__");
   });
 });
