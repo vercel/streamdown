@@ -159,6 +159,11 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
   return text;
 };
 
+// A pass costs a full rescan of the shortened text, so an adversarial tail
+// of thousands of nested incomplete constructs would turn healing quadratic
+// without a bound. Realistic nesting depth is single digits.
+const MAX_HEAL_PASSES = 32;
+
 // Preserves incomplete links and images with a special marker.
 export const handleIncompleteLinksAndImages = (
   text: string,
@@ -172,11 +177,12 @@ export const handleIncompleteLinksAndImages = (
   // re-heals to itself, so healing is idempotent. A step that grows the text
   // has completed the construct, and truncating steps strictly shorten,
   // so the loop terminates.
-  for (;;) {
+  for (let pass = 0; pass < MAX_HEAL_PASSES; pass += 1) {
     const next = healTrailingLinkOrImage(current, linkMode);
     if (next.length >= current.length) {
       return next;
     }
     current = next;
   }
+  return current;
 };

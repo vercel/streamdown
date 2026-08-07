@@ -14,6 +14,7 @@ import {
   whitespaceOrMarkersPattern,
 } from "./patterns";
 import {
+  countDoublePairs,
   getScan,
   inHtmlTagAt,
   inLinkUrlAt,
@@ -187,21 +188,8 @@ export const countTripleAsterisks = (text: string): number => {
   return count;
 };
 
-const countDoubleAsterisks = (text: string): number => {
-  const scan = getScan(text);
-  let count = 0;
-
-  for (let i = 0; i < text.length; i += 1) {
-    if (scan.regions[i] !== REGION.PROSE) {
-      continue;
-    }
-    if (text[i] === "*" && i + 1 < text.length && text[i + 1] === "*") {
-      count += 1;
-      i += 1;
-    }
-  }
-  return count;
-};
+const countDoubleAsterisks = (text: string): number =>
+  countDoublePairs(text, "*");
 
 // Whether the text has an unmatched __ delimiter, counted per maximal
 // underscore run.
@@ -257,17 +245,22 @@ const doubleUnderscoreRunFlips = (
 ): boolean => {
   const text = scan.text;
 
-  // A backslash escapes the first underscore of the run
+  // A backslash escapes the first underscore of the run. The escaped
+  // underscore is literal punctuation, so the rest of the run still flanks
+  // as a delimiter.
   let runStart = initialRunStart;
+  let escaped = false;
   if (runStart > 0 && text[runStart - 1] === "\\") {
     runStart += 1;
+    escaped = true;
   }
   const runLength = runEnd - runStart;
   if (runLength < 2) {
     return false;
   }
 
-  const prevChar = runStart > 0 ? text[runStart - 1] : "";
+  const beforeRun = runStart > 0 ? text[runStart - 1] : "";
+  const prevChar = escaped ? "\\" : beforeRun;
   const nextChar = runEnd < text.length ? text[runEnd] : "";
   if (isWordChar(prevChar) && isWordChar(nextChar)) {
     return false;

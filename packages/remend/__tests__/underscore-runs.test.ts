@@ -49,3 +49,9 @@ describe("underscore run lengths", () => {
     expect(remend("___both___ done")).toBe("___both___ done");
   });
 });
+
+describe("escaped underscores", () => {
+  it("should treat the run after an escaped underscore as a delimiter", () => {
+    expect(remend("\\___bold")).toBe("\\___bold__");
+  });
+});
