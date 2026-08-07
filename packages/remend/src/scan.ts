@@ -1,19 +1,22 @@
 // Single-pass classification of a text into code and prose regions.
 //
-// Handlers previously re-derived "am I inside code?" per candidate character
-// with O(n) rescans, making remend quadratic on delimiter-heavy input. This
-// module scans once per input string (memoized) so every position query is
-// O(1), and centralizes fence semantics that were previously approximated
-// with a context-free ``` toggle:
+// Healing runs on every streaming token, and every handler needs to know
+// whether a candidate delimiter sits in prose or in code. A single scan
+// paints a region code for every position, memoized per input string, so
+// each query is O(1) and healing stays linear in the input no matter how
+// many delimiters it holds. The lazy masks below answer the same question
+// for math, link URLs, and HTML tags.
 //
-// - A fence only opens at the start of a line, indented at most 3 spaces.
+// Fence and span semantics follow CommonMark:
+//
+// - A fence opens only at the start of a line, indented at most 3 spaces.
 // - Both ``` and ~~~ fences are recognized, with runs of 3 or more.
 // - The info string of a backtick fence cannot contain a backtick
 //   (a line like ```code``` is inline code, not a fence).
 // - A fence closes on a run of the same character at least as long as the
 //   opener, alone on its line.
 // - An inline code span opened by a run of N backticks closes only on a run
-//   of exactly N backticks; other runs are literal inside the span.
+//   of exactly N backticks. Other runs are literal inside the span.
 
 export const REGION = {
   PROSE: 0,

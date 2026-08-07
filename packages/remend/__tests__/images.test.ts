@@ -3,8 +3,7 @@ import remend from "../src";
 
 describe("image handling", () => {
   it("should remove incomplete images", () => {
-    // The space exposed by removing the image is stripped like any other
-    // single trailing space
+    // The space exposed by the removal is stripped like an input trailing space
     expect(remend("Text with ![incomplete image")).toBe("Text with");
     expect(remend("![partial")).toBe("");
   });
@@ -12,6 +11,12 @@ describe("image handling", () => {
   it("should keep complete images unchanged", () => {
     const text = "Text with ![alt text](image.png)";
     expect(remend(text)).toBe(text);
+  });
+
+  it("should preserve a hard-break double space before a removed image", () => {
+    // Only a single exposed space is stripped. A double space is a markdown
+    // hard break and survives, matching the input-side rule.
+    expect(remend("line one  ![partial")).toBe("line one  ");
   });
 
   it("should handle partial image at chunk boundary", () => {

@@ -115,8 +115,7 @@ describe("link handling with linkMode: text-only", () => {
   });
 
   it("should handle nested brackets without matching closing bracket", () => {
-    // Healing runs to a fixed point, so every unmatched bracket is resolved
-    // in one call rather than one per call
+    // Fixed-point healing resolves every unmatched bracket in one call
     expect(remend("Text [outer [inner", textOnlyOptions)).toBe(
       "Text outer inner"
     );
@@ -130,9 +129,8 @@ describe("link handling with linkMode: text-only", () => {
   });
 
   it("should still remove incomplete images", () => {
-    // Images should still be removed entirely, regardless of linkMode.
-    // The space exposed by the removal is stripped like any other single
-    // trailing space.
+    // Images are removed entirely regardless of linkMode, and the exposed
+    // trailing space is stripped
     expect(remend("Text ![incomplete image", textOnlyOptions)).toBe("Text");
     expect(remend("Text ![alt](http://partial", textOnlyOptions)).toBe("Text");
   });
