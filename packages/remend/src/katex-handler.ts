@@ -1,21 +1,6 @@
-import { getScan, REGION } from "./scan";
+import { countDoublePairs, getScan, REGION } from "./scan";
 
-const countDollarPairs = (text: string): number => {
-  const scan = getScan(text);
-  let dollarPairs = 0;
-
-  for (let i = 0; i < text.length - 1; i += 1) {
-    if (scan.regions[i] !== REGION.PROSE) {
-      continue;
-    }
-    if (text[i] === "$" && text[i + 1] === "$") {
-      dollarPairs += 1;
-      i += 1;
-    }
-  }
-
-  return dollarPairs;
-};
+const countDollarPairs = (text: string): number => countDoublePairs(text, "$");
 
 // Excludes $$ pairs and any $ inside code regions.
 const countSingleDollars = (text: string): number => {

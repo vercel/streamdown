@@ -76,3 +76,41 @@ describe("inline code span run lengths", () => {
     expect(remend("`a``")).toBe("`a``");
   });
 });
+
+describe("list-indented fences", () => {
+  it("should recognize a fence indented inside a list item", () => {
+    expect(remend("1.  Install:\n    ```bash\n    npm install foo")).toBe(
+      "1.  Install:\n    ```bash\n    npm install foo"
+    );
+  });
+
+  it("should not heal emphasis inside a list-indented fence", () => {
+    expect(remend("- step\n  - nested\n    ```js\n    const x = a__b")).toBe(
+      "- step\n  - nested\n    ```js\n    const x = a__b"
+    );
+  });
+});
+
+describe("CRLF line endings", () => {
+  it("should recognize a fence opener on a CRLF line", () => {
+    expect(remend("```js\r\nconst a = 1")).toBe("```js\r\nconst a = 1");
+  });
+
+  it("should close a CRLF fence and heal after it", () => {
+    expect(remend("```\r\ncode\r\n```\r\n__open")).toBe(
+      "```\r\ncode\r\n```\r\n__open__"
+    );
+  });
+});
+
+describe("spans across paragraphs", () => {
+  it("should leave an unmatched run literal once its paragraph ends", () => {
+    expect(remend("use ``` to open a block\n\nmore **bold streaming")).toBe(
+      "use ``` to open a block\n\nmore **bold streaming**"
+    );
+  });
+
+  it("should still complete an open span in the last paragraph", () => {
+    expect(remend("intro\n\nrun `npm i")).toBe("intro\n\nrun `npm i`");
+  });
+});
