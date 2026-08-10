@@ -21,7 +21,7 @@ const Layout = async ({ children, params }: LayoutProps<"/[lang]">) => {
         <GeistdocsProvider basePath={config.basePath} lang={lang}>
           <Navbar config={config} />
           {children}
-          <Footer config={config} />
+          <Footer />
         </GeistdocsProvider>
       </body>
     </html>
