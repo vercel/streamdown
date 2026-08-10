@@ -4,6 +4,9 @@ packages:
 
 minimumReleaseAge: 2880
 
+minimumReleaseAgeExclude:
+  - "@vercel/geistdocs"
+
 onlyBuiltDependencies:
   - '@vercel/speed-insights'
   - esbuild
