@@ -572,21 +572,6 @@ export const Streamdown = memo(
       [blocksToRender, dir]
     );
 
-    // Generate stable keys based on index and animation state.
-    // Don't use content hash - that causes unmount/remount when content changes.
-    // Include isAnimating so that when streaming ends and the animate rehype
-    // plugin is removed from the pipeline, block keys change and React mounts
-    // fresh subtrees. Without this, memoized leaf components that compare only
-    // className + source position discard the span-free reparse.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: "we're using the blocksToRender length"
-    const blockKeys = useMemo(
-      () =>
-        blocksToRender.map(
-          (_block, idx) => `${generatedId}-${idx}-${isAnimating ? "a" : "s"}`
-        ),
-      [blocksToRender.length, generatedId, isAnimating]
-    );
-
     // Stable key derived from animated option values. This prevents the
     // plugin from being recreated when the user passes an inline object
     // literal (e.g. animated={{ animation: 'fadeIn' }}) whose reference
@@ -611,6 +596,21 @@ export const Streamdown = memo(
       }
       return createAnimatePlugin(animated as AnimateOptions);
     }, [animatedKey]);
+
+    // Generate stable keys based on index. Don't use content hash — that
+    // causes unmount/remount when content changes. When the animate plugin is
+    // active, also key on isAnimating so that when streaming ends and the
+    // plugin is removed from the rehype pipeline, React mounts fresh subtrees.
+    // Without this, memoized leaf components that compare only className +
+    // source position discard the span-free reparse. When animated is absent,
+    // skip the extra suffix — no spans exist to discard.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: "we're using the blocksToRender length"
+    const blockKeys = useMemo(() => {
+      const suffix = animatePlugin ? (isAnimating ? "a" : "s") : "";
+      return blocksToRender.map(
+        (_block, idx) => `${generatedId}-${idx}-${suffix}`
+      );
+    }, [blocksToRender.length, generatedId, isAnimating, animatePlugin]);
 
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
