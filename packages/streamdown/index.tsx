@@ -572,13 +572,19 @@ export const Streamdown = memo(
       [blocksToRender, dir]
     );
 
-    // Generate stable keys based on index only
-    // Don't use content hash - that causes unmount/remount when content changes
-    // React will handle content updates via props changes and memo comparison
+    // Generate stable keys based on index and animation state.
+    // Don't use content hash - that causes unmount/remount when content changes.
+    // Include isAnimating so that when streaming ends and the animate rehype
+    // plugin is removed from the pipeline, block keys change and React mounts
+    // fresh subtrees. Without this, memoized leaf components that compare only
+    // className + source position discard the span-free reparse.
     // biome-ignore lint/correctness/useExhaustiveDependencies: "we're using the blocksToRender length"
     const blockKeys = useMemo(
-      () => blocksToRender.map((_block, idx) => `${generatedId}-${idx}`),
-      [blocksToRender.length, generatedId]
+      () =>
+        blocksToRender.map(
+          (_block, idx) => `${generatedId}-${idx}-${isAnimating ? "a" : "s"}`
+        ),
+      [blocksToRender.length, generatedId, isAnimating]
     );
 
     // Stable key derived from animated option values. This prevents the
