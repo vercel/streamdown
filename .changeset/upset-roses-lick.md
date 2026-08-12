@@ -1,5 +1,5 @@
 ---
-"streamdown": minor
+"streamdown": patch
 ---
 
 - Fix code block line wrapping when line numbers are disabled.
