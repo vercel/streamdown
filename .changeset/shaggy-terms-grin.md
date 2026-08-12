@@ -1,5 +1,5 @@
 ---
-"streamdown": minor
+"streamdown": patch
 ---
 
 Fix table copy and download actions not working in fullscreen mode.
