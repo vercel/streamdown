@@ -94,8 +94,8 @@ export const CodeBlockBody = memo(
         <pre
           className={cn(
             className,
-            "bg-[var(--sdm-bg,inherit]",
-            "dark:bg-[var(--shiki-dark-bg,var(--sdm-bg,inherit)]"
+            "bg-[var(--sdm-bg,inherit)]",
+            "dark:bg-[var(--shiki-dark-bg,var(--sdm-bg,inherit))]"
           )}
           style={preStyle}
         >
