@@ -49,3 +49,4 @@ results.txt
 
 # Next.js
 next-env.d.ts
+*.tsbuildinfo
