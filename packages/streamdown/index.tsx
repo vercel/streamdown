@@ -46,11 +46,6 @@ import {
 } from "./lib/translations-context";
 import { createCn } from "./lib/utils";
 
-export type {
-  BundledLanguage,
-  BundledTheme,
-  ThemeRegistrationAny,
-} from "shiki";
 export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimatePlugin } from "./lib/animate";
@@ -73,6 +68,8 @@ export type {
 export { defaultUrlTransform } from "./lib/markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
+  BundledLanguage,
+  BundledTheme,
   CjkPlugin,
   CodeHighlighterPlugin,
   CustomRenderer,
@@ -82,6 +79,7 @@ export type {
   MathPlugin,
   PluginConfig,
   ThemeInput,
+  ThemeRegistrationAny,
 } from "./lib/plugin-types";
 export {
   TableCopyDropdown,
@@ -237,6 +235,12 @@ export type StreamdownProps = Options & {
 
 const defaultSanitizeSchema = {
   ...defaultSchema,
+  // remark-rehype already prefixes footnote ids and backref hrefs with
+  // `user-content-` (its default `clobberPrefix`). hast-util-sanitize's default
+  // `clobberPrefix` is also `user-content-`, which would double-prefix ids like
+  // `user-content-user-content-fn-1` while leaving the (already-prefixed) href
+  // pointing at the un-doubled anchor. Disable it here to avoid the mismatch.
+  clobberPrefix: "",
   protocols: {
     ...defaultSchema.protocols,
     href: [...(defaultSchema.protocols?.href ?? []), "tel"],
@@ -438,7 +442,7 @@ export const Streamdown = memo(
     rehypePlugins = defaultRehypePluginsArray,
     remarkPlugins = defaultRemarkPluginsArray,
     className,
-    shikiTheme = defaultShikiTheme,
+    shikiTheme,
     mermaid,
     controls = true,
     isAnimating = false,
@@ -609,7 +613,8 @@ export const Streamdown = memo(
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
       () => ({
-        shikiTheme: plugins?.code?.getThemes() ?? shikiTheme,
+        shikiTheme:
+          shikiTheme ?? plugins?.code?.getThemes() ?? defaultShikiTheme,
         controls,
         isAnimating,
         lineNumbers,

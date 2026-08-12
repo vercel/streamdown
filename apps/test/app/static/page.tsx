@@ -46,7 +46,7 @@ This is ~~strikethrough~~ text.
 
 [This is a link](https://example.com)
 
-![Alt text for image](https://via.placeholder.com/300x200)
+![Alt text for image](https://placehold.co/300x200)
 
 ## Code
 

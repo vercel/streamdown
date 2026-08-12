@@ -41,7 +41,7 @@ export const TableCopyDropdown = ({
 
     try {
       const tableWrapper = dropdownRef.current?.closest(
-        '[data-streamdown="table-wrapper"]'
+        '[data-streamdown="table-wrapper"], [data-streamdown="table-fullscreen"]'
       );
       const tableElement = tableWrapper?.querySelector(
         "table"
