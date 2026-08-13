@@ -246,4 +246,46 @@ describe("MermaidFullscreenButton", () => {
       expect(mermaid?.textContent).toContain("graph TD; A-->B");
     });
   });
+
+  it("should portal fullscreen overlay to mermaid.fullscreenPortalContainer when set", async () => {
+    const portalRoot = document.createElement("div");
+    document.body.appendChild(portalRoot);
+
+    const { container } = renderWithContext(
+      { chart: "graph TD; A-->B" },
+      { mermaid: { fullscreenPortalContainer: portalRoot } }
+    );
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      const backdrop = portalRoot.querySelector(".fixed.inset-0");
+      expect(backdrop).toBeTruthy();
+      expect(portalRoot.contains(backdrop)).toBe(true);
+    });
+
+    portalRoot.remove();
+  });
+
+  it("should resolve portal container from a callback", async () => {
+    const portalRoot = document.createElement("div");
+    document.body.appendChild(portalRoot);
+
+    const { container } = renderWithContext(
+      { chart: "graph TD; A-->B" },
+      { mermaid: { fullscreenPortalContainer: () => portalRoot } }
+    );
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      expect(portalRoot.querySelector(".fixed.inset-0")).toBeTruthy();
+    });
+
+    portalRoot.remove();
+  });
 });
