@@ -123,8 +123,9 @@ describe("multiple incomplete links", () => {
   });
 
   it("should handle two incomplete links in text-only mode", () => {
+    // Fixed-point healing resolves both unmatched brackets in one call
     const result = remend("[link1 and [link2", { linkMode: "text-only" });
-    expect(result).toBe("link1 and [link2");
+    expect(result).toBe("link1 and link2");
   });
 });
 
@@ -586,11 +587,10 @@ describe("real-world AI streaming patterns", () => {
     );
   });
 
-  it("should handle incomplete image with partial URL (preserves trailing space)", () => {
-    // Image is removed, leaving "See " - the trailing space remains
-    // because remend only trims single trailing space at the very start
-    // before handlers run, and the handler produces new trailing space
-    expect(remend("See ![diagram](http://example.com/img")).toBe("See ");
+  it("should handle incomplete image with partial URL", () => {
+    // The space exposed by the removal is stripped like an input trailing
+    // space, so healed output re-heals to itself
+    expect(remend("See ![diagram](http://example.com/img")).toBe("See");
   });
 
   it("should handle link with incomplete formatting after it", () => {

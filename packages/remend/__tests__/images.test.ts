@@ -3,7 +3,8 @@ import remend from "../src";
 
 describe("image handling", () => {
   it("should remove incomplete images", () => {
-    expect(remend("Text with ![incomplete image")).toBe("Text with ");
+    // The space exposed by the removal is stripped like an input trailing space
+    expect(remend("Text with ![incomplete image")).toBe("Text with");
     expect(remend("![partial")).toBe("");
   });
 
@@ -12,8 +13,13 @@ describe("image handling", () => {
     expect(remend(text)).toBe(text);
   });
 
+  it("should preserve a hard-break double space before a removed image", () => {
+    // Only a single exposed space is stripped. A double space is a markdown hard break and survives.
+    expect(remend("line one  ![partial")).toBe("line one  ");
+  });
+
   it("should handle partial image at chunk boundary", () => {
-    expect(remend("See ![the diag")).toBe("See ");
+    expect(remend("See ![the diag")).toBe("See");
     // Images with partial URLs should be removed (images can't show skeleton)
     expect(remend("![logo](./assets/log")).toBe("");
   });
@@ -21,9 +27,9 @@ describe("image handling", () => {
   it("should handle nested brackets in incomplete images", () => {
     // When findMatchingClosingBracket returns -1 for an image (lines 74-79)
     // For this to happen, we need an opening bracket with a ] but no proper matching
-    expect(remend("Text ![outer [inner]")).toBe("Text ");
+    expect(remend("Text ![outer [inner]")).toBe("Text");
     expect(remend("![nested [brackets] text")).toBe("");
-    expect(remend("Start ![foo [bar] baz")).toBe("Start ");
+    expect(remend("Start ![foo [bar] baz")).toBe("Start");
   });
 
   it("should not add trailing underscore for images with underscores in URL (#284)", () => {

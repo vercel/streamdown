@@ -279,3 +279,25 @@ ${"Regular paragraph text with some [links](https://example.com) and more conten
     { iterations: 1000 }
   );
 });
+
+// Delimiter-heavy input at doubling sizes. Cost should grow in proportion to
+// input size: a doubling that more than doubles the time signals a
+// superlinear rescan in a handler.
+describe("Scaling", () => {
+  const unit =
+    "word snake__case text __bold__ and _it_ plus `code` *star* ~~del~~ ".repeat(
+      30
+    );
+  const sizes = [1, 2, 4, 8] as const;
+
+  for (const mult of sizes) {
+    const doc = `${unit.repeat(mult)}__open`;
+    bench(
+      `delimiter-heavy ${doc.length} chars`,
+      () => {
+        remend(doc);
+      },
+      { iterations: 200 }
+    );
+  }
+});

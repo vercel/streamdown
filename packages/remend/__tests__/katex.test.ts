@@ -286,3 +286,15 @@ describe("math blocks with asterisks", () => {
     expect(remend(text)).toBe("Start *italic with $$x^{*}$$*");
   });
 });
+
+describe("dollar signs inside code", () => {
+  it("should not let a $ in inline code suppress later healing", () => {
+    expect(remend("`$` _hello")).toBe("`$` _hello_");
+  });
+
+  it("should not let a $ in a fence suppress later healing", () => {
+    expect(remend("```\nprice = $5\n```\n_hello")).toBe(
+      "```\nprice = $5\n```\n_hello_"
+    );
+  });
+});
