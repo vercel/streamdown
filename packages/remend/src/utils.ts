@@ -75,11 +75,51 @@ export const findMatchingClosingBracket = (
   return -1; // No matching bracket found
 };
 
-// Check if a position is within a math block (between $ or $$)
+type MathContext =
+  | "none"
+  | "inlineDollar"
+  | "blockDollar"
+  | "inlineLatex"
+  | "blockLatex";
+
+const isLatexMathContext = (context: MathContext): boolean =>
+  context === "inlineLatex" || context === "blockLatex";
+
+const getLatexMathContext = (
+  context: MathContext,
+  nextChar: string
+): MathContext | null => {
+  if (nextChar === "[" && context === "none") {
+    return "blockLatex";
+  }
+  if (nextChar === "]" && context === "blockLatex") {
+    return "none";
+  }
+  if (nextChar === "(" && context === "none") {
+    return "inlineLatex";
+  }
+  if (nextChar === ")" && context === "inlineLatex") {
+    return "none";
+  }
+  return null;
+};
+
+const getDollarMathContext = (
+  context: MathContext,
+  isBlockDelimiter: boolean
+): MathContext => {
+  if (isBlockDelimiter) {
+    return context === "blockDollar" ? "none" : "blockDollar";
+  }
+  if (context === "blockDollar") {
+    return context;
+  }
+  return context === "inlineDollar" ? "none" : "inlineDollar";
+};
+
+// Check if a position is within a math block (between $, $$, \(, or \[)
 export const isWithinMathBlock = (text: string, position: number): boolean => {
-  // Count dollar signs before this position
-  let inInlineMath = false;
-  let inBlockMath = false;
+  let mathContext: MathContext = "none";
 
   for (let i = 0; i < text.length && i < position; i += 1) {
     // Skip escaped dollar signs
@@ -88,20 +128,25 @@ export const isWithinMathBlock = (text: string, position: number): boolean => {
       continue;
     }
 
-    if (text[i] === "$") {
-      // Check for block math ($$)
-      if (text[i + 1] === "$") {
-        inBlockMath = !inBlockMath;
+    if (text[i] === "\\") {
+      const nextContext = getLatexMathContext(mathContext, text[i + 1]);
+      if (nextContext !== null) {
+        mathContext = nextContext;
+        i += 1;
+        continue;
+      }
+    }
+
+    if (text[i] === "$" && !isLatexMathContext(mathContext)) {
+      const isBlockDelimiter = text[i + 1] === "$";
+      mathContext = getDollarMathContext(mathContext, isBlockDelimiter);
+      if (isBlockDelimiter) {
         i += 1; // Skip the second $
-        inInlineMath = false; // Block math takes precedence
-      } else if (!inBlockMath) {
-        // Only toggle inline math if not in block math
-        inInlineMath = !inInlineMath;
       }
     }
   }
 
-  return inInlineMath || inBlockMath;
+  return mathContext !== "none";
 };
 
 // Helper to check if position is before closing paren on same line
