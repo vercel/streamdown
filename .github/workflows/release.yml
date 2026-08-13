@@ -55,6 +55,9 @@ jobs:
         with:
           version: pnpm changeset version
           publish: pnpm changeset publish
+          # github-api creates verified commits (required by repo rules);
+          # git-cli commits are unsigned and get rejected on push.
+          commitMode: github-api
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: "" # Workaround for https://github.com/changesets/action/pull/545
