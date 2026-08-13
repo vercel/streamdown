@@ -1,4 +1,3 @@
-import type { MermaidConfig } from "mermaid";
 import type React from "react";
 import type { Pluggable } from "unified";
 import type {
@@ -80,21 +79,44 @@ export interface CodeHighlighterPlugin {
 }
 
 /**
- * Mermaid instance interface
+ * Structural type for Mermaid configuration pass-through.
+ * Avoids a hard dependency on the "mermaid" package in the core bundle.
+ */
+export type MermaidConfig = {
+  fontFamily?: string;
+  securityLevel?: string;
+  startOnLoad?: boolean;
+  suppressErrorRendering?: boolean;
+  theme?: string;
+  themeCSS?: string;
+  themeVariables?: Record<string, unknown>;
+  // biome-ignore lint/suspicious/noExplicitAny: open pass-through for mermaid options
+} & Record<string, any>;
+
+/**
+ * Mermaid instance interface.
+ *
+ * Method syntax is intentional: parameter types stay bivariant so
+ * `@streamdown/mermaid` (which uses mermaid's narrower `MermaidConfig`) remains
+ * assignable without a core type dependency on the mermaid package.
  */
 export interface MermaidInstance {
-  initialize: (config: MermaidConfig) => void;
-  render: (id: string, source: string) => Promise<{ svg: string }>;
+  initialize(config: MermaidConfig): void;
+  render(id: string, source: string): Promise<{ svg: string }>;
 }
 
 /**
- * Plugin for diagram rendering (Mermaid)
+ * Plugin for diagram rendering (Mermaid).
+ *
+ * Method syntax on `getMermaid` matches `CodeHighlighterPlugin` — keeps plugin
+ * implementations with narrower config types assignable under
+ * `strictFunctionTypes`.
  */
 export interface DiagramPlugin {
   /**
    * Get the mermaid instance (initialized with optional config)
    */
-  getMermaid: (config?: MermaidConfig) => MermaidInstance;
+  getMermaid(config?: MermaidConfig): MermaidInstance;
   /**
    * Language identifier for code blocks
    */

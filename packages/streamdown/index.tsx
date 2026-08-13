@@ -1,6 +1,5 @@
 "use client";
 
-import type { MermaidConfig } from "mermaid";
 import {
   type ComponentProps,
   type CSSProperties,
@@ -33,7 +32,11 @@ import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
 import { type ExtraProps, Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
-import type { PluginConfig, ThemeInput } from "./lib/plugin-types";
+import type {
+  MermaidConfig,
+  PluginConfig,
+  ThemeInput,
+} from "./lib/plugin-types";
 import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
