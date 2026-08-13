@@ -378,7 +378,7 @@ describe("TableFullscreenButton", () => {
     const overlay = document.querySelector(
       '[data-streamdown="table-fullscreen"]'
     );
-    const downloadBtn = document?.querySelector(
+    const downloadBtn = overlay?.querySelector(
       'button[title="Download table"]'
     ) as HTMLButtonElement;
     fireEvent.click(downloadBtn);

@@ -128,21 +128,23 @@ describe("TableDownloadDropdown", () => {
         }}
       >
         <div data-streamdown="table-fullscreen">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Age</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Alice</td>
-                <td>30</td>
-              </tr>
-            </tbody>
-          </table>
-          <TableDownloadDropdown onDownload={onDownload} />
+          <div data-streamdown="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Age</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Alice</td>
+                  <td>30</td>
+                </tr>
+              </tbody>
+            </table>
+            <TableDownloadDropdown onDownload={onDownload} />
+          </div>
         </div>
       </StreamdownContext.Provider>
     );
@@ -306,21 +308,23 @@ describe("TableDownloadButton with format='markdown'", () => {
         }}
       >
         <div data-streamdown="table-fullscreen">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Age</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Alice</td>
-                <td>30</td>
-              </tr>
-            </tbody>
-          </table>
-          <TableDownloadButton onDownload={onDownload} />
+          <div data-streamdown="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Age</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Alice</td>
+                  <td>30</td>
+                </tr>
+              </tbody>
+            </table>
+            <TableDownloadButton onDownload={onDownload} />
+          </div>
         </div>
       </StreamdownContext.Provider>
     );
@@ -509,21 +513,23 @@ describe("TableCopyDropdown", () => {
         }}
       >
         <div data-streamdown="table-fullscreen">
-          <table>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Age</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Alice</td>
-                <td>30</td>
-              </tr>
-            </tbody>
-          </table>
-          <TableCopyDropdown onCopy={onCopy} />
+          <div data-streamdown="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Age</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Alice</td>
+                  <td>30</td>
+                </tr>
+              </tbody>
+            </table>
+            <TableCopyDropdown onCopy={onCopy} />
+          </div>
         </div>
       </StreamdownContext.Provider>
     );
