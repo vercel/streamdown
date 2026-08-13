@@ -52,7 +52,6 @@
     "react-markdown": "^10.1.0",
     "rehype-parse": "^9.0.1",
     "rehype-stringify": "^10.0.1",
-    "shiki": "^3.19.0",
     "tsup": "^8.5.1",
     "vitest": "^4.0.15"
   },
