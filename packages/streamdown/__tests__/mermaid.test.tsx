@@ -510,7 +510,7 @@ describe("Mermaid", () => {
       });
 
       const mmdButton = await waitFor(() =>
-        getByRole("button", { name: "MMD" })
+        getByRole("button", { name: "Download diagram as MMD" })
       );
 
       await act(() => {
@@ -552,7 +552,7 @@ describe("Mermaid", () => {
       });
 
       const svgButton = await waitFor(() =>
-        getByRole("button", { name: "SVG" })
+        getByRole("button", { name: "Download diagram as SVG" })
       );
 
       await act(() => {
@@ -623,7 +623,7 @@ describe("Mermaid", () => {
         });
 
         const pngButton = await waitFor(() =>
-          getByRole("button", { name: "PNG" })
+          getByRole("button", { name: "Download diagram as PNG" })
         );
 
         await act(() => {
@@ -664,7 +664,7 @@ describe("Mermaid", () => {
       });
 
       const svgButton = await waitFor(() =>
-        getByRole("button", { name: "SVG" })
+        getByRole("button", { name: "Download diagram as SVG" })
       );
 
       await act(() => {

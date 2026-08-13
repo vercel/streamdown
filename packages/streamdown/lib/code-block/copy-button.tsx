@@ -80,7 +80,7 @@ export const CodeBlockCopyButton = ({
         type="button"
         {...props}
       >
-        {children ?? <Icon size={14} />}
+        {children ?? <Icon aria-hidden="true" size={14} />}
       </button>
       {isCopied && (
         <output aria-live="polite" className="sr-only">
