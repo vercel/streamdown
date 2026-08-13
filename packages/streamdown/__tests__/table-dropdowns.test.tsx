@@ -114,6 +114,57 @@ describe("TableDownloadDropdown", () => {
     expect(onDownload).toHaveBeenCalledWith("markdown");
   });
 
+  it("should download when inside table-fullscreen", async () => {
+    const { save } = await import("../lib/utils");
+    const onDownload = vi.fn();
+
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming",
+        }}
+      >
+        <div data-streamdown="table-fullscreen">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Age</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Alice</td>
+                <td>30</td>
+              </tr>
+            </tbody>
+          </table>
+          <TableDownloadDropdown onDownload={onDownload} />
+        </div>
+      </StreamdownContext.Provider>
+    );
+
+    const toggleBtn = container.querySelector('button[title="Download table"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(toggleBtn!);
+
+    const csvBtn = container.querySelector(
+      'button[title="Download table as CSV"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(csvBtn!);
+
+    expect(save).toHaveBeenCalledWith(
+      "table.csv",
+      expect.any(String),
+      "text/csv"
+    );
+    expect(onDownload).toHaveBeenCalledWith("csv");
+  });
+
   it("should call onError when save throws", async () => {
     const { save } = await import("../lib/utils");
     (save as any).mockImplementation(() => {
@@ -241,6 +292,44 @@ describe("TableDownloadButton with format='markdown'", () => {
     fireEvent.click(btn!);
 
     expect(onError).toHaveBeenCalledWith(expect.any(Error));
+  });
+
+  it("should download when inside table-fullscreen", () => {
+    const onDownload = vi.fn();
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming",
+        }}
+      >
+        <div data-streamdown="table-fullscreen">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Age</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Alice</td>
+                <td>30</td>
+              </tr>
+            </tbody>
+          </table>
+          <TableDownloadButton onDownload={onDownload} />
+        </div>
+      </StreamdownContext.Provider>
+    );
+
+    const btn = container.querySelector("button");
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(btn!);
+
+    expect(onDownload).toHaveBeenCalled();
   });
 });
 
@@ -406,6 +495,51 @@ describe("TableCopyDropdown", () => {
     });
 
     expect(onError).toHaveBeenCalledWith(expect.any(Error));
+  });
+
+  it("should copy when inside table-fullscreen", async () => {
+    const onCopy = vi.fn();
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming",
+        }}
+      >
+        <div data-streamdown="table-fullscreen">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Age</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Alice</td>
+                <td>30</td>
+              </tr>
+            </tbody>
+          </table>
+          <TableCopyDropdown onCopy={onCopy} />
+        </div>
+      </StreamdownContext.Provider>
+    );
+
+    const toggleBtn = container.querySelector('button[title="Copy table"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(toggleBtn!);
+
+    const csvBtn = container.querySelector('button[title="Copy table as CSV"]');
+    // biome-ignore lint/suspicious/useAwait: act needs async to flush clipboard promises
+    await act(async () => {
+      // biome-ignore lint/style/noNonNullAssertion: test assertion
+      fireEvent.click(csvBtn!);
+    });
+
+    expect(onCopy).toHaveBeenCalledWith("csv");
   });
 
   it("should close dropdown on outside click", () => {

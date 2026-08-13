@@ -1,8 +1,8 @@
-import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useState } from "react";
 import { useDeferredRender } from "../../hooks/use-deferred-render";
 import { StreamdownContext } from "../../index";
 import { useMermaidPlugin } from "../plugin-context";
+import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
 import { PanZoom } from "./pan-zoom";
 
