@@ -37,7 +37,7 @@ export const TableDownloadButton = ({
       // Find the closest table element
       const button = event.currentTarget;
       const tableWrapper = button.closest(
-        '[data-streamdown="table-wrapper"], [data-streamdown="table-fullscreen"]'
+        '[data-streamdown="table-wrapper"]'
       );
       const tableElement = tableWrapper?.querySelector(
         "table"
@@ -119,7 +119,7 @@ export const TableDownloadDropdown = ({
   const downloadTableData = (format: "csv" | "markdown") => {
     try {
       const tableWrapper = dropdownRef.current?.closest(
-        '[data-streamdown="table-wrapper"], [data-streamdown="table-fullscreen"]'
+        '[data-streamdown="table-wrapper"]'
       );
       const tableElement = tableWrapper?.querySelector(
         "table"
