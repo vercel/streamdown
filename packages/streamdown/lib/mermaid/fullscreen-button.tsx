@@ -1,6 +1,7 @@
 import { type ComponentProps, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
+import { CodeBlockCopyButton } from "../code-block/copy-button";
 import { useIcons } from "../icon-context";
 import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
@@ -55,6 +56,19 @@ export const MermaidFullscreenButton = ({
       return true;
     }
     return mermaidCtl.download !== false;
+  })();
+  const showCopy = (() => {
+    if (typeof controlsConfig === "boolean") {
+      return controlsConfig;
+    }
+    const mermaidCtl = controlsConfig.mermaid;
+    if (mermaidCtl === false) {
+      return false;
+    }
+    if (mermaidCtl === true || mermaidCtl === undefined) {
+      return true;
+    }
+    return mermaidCtl.copy !== false;
   })();
 
   const handleToggle = () => {
@@ -136,6 +150,7 @@ export const MermaidFullscreenButton = ({
                 {showDownload ? (
                   <MermaidDownloadDropdown chart={chart} config={config} />
                 ) : null}
+                {showCopy ? <CodeBlockCopyButton code={chart} /> : null}
                 <button
                   aria-label={t.exitFullscreen}
                   className={cn(
