@@ -19,28 +19,13 @@ jobs:
     timeout-minutes: 10
 
     steps:
-
-      - name: Generate GitHub App Token
-        id: generate-token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ secrets.STREAMDOWN_APP_ID }}
-          private-key: ${{ secrets.STREAMDOWN_APP_PRIVATE_KEY }}
-
       - name: Checkout Repo
-        uses: actions/checkout@v4
-        with:
-          token: ${{ steps.generate-token.outputs.token }}
-
-      - name: Setup Git User
-        run: |
-          git config --global user.email "streamdown-bot[bot]@users.noreply.github.com"
-          git config --global user.name "streamdown-bot[bot]"
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '24'
           registry-url: 'https://registry.npmjs.org'
@@ -71,7 +56,7 @@ jobs:
           version: pnpm changeset version
           publish: pnpm changeset publish
         env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: "" # Workaround for https://github.com/changesets/action/pull/545
 
       - name: Deploy to Vercel
