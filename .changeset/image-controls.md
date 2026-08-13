@@ -1,5 +1,5 @@
 ---
-"streamdown": minor
+"streamdown": patch
 ---
 
 feat: add image control options (`controls.image`) to disable hover overlay and download button on images
