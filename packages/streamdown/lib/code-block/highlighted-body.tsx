@@ -1,8 +1,7 @@
 import { type HTMLAttributes, useContext, useEffect, useState } from "react";
-import type { BundledLanguage } from "shiki";
 import { StreamdownContext } from "../../index";
 import { useCodePlugin } from "../plugin-context";
-import type { HighlightResult } from "../plugin-types";
+import type { BundledLanguage, HighlightResult } from "../plugin-types";
 import { CodeBlockBody } from "./body";
 
 type HighlightedCodeBlockBodyProps = HTMLAttributes<HTMLDivElement> & {
