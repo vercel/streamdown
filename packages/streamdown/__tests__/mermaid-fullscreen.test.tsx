@@ -2,6 +2,7 @@ import { fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { StreamdownContext } from "../index";
 import { PluginContext } from "../lib/plugin-context";
+import type { DiagramPlugin, MermaidInstance } from "../lib/plugin-types";
 
 // Must mock the Mermaid component that fullscreen-button imports
 vi.mock("../lib/mermaid", () => ({
@@ -12,8 +13,23 @@ vi.mock("../lib/mermaid", () => ({
   ),
 }));
 
-// Import after mock
+vi.mock("../lib/utils", async () => {
+  const actual = await vi.importActual("../lib/utils");
+  return {
+    ...actual,
+    save: vi.fn(),
+  };
+});
+
+vi.mock("../lib/mermaid/utils", () => ({
+  svgToPngBlob: vi
+    .fn()
+    .mockResolvedValue(new Blob(["png"], { type: "image/png" })),
+}));
+
 import { MermaidFullscreenButton } from "../lib/mermaid/fullscreen-button";
+// Import after mocks
+import { save } from "../lib/utils";
 
 describe("MermaidFullscreenButton", () => {
   const defaultContext = {
@@ -23,9 +39,28 @@ describe("MermaidFullscreenButton", () => {
     mode: "streaming" as const,
   };
 
-  const renderWithContext = (props: any, contextOverrides = {}) => {
+  const createMockPlugin = (
+    renderResult = { svg: "<svg><text>Chart</text></svg>" }
+  ): DiagramPlugin => {
+    const mockInstance: MermaidInstance = {
+      initialize: vi.fn(),
+      render: vi.fn().mockResolvedValue(renderResult),
+    };
+    return {
+      name: "mermaid",
+      type: "diagram",
+      language: "mermaid",
+      getMermaid: vi.fn().mockReturnValue(mockInstance),
+    };
+  };
+
+  const renderWithContext = (
+    props: any,
+    contextOverrides = {},
+    plugin: DiagramPlugin | undefined = undefined
+  ) => {
     return render(
-      <PluginContext.Provider value={{}}>
+      <PluginContext.Provider value={plugin ? { mermaid: plugin } : {}}>
         <StreamdownContext.Provider
           value={{ ...defaultContext, ...contextOverrides }}
         >
@@ -245,5 +280,68 @@ describe("MermaidFullscreenButton", () => {
       expect(mermaid).toBeTruthy();
       expect(mermaid?.textContent).toContain("graph TD; A-->B");
     });
+  });
+
+  it("should render a working download button inside the fullscreen portal", async () => {
+    const plugin = createMockPlugin();
+    const { container } = renderWithContext(
+      { chart: "graph TD; A-->B" },
+      {},
+      plugin
+    );
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+    });
+
+    const downloadBtn = document.querySelector(
+      'button[title="Download diagram"]'
+    );
+    expect(downloadBtn).toBeTruthy();
+
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(downloadBtn!);
+
+    const pngOption = await waitFor(() =>
+      document.querySelector('button[title="Download diagram as PNG"]')
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(pngOption!);
+
+    await waitFor(() => {
+      expect(save).toHaveBeenCalledWith(
+        "diagram.png",
+        expect.any(Blob),
+        "image/png"
+      );
+    });
+
+    // Fullscreen should still be open — downloading must not close it.
+    expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+  });
+
+  it("should hide the fullscreen download button when the download control is disabled", async () => {
+    const plugin = createMockPlugin();
+    const { container } = renderWithContext(
+      { chart: "graph TD; A-->B" },
+      { controls: { mermaid: { download: false } } },
+      plugin
+    );
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+    });
+
+    expect(
+      document.querySelector('button[title="Download diagram"]')
+    ).toBeFalsy();
   });
 });

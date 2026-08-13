@@ -1,12 +1,14 @@
 import { type ComponentProps, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
+import { CodeBlockCopyButton } from "../code-block/copy-button";
 import { useIcons } from "../icon-context";
 import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
 import { useTranslations } from "../translations-context";
 import { Mermaid } from ".";
+import { MermaidDownloadDropdown } from "./download-button";
 
 type MermaidFullscreenButtonProps = ComponentProps<"button"> & {
   chart: string;
@@ -41,6 +43,32 @@ export const MermaidFullscreenButton = ({
       return true;
     }
     return mermaidCtl.panZoom !== false;
+  })();
+  const showDownload = (() => {
+    if (typeof controlsConfig === "boolean") {
+      return controlsConfig;
+    }
+    const mermaidCtl = controlsConfig.mermaid;
+    if (mermaidCtl === false) {
+      return false;
+    }
+    if (mermaidCtl === true || mermaidCtl === undefined) {
+      return true;
+    }
+    return mermaidCtl.download !== false;
+  })();
+  const showCopy = (() => {
+    if (typeof controlsConfig === "boolean") {
+      return controlsConfig;
+    }
+    const mermaidCtl = controlsConfig.mermaid;
+    if (mermaidCtl === false) {
+      return false;
+    }
+    if (mermaidCtl === true || mermaidCtl === undefined) {
+      return true;
+    }
+    return mermaidCtl.copy !== false;
   })();
 
   const handleToggle = () => {
@@ -110,17 +138,31 @@ export const MermaidFullscreenButton = ({
               }}
               role="dialog"
             >
-              <button
-                aria-label={t.exitFullscreen}
+              {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
+              <div
                 className={cn(
-                  "absolute top-4 right-4 z-10 rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+                  "absolute top-4 right-4 z-10 flex items-center gap-1"
                 )}
-                onClick={handleToggle}
-                title={t.exitFullscreen}
-                type="button"
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                role="presentation"
               >
-                <XIcon aria-hidden="true" size={20} />
-              </button>
+                {showDownload ? (
+                  <MermaidDownloadDropdown chart={chart} config={config} />
+                ) : null}
+                {showCopy ? <CodeBlockCopyButton code={chart} /> : null}
+                <button
+                  aria-label={t.exitFullscreen}
+                  className={cn(
+                    "rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
+                  )}
+                  onClick={handleToggle}
+                  title={t.exitFullscreen}
+                  type="button"
+                >
+                  <XIcon aria-hidden="true" size={20} />
+                </button>
+              </div>
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
               <div
                 className={cn("flex size-full items-center justify-center p-4")}
