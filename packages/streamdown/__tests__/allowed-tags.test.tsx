@@ -193,13 +193,10 @@ Content for snippet 2
       </Streamdown>
     );
 
-    // rehype-sanitize prefixes id attributes with "user-content-"
-    const snippet1 = container.querySelector(
-      '[data-testid="snippet-user-content-1"]'
-    );
-    const snippet2 = container.querySelector(
-      '[data-testid="snippet-user-content-2"]'
-    );
+    // Sanitizer's clobberPrefix is disabled to keep footnote backref hrefs in
+    // sync with their targets, so user-provided ids are preserved as-is.
+    const snippet1 = container.querySelector('[data-testid="snippet-1"]');
+    const snippet2 = container.querySelector('[data-testid="snippet-2"]');
     expect(snippet1).toBeTruthy();
     expect(snippet2).toBeTruthy();
     // Ensure snippet 2's content isn't absorbed into snippet 1

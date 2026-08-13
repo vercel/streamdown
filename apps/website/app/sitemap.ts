@@ -13,9 +13,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const pages: MetadataRoute.Sitemap = [];
 
   for (const page of source.getPages()) {
+    const data = page.data as {
+      lastModified?: Date;
+    };
+
     pages.push({
       changeFrequency: "weekly" as const,
-      lastModified: undefined,
+      lastModified: data.lastModified ? new Date(data.lastModified) : undefined,
       priority: 0.5,
       url: url(page.url),
     });
