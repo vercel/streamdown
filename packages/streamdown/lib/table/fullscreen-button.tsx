@@ -87,6 +87,7 @@ export const TableFullscreenButton = ({
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
               <div
                 className={cn("flex h-full flex-col")}
+                data-streamdown="table-wrapper"
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
                 role="presentation"
