@@ -21,11 +21,15 @@ vi.mock("../lib/utils", async () => {
   };
 });
 
-vi.mock("../lib/mermaid/utils", () => ({
-  svgToPngBlob: vi
-    .fn()
-    .mockResolvedValue(new Blob(["png"], { type: "image/png" })),
-}));
+vi.mock("../lib/mermaid/utils", async () => {
+  const actual = await vi.importActual("../lib/mermaid/utils");
+  return {
+    ...actual,
+    svgToPngBlob: vi
+      .fn()
+      .mockResolvedValue(new Blob(["png"], { type: "image/png" })),
+  };
+});
 
 import { MermaidFullscreenButton } from "../lib/mermaid/fullscreen-button";
 // Import after mocks
