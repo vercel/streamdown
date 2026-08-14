@@ -119,6 +119,64 @@ describe("Table Utils", () => {
       expect(result.headers).toEqual([]);
       expect(result.rows).toEqual([["Data"]]);
     });
+
+    it("should convert <br> elements to newlines in cells", () => {
+      tableElement.innerHTML = `
+        <thead>
+          <tr>
+            <th>Header</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Paragraph one.<br>Paragraph two.</td>
+          </tr>
+        </tbody>
+      `;
+
+      const result = extractTableDataFromElement(tableElement);
+
+      expect(result.rows).toEqual([["Paragraph one.\nParagraph two."]]);
+    });
+
+    it("should convert multiple <br> elements to newlines", () => {
+      tableElement.innerHTML = `
+        <thead>
+          <tr>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Line A<br>Line B<br>Line C</td>
+          </tr>
+        </tbody>
+      `;
+
+      const result = extractTableDataFromElement(tableElement);
+
+      expect(result.rows).toEqual([["Line A\nLine B\nLine C"]]);
+    });
+
+    it("should convert <br> inside nested elements to newlines", () => {
+      tableElement.innerHTML = `
+        <thead>
+          <tr>
+            <th>Header<br>with break</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Bold</strong><br><em>Italic</em></td>
+          </tr>
+        </tbody>
+      `;
+
+      const result = extractTableDataFromElement(tableElement);
+
+      expect(result.headers).toEqual(["Header\nwith break"]);
+      expect(result.rows).toEqual([["Bold\nItalic"]]);
+    });
   });
 
   describe("tableDataToCSV", () => {
@@ -290,6 +348,11 @@ describe("Table Utils", () => {
       const result = escapeMarkdownTableCell("");
       expect(result).toBe("");
     });
+
+    it("should convert newlines to <br>", () => {
+      const result = escapeMarkdownTableCell("Paragraph one.\nParagraph two.");
+      expect(result).toBe("Paragraph one.<br>Paragraph two.");
+    });
   });
 
   describe("tableDataToMarkdown", () => {
@@ -377,6 +440,19 @@ describe("Table Utils", () => {
       // The function only includes cells up to the number of headers
       // Extra cells are ignored during the mapping
       expect(result).toBe("| Col1 | Col2 |\n| --- | --- |\n| A | B | C | D |");
+    });
+
+    it("should convert cell newlines to <br> for single-line table rows", () => {
+      const data: TableData = {
+        headers: ["Description"],
+        rows: [["Paragraph one.\nParagraph two."]],
+      };
+
+      const result = tableDataToMarkdown(data);
+
+      expect(result).toBe(
+        "| Description |\n| --- |\n| Paragraph one.<br>Paragraph two. |"
+      );
     });
   });
 });
