@@ -29,6 +29,30 @@ describe("line numbers", () => {
       expect(span?.className ?? "").not.toContain(
         "before:content-[counter(line)]"
       );
+      expect(span?.className).toContain("block");
+    });
+
+    it("renders one block-level line span per row when lineNumbers={false}", () => {
+      const result = {
+        tokens: [
+          [{ content: "line 1", color: "#000" }],
+          [{ content: "line 2", color: "#000" }],
+          [{ content: "line 3", color: "#000" }],
+        ],
+        bg: "#fff",
+        fg: "#000",
+      };
+      const { container } = render(
+        <CodeBlockBody language="js" lineNumbers={false} result={result} />
+      );
+      const lineSpans = container.querySelectorAll("code > span");
+      expect(lineSpans.length).toBe(3);
+      for (const lineSpan of lineSpans) {
+        expect(lineSpan.className).toContain("block");
+        expect(lineSpan.className).not.toContain(
+          "before:content-[counter(line)]"
+        );
+      }
     });
 
     it("applies counter CSS classes to <code> when lineNumbers={true}", () => {
