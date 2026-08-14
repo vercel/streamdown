@@ -356,6 +356,7 @@ export const CodeBlockDownloadButton = ({
 
   return (
     <button
+      aria-label={t.downloadFile}
       className={cn(
         "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
         className

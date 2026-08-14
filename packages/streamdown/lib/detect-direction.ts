@@ -8,36 +8,48 @@ const RTL_PATTERN = /[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/;
 const LETTER_PATTERN = /\p{L}/u;
 
 /**
- * Detect text direction using the "first strong character" algorithm.
- * Strips common markdown syntax then finds the first Unicode letter
- * with strong directionality.
+ * Detect text direction by counting strong characters in the text.
+ * Ties use the first strong character, preserving intuitive behavior for
+ * short mixed labels while allowing RTL-majority prose that starts with an
+ * English identifier to remain RTL.
  *
- * Note: markdown stripping is best-effort — nested formatting,
- * multi-line fenced code blocks, and raw HTML are not fully handled.
- * This is acceptable since the algorithm only needs to reach the first
- * strong character, which is almost always in plain prose.
+ * Markdown stripping is best-effort. Fenced and inline code are excluded
+ * because code is always rendered LTR and should not influence surrounding
+ * prose.
  *
- * @returns "rtl" if first strong char is RTL, "ltr" otherwise
+ * @returns "rtl" if RTL strong characters are the majority, "ltr" otherwise
  */
 export function detectTextDirection(text: string): "ltr" | "rtl" {
-  // Strip common markdown syntax to get to actual text content
   const stripped = text
+    .replace(/(```|~~~)[\s\S]*?\1/g, "") // fenced code
     .replace(/^#{1,6}\s+/gm, "") // headings
     .replace(/(\*{1,3}|_{1,3})/g, "") // bold/italic
     .replace(/`[^`]*`/g, "") // inline code
     .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1") // links (keep text)
     .replace(/^[\s>*\-+\d.]+/gm, ""); // list markers, blockquotes
 
-  // Find first strong directional character (any Unicode letter)
+  let firstStrong: "ltr" | "rtl" | undefined;
+  let ltrCount = 0;
+  let rtlCount = 0;
+
   for (const char of stripped) {
     if (RTL_PATTERN.test(char)) {
-      return "rtl";
+      firstStrong ??= "rtl";
+      rtlCount += 1;
+      continue;
     }
-    // Latin, CJK, Cyrillic, etc. — any letter that's not RTL is LTR
+    // Latin, CJK, Cyrillic, etc. — any letter that's not RTL is LTR.
     if (LETTER_PATTERN.test(char)) {
-      return "ltr";
+      firstStrong ??= "ltr";
+      ltrCount += 1;
     }
   }
 
-  return "ltr";
+  if (rtlCount > ltrCount) {
+    return "rtl";
+  }
+  if (ltrCount > rtlCount) {
+    return "ltr";
+  }
+  return firstStrong ?? "ltr";
 }

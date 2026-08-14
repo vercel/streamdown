@@ -11,6 +11,9 @@ type CodeBlockBodyProps = ComponentProps<"div"> & {
   lineNumbers?: boolean;
 };
 
+// Base line classes string (merged without prefix for memoization)
+const LINE_CLASSES_BASE = baseCn("block");
+
 // Base line numbers class string (merged without prefix for memoization)
 const LINE_NUMBER_CLASSES_BASE = baseCn(
   "block",
@@ -60,6 +63,9 @@ export const CodeBlockBody = memo(
     // Prefix the pre-computed line number classes
     const lineNumberClasses = useMemo(() => cn(LINE_NUMBER_CLASSES_BASE), [cn]);
 
+    // Prefix the base line classes string
+    const baseLineClasses = useMemo(() => cn(LINE_CLASSES_BASE), [cn]);
+
     // Use CSS custom properties instead of direct inline styles so that
     // dark-mode Tailwind classes can override without !important.
     // This is necessary because !important syntax differs between Tailwind v3 and v4.
@@ -94,8 +100,8 @@ export const CodeBlockBody = memo(
         <pre
           className={cn(
             className,
-            "bg-[var(--sdm-bg,inherit]",
-            "dark:bg-[var(--shiki-dark-bg,var(--sdm-bg,inherit)]"
+            "bg-[var(--sdm-bg,inherit)]",
+            "dark:bg-[var(--shiki-dark-bg,var(--sdm-bg,inherit))]"
           )}
           style={preStyle}
         >
@@ -113,7 +119,7 @@ export const CodeBlockBody = memo(
           >
             {result.tokens.map((row, index) => (
               <span
-                className={lineNumbers ? lineNumberClasses : undefined}
+                className={lineNumbers ? lineNumberClasses : baseLineClasses}
                 // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
                 key={index}
               >

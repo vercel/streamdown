@@ -65,7 +65,11 @@ export const CodeBlock = ({
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
-      <CodeBlockContainer isIncomplete={isIncomplete} language={language}>
+      <CodeBlockContainer
+        dir="ltr"
+        isIncomplete={isIncomplete}
+        language={language}
+      >
         <CodeBlockHeader language={language} />
         {children ? (
           <div
