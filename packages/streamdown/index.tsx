@@ -189,7 +189,15 @@ export type AllowedTags = Record<string, string[]>;
 
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
-  /** Text direction for blocks. "auto" detects per-block using first strong character algorithm. */
+  /**
+   * Text direction. `"ltr"` / `"rtl"` force a single direction.
+   * `"auto"` detects direction per block: in streaming mode via parsed
+   * markdown blocks, in static mode via a rehype pass on each semantic
+   * block (headings, paragraphs, list items, table cells, etc.).
+   * Detection uses a content-majority strong-character count with
+   * first-strong as the tie-breaker; fenced/inline code is excluded from
+   * the evidence and code blocks are always rendered LTR.
+   */
   dir?: "auto" | "ltr" | "rtl";
   BlockComponent?: React.ComponentType<BlockProps>;
   parseMarkdownIntoBlocksFn?: (markdown: string) => string[];
