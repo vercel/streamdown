@@ -40,6 +40,7 @@ import type {
 import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
+import { rehypeBlockDirection } from "./lib/rehype/block-direction";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
 import {
@@ -188,7 +189,15 @@ export type AllowedTags = Record<string, string[]>;
 
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
-  /** Text direction for blocks. "auto" detects per-block using first strong character algorithm. */
+  /**
+   * Text direction. `"ltr"` / `"rtl"` force a single direction.
+   * `"auto"` detects direction per block: in streaming mode via parsed
+   * markdown blocks, in static mode via a rehype pass on each semantic
+   * block (headings, paragraphs, list items, table cells, etc.).
+   * Detection uses a content-majority strong-character count with
+   * first-strong as the tie-breaker; fenced/inline code is excluded from
+   * the evidence and code blocks are always rendered LTR.
+   */
   dir?: "auto" | "ltr" | "rtl";
   BlockComponent?: React.ComponentType<BlockProps>;
   parseMarkdownIntoBlocksFn?: (markdown: string) => string[];
@@ -735,6 +744,10 @@ export const Streamdown = memo(
         result = [...result, animatePlugin.rehypePlugin];
       }
 
+      if (dir === "auto" && mode === "static") {
+        result = [...result, rehypeBlockDirection];
+      }
+
       return result;
     }, [
       rehypePlugins,
@@ -743,6 +756,8 @@ export const Streamdown = memo(
       isAnimating,
       allowedTags,
       literalTagContent,
+      dir,
+      mode,
     ]);
 
     const shouldHideCaret = useMemo(() => {
@@ -777,11 +792,7 @@ export const Streamdown = memo(
                       "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
                       className
                     )}
-                    dir={
-                      dir === "auto"
-                        ? detectTextDirection(processedChildren)
-                        : dir
-                    }
+                    dir={dir === "auto" ? undefined : dir}
                   >
                     <Markdown
                       components={mergedComponents}
