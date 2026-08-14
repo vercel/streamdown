@@ -1,5 +1,5 @@
 ---
-"streamdown": minor
+"streamdown": patch
 ---
 
 - Fixed table copy losing line breaks inside cells containing `<br>` elements.
