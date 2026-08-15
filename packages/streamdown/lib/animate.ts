@@ -12,6 +12,12 @@ export interface AnimatePlugin {
   name: "animate";
   rehypePlugin: Pluggable;
   /**
+   * Enable or disable animation inside code/pre blocks.
+   * When true, code block content will be animated incrementally
+   * during streaming (useful for incomplete/unclosed code fences).
+   */
+  setAnimateCodeBlocks: (enabled: boolean) => void;
+  /**
    * Set the number of HAST text characters from a previous render.
    * Characters up to this count will get duration=0ms, preventing
    * re-animation of already-visible content during streaming updates.
@@ -31,6 +37,7 @@ export interface AnimateOptions {
 const WHITESPACE_RE = /\s/;
 const WHITESPACE_ONLY_RE = /^\s+$/;
 const SKIP_TAGS = new Set(["code", "pre", "svg", "math", "annotation"]);
+const SKIP_TAGS_WITHOUT_CODE = new Set(["svg", "math", "annotation"]);
 
 const isElement = (node: unknown): node is Element =>
   typeof node === "object" &&
@@ -38,10 +45,15 @@ const isElement = (node: unknown): node is Element =>
   "type" in node &&
   (node as Element).type === "element";
 
-const hasSkipAncestor = (ancestors: Node[]): boolean =>
-  ancestors.some(
-    (ancestor) => isElement(ancestor) && SKIP_TAGS.has(ancestor.tagName)
+const hasSkipAncestor = (
+  ancestors: Node[],
+  animateCodeBlocks: boolean
+): boolean => {
+  const tags = animateCodeBlocks ? SKIP_TAGS_WITHOUT_CODE : SKIP_TAGS;
+  return ancestors.some(
+    (ancestor) => isElement(ancestor) && tags.has(ancestor.tagName)
   );
+};
 
 const splitByWord = (text: string): string[] => {
   const parts: string[] = [];
@@ -126,6 +138,7 @@ interface AnimateConfig {
  * object that setPrevContentLength / getLastRenderCharCount mutate.
  */
 interface AnimateRenderState {
+  animateCodeBlocks: boolean;
   lastRenderCharCount: number;
   prevContentLength: number;
 }
@@ -143,7 +156,7 @@ const processTextNode = (
     return;
   }
 
-  if (hasSkipAncestor(ancestors)) {
+  if (hasSkipAncestor(ancestors, renderState.animateCodeBlocks)) {
     return SKIP;
   }
 
@@ -203,6 +216,7 @@ export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
   // Mutable render state — the rehype closure and the plugin API methods
   // both reference this same object.
   const renderState: AnimateRenderState = {
+    animateCodeBlocks: false,
     prevContentLength: 0,
     lastRenderCharCount: 0,
   };
@@ -230,6 +244,9 @@ export function createAnimatePlugin(options?: AnimateOptions): AnimatePlugin {
     name: "animate",
     type: "animate",
     rehypePlugin: rehypeAnimate,
+    setAnimateCodeBlocks(enabled: boolean) {
+      renderState.animateCodeBlocks = enabled;
+    },
     setPrevContentLength(length: number) {
       renderState.prevContentLength = length;
     },
