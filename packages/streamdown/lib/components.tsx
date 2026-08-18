@@ -89,6 +89,38 @@ function sameClassAndNode(
   );
 }
 
+function getCodeContent(children: React.ReactNode): string | undefined {
+  if (typeof children === "string") {
+    return children;
+  }
+
+  if (
+    isValidElement(children) &&
+    children.props &&
+    typeof children.props === "object" &&
+    "children" in children.props &&
+    typeof children.props.children === "string"
+  ) {
+    return children.props.children;
+  }
+
+  return undefined;
+}
+
+function sameCodeContent(
+  prev: React.ReactNode,
+  next: React.ReactNode
+): boolean {
+  const prevContent = getCodeContent(prev);
+  const nextContent = getCodeContent(next);
+
+  if (prevContent === undefined && nextContent === undefined) {
+    return prev === next;
+  }
+
+  return prevContent === nextContent;
+}
+
 const shouldShowControls = (
   config: ControlsConfig,
   type: "table" | "code" | "mermaid" | "image"
@@ -852,19 +884,7 @@ const CodeComponent = ({
     : false;
   const showLineNumbers = !metaNoLineNumbers && contextLineNumbers !== false;
 
-  // Extract code content from children safely
-  let code = "";
-  if (
-    isValidElement(children) &&
-    children.props &&
-    typeof children.props === "object" &&
-    "children" in children.props &&
-    typeof children.props.children === "string"
-  ) {
-    code = children.props.children;
-  } else if (typeof children === "string") {
-    code = children;
-  }
+  const code = getCodeContent(children) ?? "";
 
   if (customRenderer) {
     const CustomComponent = customRenderer.component;
@@ -981,7 +1001,10 @@ const MemoCode = memo<
   DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & ExtraProps
 >(
   CodeComponent,
-  (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+  (p, n) =>
+    p.className === n.className &&
+    sameNodePosition(p.node, n.node) &&
+    sameCodeContent(p.children, n.children)
 );
 MemoCode.displayName = "MarkdownCode";
 
