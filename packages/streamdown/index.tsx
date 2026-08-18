@@ -8,10 +8,9 @@ import {
   memo,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
-  useState,
-  useTransition,
 } from "react";
 import { harden } from "rehype-harden";
 import rehypeRaw from "rehype-raw";
@@ -22,7 +21,9 @@ import type { Pluggable } from "unified";
 import {
   type AnimateOptions,
   type AnimatePlugin,
+  type AnimateTimeline,
   createAnimatePlugin,
+  createAnimateTimeline,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as defaultComponents } from "./lib/components";
@@ -353,18 +354,18 @@ export const Block = memo(
     animatePlugin: animatePluginProp,
     ...props
   }: BlockProps) => {
-    // Tell the animate plugin how many HAST characters were already rendered
-    // so it can skip their animation (duration=0ms) on this render pass.
+    // After rehype paints, commit the new char count so the *next* render
+    // treats already-visible text as settled. Commit lives outside the render
+    // body so StrictMode double-invoke cannot wipe and re-seed prevContentLength
+    // (#570 secondary). The plugin seeds prevContentLength from its own
+    // committedCharCount at the start of every rehype run.
     //
-    // getLastRenderCharCount() returns the char count from the PREVIOUS
-    // rehype run then resets to 0. React renders depth-first: this Block's
-    // body runs, then its child Markdown calls processor.runSync (which
-    // runs rehypeAnimate synchronously). So the value here is from the
-    // previous render — exactly what we need as prevContentLength.
-    if (animatePluginProp) {
-      const prevCount = animatePluginProp.getLastRenderCharCount();
-      animatePluginProp.setPrevContentLength(prevCount);
-    }
+    // Span teardown on settle (#570 primary) is handled by stamping
+    // data-sd-animated on ancestors in the plugin and comparing that prop in
+    // sameClassAndNode — no Markdown remount key needed.
+    useLayoutEffect(() => {
+      animatePluginProp?.commit();
+    });
 
     // Note: remend is already applied to the entire markdown before parsing into blocks
     // in the Streamdown component, so we don't need to apply it again here
@@ -438,6 +439,12 @@ export const Block = memo(
       return false;
     }
 
+    // Animate plugin presence toggles with isAnimating — must re-render so
+    // settled blocks drop their data-sd-animate spans (#570).
+    if (!!prevProps.animatePlugin !== !!nextProps.animatePlugin) {
+      return false;
+    }
+
     return true;
   }
 );
@@ -478,7 +485,6 @@ export const Streamdown = memo(
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
     const generatedId = useId();
-    const [_isPending, startTransition] = useTransition();
 
     const prefixedCn = useMemo(() => createCn(prefix), [prefix]);
 
@@ -562,24 +568,10 @@ export const Streamdown = memo(
       [processedChildren, parseMarkdownIntoBlocksFn]
     );
 
-    // Initialize displayBlocks with blocks to avoid hydration mismatch
-    // Previously initialized as [] which caused content to flicker on hydration
-    const [displayBlocks, setDisplayBlocks] = useState<string[]>(blocks);
-
-    // Use transition for block updates in streaming mode to avoid blocking UI
-    // biome-ignore lint/correctness/useExhaustiveDependencies: animatePlugin checked but not a dep
-    useEffect(() => {
-      if (mode === "streaming" && !animatePlugin) {
-        startTransition(() => {
-          setDisplayBlocks(blocks);
-        });
-      } else {
-        setDisplayBlocks(blocks);
-      }
-    }, [blocks, mode]);
-
-    // Use displayBlocks for rendering to leverage useTransition
-    const blocksToRender = mode === "streaming" ? displayBlocks : blocks;
+    // Render blocks directly. The previous displayBlocks + useTransition path
+    // could be starved by sibling urgent updates when animated was off (#550),
+    // freezing markdown at the first parse. Eager updates are correct here.
+    const blocksToRender = blocks;
 
     // Pre-compute per-block text directions when dir="auto" so detection
     // runs once per block change rather than on every render pass.
@@ -612,16 +604,56 @@ export const Streamdown = memo(
       return "";
     }, [animated]);
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: keyed by animatedKey for value equality
-    const animatePlugin = useMemo(() => {
-      if (!animatedKey) {
-        return null;
+    // Shared wall-clock timeline: serializes stagger delays across sibling
+    // blocks AND across streaming ticks (memoized earlier blocks don't
+    // re-render, so a pure render-order counter would miss them). Fixes #482.
+    const animateTimelineRef = useRef<AnimateTimeline | null>(null);
+    // One AnimatePlugin per block so each tracks its own prevContentLength.
+    const blockAnimatePluginsRef = useRef<AnimatePlugin[]>([]);
+    // Per-block rehype plugin arrays (base + that block's animate plugin).
+    // Stable references keep Block's memo from thrashing.
+    const blockRehypePluginsRef = useRef<Pluggable[][]>([]);
+    const prevMergedRehypePluginsRef = useRef<Pluggable[] | null>(null);
+    const prevAnimatedKeyRef = useRef<string>("");
+
+    if (animatedKey) {
+      if (prevAnimatedKeyRef.current !== animatedKey) {
+        prevAnimatedKeyRef.current = animatedKey;
+        const backlog =
+          animatedKey !== "true"
+            ? (animated as AnimateOptions).maxBacklogMs
+            : undefined;
+        animateTimelineRef.current = createAnimateTimeline({
+          maxBacklogMs: backlog,
+        });
+        blockAnimatePluginsRef.current = [];
+        blockRehypePluginsRef.current = [];
+      } else if (!animateTimelineRef.current) {
+        animateTimelineRef.current = createAnimateTimeline();
       }
-      if (animatedKey === "true") {
-        return createAnimatePlugin();
+      // Reset the per-pass cursor from the last *committed* horizon so a
+      // StrictMode double-render recomputes the same delays instead of
+      // stacking (#482 + StrictMode).
+      if (isAnimating && animateTimelineRef.current) {
+        animateTimelineRef.current.beginPass(
+          animateTimelineRef.current.now()
+        );
       }
-      return createAnimatePlugin(animated as AnimateOptions);
-    }, [animatedKey]);
+    } else {
+      animateTimelineRef.current = null;
+      blockAnimatePluginsRef.current = [];
+      blockRehypePluginsRef.current = [];
+      prevAnimatedKeyRef.current = "";
+    }
+
+    // Commit the in-flight pass horizon after paint. Discarded concurrent
+    // renders that called beginPass never reach this effect, so they can't
+    // poison nextStartAt.
+    useLayoutEffect(() => {
+      if (isAnimating) {
+        animateTimelineRef.current?.commitPass();
+      }
+    });
 
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
@@ -740,9 +772,8 @@ export const Streamdown = memo(
         result = [...result, plugins.math.rehypePlugin];
       }
 
-      if (animatePlugin && isAnimating) {
-        result = [...result, animatePlugin.rehypePlugin];
-      }
+      // Animate plugins are attached per-block in getBlockPlugins() so each
+      // block owns its prevContentLength while sharing one timeline.
 
       if (dir === "auto" && mode === "static") {
         result = [...result, rehypeBlockDirection];
@@ -752,8 +783,6 @@ export const Streamdown = memo(
     }, [
       rehypePlugins,
       plugins?.math,
-      animatePlugin,
-      isAnimating,
       allowedTags,
       literalTagContent,
       dir,
@@ -777,6 +806,49 @@ export const Streamdown = memo(
           : undefined,
       [caret, isAnimating, shouldHideCaret]
     );
+
+    const getBlockPlugins = (
+      index: number
+    ): {
+      blockAnimatePlugin: AnimatePlugin | null;
+      blockRehypePlugins: Pluggable[];
+    } => {
+      let blockAnimatePlugin: AnimatePlugin | null = null;
+      if (animateTimelineRef.current && isAnimating) {
+        if (!blockAnimatePluginsRef.current[index]) {
+          // maxBacklogMs is consumed by the timeline factory, not the plugin.
+          const { maxBacklogMs: _budget, ...pluginOpts } =
+            animatedKey && animatedKey !== "true"
+              ? (animated as AnimateOptions)
+              : ({} as AnimateOptions);
+          void _budget;
+          blockAnimatePluginsRef.current[index] = createAnimatePlugin({
+            ...pluginOpts,
+            timeline: animateTimelineRef.current,
+          });
+        }
+        blockAnimatePlugin = blockAnimatePluginsRef.current[index];
+      }
+
+      if (prevMergedRehypePluginsRef.current !== mergedRehypePlugins) {
+        blockRehypePluginsRef.current = [];
+        prevMergedRehypePluginsRef.current = mergedRehypePlugins;
+      }
+
+      if (blockAnimatePlugin && !blockRehypePluginsRef.current[index]) {
+        blockRehypePluginsRef.current[index] = [
+          ...mergedRehypePlugins,
+          blockAnimatePlugin.rehypePlugin,
+        ];
+      }
+
+      const blockRehypePlugins =
+        blockAnimatePlugin && blockRehypePluginsRef.current[index]
+          ? blockRehypePluginsRef.current[index]
+          : mergedRehypePlugins;
+
+      return { blockAnimatePlugin, blockRehypePlugins };
+    };
 
     // Static mode: simple rendering without streaming features
     if (mode === "static") {
@@ -838,9 +910,11 @@ export const Streamdown = memo(
                       isAnimating &&
                       isLastBlock &&
                       hasIncompleteCodeFence(block);
+                    const { blockAnimatePlugin, blockRehypePlugins } =
+                      getBlockPlugins(index);
                     return (
                       <BlockComponent
-                        animatePlugin={animatePlugin}
+                        animatePlugin={blockAnimatePlugin}
                         components={mergedComponents}
                         content={block}
                         dir={
@@ -850,7 +924,7 @@ export const Streamdown = memo(
                         index={index}
                         isIncomplete={isIncomplete}
                         key={blockKeys[index]}
-                        rehypePlugins={mergedRehypePlugins}
+                        rehypePlugins={blockRehypePlugins}
                         remarkPlugins={mergedRemarkPlugins}
                         shouldNormalizeHtmlIndentation={
                           shouldNormalizeHtmlIndentation
