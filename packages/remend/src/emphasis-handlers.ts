@@ -60,11 +60,6 @@ const shouldSkipAsterisk = (
     return true;
   }
 
-  // Skip if asterisk is word-internal (between word characters)
-  if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
-    return true;
-  }
-
   // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter per CommonMark)
   // This also catches list markers (e.g., "* item") since they have whitespace on both sides
   const prevIsWhitespace =
@@ -78,12 +73,17 @@ const shouldSkipAsterisk = (
   return false;
 };
 
+const isWordInternalAsterisk = (prevChar: string, nextChar: string): boolean =>
+  Boolean(prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar));
+
 // OPTIMIZATION: Counts single asterisks without split("").reduce()
-// Counts single asterisks that are not part of double asterisks, not escaped, not list markers, not word-internal,
+// Counts single asterisks that are not part of double asterisks, escaped, or list markers.
+// Intraword asterisks are counted only while resolving an active emphasis chain,
 // and not inside fenced code blocks
 export const countSingleAsterisks = (text: string): number => {
   let count = 0;
   let inCodeBlock = false;
+  let inWordAsteriskChain = false;
   const len = text.length;
 
   for (let index = 0; index < len; index += 1) {
@@ -105,14 +105,27 @@ export const countSingleAsterisks = (text: string): number => {
     }
 
     if (text[index] !== "*") {
+      if (!isWordChar(text[index])) {
+        inWordAsteriskChain = false;
+      }
       continue;
     }
 
     const prevChar = index > 0 ? text[index - 1] : "";
     const nextChar = index < len - 1 ? text[index + 1] : "";
 
+    const isWordInternal = isWordInternalAsterisk(prevChar, nextChar);
+
+    // An intraword asterisk can close an open emphasis run. Once it does,
+    // another intraword asterisk in the same word can start a new run.
+    // A lone intraword asterisk remains literal.
+    if (isWordInternal && count % 2 === 0 && !inWordAsteriskChain) {
+      continue;
+    }
+
     if (!shouldSkipAsterisk(text, index, prevChar, nextChar)) {
       count += 1;
+      inWordAsteriskChain = isWordInternal;
     }
   }
 
