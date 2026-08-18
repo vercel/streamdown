@@ -42,7 +42,6 @@ import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
 import { rehypeBlockDirection } from "./lib/rehype/block-direction";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
-import { rehypeMarkdownInCustomTags } from "./lib/rehype/markdown-in-custom-tags";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
 import {
   defaultTranslations,
@@ -541,9 +540,9 @@ export const Streamdown = memo(
         result = preprocessLiteralTagContent(result, literalTagContent);
       }
 
-      // Preprocess custom tags to prevent blank lines from splitting HTML blocks.
-      // Runs after preprocessLiteralTagContent so that the inserted <!---->
-      // markers are not corrupted by markdown metacharacter escaping.
+      // Normalize multi-line custom tags: blank-line sandwich so nested markdown
+      // parses, plus <!----> placeholders for internal blank lines. Runs after
+      // literal escaping so those markers are not corrupted.
       if (allowedTagNames.length > 0) {
         result = preprocessCustomTags(result, allowedTagNames);
       }
@@ -733,22 +732,6 @@ export const Streamdown = memo(
         ];
       }
 
-      // Re-parse text content of custom tags as Markdown. This fixes the case
-      // where a custom tag with multiline content is parsed as an HTML block by
-      // CommonMark, which passes inner content through as raw text instead of
-      // Markdown. We skip tags listed in literalTagContent (those intentionally
-      // suppress Markdown parsing). Only applied when allowedTags are defined.
-      if (allowedTagNames.length > 0) {
-        result = [
-          ...result,
-          [
-            rehypeMarkdownInCustomTags,
-            allowedTagNames,
-            literalTagContent ?? [],
-          ],
-        ];
-      }
-
       if (literalTagContent && literalTagContent.length > 0) {
         result = [...result, [rehypeLiteralTagContent, literalTagContent]];
       }
@@ -772,7 +755,6 @@ export const Streamdown = memo(
       animatePlugin,
       isAnimating,
       allowedTags,
-      allowedTagNames,
       literalTagContent,
       dir,
       mode,
