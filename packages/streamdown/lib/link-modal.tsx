@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useIcons } from "./icon-context";
 import { useCn } from "./prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "./scroll-lock";
@@ -55,11 +56,11 @@ export const LinkSafetyModal = ({
     }
   }, [isOpen, onClose]);
 
-  if (!isOpen) {
+  if (!isOpen || typeof document === "undefined") {
     return null;
   }
 
-  return (
+  const modal = (
     // biome-ignore lint/a11y/useSemanticElements: "div is used as a backdrop overlay"
     <div
       className={cn(
@@ -148,4 +149,6 @@ export const LinkSafetyModal = ({
       </div>
     </div>
   );
+
+  return createPortal(modal, document.body);
 };

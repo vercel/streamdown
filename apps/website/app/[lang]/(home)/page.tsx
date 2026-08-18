@@ -1,12 +1,20 @@
+import {
+  CommandPromptContent,
+  CommandPromptCopy,
+  CommandPromptList,
+  CommandPromptPrefix,
+  CommandPromptRoot,
+  CommandPromptSurface,
+  CommandPromptTrigger,
+  CommandPromptTriggerDivider,
+  CommandPromptViewport,
+} from "@vercel/geistdocs/components/command-prompt";
 import DynamicLink from "fumadocs-core/dynamic-link";
 import type { Metadata } from "next";
-import { Installer } from "@/components/geistdocs/installer";
-import { Button } from "@/components/ui/button";
 import { CenteredSection } from "./components/centered-section";
 import { CTA } from "./components/cta";
 import { Demo } from "./components/demo";
 import { Hero } from "./components/hero";
-import { Logos } from "./components/logos";
 import { OneTwoSection } from "./components/one-two-section";
 import { Templates } from "./components/templates";
 import { TextGridSection } from "./components/text-grid-section";
@@ -18,6 +26,9 @@ import VibeCodingPlatform from "./images/vibe-coding-platform.png";
 const title = "Streamdown";
 const description =
   "A markdown renderer designed for streaming content from AI models. Highly interactive, customizable, and easy to use.";
+
+const COMMAND_FOR_HUMANS = "npm i streamdown";
+const COMMAND_FOR_AGENTS = "npx skills add vercel/streamdown@streamdown";
 
 export const metadata: Metadata = {
   title,
@@ -133,23 +144,45 @@ const features = [
 const HomePage = () => (
   <div className="container mx-auto max-w-5xl">
     <Hero description={description} title={title}>
-      <div className="mx-auto inline-flex w-fit items-center gap-3">
-        <Installer command="npm i streamdown" />
-        <Button asChild className="px-4" size="lg" variant="outline">
-          <DynamicLink href="/[lang]/docs/getting-started">
-            Read the docs
-          </DynamicLink>
-        </Button>
+      <div className="mx-auto flex w-full flex-col items-center gap-6">
+        <CommandPromptRoot defaultValue="humans">
+          <CommandPromptList>
+            <CommandPromptTrigger className="min-w-[90px]" value="humans">
+              For humans
+            </CommandPromptTrigger>
+            <CommandPromptTriggerDivider />
+            <CommandPromptTrigger className="min-w-[84px]" value="agents">
+              For agents
+            </CommandPromptTrigger>
+          </CommandPromptList>
+          <CommandPromptSurface>
+            <CommandPromptPrefix>$</CommandPromptPrefix>
+            <CommandPromptViewport>
+              <CommandPromptContent
+                copyValue={COMMAND_FOR_HUMANS}
+                value="humans"
+              >
+                {COMMAND_FOR_HUMANS}
+              </CommandPromptContent>
+              <CommandPromptContent
+                copyValue={COMMAND_FOR_AGENTS}
+                value="agents"
+              >
+                {COMMAND_FOR_AGENTS}
+              </CommandPromptContent>
+            </CommandPromptViewport>
+            <CommandPromptCopy />
+          </CommandPromptSurface>
+        </CommandPromptRoot>
       </div>
     </Hero>
-    <div className="grid divide-y border-y sm:border-x">
+    <div className="grid">
       <CenteredSection
         description="Built-in typography, streaming carets, animations, plugins, and more."
         title="A fully-loaded Markdown renderer"
       >
         <Demo />
       </CenteredSection>
-      <Logos />
       <TextGridSection data={features} />
       <OneTwoSection
         description="Install only what you need. Plugins are optional and tree-shakeable for minimal bundle size."

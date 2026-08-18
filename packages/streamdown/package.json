@@ -52,7 +52,6 @@
     "react-markdown": "^10.1.0",
     "rehype-parse": "^9.0.1",
     "rehype-stringify": "^10.0.1",
-    "shiki": "^3.19.0",
     "tsup": "^8.5.1",
     "vitest": "^4.0.15"
   },
@@ -74,7 +73,6 @@
     "remend": "workspace:*",
     "tailwind-merge": "^3.4.0",
     "unified": "^11.0.5",
-    "mermaid": "^11.12.2",
     "unist-util-visit": "^5.0.0",
     "unist-util-visit-parents": "^6.0.0"
   }

@@ -91,7 +91,7 @@ function sameClassAndNode(
 
 const shouldShowControls = (
   config: ControlsConfig,
-  type: "table" | "code" | "mermaid"
+  type: "table" | "code" | "mermaid" | "image"
 ) => {
   if (typeof config === "boolean") {
     return config;
@@ -161,6 +161,27 @@ const shouldShowMermaidControl = (
   }
 
   return mermaidConfig[controlType] !== false;
+};
+
+const shouldShowImageControl = (
+  config: ControlsConfig,
+  controlType: "download"
+): boolean => {
+  if (typeof config === "boolean") {
+    return config;
+  }
+
+  const imageConfig = config.image;
+
+  if (imageConfig === false) {
+    return false;
+  }
+
+  if (imageConfig === true || imageConfig === undefined) {
+    return true;
+  }
+
+  return imageConfig[controlType] !== false;
 };
 
 type OlProps = WithNode<JSX.IntrinsicElements["ol"]>;
@@ -964,11 +985,31 @@ const MemoCode = memo<
 );
 MemoCode.displayName = "MarkdownCode";
 
-const MemoImg = memo<
-  DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement> &
-    ExtraProps
->(
-  ImageComponent,
+type ImgProps = DetailedHTMLProps<
+  ImgHTMLAttributes<HTMLImageElement>,
+  HTMLImageElement
+> &
+  ExtraProps;
+
+const ImageWrapper = ({ node, className, ...props }: ImgProps) => {
+  const { controls: controlsConfig } = useContext(StreamdownContext);
+  const showImageControls = shouldShowControls(controlsConfig, "image");
+  const showDownloadControl =
+    showImageControls && shouldShowImageControl(controlsConfig, "download");
+
+  return (
+    <ImageComponent
+      className={className}
+      node={node}
+      showControls={showImageControls}
+      showDownloadControl={showDownloadControl}
+      {...props}
+    />
+  );
+};
+
+const MemoImg = memo<ImgProps>(
+  ImageWrapper,
   (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
 );
 

@@ -4,6 +4,14 @@ import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
+import { Button } from "@vercel/geistdocs/components/button";
+import { Input } from "@vercel/geistdocs/components/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@vercel/geistdocs/components/popover";
+import { Textarea } from "@vercel/geistdocs/components/textarea";
 import { SettingsIcon } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { CustomRenderer } from "streamdown";
@@ -12,13 +20,6 @@ import {
   Conversation,
   ConversationContent,
 } from "@/components/ai-elements/conversation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -26,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { VegaLiteRenderer } from "./vega-lite-renderer";
 
 const defaultMarkdown = `# Streamdown Feature Showcase

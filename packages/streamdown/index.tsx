@@ -1,6 +1,5 @@
 "use client";
 
-import type { MermaidConfig } from "mermaid";
 import {
   type ComponentProps,
   type CSSProperties,
@@ -33,10 +32,15 @@ import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
 import { type ExtraProps, Markdown, type Options } from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
-import type { PluginConfig, ThemeInput } from "./lib/plugin-types";
+import type {
+  MermaidConfig,
+  PluginConfig,
+  ThemeInput,
+} from "./lib/plugin-types";
 import { PrefixContext } from "./lib/prefix-context";
 import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
+import { rehypeBlockDirection } from "./lib/rehype/block-direction";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { rehypeMarkdownInCustomTags } from "./lib/rehype/markdown-in-custom-tags";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
@@ -47,11 +51,6 @@ import {
 } from "./lib/translations-context";
 import { createCn } from "./lib/utils";
 
-export type {
-  BundledLanguage,
-  BundledTheme,
-  ThemeRegistrationAny,
-} from "shiki";
 export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimatePlugin } from "./lib/animate";
@@ -74,6 +73,8 @@ export type {
 export { defaultUrlTransform } from "./lib/markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
+  BundledLanguage,
+  BundledTheme,
   CjkPlugin,
   CodeHighlighterPlugin,
   CustomRenderer,
@@ -83,6 +84,7 @@ export type {
   MathPlugin,
   PluginConfig,
   ThemeInput,
+  ThemeRegistrationAny,
 } from "./lib/plugin-types";
 export {
   TableCopyDropdown,
@@ -157,6 +159,7 @@ export type ControlsConfig =
             fullscreen?: boolean;
             panZoom?: boolean;
           };
+      image?: boolean | { download?: boolean };
     };
 
 export interface LinkSafetyModalProps {
@@ -187,7 +190,15 @@ export type AllowedTags = Record<string, string[]>;
 
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
-  /** Text direction for blocks. "auto" detects per-block using first strong character algorithm. */
+  /**
+   * Text direction. `"ltr"` / `"rtl"` force a single direction.
+   * `"auto"` detects direction per block: in streaming mode via parsed
+   * markdown blocks, in static mode via a rehype pass on each semantic
+   * block (headings, paragraphs, list items, table cells, etc.).
+   * Detection uses a content-majority strong-character count with
+   * first-strong as the tie-breaker; fenced/inline code is excluded from
+   * the evidence and code blocks are always rendered LTR.
+   */
   dir?: "auto" | "ltr" | "rtl";
   BlockComponent?: React.ComponentType<BlockProps>;
   parseMarkdownIntoBlocksFn?: (markdown: string) => string[];
@@ -238,6 +249,12 @@ export type StreamdownProps = Options & {
 
 const defaultSanitizeSchema = {
   ...defaultSchema,
+  // remark-rehype already prefixes footnote ids and backref hrefs with
+  // `user-content-` (its default `clobberPrefix`). hast-util-sanitize's default
+  // `clobberPrefix` is also `user-content-`, which would double-prefix ids like
+  // `user-content-user-content-fn-1` while leaving the (already-prefixed) href
+  // pointing at the un-doubled anchor. Disable it here to avoid the mismatch.
+  clobberPrefix: "",
   protocols: {
     ...defaultSchema.protocols,
     href: [...(defaultSchema.protocols?.href ?? []), "tel"],
@@ -439,7 +456,7 @@ export const Streamdown = memo(
     rehypePlugins = defaultRehypePluginsArray,
     remarkPlugins = defaultRemarkPluginsArray,
     className,
-    shikiTheme = defaultShikiTheme,
+    shikiTheme,
     mermaid,
     controls = true,
     isAnimating = false,
@@ -610,7 +627,8 @@ export const Streamdown = memo(
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
       () => ({
-        shikiTheme: plugins?.code?.getThemes() ?? shikiTheme,
+        shikiTheme:
+          shikiTheme ?? plugins?.code?.getThemes() ?? defaultShikiTheme,
         controls,
         isAnimating,
         lineNumbers,
@@ -743,6 +761,10 @@ export const Streamdown = memo(
         result = [...result, animatePlugin.rehypePlugin];
       }
 
+      if (dir === "auto" && mode === "static") {
+        result = [...result, rehypeBlockDirection];
+      }
+
       return result;
     }, [
       rehypePlugins,
@@ -752,6 +774,8 @@ export const Streamdown = memo(
       allowedTags,
       allowedTagNames,
       literalTagContent,
+      dir,
+      mode,
     ]);
 
     const shouldHideCaret = useMemo(() => {
@@ -786,11 +810,7 @@ export const Streamdown = memo(
                       "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
                       className
                     )}
-                    dir={
-                      dir === "auto"
-                        ? detectTextDirection(processedChildren)
-                        : dir
-                    }
+                    dir={dir === "auto" ? undefined : dir}
                   >
                     <Markdown
                       components={mergedComponents}
