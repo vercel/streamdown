@@ -42,18 +42,18 @@ export interface ScheduleSlot {
  */
 export interface AnimateTimeline {
   beginPass: (now: number) => void;
-  take: (wordCount: number, stagger: number, now: number) => ScheduleSlot;
   commitPass: () => void;
   /** Snapshot of the working cursor (passNextStartAt). */
   mark: () => number;
+  now: () => number;
   /** Restore the working cursor to a prior mark. */
   rewind: (mark: number) => void;
-  now: () => number;
+  take: (wordCount: number, stagger: number, now: number) => ScheduleSlot;
 }
 
 export interface CreateAnimateTimelineOptions {
-  now?: () => number;
   maxBacklogMs?: number;
+  now?: () => number;
 }
 
 const defaultNow = (): number =>
@@ -94,7 +94,8 @@ export function createAnimateTimeline(
 
       const idealStep = Math.max(0, stagger);
       // Floor only applies when the user asked for a non-zero stagger.
-      const minStep = idealStep === 0 ? 0 : Math.min(idealStep, MIN_STAGGER_STEP_MS);
+      const minStep =
+        idealStep === 0 ? 0 : Math.min(idealStep, MIN_STAGGER_STEP_MS);
 
       // Ideal start: after everything already scheduled this pass.
       const startAt = Math.max(passNextStartAt, now);
@@ -234,7 +235,10 @@ const splitByChar = (text: string): string[] => {
 
   for (const char of text) {
     if (WHITESPACE_RE.test(char)) {
-      if (parts.length > 0 && !WHITESPACE_ONLY_RE.test(parts.at(-1) as string)) {
+      if (
+        parts.length > 0 &&
+        !WHITESPACE_ONLY_RE.test(parts.at(-1) as string)
+      ) {
         parts[parts.length - 1] += char;
       } else {
         wsBuffer += char;
@@ -294,13 +298,13 @@ interface AnimateConfig {
 interface AnimateRenderState {
   committedCharCount: number;
   lastRenderCharCount: number;
-  prevContentLength: number;
   /**
    * Timeline cursor snapshot from the first rehype run of the current commit.
    * null → not yet run this commit; number → rewind here on re-entry
    * (StrictMode double-invoke / discarded concurrent render).
    */
   pendingMark: number | null;
+  prevContentLength: number;
 }
 
 interface Schedule {

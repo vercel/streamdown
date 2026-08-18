@@ -12,6 +12,9 @@ import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 import { MAX_ANIMATION_BACKLOG_MS } from "../lib/animate";
 
+const NEW_WORD_RE = /^(Next|section|arrives)$/;
+const SPAN_GAP_RE = /<\/span> <span/;
+
 const parseDelay = (el: Element): number => {
   const raw = (el as HTMLElement).style.getPropertyValue("--sd-delay").trim();
   if (!raw) {
@@ -54,9 +57,7 @@ describe("issue #482 — cross-block stagger serialization", () => {
       Array.from(
         container.querySelectorAll("[data-sd-animate]")
       ) as HTMLElement[]
-    ).filter((el) =>
-      /^(Next|section|arrives)$/.test(el.textContent?.trim() ?? "")
-    );
+    ).filter((el) => NEW_WORD_RE.test(el.textContent?.trim() ?? ""));
     expect(newWords.length).toBe(3);
 
     const newDelays = newWords.map(parseDelay);
@@ -111,9 +112,7 @@ describe("issue #482 — cross-block stagger serialization", () => {
     // Delays are relative to each render's `now`, so a few ms of wall-clock
     // drift between act() frames is fine; absolute order is still preserved.
     expect(Math.min(...headingDelays)).toBeGreaterThan(0);
-    expect(Math.min(...headingDelays)).toBeGreaterThanOrEqual(
-      listEndsAt - 50
-    );
+    expect(Math.min(...headingDelays)).toBeGreaterThanOrEqual(listEndsAt - 50);
   });
 });
 
@@ -147,7 +146,7 @@ describe("issue #535 — underline doesn't paint ahead of link words", () => {
     // No bare text-node space between animate spans inside the link —
     // that bare space is what paints underline before the word fades in.
     const html = anchor?.innerHTML ?? "";
-    expect(html).not.toMatch(/<\/span> <span/);
+    expect(html).not.toMatch(SPAN_GAP_RE);
   });
 });
 

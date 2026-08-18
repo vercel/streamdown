@@ -10,6 +10,11 @@ import {
 } from "../lib/animate";
 
 const SPAN_GAP_RE = /<\/span>\s+<span/;
+const SPAN_GAP_STRICT_RE = /<\/span> <span/;
+const SPAN_GAP_CHAR_RE = /<\/span> <span[^>]*>t</;
+const HELLO_SPAN_RE = />Hello <\/span>/;
+const WORLD_SPAN_RE = />world<\/span>/;
+const I_SPACE_SPAN_RE = />i <\/span>/;
 const CODE_CONTENT_RE = /<code>([^<]*)<\/code>/;
 const DELAY_RE = /--sd-delay:(\d+)ms/g;
 
@@ -305,17 +310,17 @@ describe("animate plugin", () => {
     it("keeps the space after a word inside the same animate span", async () => {
       const result = await processHtml("<p>Hello world</p>");
       // "Hello " (with trailing space) is one span, then "world"
-      expect(result).toMatch(/>Hello <\/span>/);
-      expect(result).toMatch(/>world<\/span>/);
+      expect(result).toMatch(HELLO_SPAN_RE);
+      expect(result).toMatch(WORLD_SPAN_RE);
       // No bare whitespace text node between the two spans
-      expect(result).not.toMatch(/<\/span> <span/);
+      expect(result).not.toMatch(SPAN_GAP_STRICT_RE);
     });
 
     it("glues spaces in char mode onto the preceding character", async () => {
       const plugin = createAnimatePlugin({ sep: "char", stagger: 20 });
       const result = await processHtml("<p>Hi there</p>", plugin);
-      expect(result).toMatch(/>i <\/span>/);
-      expect(result).not.toMatch(/<\/span> <span[^>]*>t</);
+      expect(result).toMatch(I_SPACE_SPAN_RE);
+      expect(result).not.toMatch(SPAN_GAP_CHAR_RE);
     });
   });
 
@@ -516,9 +521,7 @@ describe("animate plugin", () => {
       const results: number[][] = [];
       for (const p of plugins) {
         const words = Array.from({ length: 6 }, (_, i) => `w${i}`).join(" ");
-        results.push(
-          delaysOf(await processHtml(`<p>${words}</p>`, p))
-        );
+        results.push(delaysOf(await processHtml(`<p>${words}</p>`, p)));
       }
       timeline.commitPass();
 
