@@ -49,7 +49,12 @@ interface MarkdownPosition {
 }
 interface MarkdownNode {
   position?: MarkdownPosition;
-  properties?: { className?: string; metastring?: string };
+  properties?: {
+    className?: string;
+    /** Present while the animate plugin is wrapping this node's text. */
+    "data-sd-animated"?: boolean | string | null;
+    metastring?: string;
+  };
 }
 
 type WithNode<T> = T & {
@@ -79,13 +84,18 @@ function sameNodePosition(prev?: MarkdownNode, next?: MarkdownNode): boolean {
   );
 }
 
-// Shared comparators
+// Shared comparators. Also compares data-sd-animated so that turning the
+// animate plugin off (isAnimating→false) commits the span-free reparse
+// without a subtree remount key on Markdown (#570).
 function sameClassAndNode(
   prev: { className?: string; node?: MarkdownNode },
   next: { className?: string; node?: MarkdownNode }
 ) {
   return (
-    prev.className === next.className && sameNodePosition(prev.node, next.node)
+    prev.className === next.className &&
+    sameNodePosition(prev.node, next.node) &&
+    !!prev.node?.properties?.["data-sd-animated"] ===
+      !!next.node?.properties?.["data-sd-animated"]
   );
 }
 
@@ -220,7 +230,7 @@ const MemoLi = memo<LiProps>(
       </li>
     );
   },
-  (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+  (p, n) => sameClassAndNode(p, n)
 );
 MemoLi.displayName = "MarkdownLi";
 
