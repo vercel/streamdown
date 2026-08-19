@@ -334,7 +334,7 @@ export const CodeBlockDownloadButton = ({
 }) => {
   const cn = useCn();
   const { code: contextCode } = useCodeBlockContext();
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, codeDownload } = useContext(StreamdownContext);
   const t = useTranslations();
   const icons = useIcons();
   const code = propCode ?? contextCode;
@@ -342,7 +342,7 @@ export const CodeBlockDownloadButton = ({
     language && language in languageExtensionMap
       ? languageExtensionMap[language]
       : "txt";
-  const filename = `file.${extension}`;
+  const filename = `${codeDownload?.baseFileName ?? "file"}.${extension}`;
   const mimeType = "text/plain";
 
   const downloadCode = () => {

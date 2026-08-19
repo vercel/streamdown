@@ -186,6 +186,10 @@ export interface MermaidOptions {
   errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
 }
 
+export interface CodeDownloadConfig {
+  baseFileName?: string;
+}
+
 export type AllowedTags = Record<string, string[]>;
 
 export type StreamdownProps = Options & {
@@ -245,6 +249,7 @@ export type StreamdownProps = Options & {
   onAnimationStart?: () => void;
   /** Called when isAnimating transitions from true to false. Suppressed in mode="static". */
   onAnimationEnd?: () => void;
+  codeDownload?: CodeDownloadConfig;
 };
 
 const defaultSanitizeSchema = {
@@ -296,6 +301,7 @@ const carets = {
 
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
+  codeDownload?: CodeDownloadConfig;
   controls: ControlsConfig;
   isAnimating: boolean;
   /** Show line numbers in code blocks. @default true */
@@ -316,6 +322,7 @@ const defaultLinkSafetyConfig: LinkSafetyConfig = {
 };
 
 const defaultStreamdownContext: StreamdownContextType = {
+  codeDownload: undefined,
   shikiTheme: defaultShikiTheme,
   controls: true,
   isAnimating: false,
@@ -465,6 +472,7 @@ export const Streamdown = memo(
     shikiTheme,
     mermaid,
     controls = true,
+    codeDownload,
     isAnimating = false,
     animated,
     BlockComponent = Block,
@@ -659,6 +667,7 @@ export const Streamdown = memo(
         shikiTheme:
           shikiTheme ?? plugins?.code?.getThemes() ?? defaultShikiTheme,
         controls,
+        codeDownload,
         isAnimating,
         lineNumbers,
         mode,
@@ -669,6 +678,7 @@ export const Streamdown = memo(
         shikiTheme,
         controls,
         isAnimating,
+        codeDownload,
         lineNumbers,
         mode,
         mermaid,
