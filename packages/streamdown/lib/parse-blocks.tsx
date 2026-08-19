@@ -5,8 +5,9 @@ import { Lexer } from "marked";
 // Previously used [^\]\s] which incorrectly matched regex character classes like [^\s...]
 const footnoteReferencePattern = /\[\^[\w-]{1,200}\](?!:)/;
 const footnoteDefinitionPattern = /\[\^[\w-]{1,200}\]:/;
-const _closingTagPattern = /<\/(\w+)>/;
-const openingTagPattern = /<(\w+)[\s>]/;
+// Allow hyphens / colons so custom tags like <ai-thinking> are tracked across
+// blank-line interruptions (\w alone only matches [A-Za-z0-9_]).
+const openingTagPattern = /<([A-Za-z][\w:-]*)[\s>/]/;
 
 // HTML void elements (self-closing tags) that don't need closing tags
 const voidElements = new Set([

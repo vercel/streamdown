@@ -1,7 +1,28 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { svgToPngBlob } from "../lib/mermaid/utils";
+import { serializeSvgForDownload, svgToPngBlob } from "../lib/mermaid/utils";
 
 const BASE64_SVG_DATA_URL_REGEX = /^data:image\/svg\+xml;base64,/;
+const RAW_BR_TAG_REGEX = /<br(?:\s[^/>]*)?>/;
+
+describe("serializeSvgForDownload", () => {
+  it("serializes HTML-style SVG markup as XML", () => {
+    const svgString =
+      '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><div>Line 1<br>Line 2</div></foreignObject></svg>';
+
+    const serialized = serializeSvgForDownload(svgString);
+
+    expect(serialized).toContain("<svg");
+    expect(serialized).toContain("Line 1");
+    expect(serialized).toContain("Line 2");
+    expect(serialized).not.toMatch(RAW_BR_TAG_REGEX);
+  });
+
+  it("returns the original string when no SVG element exists", () => {
+    const html = "<div>Not an SVG</div>";
+
+    expect(serializeSvgForDownload(html)).toBe(html);
+  });
+});
 
 describe("svgToPngBlob", () => {
   let mockCanvas: any;

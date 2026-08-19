@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 const BYPASS_LABELS = ["minor", "major"];
 
 // Regex patterns moved to top level for performance
-const CHANGESET_FILE_PATTERN = /^\.changeset\/[a-z-]+\.md/;
+const CHANGESET_FILE_PATTERN = /^\.changeset\/[a-z0-9-]+\.md/;
 const FRONTMATTER_PATTERN = /---\n([\s\S]+?)\n---/;
 
 // Helper function to validate changeset file path

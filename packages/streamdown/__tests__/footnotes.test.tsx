@@ -149,6 +149,35 @@ GFM extends standard Markdown with powerful features[^1]. Here's a comprehensive
     }
   });
 
+  it("should not double-prefix footnote ids with user-content-", () => {
+    const markdown = `First[^1] and second[^note2].
+
+[^1]: First footnote content.
+[^note2]: Second footnote content.`;
+
+    const { container } = render(<Streamdown>{markdown}</Streamdown>);
+
+    // Footnote list item ids should be prefixed with `user-content-` exactly once
+    // (not `user-content-user-content-fn-1`).
+    expect(container.querySelector("#user-content-fn-1")).toBeTruthy();
+    expect(container.querySelector("#user-content-fn-note2")).toBeTruthy();
+    expect(
+      container.querySelector("#user-content-user-content-fn-1")
+    ).toBeNull();
+    expect(
+      container.querySelector("#user-content-user-content-fn-note2")
+    ).toBeNull();
+
+    // Footnote label heading id should also not be doubled.
+    const labelIds = Array.from(container.querySelectorAll("[id]"))
+      .map((el) => el.id)
+      .filter((id) => id.includes("footnote-label"));
+    expect(labelIds.length).toBeGreaterThan(0);
+    for (const id of labelIds) {
+      expect(id.startsWith("user-content-user-content-")).toBe(false);
+    }
+  });
+
   it("should show footnotes once content arrives", () => {
     // Simulate streaming where definition has partial content
     const markdown = `Text with footnote[^1].
