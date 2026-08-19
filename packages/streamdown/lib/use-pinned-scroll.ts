@@ -9,7 +9,11 @@ const BOTTOM_THRESHOLD_PX = 8;
 export const resolveMaxHeight = (
   maxHeight: number | string | undefined
 ): string | undefined => {
-  if (maxHeight === undefined || maxHeight === 0 || maxHeight === Infinity) {
+  if (
+    maxHeight === undefined ||
+    maxHeight === 0 ||
+    maxHeight === Number.POSITIVE_INFINITY
+  ) {
     return;
   }
   if (typeof maxHeight === "number") {
@@ -67,6 +71,8 @@ export const usePinnedScroll = (
     wasActiveRef.current = isActive;
   }, [isActive]);
 
+  // contentKey intentionally triggers re-scroll when streamed content grows
+  // biome-ignore lint/correctness/useExhaustiveDependencies: contentKey is a change detector, not a read value
   useEffect(() => {
     const el = scrollRef.current;
     if (!(el && enabled && isActive && pinnedRef.current)) {

@@ -60,7 +60,7 @@ describe("resolveMaxHeight", () => {
 
   it("disables for 0, Infinity, and none", () => {
     expect(resolveMaxHeight(0)).toBeUndefined();
-    expect(resolveMaxHeight(Infinity)).toBeUndefined();
+    expect(resolveMaxHeight(Number.POSITIVE_INFINITY)).toBeUndefined();
     expect(resolveMaxHeight("0")).toBeUndefined();
     expect(resolveMaxHeight("none")).toBeUndefined();
     expect(resolveMaxHeight(undefined)).toBeUndefined();
@@ -302,7 +302,11 @@ describe("CodeBlockBody scroll", () => {
 
   it("does not constrain height when maxHeight is Infinity", () => {
     const { container } = renderWithContext(
-      <CodeBlockBody language="js" maxHeight={Infinity} result={baseResult} />
+      <CodeBlockBody
+        language="js"
+        maxHeight={Number.POSITIVE_INFINITY}
+        result={baseResult}
+      />
     );
 
     const body = container.querySelector(
