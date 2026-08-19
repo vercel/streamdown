@@ -540,9 +540,9 @@ export const Streamdown = memo(
         result = preprocessLiteralTagContent(result, literalTagContent);
       }
 
-      // Preprocess custom tags to prevent blank lines from splitting HTML blocks.
-      // Runs after preprocessLiteralTagContent so that the inserted <!---->
-      // markers are not corrupted by markdown metacharacter escaping.
+      // Normalize multi-line custom tags: blank-line sandwich so nested markdown
+      // parses, plus <!----> placeholders for internal blank lines. Runs after
+      // literal escaping so those markers are not corrupted.
       if (allowedTagNames.length > 0) {
         result = preprocessCustomTags(result, allowedTagNames);
       }
