@@ -968,6 +968,10 @@ const CodeComponent = ({
   const showDownload = shouldShowCodeControl(controlsConfig, "download");
   const showCopy = shouldShowCodeControl(controlsConfig, "copy");
 
+  // `data-block` is the marker the custom `pre` component sets to identify a
+  // fenced block. It is internal, so it is the one prop not forwarded on.
+  const { "data-block": _blockMarker, ...forwarded } = props;
+
   return (
     <CodeBlock
       className={className}
@@ -976,6 +980,7 @@ const CodeComponent = ({
       language={language}
       lineNumbers={showLineNumbers}
       startLine={startLine}
+      {...forwarded}
     >
       {showCodeControls ? (
         <>
