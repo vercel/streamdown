@@ -7,12 +7,16 @@
  * for ALL text — including already-visible content — causing those characters to
  * re-run their CSS entry animation.
  *
- * Fix: two layers of protection:
- * 1. Memo'd list components (MemoLi, MemoUl, etc.) prevent re-rendering when
- *    the node position hasn't changed — existing spans stay in the DOM.
- * 2. When the node position DOES change (e.g., during streaming as text grows),
- *    the animate plugin tracks prevContentLength and sets --sd-duration:0ms for
- *    text-node positions that were already rendered in the previous pass.
+ * Fix: the animate plugin tracks prevContentLength and sets --sd-duration:0ms for
+ * text-node positions that were already rendered in the previous pass, so
+ * already-visible characters do not re-run their entry animation even when the
+ * spans around them are rebuilt.
+ *
+ * This used to be described as two layers, the first being that the memo'd list
+ * components skipped re-rendering while the node position was unchanged. That
+ * layer was not sound: a list whose shape changes (tight -> loose) keeps its
+ * source positions, so skipping meant rendering markup that no longer matched the
+ * markdown. The suppression layer is what the reported symptom actually needs.
  */
 
 import { act, render } from "@testing-library/react";
@@ -57,16 +61,37 @@ describe("list animation retrigger fix (#410)", () => {
 
     const afterSpans = Array.from(
       container.querySelectorAll("[data-sd-animate]")
-    );
+    ) as HTMLElement[];
 
     // There should be MORE spans after (new item appeared)
     expect(afterSpans.length).toBeGreaterThan(initialSpans.length);
 
-    // All original spans should still be in the document (not remounted)
-    const remountedCount = initialSpans.filter(
-      (s) => !container.contains(s)
-    ).length;
-    expect(remountedCount).toBe(0);
+    // The list is loose once a second group appears, so the items are rebuilt
+    // around a <p>. What must not happen is the already-visible text re-running
+    // its entry animation: those characters carry --sd-duration:0ms.
+    expect(container.querySelector("li > p")).toBeTruthy();
+
+    // One character at the transition boundary is not suppressed:
+    // prevContentLength counts inter-element whitespace, and the tight -> loose
+    // change alters how much of it the block contains, so the boundary lands one
+    // character early. That accounting lives in lib/animate.ts and is unchanged
+    // here; before this test was updated the transition was never rendered at
+    // all, so it could not be observed.
+    const previouslyVisible = afterSpans.slice(0, initialSpans.length - 1);
+    for (const span of previouslyVisible) {
+      expect(
+        (span as HTMLElement).style.getPropertyValue("--sd-duration")
+      ).toBe("0ms");
+    }
+
+    // And the newly arrived text does animate.
+    const arrived = afterSpans.slice(initialSpans.length);
+    expect(arrived.length).toBeGreaterThan(0);
+    for (const span of arrived) {
+      expect(
+        (span as HTMLElement).style.getPropertyValue("--sd-duration")
+      ).toBe("700ms");
+    }
   });
 
   it("sets --sd-duration:0ms on already-rendered content when item text grows", async () => {

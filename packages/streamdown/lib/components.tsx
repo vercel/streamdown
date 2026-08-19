@@ -39,22 +39,8 @@ const Mermaid = lazy(() =>
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
-interface MarkdownPoint {
-  column?: number;
-  line?: number;
-}
-interface MarkdownPosition {
-  end?: MarkdownPoint;
-  start?: MarkdownPoint;
-}
 interface MarkdownNode {
-  position?: MarkdownPosition;
-  properties?: {
-    className?: string;
-    /** Present while the animate plugin is wrapping this node's text. */
-    "data-sd-animated"?: boolean | string | null;
-    metastring?: string;
-  };
+  properties?: { className?: string; metastring?: string };
 }
 
 type WithNode<T> = T & {
@@ -63,40 +49,62 @@ type WithNode<T> = T & {
   className?: string;
 };
 
-function sameNodePosition(prev?: MarkdownNode, next?: MarkdownNode): boolean {
-  if (!(prev?.position || next?.position)) {
-    return true;
-  }
-  if (!(prev?.position && next?.position)) {
+// Shared comparators
+
+/**
+ * The `node` prop is a fresh object on every parse, so comparing it by identity
+ * would defeat memoization entirely. Nothing here renders it directly; the one
+ * value read off it that reaches the output — a code fence's meta string — is
+ * compared explicitly by `sameCodeMeta` below.
+ */
+const IGNORED_PROP = "node";
+
+/**
+ * A memoized markup component may skip rendering only when every prop capable of
+ * changing its rendered output is equivalent.
+ *
+ * This is React's own shallow prop comparison — what `memo` does with no
+ * comparator at all — minus the `node` prop. Source position is not a substitute:
+ * a replacement of the same length occupies the same lines and columns, so a
+ * position-based comparator reports "unchanged" for content that changed and the
+ * component keeps rendering the previous text.
+ *
+ * The skip that matters is not lost. An unchanged block is memoized a level up
+ * and is never re-rendered, so these comparators only run for a block that was
+ * re-parsed — exactly the case where the output can differ.
+ */
+function sameRenderedProps(prev: object, next: object): boolean {
+  const prevKeys = Object.keys(prev);
+
+  if (prevKeys.length !== Object.keys(next).length) {
     return false;
   }
 
-  const prevStart = prev.position.start;
-  const nextStart = next.position.start;
-  const prevEnd = prev.position.end;
-  const nextEnd = next.position.end;
+  const prevRecord = prev as Record<string, unknown>;
+  const nextRecord = next as Record<string, unknown>;
 
-  return (
-    prevStart?.line === nextStart?.line &&
-    prevStart?.column === nextStart?.column &&
-    prevEnd?.line === nextEnd?.line &&
-    prevEnd?.column === nextEnd?.column
-  );
+  for (const key of prevKeys) {
+    if (key === IGNORED_PROP) {
+      continue;
+    }
+    if (!Object.is(prevRecord[key], nextRecord[key])) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
-// Shared comparators. Also compares data-sd-animated so that turning the
-// animate plugin off (isAnimating→false) commits the span-free reparse
-// without a subtree remount key on Markdown (#570).
-function sameClassAndNode(
-  prev: { className?: string; node?: MarkdownNode },
-  next: { className?: string; node?: MarkdownNode }
-) {
-  return (
-    prev.className === next.className &&
-    sameNodePosition(prev.node, next.node) &&
-    !!prev.node?.properties?.["data-sd-animated"] ===
-      !!next.node?.properties?.["data-sd-animated"]
-  );
+/**
+ * A code fence's meta string (```ts startLine=10) changes the rendered output
+ * without changing the code element's children or className, so it is the one
+ * part of `node` that has to participate in the comparison.
+ */
+function sameCodeMeta(
+  prev?: { properties?: { metastring?: unknown } },
+  next?: { properties?: { metastring?: unknown } }
+): boolean {
+  return prev?.properties?.metastring === next?.properties?.metastring;
 }
 
 const shouldShowControls = (
@@ -211,7 +219,7 @@ const MemoOl = memo<OlProps>(
       </ol>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoOl.displayName = "MarkdownOl";
 
@@ -230,7 +238,7 @@ const MemoLi = memo<LiProps>(
       </li>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoLi.displayName = "MarkdownLi";
 
@@ -251,7 +259,7 @@ const MemoUl = memo<UlProps>(
       </ul>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoUl.displayName = "MarkdownUl";
 
@@ -267,7 +275,7 @@ const MemoHr = memo<HrProps>(
       />
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoHr.displayName = "MarkdownHr";
 
@@ -285,7 +293,7 @@ const MemoStrong = memo<StrongProps>(
       </span>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoStrong.displayName = "MarkdownStrong";
 
@@ -384,10 +392,7 @@ const LinkComponent = ({
   );
 };
 
-const MemoA = memo<AProps>(
-  LinkComponent,
-  (p, n) => sameClassAndNode(p, n) && p.href === n.href
-);
+const MemoA = memo<AProps>(LinkComponent, (p, n) => sameRenderedProps(p, n));
 MemoA.displayName = "MarkdownA";
 
 type HeadingProps<TTag extends keyof JSX.IntrinsicElements> = WithNode<
@@ -407,7 +412,7 @@ const MemoH1 = memo<HeadingProps<"h1">>(
       </h1>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH1.displayName = "MarkdownH1";
 
@@ -424,7 +429,7 @@ const MemoH2 = memo<HeadingProps<"h2">>(
       </h2>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH2.displayName = "MarkdownH2";
 
@@ -441,7 +446,7 @@ const MemoH3 = memo<HeadingProps<"h3">>(
       </h3>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH3.displayName = "MarkdownH3";
 
@@ -458,7 +463,7 @@ const MemoH4 = memo<HeadingProps<"h4">>(
       </h4>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH4.displayName = "MarkdownH4";
 
@@ -475,7 +480,7 @@ const MemoH5 = memo<HeadingProps<"h5">>(
       </h5>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH5.displayName = "MarkdownH5";
 
@@ -492,7 +497,7 @@ const MemoH6 = memo<HeadingProps<"h6">>(
       </h6>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH6.displayName = "MarkdownH6";
 
@@ -520,7 +525,7 @@ const MemoTable = memo<TableComponentProps>(
       </Table>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoTable.displayName = "MarkdownTable";
 
@@ -538,7 +543,7 @@ const MemoThead = memo<TheadProps>(
       </thead>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoThead.displayName = "MarkdownThead";
 
@@ -556,7 +561,7 @@ const MemoTbody = memo<TbodyProps>(
       </tbody>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoTbody.displayName = "MarkdownTbody";
 
@@ -574,7 +579,7 @@ const MemoTr = memo<TrProps>(
       </tr>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoTr.displayName = "MarkdownTr";
 
@@ -595,7 +600,7 @@ const MemoTh = memo<ThProps>(
       </th>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoTh.displayName = "MarkdownTh";
 
@@ -613,7 +618,7 @@ const MemoTd = memo<TdProps>(
       </td>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoTd.displayName = "MarkdownTd";
 
@@ -634,7 +639,7 @@ const MemoBlockquote = memo<BlockquoteProps>(
       </blockquote>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoBlockquote.displayName = "MarkdownBlockquote";
 
@@ -652,7 +657,7 @@ const MemoSup = memo<SupProps>(
       </sup>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoSup.displayName = "MarkdownSup";
 
@@ -670,7 +675,7 @@ const MemoSub = memo<SubProps>(
       </sub>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoSub.displayName = "MarkdownSub";
 
@@ -804,7 +809,7 @@ const MemoSection = memo<SectionProps>(
       </section>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoSection.displayName = "MarkdownSection";
 
@@ -993,7 +998,7 @@ const MemoCode = memo<
   DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & ExtraProps
 >(
   CodeComponent,
-  (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+  (p, n) => sameRenderedProps(p, n) && sameCodeMeta(p.node, n.node)
 );
 MemoCode.displayName = "MarkdownCode";
 
@@ -1020,10 +1025,7 @@ const ImageWrapper = ({ node, className, ...props }: ImgProps) => {
   );
 };
 
-const MemoImg = memo<ImgProps>(
-  ImageWrapper,
-  (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
-);
+const MemoImg = memo<ImgProps>(ImageWrapper, (p, n) => sameRenderedProps(p, n));
 
 MemoImg.displayName = "MarkdownImg";
 
@@ -1065,7 +1067,7 @@ const MemoParagraph = memo<ParagraphProps>(
 
     return <p {...props}>{children}</p>;
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoParagraph.displayName = "MarkdownParagraph";
 
