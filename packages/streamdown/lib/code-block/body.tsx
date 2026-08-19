@@ -3,13 +3,12 @@ import {
   type CSSProperties,
   memo,
   useContext,
-  useEffect,
   useMemo,
-  useRef,
 } from "react";
 import { StreamdownContext } from "../../index";
 import type { HighlightResult } from "../plugin-types";
 import { useCn } from "../prefix-context";
+import { resolveMaxHeight, usePinnedScroll } from "../use-pinned-scroll";
 import { cn as baseCn } from "../utils";
 
 type CodeBlockBodyProps = ComponentProps<"div"> & {
@@ -71,41 +70,12 @@ export const CodeBlockBody = memo(
   }: CodeBlockBodyProps) => {
     const cn = useCn();
     const { isAnimating } = useContext(StreamdownContext);
-    const scrollRef = useRef<HTMLDivElement>(null);
-    const pinnedRef = useRef<boolean>(true);
-
-    let maxHeightStyle: string | undefined;
-    if (maxHeight !== undefined) {
-      maxHeightStyle =
-        typeof maxHeight === "number" ? `${maxHeight}px` : maxHeight;
-    }
-
-    useEffect(() => {
-      const el = scrollRef.current;
-      if (!(el && maxHeightStyle)) {
-        return;
-      }
-      const handleScroll = () => {
-        const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 8;
-        pinnedRef.current = atBottom;
-      };
-      el.addEventListener("scroll", handleScroll, { passive: true });
-      return () => el.removeEventListener("scroll", handleScroll);
-    }, [maxHeightStyle]);
-
-    useEffect(() => {
-      const el = scrollRef.current;
-      if (!(el && maxHeightStyle && isAnimating && pinnedRef.current)) {
-        return;
-      }
-      el.scrollTo({ top: el.scrollHeight, behavior: "instant" });
-    }, [isAnimating, maxHeightStyle]);
-
-    useEffect(() => {
-      if (!isAnimating) {
-        pinnedRef.current = true;
-      }
-    }, [isAnimating]);
+    const maxHeightStyle = resolveMaxHeight(maxHeight);
+    const scrollRef = usePinnedScroll(
+      isAnimating,
+      Boolean(maxHeightStyle),
+      result
+    );
 
     // Prefix the pre-computed line number classes
     const lineNumberClasses = useMemo(() => cn(LINE_NUMBER_CLASSES_BASE), [cn]);
@@ -138,8 +108,8 @@ export const CodeBlockBody = memo(
       <div
         className={cn(
           className,
-          maxHeightStyle ? "overflow-y-auto" : "overflow-hidden",
-          "rounded-md border border-border bg-background p-4 text-sm"
+          maxHeightStyle ? "overflow-y-auto" : null,
+          "overflow-x-auto rounded-md border border-border bg-background p-4 text-sm"
         )}
         data-language={language}
         data-streamdown="code-block-body"

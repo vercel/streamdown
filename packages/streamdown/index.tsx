@@ -208,9 +208,17 @@ export type StreamdownProps = Options & {
   className?: string;
   shikiTheme?: [ThemeInput, ThemeInput];
   mermaid?: MermaidOptions;
+  /**
+   * Max height for fenced code blocks. Numbers are treated as px.
+   * Set to `0` or `Infinity` to disable. @default 400
+   */
   codeBlockMaxHeight?: number | string;
   controls?: ControlsConfig;
   isAnimating?: boolean;
+  /**
+   * Max height for tables. Numbers are treated as px.
+   * Set to `0` or `Infinity` to disable. @default 300
+   */
   tableMaxHeight?: number | string;
   animated?: boolean | AnimateOptions;
   caret?: keyof typeof carets;
@@ -298,6 +306,7 @@ const carets = {
 
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
+  /** Max height for fenced code blocks. @default 400 */
   codeBlockMaxHeight: number | string;
   controls: ControlsConfig;
   isAnimating: boolean;
@@ -307,6 +316,7 @@ export interface StreamdownContextType {
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
   shikiTheme: [ThemeInput, ThemeInput];
+  /** Max height for tables. @default 300 */
   tableMaxHeight: number | string;
 }
 
@@ -964,6 +974,8 @@ export const Streamdown = memo(
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
     prevProps.lineNumbers === nextProps.lineNumbers &&
+    prevProps.codeBlockMaxHeight === nextProps.codeBlockMaxHeight &&
+    prevProps.tableMaxHeight === nextProps.tableMaxHeight &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
     prevProps.literalTagContent === nextProps.literalTagContent &&
     JSON.stringify(prevProps.translations) ===
