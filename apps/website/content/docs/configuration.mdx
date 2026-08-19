@@ -162,6 +162,18 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       type: "boolean",
       default: "true",
     },
+    codeBlockMaxHeight: {
+      description:
+        "Max height for fenced code blocks. Numbers are treated as px. Strings pass through as CSS values (e.g. `50vh`). Set to `0` or `Infinity` to disable. While streaming (`isAnimating`), the block auto-scrolls to the bottom and unpins if the user scrolls up. See [Code Blocks](/docs/code-blocks#max-height).",
+      type: "number | string",
+      default: "400",
+    },
+    tableMaxHeight: {
+      description:
+        "Max height for tables. Numbers are treated as px. Strings pass through as CSS values (e.g. `50vh`). Set to `0` or `Infinity` to disable. While streaming (`isAnimating`), the table body auto-scrolls to the bottom and unpins if the user scrolls up. See [GitHub Flavored Markdown](/docs/gfm#max-height).",
+      type: "number | string",
+      default: "300",
+    },
     animated: {
       description: "Enable character-by-character animation for streaming content. See [Animation](/docs/animation).",
       type: "boolean | AnimateOptions",
