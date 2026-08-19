@@ -562,6 +562,9 @@ const PlaygroundEditor = () => {
           <Conversation>
             <ConversationContent>
               <Streamdown
+                allowedTags={{
+                  "playground-test": [],
+                }}
                 animated={
                   animated
                     ? {
