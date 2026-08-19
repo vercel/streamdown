@@ -1,9 +1,18 @@
-import { type ComponentProps, type CSSProperties, memo, useMemo } from "react";
+import {
+  type ComponentProps,
+  type CSSProperties,
+  memo,
+  useContext,
+  useMemo,
+} from "react";
+import { StreamdownContext } from "../../index";
 import type { HighlightResult } from "../plugin-types";
 import { useCn } from "../prefix-context";
+import { resolveMaxHeight, usePinnedScroll } from "../use-pinned-scroll";
 import { cn as baseCn } from "../utils";
 
 type CodeBlockBodyProps = ComponentProps<"div"> & {
+  maxHeight?: number | string;
   result: HighlightResult;
   language: string;
   startLine?: number;
@@ -54,11 +63,19 @@ export const CodeBlockBody = memo(
     result,
     language,
     className,
+    maxHeight,
     startLine,
     lineNumbers = true,
     ...rest
   }: CodeBlockBodyProps) => {
     const cn = useCn();
+    const { isAnimating } = useContext(StreamdownContext);
+    const maxHeightStyle = resolveMaxHeight(maxHeight);
+    const scrollRef = usePinnedScroll(
+      isAnimating,
+      Boolean(maxHeightStyle),
+      result
+    );
 
     // Prefix the pre-computed line number classes
     const lineNumberClasses = useMemo(() => cn(LINE_NUMBER_CLASSES_BASE), [cn]);
@@ -91,10 +108,13 @@ export const CodeBlockBody = memo(
       <div
         className={cn(
           className,
+          maxHeightStyle ? "overflow-y-auto" : null,
           "overflow-x-auto rounded-md border border-border bg-background p-4 text-sm"
         )}
         data-language={language}
         data-streamdown="code-block-body"
+        ref={scrollRef}
+        style={maxHeightStyle ? { maxHeight: maxHeightStyle } : undefined}
         {...rest}
       >
         <pre
@@ -186,6 +206,7 @@ export const CodeBlockBody = memo(
   (prevProps, nextProps) => {
     // Custom comparison: only re-render if result tokens actually changed
     return (
+      prevProps.maxHeight === nextProps.maxHeight &&
       prevProps.result === nextProps.result &&
       prevProps.language === nextProps.language &&
       prevProps.className === nextProps.className &&

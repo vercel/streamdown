@@ -208,8 +208,18 @@ export type StreamdownProps = Options & {
   className?: string;
   shikiTheme?: [ThemeInput, ThemeInput];
   mermaid?: MermaidOptions;
+  /**
+   * Max height for fenced code blocks. Numbers are treated as px.
+   * Set to `0` or `Infinity` to disable. @default 400
+   */
+  codeBlockMaxHeight?: number | string;
   controls?: ControlsConfig;
   isAnimating?: boolean;
+  /**
+   * Max height for tables. Numbers are treated as px.
+   * Set to `0` or `Infinity` to disable. @default 300
+   */
+  tableMaxHeight?: number | string;
   animated?: boolean | AnimateOptions;
   caret?: keyof typeof carets;
   plugins?: PluginConfig;
@@ -296,6 +306,8 @@ const carets = {
 
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
+  /** Max height for fenced code blocks. @default 400 */
+  codeBlockMaxHeight: number | string;
   controls: ControlsConfig;
   isAnimating: boolean;
   /** Show line numbers in code blocks. @default true */
@@ -304,6 +316,8 @@ export interface StreamdownContextType {
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
   shikiTheme: [ThemeInput, ThemeInput];
+  /** Max height for tables. @default 300 */
+  tableMaxHeight: number | string;
 }
 
 const defaultShikiTheme: [ThemeInput, ThemeInput] = [
@@ -316,6 +330,7 @@ const defaultLinkSafetyConfig: LinkSafetyConfig = {
 };
 
 const defaultStreamdownContext: StreamdownContextType = {
+  codeBlockMaxHeight: 400,
   shikiTheme: defaultShikiTheme,
   controls: true,
   isAnimating: false,
@@ -323,6 +338,7 @@ const defaultStreamdownContext: StreamdownContextType = {
   mode: "streaming",
   mermaid: undefined,
   linkSafety: defaultLinkSafetyConfig,
+  tableMaxHeight: 300,
 };
 
 export const StreamdownContext = createContext<StreamdownContextType>(
@@ -464,8 +480,10 @@ export const Streamdown = memo(
     className,
     shikiTheme,
     mermaid,
+    codeBlockMaxHeight = 400,
     controls = true,
     isAnimating = false,
+    tableMaxHeight = 300,
     animated,
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
@@ -656,6 +674,7 @@ export const Streamdown = memo(
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
       () => ({
+        codeBlockMaxHeight,
         shikiTheme:
           shikiTheme ?? plugins?.code?.getThemes() ?? defaultShikiTheme,
         controls,
@@ -664,8 +683,10 @@ export const Streamdown = memo(
         mode,
         mermaid,
         linkSafety,
+        tableMaxHeight,
       }),
       [
+        codeBlockMaxHeight,
         shikiTheme,
         controls,
         isAnimating,
@@ -674,6 +695,7 @@ export const Streamdown = memo(
         mermaid,
         linkSafety,
         plugins?.code,
+        tableMaxHeight,
       ]
     );
 
@@ -952,6 +974,8 @@ export const Streamdown = memo(
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
     prevProps.lineNumbers === nextProps.lineNumbers &&
+    prevProps.codeBlockMaxHeight === nextProps.codeBlockMaxHeight &&
+    prevProps.tableMaxHeight === nextProps.tableMaxHeight &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
     prevProps.literalTagContent === nextProps.literalTagContent &&
     JSON.stringify(prevProps.translations) ===
