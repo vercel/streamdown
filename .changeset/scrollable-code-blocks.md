@@ -1,5 +1,5 @@
 ---
-"streamdown": patch
+"streamdown": minor
 ---
 
-Add codeBlockMaxHeight and tableMaxHeight props with streaming auto-scroll
+Add `codeBlockMaxHeight` and `tableMaxHeight` props with streaming auto-scroll
