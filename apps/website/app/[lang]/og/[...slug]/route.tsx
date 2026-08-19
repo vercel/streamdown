@@ -35,6 +35,7 @@ export const GET = async (
   );
 
   return new ImageResponse(
+    // @ts-expect-error next/og experimental `tw` prop is untyped in Next.js 16.3+
     <div style={{ fontFamily: "Geist" }} tw="flex h-full w-full bg-black">
       {/** biome-ignore lint/performance/noImgElement: "Required for Satori" */}
       <img
@@ -43,11 +44,13 @@ export const GET = async (
         src={backgroundImageData as never}
         width={1200}
       />
+      {/* @ts-expect-error next/og experimental `tw` prop is untyped in Next.js 16.3+ */}
       <div tw="flex flex-col absolute h-full w-[750px] justify-center left-[50px] pr-[50px] pt-[116px] pb-[86px]">
         <div
           style={{
             textWrap: "balance",
           }}
+          // @ts-expect-error next/og experimental `tw` prop is untyped in Next.js 16.3+
           tw="text-5xl font-medium text-white tracking-tight flex leading-[1.1] mb-4"
         >
           {title}
@@ -58,6 +61,7 @@ export const GET = async (
             lineHeight: "44px",
             textWrap: "balance",
           }}
+          // @ts-expect-error next/og experimental `tw` prop is untyped in Next.js 16.3+
           tw="text-[32px]"
         >
           {description}
