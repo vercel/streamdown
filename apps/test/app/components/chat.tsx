@@ -6,7 +6,12 @@ import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { CheckIcon, Columns3Icon, RotateCcwIcon } from "lucide-react";
+import {
+  CheckIcon,
+  Columns3Icon,
+  CopyIcon,
+  RotateCcwIcon,
+} from "lucide-react";
 import Image from "next/image";
 import {
   type ReactNode,
@@ -73,7 +78,9 @@ const COLUMN_LABELS: Record<ColumnId, string> = {
 
 const DEFAULT_VISIBLE_COLUMNS: ColumnId[] = [...COLUMN_IDS];
 const VISIBLE_COLUMNS_STORAGE_KEY = "chat-visible-columns";
+const MODEL_STORAGE_KEY = "chat-model";
 const RESTREAM_SPEED_MS = 40;
+const TOKEN_SPLIT_RE = /(\s+)/;
 
 const gridColsClassName: Record<number, string> = {
   1: "grid-cols-1",
@@ -83,7 +90,30 @@ const gridColsClassName: Record<number, string> = {
   5: "grid-cols-5",
 };
 
-const tokenize = (text: string) => text.split(/(\s+)/).filter(Boolean);
+const tokenize = (text: string) => text.split(TOKEN_SPLIT_RE).filter(Boolean);
+
+const readStoredColumns = (): ColumnId[] | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const saved = localStorage.getItem(VISIBLE_COLUMNS_STORAGE_KEY);
+    if (!saved) {
+      return null;
+    }
+
+    const parsed: unknown = JSON.parse(saved);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    const next = COLUMN_IDS.filter((id) => parsed.includes(id));
+    return next.length > 0 ? next : null;
+  } catch {
+    return null;
+  }
+};
 
 const getMessageText = (message: UIMessage) =>
   message.parts
@@ -93,33 +123,90 @@ const getMessageText = (message: UIMessage) =>
 
 const MessageLabel = ({
   role,
+  markdown,
   onReplay,
   canReplay,
   isReplaying,
 }: {
   role: UIMessage["role"];
+  markdown?: string;
   onReplay?: () => void;
   canReplay?: boolean;
   isReplaying?: boolean;
-}) => (
-  <div className="mb-1 flex items-center gap-1.5">
-    <span className="font-bold">{role === "user" ? "User: " : "AI: "}</span>
-    {role === "assistant" && onReplay ? (
-      <Button
-        aria-label="Replay message"
-        className="h-5 gap-1 px-1.5 text-[11px]"
-        disabled={!canReplay}
-        onClick={onReplay}
-        size="sm"
-        type="button"
-        variant="ghost"
-      >
-        <RotateCcwIcon className={cn("size-3", isReplaying && "animate-spin")} />
-        Replay
-      </Button>
-    ) : null}
-  </div>
-);
+}) => {
+  const [copied, setCopied] = useState(false);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (copiedTimeoutRef.current) {
+        clearTimeout(copiedTimeoutRef.current);
+      }
+    },
+    []
+  );
+
+  const handleCopy = async () => {
+    if (!markdown) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(markdown);
+      setCopied(true);
+      if (copiedTimeoutRef.current) {
+        clearTimeout(copiedTimeoutRef.current);
+      }
+      copiedTimeoutRef.current = setTimeout(() => {
+        setCopied(false);
+      }, 1500);
+    } catch {
+      // Clipboard may be unavailable in some environments.
+    }
+  };
+
+  return (
+    <div className="mb-1 flex items-center gap-1.5">
+      <span className="font-bold">{role === "user" ? "User: " : "AI: "}</span>
+      {role === "assistant" ? (
+        <div className="flex items-center gap-0.5">
+          <Button
+            aria-label="Copy markdown"
+            className="h-5 gap-1 px-1.5 text-[11px]"
+            disabled={!markdown}
+            onClick={handleCopy}
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
+            {copied ? (
+              <CheckIcon className="size-3" />
+            ) : (
+              <CopyIcon className="size-3" />
+            )}
+            {copied ? "Copied" : "Copy"}
+          </Button>
+          {onReplay ? (
+            <Button
+              aria-label="Replay message"
+              className="h-5 gap-1 px-1.5 text-[11px]"
+              disabled={!canReplay}
+              onClick={onReplay}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              <RotateCcwIcon
+                className={cn("size-3", isReplaying && "animate-spin")}
+              />
+              Replay
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+};
 
 const FilePart = ({
   part,
@@ -148,10 +235,13 @@ export const Chat = ({ models }: ChatProps) => {
     }),
   });
   const [input, setInput] = useState("");
-  const [model, setModel] = useState(models[0].value);
+  // SSR-safe defaults; restored from localStorage after mount via prefsReady gate.
+  const [model, setModel] = useState(models[0]?.value ?? "");
   const [visibleColumns, setVisibleColumns] = useState<ColumnId[]>(
     DEFAULT_VISIBLE_COLUMNS
   );
+  // Prevents the save effects from overwriting stored prefs with defaults on first paint.
+  const [prefsReady, setPrefsReady] = useState(false);
   const [restreamId, setRestreamId] = useState<string | null>(null);
   const [restreamText, setRestreamText] = useState("");
   const restreamIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
@@ -214,43 +304,41 @@ export const Chat = ({ models }: ChatProps) => {
   }, [status, stopRestream]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("chat-model");
-    if (saved && models.some((m) => m.value === saved)) {
-      setModel(saved);
+    const savedModel = localStorage.getItem(MODEL_STORAGE_KEY);
+    if (savedModel && models.some((m) => m.value === savedModel)) {
+      setModel(savedModel);
+    } else if (models[0]) {
+      setModel((current) =>
+        models.some((m) => m.value === current) ? current : models[0].value
+      );
     }
+
+    const savedColumns = readStoredColumns();
+    if (savedColumns) {
+      setVisibleColumns(savedColumns);
+    }
+
+    setPrefsReady(true);
+    // Restore once when models are available; don't re-run on model changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount/models bootstrap only
   }, [models]);
 
   useEffect(() => {
-    localStorage.setItem("chat-model", model);
-  }, [model]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem(VISIBLE_COLUMNS_STORAGE_KEY);
-    if (!saved) {
+    if (!prefsReady || !model) {
       return;
     }
-
-    try {
-      const parsed: unknown = JSON.parse(saved);
-      if (!Array.isArray(parsed)) {
-        return;
-      }
-
-      const next = COLUMN_IDS.filter((id) => parsed.includes(id));
-      if (next.length > 0) {
-        setVisibleColumns(next);
-      }
-    } catch {
-      // Ignore invalid stored values.
-    }
-  }, []);
+    localStorage.setItem(MODEL_STORAGE_KEY, model);
+  }, [model, prefsReady]);
 
   useEffect(() => {
+    if (!prefsReady) {
+      return;
+    }
     localStorage.setItem(
       VISIBLE_COLUMNS_STORAGE_KEY,
       JSON.stringify(visibleColumns)
     );
-  }, [visibleColumns]);
+  }, [visibleColumns, prefsReady]);
 
   const toggleColumn = (id: ColumnId) => {
     setVisibleColumns((current) => {
@@ -282,18 +370,22 @@ export const Chat = ({ models }: ChatProps) => {
   const canReplay = status === "ready" && restreamId === null;
 
   const columns = useMemo(() => {
-    const renderLabel = (message: UIMessage) => (
-      <MessageLabel
-        canReplay={canReplay && Boolean(getMessageText(message))}
-        isReplaying={restreamId === message.id}
-        onReplay={
-          message.role === "assistant"
-            ? () => startRestream(message)
-            : undefined
-        }
-        role={message.role}
-      />
-    );
+    const renderLabel = (message: UIMessage) => {
+      const markdown = getMessageText(message);
+      return (
+        <MessageLabel
+          canReplay={canReplay && Boolean(markdown)}
+          isReplaying={restreamId === message.id}
+          markdown={markdown}
+          onReplay={
+            message.role === "assistant"
+              ? () => startRestream(message)
+              : undefined
+          }
+          role={message.role}
+        />
+      );
+    };
 
     const items: { id: ColumnId; content: ReactNode }[] = [
       {
