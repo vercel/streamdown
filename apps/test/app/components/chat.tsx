@@ -6,12 +6,7 @@ import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import {
-  CheckIcon,
-  Columns3Icon,
-  CopyIcon,
-  RotateCcwIcon,
-} from "lucide-react";
+import { CheckIcon, Columns3Icon, CopyIcon, RotateCcwIcon } from "lucide-react";
 import Image from "next/image";
 import {
   type ReactNode,
@@ -324,7 +319,7 @@ export const Chat = ({ models }: ChatProps) => {
   }, [models]);
 
   useEffect(() => {
-    if (!prefsReady || !model) {
+    if (!(prefsReady && model)) {
       return;
     }
     localStorage.setItem(MODEL_STORAGE_KEY, model);
