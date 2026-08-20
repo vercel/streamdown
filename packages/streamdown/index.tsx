@@ -267,7 +267,7 @@ const defaultSanitizeSchema = {
   clobberPrefix: "",
   protocols: {
     ...defaultSchema.protocols,
-    href: [...(defaultSchema.protocols?.href ?? []), "tel"],
+    href: [...(defaultSchema.protocols?.href ?? []), "tel", "streamdown"],
   },
   attributes: {
     ...defaultSchema.attributes,
