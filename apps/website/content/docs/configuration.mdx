@@ -54,11 +54,34 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
     },
     dir: {
       description:
-        "Text direction. 'auto' detects per-block using the first strong character algorithm.",
+        "Text direction. 'ltr'/'rtl' force a single direction. 'auto' detects per block (content-majority strong characters, first-strong on ties). Code is always LTR.",
       type: '"auto" | "ltr" | "rtl"',
     },
   }}
 />
+
+### Text direction (`dir`)
+
+Use `dir` when rendering RTL languages (Persian, Arabic, Hebrew, etc.) or mixed-script content:
+
+```tsx title="app/page.tsx"
+<Streamdown dir="auto" mode="static">
+  {markdown}
+</Streamdown>
+```
+
+| Value | Behavior |
+| --- | --- |
+| `"ltr"` / `"rtl"` | Applies that direction to the root (static) or each streaming block |
+| `"auto"` | Detects direction independently per block |
+| omitted | No `dir` attribute is set |
+
+With `dir="auto"`:
+
+- **Streaming mode** — direction is resolved once per parsed markdown block (same unit used for memoized streaming updates).
+- **Static mode** — a rehype pass assigns `dir` on each semantic block (headings, paragraphs, list items, blockquotes, definition terms/descriptions, captions, and table cells) so mixed Persian/Hebrew/Arabic/English documents keep the correct base direction without splitting the document (footnotes and cross-block references still resolve).
+- **Detection** — counts Unicode strong letters after stripping common markdown syntax. The majority wins; equal counts fall back to the first strong character. Fenced and inline code are excluded from the count so LTR identifiers do not skew surrounding RTL prose.
+- **Code** — fenced code blocks and code-related elements are always LTR so line numbers and syntax highlighting stay correct inside RTL documents.
 
 ## Styling Props
 
@@ -138,6 +161,18 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       description: "Show line numbers in code blocks. Can be overridden per block with the noLineNumbers meta string.",
       type: "boolean",
       default: "true",
+    },
+    codeBlockMaxHeight: {
+      description:
+        "Max height for fenced code blocks. Numbers are treated as px. Strings pass through as CSS values (e.g. `50vh`). Set to `0` or `Infinity` to disable. While streaming (`isAnimating`), the block auto-scrolls to the bottom and unpins if the user scrolls up. See [Code Blocks](/docs/code-blocks#max-height).",
+      type: "number | string",
+      default: "400",
+    },
+    tableMaxHeight: {
+      description:
+        "Max height for tables. Numbers are treated as px. Strings pass through as CSS values (e.g. `50vh`). Set to `0` or `Infinity` to disable. While streaming (`isAnimating`), the table body auto-scrolls to the bottom and unpins if the user scrolls up. See [GitHub Flavored Markdown](/docs/gfm#max-height).",
+      type: "number | string",
+      default: "300",
     },
     animated: {
       description: "Enable character-by-character animation for streaming content. See [Animation](/docs/animation).",

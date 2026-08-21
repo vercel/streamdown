@@ -11,12 +11,15 @@ describe("Link Safety Modal", () => {
   const createContextValue = (
     linkSafety?: StreamdownContextType["linkSafety"]
   ): StreamdownContextType => ({
+    codeBlockMaxHeight: 400,
     shikiTheme: ["github-light", "github-dark"],
     controls: true,
     isAnimating: false,
+    lineNumbers: true,
     mode: "streaming",
     mermaid: undefined,
     linkSafety,
+    tableMaxHeight: 300,
   });
 
   it("should render link normally when linkSafety is not enabled", () => {

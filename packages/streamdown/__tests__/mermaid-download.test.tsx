@@ -5,6 +5,8 @@ import { MermaidDownloadDropdown } from "../lib/mermaid/download-button";
 import { PluginContext } from "../lib/plugin-context";
 import type { DiagramPlugin, MermaidInstance } from "../lib/plugin-types";
 
+const RAW_BR_TAG_REGEX = /<br(?:\s[^/>]*)?>/;
+
 vi.mock("../lib/utils", async () => {
   const actual = await vi.importActual("../lib/utils");
   return {
@@ -13,11 +15,15 @@ vi.mock("../lib/utils", async () => {
   };
 });
 
-vi.mock("../lib/mermaid/utils", () => ({
-  svgToPngBlob: vi
-    .fn()
-    .mockResolvedValue(new Blob(["png"], { type: "image/png" })),
-}));
+vi.mock("../lib/mermaid/utils", async () => {
+  const actual = await vi.importActual("../lib/mermaid/utils");
+  return {
+    ...actual,
+    svgToPngBlob: vi
+      .fn()
+      .mockResolvedValue(new Blob(["png"], { type: "image/png" })),
+  };
+});
 
 describe("MermaidDownloadDropdown", () => {
   const defaultContext = {
@@ -131,10 +137,38 @@ describe("MermaidDownloadDropdown", () => {
     await waitFor(() => {
       expect(save).toHaveBeenCalledWith(
         "diagram.svg",
-        "<svg><text>Chart</text></svg>",
+        expect.stringContaining("<text>Chart</text>"),
         "image/svg+xml"
       );
       expect(onDownload).toHaveBeenCalledWith("svg");
+    });
+  });
+
+  it("should serialize SVG markup before downloading", async () => {
+    const { save } = await import("../lib/utils");
+    const plugin = createMockPlugin({
+      svg: '<svg xmlns="http://www.w3.org/2000/svg"><foreignObject><div>Line 1<br>Line 2</div></foreignObject></svg>',
+    });
+    const { container } = renderWithContext(
+      { chart: "graph TD; A-->B" },
+      plugin
+    );
+
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(container.querySelector("button")!);
+
+    const svgButton = Array.from(container.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "SVG"
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(svgButton!);
+
+    await waitFor(() => {
+      expect(save).toHaveBeenCalledWith(
+        "diagram.svg",
+        expect.not.stringMatching(RAW_BR_TAG_REGEX),
+        "image/svg+xml"
+      );
     });
   });
 
@@ -161,7 +195,7 @@ describe("MermaidDownloadDropdown", () => {
 
     await waitFor(() => {
       expect(svgToPngBlob).toHaveBeenCalledWith(
-        "<svg><text>Chart</text></svg>"
+        expect.stringContaining("<text>Chart</text>")
       );
       expect(save).toHaveBeenCalledWith(
         "diagram.png",
