@@ -1076,7 +1076,7 @@ const MemoParagraph = memo<ParagraphProps>(
 );
 MemoParagraph.displayName = "MarkdownParagraph";
 
-export const components: Options["components"] = {
+export const components = {
   ol: MemoOl,
   li: MemoLi,
   ul: MemoUl,
@@ -1108,4 +1108,4 @@ export const components: Options["components"] = {
   sub: MemoSub,
   p: MemoParagraph,
   section: MemoSection,
-};
+} satisfies Options["components"];
