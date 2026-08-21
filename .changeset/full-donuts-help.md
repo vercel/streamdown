@@ -2,7 +2,7 @@
 "streamdown": minor
 ---
 
-- Add `codeDownload.baseFileName` to customize downloaded code filenames
-- Preserve automatic language-to-extension mapping for downloaded files
-- Keep existing `file.<ext>` behavior as the default when not configured
-- Expose the configuration through `StreamdownContext` without prop drilling
+- Add custom download filenames for code, table, and mermaid via the `controls` prop
+- Configure downloads with `download: { filename: "customName" }` while keeping boolean `true`/`false` to show or hide
+- Preserve automatic file-extension mapping based on language or export format
+- Remove the `codeDownload` prop in favor of the unified `controls` API
