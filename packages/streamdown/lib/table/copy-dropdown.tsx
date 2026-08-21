@@ -4,6 +4,7 @@ import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
 import {
+  type CSVSeparator,
   extractTableDataFromElement,
   tableDataToCSV,
   tableDataToMarkdown,
@@ -13,6 +14,7 @@ import {
 export interface TableCopyDropdownProps {
   children?: React.ReactNode;
   className?: string;
+  csvSeparator?: CSVSeparator;
   onCopy?: (format: "csv" | "tsv" | "md") => void;
   onError?: (error: Error) => void;
   timeout?: number;
@@ -21,6 +23,7 @@ export interface TableCopyDropdownProps {
 export const TableCopyDropdown = ({
   children,
   className,
+  csvSeparator,
   onCopy,
   onError,
   timeout = 2000,
@@ -53,14 +56,15 @@ export const TableCopyDropdown = ({
       }
 
       const tableData = extractTableDataFromElement(tableElement);
+      let content = "";
 
-      const formatters = {
-        csv: tableDataToCSV,
-        tsv: tableDataToTSV,
-        md: tableDataToMarkdown,
-      };
-      const formatter = formatters[format] || tableDataToMarkdown;
-      const content = formatter(tableData);
+      if (format === "csv") {
+        content = tableDataToCSV(tableData, csvSeparator);
+      } else if (format === "tsv") {
+        content = tableDataToTSV(tableData);
+      } else {
+        content = tableDataToMarkdown(tableData);
+      }
 
       const clipboardItemData = new ClipboardItem({
         "text/plain": new Blob([content], { type: "text/plain" }),

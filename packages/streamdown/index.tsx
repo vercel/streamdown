@@ -97,6 +97,7 @@ export {
   type TableDownloadDropdownProps,
 } from "./lib/table/download-dropdown";
 export {
+  type CSVSeparator,
   escapeMarkdownTableCell,
   extractTableDataFromElement,
   type TableData,

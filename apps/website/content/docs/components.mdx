@@ -224,6 +224,14 @@ import { TableDownloadButton } from "streamdown";
 <TableDownloadButton format="csv" />
 ```
 
+You can control the CSV delimiter used by the table actions with the optional `csvSeparator` prop. Supported values are `","`, `";"`, `"\t"`, and `"auto"` (locale-aware selection):
+
+```tsx title="app/page.tsx"
+<TableCopyDropdown csvSeparator="auto" />
+<TableDownloadDropdown csvSeparator=";" />
+<TableDownloadButton format="csv" csvSeparator="\t" />
+```
+
 ### Lower-level utilities
 
 For fully custom implementations, use the extraction and conversion utilities directly:
@@ -231,6 +239,7 @@ For fully custom implementations, use the extraction and conversion utilities di
 ```tsx title="app/page.tsx"
 import {
   extractTableDataFromElement,
+  type CSVSeparator,
   tableDataToCSV,
   tableDataToTSV,
   tableDataToMarkdown,
@@ -240,10 +249,12 @@ import {
 const data = extractTableDataFromElement(tableElement);
 
 // Convert to various formats
-const csv = tableDataToCSV(data);
+const csv = tableDataToCSV(data, "auto");
 const tsv = tableDataToTSV(data);
 const markdown = tableDataToMarkdown(data);
 ```
+
+The `tableDataToCSV` helper accepts an optional `CSVSeparator` argument (`"," | ";" | "\t" | "auto"`) so you can choose the delimiter explicitly or let `"auto"` pick a locale-friendly separator.
 
 ## Custom HTML Tags
 
