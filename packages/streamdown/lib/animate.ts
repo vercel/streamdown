@@ -428,6 +428,12 @@ interface Schedule {
   step: number;
 }
 
+const isNewAnimateUnit = (prevLen: number, partStart: number): boolean =>
+  !(prevLen > 0 && partStart < prevLen);
+
+const isVoidAnimateElement = (node: Node): node is Element =>
+  isElement(node) && VOID_ANIMATE_TAGS.has(node.tagName);
+
 /**
  * Count newly-animated units (mirrors processTextNode / processVoidElement
  * skip logic) so timeline.take reserves the right number of slots.
@@ -441,19 +447,16 @@ const countNewWords = (
   let charPos = 0;
   visitParents(
     tree,
-    (node: Node) =>
-      node.type === "text" ||
-      (isElement(node) && VOID_ANIMATE_TAGS.has(node.tagName)),
+    (node: Node) => node.type === "text" || isVoidAnimateElement(node),
     (node: Node, ancestors) => {
       if (hasSkipAncestor(ancestors)) {
         return SKIP;
       }
-      if (isElement(node) && VOID_ANIMATE_TAGS.has(node.tagName)) {
-        const partStart = charPos;
-        charPos += 1;
-        if (!(prevLen > 0 && partStart < prevLen)) {
+      if (isVoidAnimateElement(node)) {
+        if (isNewAnimateUnit(prevLen, charPos)) {
           newWords += 1;
         }
+        charPos += 1;
         return;
       }
       const text = (node as Text).value;
@@ -466,10 +469,10 @@ const countNewWords = (
       for (const part of parts) {
         const partStart = charPos;
         charPos += part.length;
-        if (WHITESPACE_ONLY_RE.test(part)) {
-          continue;
-        }
-        if (!(prevLen > 0 && partStart < prevLen)) {
+        if (
+          !WHITESPACE_ONLY_RE.test(part) &&
+          isNewAnimateUnit(prevLen, partStart)
+        ) {
           newWords += 1;
         }
       }
@@ -611,9 +614,7 @@ export function createAnimatePlugin(
 
     visitParents(
       tree,
-      (node: Node) =>
-        node.type === "text" ||
-        (isElement(node) && VOID_ANIMATE_TAGS.has(node.tagName)),
+      (node: Node) => node.type === "text" || isVoidAnimateElement(node),
       (node: Node, ancestors) => {
         if (node.type === "text") {
           return processTextNode(
