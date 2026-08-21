@@ -44,11 +44,12 @@ describe("MermaidDownloadDropdown", () => {
 
   const renderWithContext = (
     props: any,
-    plugin: DiagramPlugin = createMockPlugin()
+    plugin: DiagramPlugin = createMockPlugin(),
+    context = defaultContext
   ) => {
     return render(
       <PluginContext.Provider value={{ mermaid: plugin }}>
-        <StreamdownContext.Provider value={defaultContext}>
+        <StreamdownContext.Provider value={context}>
           <MermaidDownloadDropdown {...props} />
         </StreamdownContext.Provider>
       </PluginContext.Provider>
@@ -289,5 +290,73 @@ describe("MermaidDownloadDropdown", () => {
 
     const button = container.querySelector("button");
     expect(button?.hasAttribute("disabled")).toBe(true);
+  });
+
+  it("should use custom filename from controls for mmd downloads", async () => {
+    const { save } = await import("../lib/utils");
+    const onDownload = vi.fn();
+    const { container } = renderWithContext(
+      {
+        chart: "graph TD; A-->B",
+        onDownload,
+      },
+      createMockPlugin(),
+      {
+        ...defaultContext,
+        controls: { mermaid: { download: { filename: "flowchart" } } },
+      }
+    );
+
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(container.querySelector("button")!);
+
+    const mmdButton = Array.from(container.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "MMD"
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(mmdButton!);
+
+    await waitFor(() => {
+      expect(save).toHaveBeenCalledWith(
+        "flowchart.mmd",
+        "graph TD; A-->B",
+        "text/plain"
+      );
+      expect(onDownload).toHaveBeenCalledWith("mmd");
+    });
+  });
+
+  it("should use custom filename from controls for svg downloads", async () => {
+    const { save } = await import("../lib/utils");
+    const onDownload = vi.fn();
+    const { container } = renderWithContext(
+      {
+        chart: "graph TD; A-->B",
+        onDownload,
+      },
+      createMockPlugin(),
+      {
+        ...defaultContext,
+        controls: { mermaid: { download: { filename: "flowchart" } } },
+      }
+    );
+
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(container.querySelector("button")!);
+
+    const svgButton = Array.from(container.querySelectorAll("button")).find(
+      (btn) => btn.textContent === "SVG"
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(svgButton!);
+
+    await waitFor(() => {
+      expect(save).toHaveBeenCalledWith(
+        "flowchart.svg",
+        expect.any(String),
+        "image/svg+xml"
+      );
+      expect(onDownload).toHaveBeenCalledWith("svg");
+    });
   });
 });

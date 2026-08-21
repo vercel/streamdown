@@ -351,6 +351,19 @@ graph TD
       expect(downloadBtn).toBeTruthy();
     });
 
+    it("should show download when table.download is a filename config", () => {
+      const { container } = render(
+        <Streamdown controls={{ table: { download: { filename: "report" } } }}>
+          {markdownWithTable}
+        </Streamdown>
+      );
+
+      const downloadBtn = container.querySelector(
+        'button[title="Download table"]'
+      );
+      expect(downloadBtn).toBeTruthy();
+    });
+
     it("should hide all table controls when no sub-controls are visible", () => {
       const { container } = render(
         <Streamdown
@@ -438,6 +451,21 @@ graph TD
         '[data-streamdown="code-block-actions"] button'
       );
       expect(buttons?.length).toBe(0);
+    });
+
+    it("should show download when code.download is a filename config", async () => {
+      const { container } = render(
+        <Streamdown controls={{ code: { download: { filename: "myScript" } } }}>
+          {markdownWithCode}
+        </Streamdown>
+      );
+
+      await waitFor(() => {
+        const downloadBtn = container.querySelector(
+          'button[title="Download file"]'
+        );
+        expect(downloadBtn).toBeTruthy();
+      });
     });
   });
 

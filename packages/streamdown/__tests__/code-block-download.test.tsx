@@ -138,17 +138,18 @@ describe("CodeBlockDownloadButton", () => {
     expect(button?.hasAttribute("disabled")).toBe(true);
   });
 
-  it("should use custom baseFileName from context", async () => {
+  it("should use custom filename from controls", async () => {
     const { save } = await import("../lib/utils");
 
     const { container } = render(
       <StreamdownContext.Provider
         value={{
           shikiTheme: ["github-light", "github-dark"],
-          controls: true,
+          controls: {
+            code: { download: { filename: "myScript" } },
+          },
           isAnimating: false,
           mode: "streaming",
-          codeDownload: { baseFileName: "myScript" },
         }}
       >
         <CodeBlock code="console.log('test');" language="javascript">
@@ -180,17 +181,18 @@ describe("CodeBlockDownloadButton", () => {
     );
   });
 
-  it("should use custom baseFileName with unknown language", async () => {
+  it("should use custom filename with unknown language", async () => {
     const { save } = await import("../lib/utils");
 
     const { container } = render(
       <StreamdownContext.Provider
         value={{
           shikiTheme: ["github-light", "github-dark"],
-          controls: true,
+          controls: {
+            code: { download: { filename: "output" } },
+          },
           isAnimating: false,
           mode: "streaming",
-          codeDownload: { baseFileName: "output" },
         }}
       >
         <CodeBlock code="some data" language="unknown">
@@ -215,7 +217,7 @@ describe("CodeBlockDownloadButton", () => {
     expect(save).toHaveBeenCalledWith("output.txt", "some data", "text/plain");
   });
 
-  it("should fall back to default filename when codeDownload is undefined", async () => {
+  it("should fall back to default filename when controls is true", async () => {
     const { save } = await import("../lib/utils");
 
     const { container } = render(
@@ -225,7 +227,6 @@ describe("CodeBlockDownloadButton", () => {
           controls: true,
           isAnimating: false,
           mode: "streaming",
-          codeDownload: undefined,
         }}
       >
         <CodeBlock code="python code" language="python">
@@ -250,17 +251,16 @@ describe("CodeBlockDownloadButton", () => {
     expect(save).toHaveBeenCalledWith("file.py", "python code", "text/plain");
   });
 
-  it("should fall back to default filename when baseFileName is not set", async () => {
+  it("should fall back to default filename when download is enabled without a filename", async () => {
     const { save } = await import("../lib/utils");
 
     const { container } = render(
       <StreamdownContext.Provider
         value={{
           shikiTheme: ["github-light", "github-dark"],
-          controls: true,
+          controls: { code: { download: true } },
           isAnimating: false,
           mode: "streaming",
-          codeDownload: {},
         }}
       >
         <CodeBlock code="rust code" language="rust">
@@ -285,17 +285,18 @@ describe("CodeBlockDownloadButton", () => {
     expect(save).toHaveBeenCalledWith("file.rs", "rust code", "text/plain");
   });
 
-  it("should handle special characters in custom baseFileName", async () => {
+  it("should handle special characters in custom filename", async () => {
     const { save } = await import("../lib/utils");
 
     const { container } = render(
       <StreamdownContext.Provider
         value={{
           shikiTheme: ["github-light", "github-dark"],
-          controls: true,
+          controls: {
+            code: { download: { filename: "my-config.backup" } },
+          },
           isAnimating: false,
           mode: "streaming",
-          codeDownload: { baseFileName: "my-config.backup" },
         }}
       >
         <CodeBlock code="config data" language="json">
