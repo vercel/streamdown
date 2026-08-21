@@ -84,6 +84,16 @@ You can disable the table download button:
 </Streamdown>
 ```
 
+### Custom Download Filename
+
+By default, table downloads use `table.csv` and `table.md`. Set a custom base name with `download: { filename }`:
+
+```tsx
+<Streamdown controls={{ table: { download: { filename: "report" } } }}>
+  {markdown}
+</Streamdown>
+```
+
 ## Task Lists
 
 Create interactive todo lists:
