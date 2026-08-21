@@ -202,16 +202,9 @@ export const CodeBlockBody = memo(
         </pre>
       </div>
     );
-  },
-  (prevProps, nextProps) => {
-    // Custom comparison: only re-render if result tokens actually changed
-    return (
-      prevProps.maxHeight === nextProps.maxHeight &&
-      prevProps.result === nextProps.result &&
-      prevProps.language === nextProps.language &&
-      prevProps.className === nextProps.className &&
-      prevProps.startLine === nextProps.startLine &&
-      prevProps.lineNumbers === nextProps.lineNumbers
-    );
   }
+  // No custom comparator: React's default shallow comparison already compares
+  // `result` by reference — the tokens are memoized upstream, so an unchanged
+  // code string does not re-highlight — and, unlike a hand-written list of
+  // props, it also covers whatever the caller forwards through CodeBlock.
 );
