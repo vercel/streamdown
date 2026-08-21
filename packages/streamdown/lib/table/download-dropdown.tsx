@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
+import { getDownloadFilename } from "../controls";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
@@ -28,7 +29,7 @@ export const TableDownloadButton = ({
   filename,
 }: TableDownloadButtonProps) => {
   const cn = useCn();
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, controls } = useContext(StreamdownContext);
   const t = useTranslations();
   const icons = useIcons();
 
@@ -68,7 +69,11 @@ export const TableDownloadButton = ({
           extension = "csv";
       }
 
-      save(`${filename || "table"}.${extension}`, content, mimeType);
+      save(
+        `${filename || getDownloadFilename(controls, "table", "table")}.${extension}`,
+        content,
+        mimeType
+      );
 
       onDownload?.();
     } catch (error) {
@@ -110,7 +115,7 @@ export const TableDownloadDropdown = ({
   const cn = useCn();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, controls } = useContext(StreamdownContext);
   const t = useTranslations();
   const icons = useIcons();
 
@@ -134,10 +139,10 @@ export const TableDownloadDropdown = ({
           ? tableDataToCSV(tableData)
           : tableDataToMarkdown(tableData);
       const extension = format === "csv" ? "csv" : "md";
-      const filename = `table.${extension}`;
+      const downloadFilename = `${getDownloadFilename(controls, "table", "table")}.${extension}`;
       const mimeType = format === "csv" ? "text/csv" : "text/markdown";
 
-      save(filename, content, mimeType);
+      save(downloadFilename, content, mimeType);
       setIsOpen(false);
       onDownload?.(format);
     } catch (error) {

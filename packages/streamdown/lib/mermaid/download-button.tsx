@@ -1,6 +1,7 @@
 import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
+import { getDownloadFilename } from "../controls";
 import { useIcons } from "../icon-context";
 import { useMermaidPlugin } from "../plugin-context";
 import { useCn } from "../prefix-context";
@@ -28,16 +29,17 @@ export const MermaidDownloadDropdown = ({
   const cn = useCn();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, controls } = useContext(StreamdownContext);
   const icons = useIcons();
   const mermaidPlugin = useMermaidPlugin();
   const t = useTranslations();
+  const baseFilename = getDownloadFilename(controls, "mermaid", "diagram");
 
   const downloadMermaid = async (format: "mmd" | "png" | "svg") => {
     try {
       if (format === "mmd") {
         // Download as Mermaid source code
-        const filename = "diagram.mmd";
+        const filename = `${baseFilename}.mmd`;
         const mimeType = "text/plain";
         save(filename, chart, mimeType);
         setIsOpen(false);
@@ -70,7 +72,7 @@ export const MermaidDownloadDropdown = ({
       }
 
       if (format === "svg") {
-        const filename = "diagram.svg";
+        const filename = `${baseFilename}.svg`;
         const mimeType = "image/svg+xml";
         save(filename, svg, mimeType);
         setIsOpen(false);
@@ -80,7 +82,7 @@ export const MermaidDownloadDropdown = ({
 
       if (format === "png") {
         const blob = await svgToPngBlob(svg);
-        save("diagram.png", blob, "image/png");
+        save(`${baseFilename}.png`, blob, "image/png");
         onDownload?.(format);
         setIsOpen(false);
         return;
