@@ -224,12 +224,12 @@ import { TableDownloadButton } from "streamdown";
 <TableDownloadButton format="csv" />
 ```
 
-You can control the CSV delimiter used by the table actions with the optional `csvSeparator` prop. Supported values are `","`, `";"`, `"\t"`, and `"auto"` (locale-aware selection):
+You can control the CSV delimiter for table copy and download with `controls.table.csvSeparator`. Supported values are `","`, `";"`, `"\t"`, and `"auto"` (locale-aware selection). The default is `","`.
 
 ```tsx title="app/page.tsx"
-<TableCopyDropdown csvSeparator="auto" />
-<TableDownloadDropdown csvSeparator=";" />
-<TableDownloadButton format="csv" csvSeparator="\t" />
+<Streamdown controls={{ table: { csvSeparator: "auto" } }}>
+  {markdown}
+</Streamdown>
 ```
 
 ### Lower-level utilities

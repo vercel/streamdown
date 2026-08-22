@@ -84,6 +84,16 @@ You can disable the table download button:
 </Streamdown>
 ```
 
+### Custom CSV Separator
+
+By default, copied and downloaded CSV uses a comma. Set `controls.table.csvSeparator` to `";"`, `"\t"`, or `"auto"` (picks `;` in comma-decimal locales):
+
+```tsx
+<Streamdown controls={{ table: { csvSeparator: "auto" } }}>
+  {markdown}
+</Streamdown>
+```
+
 ## Task Lists
 
 Create interactive todo lists:
