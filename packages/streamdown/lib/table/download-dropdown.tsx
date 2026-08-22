@@ -5,8 +5,8 @@ import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
 import { save } from "../utils";
 import {
-  type CSVSeparator,
   extractTableDataFromElement,
+  getTableCsvSeparator,
   tableDataToCSV,
   tableDataToMarkdown,
 } from "./utils";
@@ -14,7 +14,6 @@ import {
 export interface TableDownloadButtonProps {
   children?: React.ReactNode;
   className?: string;
-  csvSeparator?: CSVSeparator;
   filename?: string;
   format?: "csv" | "markdown";
   onDownload?: () => void;
@@ -24,17 +23,16 @@ export interface TableDownloadButtonProps {
 export const TableDownloadButton = ({
   children,
   className,
-  csvSeparator,
   onDownload,
   onError,
   format = "csv",
   filename,
 }: TableDownloadButtonProps) => {
   const cn = useCn();
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, controls } = useContext(StreamdownContext);
   const t = useTranslations();
   const icons = useIcons();
-
+  const csvSeparator = getTableCsvSeparator(controls);
   const downloadTableData = (event: React.MouseEvent<HTMLButtonElement>) => {
     try {
       // Find the closest table element
@@ -100,7 +98,6 @@ export const TableDownloadButton = ({
 export interface TableDownloadDropdownProps {
   children?: React.ReactNode;
   className?: string;
-  csvSeparator?: CSVSeparator;
   onDownload?: (format: "csv" | "markdown") => void;
   onError?: (error: Error) => void;
 }
@@ -108,16 +105,16 @@ export interface TableDownloadDropdownProps {
 export const TableDownloadDropdown = ({
   children,
   className,
-  csvSeparator,
   onDownload,
   onError,
 }: TableDownloadDropdownProps) => {
   const cn = useCn();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, controls } = useContext(StreamdownContext);
   const t = useTranslations();
   const icons = useIcons();
+  const csvSeparator = getTableCsvSeparator(controls);
 
   const downloadTableData = (format: "csv" | "markdown") => {
     try {
