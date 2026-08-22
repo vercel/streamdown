@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   escapeMarkdownTableCell,
   extractTableDataFromElement,
+  getTableCsvSeparator,
   type TableData,
   tableDataToCSV,
   tableDataToMarkdown,
@@ -286,6 +287,33 @@ describe("Table Utils", () => {
       const result = tableDataToCSV(data);
 
       expect(result).toBe("");
+    });
+  });
+
+  describe("getTableCsvSeparator", () => {
+    it("returns comma when controls is a boolean", () => {
+      expect(getTableCsvSeparator(true)).toBe(",");
+      expect(getTableCsvSeparator(false)).toBe(",");
+    });
+
+    it("returns comma when table is missing or a boolean", () => {
+      expect(getTableCsvSeparator({})).toBe(",");
+      expect(getTableCsvSeparator({ table: true })).toBe(",");
+      expect(getTableCsvSeparator({ table: false })).toBe(",");
+    });
+
+    it("returns comma when csvSeparator is not set", () => {
+      expect(getTableCsvSeparator({ table: {} })).toBe(",");
+    });
+
+    it("returns the configured separator", () => {
+      expect(getTableCsvSeparator({ table: { csvSeparator: ";" } })).toBe(";");
+      expect(getTableCsvSeparator({ table: { csvSeparator: "\t" } })).toBe(
+        "\t"
+      );
+      expect(getTableCsvSeparator({ table: { csvSeparator: "auto" } })).toBe(
+        "auto"
+      );
     });
   });
 
