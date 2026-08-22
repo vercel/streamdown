@@ -39,6 +39,7 @@ import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
+import type { CSVSeparator } from "./lib/table/utils";
 import {
   defaultTranslations,
   type StreamdownTranslations,
@@ -140,6 +141,7 @@ export type ControlsConfig =
         | boolean
         | {
             copy?: boolean;
+            csvSeparator?: CSVSeparator;
             download?: boolean;
             fullscreen?: boolean;
           };
