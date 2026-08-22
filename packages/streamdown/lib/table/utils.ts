@@ -31,6 +31,21 @@ export const extractTableDataFromElement = (
 
 export type CSVSeparator = "," | ";" | "\t" | "auto";
 
+export const getTableCsvSeparator = (
+  config: boolean | { table?: boolean | { csvSeparator?: CSVSeparator } }
+): CSVSeparator => {
+  if (typeof config !== "object") {
+    return ",";
+  }
+
+  const tableConfig = config.table;
+  if (typeof tableConfig !== "object") {
+    return ",";
+  }
+
+  return tableConfig.csvSeparator ?? ",";
+};
+
 export const tableDataToCSV = (
   data: TableData,
   separator: CSVSeparator = ","
