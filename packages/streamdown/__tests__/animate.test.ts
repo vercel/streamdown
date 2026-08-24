@@ -15,7 +15,7 @@ const SPAN_GAP_CHAR_RE = /<\/span> <span[^>]*>t</;
 const HELLO_SPAN_RE = />Hello <\/span>/;
 const WORLD_SPAN_RE = />world<\/span>/;
 const I_SPACE_SPAN_RE = />i <\/span>/;
-const CODE_CONTENT_RE = /<code>([^<]*)<\/code>/;
+
 const INPUT_TAG_RE = /<input[^>]*>/;
 const INPUT_TAG_GLOBAL_RE = /<input[^>]*>/g;
 const IMG_TAG_RE = /<img[^>]*>/;
@@ -114,10 +114,14 @@ describe("animate plugin", () => {
   });
 
   describe("skip tags", () => {
-    it("should not animate text inside code elements", async () => {
+    // Inline <code> is layout-neutral to word-span wrapping (#594).
+    it("should animate text inside inline code elements", async () => {
       const result = await processHtml("<code>const x = 1</code>");
-      expect(result).not.toContain("data-sd-animate");
-      expect(result).toContain("const x = 1");
+      expect(result).toContain("data-sd-animate");
+      expect(result).toContain("const ");
+      expect(result).toContain("x ");
+      expect(result).toContain("= ");
+      expect(result).toContain(">1<");
     });
 
     it("should not animate text inside pre elements", async () => {
@@ -125,18 +129,31 @@ describe("animate plugin", () => {
       expect(result).not.toContain("data-sd-animate");
     });
 
+    it("should not animate text inside pre > code (fenced blocks)", async () => {
+      const result = await processHtml(
+        "<pre><code>const x = 1</code></pre>"
+      );
+      expect(result).not.toContain("data-sd-animate");
+      expect(result).toContain("const x = 1");
+    });
+
     it("should not animate text inside svg elements", async () => {
       const result = await processHtml("<svg><text>label</text></svg>");
       expect(result).not.toContain("data-sd-animate");
     });
 
-    it("should animate text outside code but not inside", async () => {
-      const result = await processHtml("<p>Hello <code>world</code> foo</p>");
-      // "Hello" and "foo" should be animated
+    it("should animate prose and inline code, but not fenced pre", async () => {
+      const result = await processHtml(
+        "<p>Hello <code>world</code> foo</p><pre><code>block</code></pre>"
+      );
       expect(result).toContain("data-sd-animate");
-      // "world" inside code should NOT be animated
-      const codeMatch = result.match(CODE_CONTENT_RE);
-      expect(codeMatch?.[1]).toBe("world");
+      // Inline code is animated — its text sits inside animate spans.
+      expect(result).toMatch(
+        /<code[^>]*>[\s\S]*data-sd-animate[\s\S]*world[\s\S]*<\/code>/
+      );
+      // Fenced block stays a bare text child (no animate spans under pre).
+      expect(result).toMatch(/<pre><code>block<\/code><\/pre>/);
+      expect(result).not.toMatch(/<pre>[\s\S]*data-sd-animate/);
     });
   });
 
