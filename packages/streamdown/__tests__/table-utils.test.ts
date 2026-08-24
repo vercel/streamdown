@@ -1,7 +1,8 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   escapeMarkdownTableCell,
   extractTableDataFromElement,
+  getTableCsvSeparator,
   type TableData,
   tableDataToCSV,
   tableDataToMarkdown,
@@ -205,6 +206,59 @@ describe("Table Utils", () => {
       expect(result).toBe('Name,Location\nJohn,"New York, USA"');
     });
 
+    it("should escape quotes and separator together", () => {
+      const data: TableData = {
+        headers: ["Message"],
+        rows: [['Hello, "World"']],
+      };
+
+      const result = tableDataToCSV(data);
+
+      expect(result).toBe('Message\n"Hello, ""World"""');
+    });
+
+    it("should support semicolon separators", () => {
+      const data: TableData = {
+        headers: ["Name", "Location"],
+        rows: [["Aradhya", "New York; USA"]],
+      };
+
+      const result = tableDataToCSV(data, ";");
+
+      expect(result).toBe('Name;Location\nAradhya;"New York; USA"');
+    });
+
+    it("should use semicolon separator in auto mode for comma-decimal locales", () => {
+      const numberFormatSpy = vi.spyOn(Intl, "NumberFormat").mockImplementation(
+        () =>
+          ({
+            format: () => "1,1",
+          }) as Intl.NumberFormat
+      );
+
+      const data: TableData = {
+        headers: ["Name", "City"],
+        rows: [["John", "Paris; France"]],
+      };
+
+      const result = tableDataToCSV(data, "auto");
+
+      expect(result).toBe('Name;City\nJohn;"Paris; France"');
+
+      numberFormatSpy.mockRestore();
+    });
+
+    it("should escape carriage returns", () => {
+      const data: TableData = {
+        headers: ["Text"],
+        rows: [["line1\rline2"]],
+      };
+
+      const result = tableDataToCSV(data);
+
+      expect(result).toBe('Text\n"line1\rline2"');
+    });
+
     it("should escape quotes in values", () => {
       const data: TableData = {
         headers: ["Quote"],
@@ -227,6 +281,28 @@ describe("Table Utils", () => {
       expect(result).toBe('Text\n"Line 1\nLine 2"');
     });
 
+    it("should support tab separators", () => {
+      const data: TableData = {
+        headers: ["Name", "Note"],
+        rows: [["Mike", "A\tB"]],
+      };
+
+      const result = tableDataToCSV(data, "\t");
+
+      expect(result).toBe('Name\tNote\nMike\t"A\tB"');
+    });
+
+    it("should not use separators as its single column", () => {
+      const data: TableData = {
+        headers: ["Name"],
+        rows: [["John"]],
+      };
+
+      const result = tableDataToCSV(data, ";");
+
+      expect(result).toBe("Name\nJohn");
+    });
+
     it("should handle empty headers", () => {
       const data: TableData = {
         headers: [],
@@ -247,6 +323,55 @@ describe("Table Utils", () => {
       const result = tableDataToCSV(data);
 
       expect(result).toBe("Header1,Header2");
+    });
+
+    it("should handle empty values", () => {
+      const data: TableData = {
+        headers: ["Name", "Age"],
+        rows: [["", ""]],
+      };
+
+      const result = tableDataToCSV(data);
+
+      expect(result).toBe("Name,Age\n,");
+    });
+
+    it("should handle empty tables", () => {
+      const data: TableData = {
+        headers: [],
+        rows: [],
+      };
+
+      const result = tableDataToCSV(data);
+
+      expect(result).toBe("");
+    });
+  });
+
+  describe("getTableCsvSeparator", () => {
+    it("returns comma when controls is a boolean", () => {
+      expect(getTableCsvSeparator(true)).toBe(",");
+      expect(getTableCsvSeparator(false)).toBe(",");
+    });
+
+    it("returns comma when table is missing or a boolean", () => {
+      expect(getTableCsvSeparator({})).toBe(",");
+      expect(getTableCsvSeparator({ table: true })).toBe(",");
+      expect(getTableCsvSeparator({ table: false })).toBe(",");
+    });
+
+    it("returns comma when csvSeparator is not set", () => {
+      expect(getTableCsvSeparator({ table: {} })).toBe(",");
+    });
+
+    it("returns the configured separator", () => {
+      expect(getTableCsvSeparator({ table: { csvSeparator: ";" } })).toBe(";");
+      expect(getTableCsvSeparator({ table: { csvSeparator: "\t" } })).toBe(
+        "\t"
+      );
+      expect(getTableCsvSeparator({ table: { csvSeparator: "auto" } })).toBe(
+        "auto"
+      );
     });
   });
 

@@ -44,6 +44,7 @@ import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-conten
 import { rehypeBlockDirection } from "./lib/rehype/block-direction";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
+import type { CSVSeparator } from "./lib/table/utils";
 import {
   defaultTranslations,
   type StreamdownTranslations,
@@ -97,6 +98,7 @@ export {
   type TableDownloadDropdownProps,
 } from "./lib/table/download-dropdown";
 export {
+  type CSVSeparator,
   escapeMarkdownTableCell,
   extractTableDataFromElement,
   type TableData,
@@ -142,6 +144,7 @@ export type ControlsConfig =
         | boolean
         | {
             copy?: boolean;
+            csvSeparator?: CSVSeparator;
             download?: boolean;
             fullscreen?: boolean;
           };
