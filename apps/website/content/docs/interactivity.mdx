@@ -39,7 +39,15 @@ Tables include a copy button that opens a dropdown menu allowing users to copy t
 
 ### Download Tables
 
-Tables can be downloaded in two formats: CSV and Markdown. The download button will be shown for tables in the top-right corner on hover. The download button opens a dropdown menu with options to download as CSV or Markdown, making it easy to export table data for use in spreadsheets or documentation.
+Tables can be downloaded in two formats: CSV and Markdown. The download button will be shown for tables in the top-right corner on hover. The download button opens a dropdown menu with options to download as CSV or Markdown, making it easy to export table data for use in spreadsheets or documentation. By default files are named `table.csv` and `table.md`. Customize the base name with `controls.table.download`:
+
+```tsx
+<Streamdown controls={{ table: { download: { filename: "report" } } }}>
+  {markdown}
+</Streamdown>
+```
+
+This downloads `report.csv` or `report.md` depending on the format the user chooses.
 
 CSV copy and download use a comma by default. Customize the delimiter with `controls.table.csvSeparator` (`","`, `";"`, `"\t"`, or `"auto"`):
 
@@ -57,7 +65,15 @@ Every code block includes a copy button that appears on hover. The copy button w
 
 ### Download Code
 
-Code blocks also include a download button that appears on hover. The download button will be shown for code blocks in the top-right corner on hover. The download button will download the code with the appropriate file extension based on language. It will also use "file.[extension]" as the filename. It will preserve formatting and indentation.
+Code blocks also include a download button that appears on hover. The download button will be shown for code blocks in the top-right corner on hover. The download button will download the code with the appropriate file extension based on language. It will also use "file.[extension]" as the filename by default. Customize the base name with `controls.code.download`:
+
+```tsx
+<Streamdown controls={{ code: { download: { filename: "myScript" } } }}>
+  {markdown}
+</Streamdown>
+```
+
+A JavaScript block would download as `myScript.js`. It will preserve formatting and indentation.
 
 ## Mermaid Diagram Buttons
 
@@ -67,7 +83,13 @@ Mermaid diagrams include a copy button that allows users to copy the diagram sou
 
 ### Download Diagrams
 
-Mermaid diagrams can be downloaded as SVG files. The download button will be shown for Mermaid diagrams in the top-right corner on hover. The download button will download the rendered diagram as an SVG file. It will use "diagram.svg" as the default filename.
+Mermaid diagrams can be downloaded as SVG, PNG, or Mermaid source (`.mmd`). The download button will be shown for Mermaid diagrams in the top-right corner on hover. By default files are named `diagram.svg`, `diagram.png`, and `diagram.mmd`. Customize the base name with `controls.mermaid.download`:
+
+```tsx
+<Streamdown controls={{ mermaid: { download: { filename: "flowchart" } } }}>
+  {markdown}
+</Streamdown>
+```
 
 ### Pan and Zoom
 

@@ -236,6 +236,22 @@ Disable individual code block buttons using the `controls` prop:
 <Streamdown controls={false}>{markdown}</Streamdown>
 ```
 
+### Custom Download Filename
+
+Pass `download: { filename }` to set a custom base name. Streamdown appends the language-appropriate extension automatically (for example `myScript.ts`). The default is `file.<ext>`.
+
+```tsx title="app/page.tsx"
+<Streamdown
+  controls={{
+    code: {
+      download: { filename: "myScript" },
+    },
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
 ## Inline Code
 
 Inline code uses backticks and receives subtle styling:

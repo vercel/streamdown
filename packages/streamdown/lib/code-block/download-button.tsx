@@ -1,5 +1,6 @@
 import { type ComponentProps, useContext } from "react";
 import { StreamdownContext } from "../../index";
+import { getDownloadFilename } from "../controls";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
@@ -334,7 +335,7 @@ export const CodeBlockDownloadButton = ({
 }) => {
   const cn = useCn();
   const { code: contextCode } = useCodeBlockContext();
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, controls } = useContext(StreamdownContext);
   const t = useTranslations();
   const icons = useIcons();
   const code = propCode ?? contextCode;
@@ -342,7 +343,7 @@ export const CodeBlockDownloadButton = ({
     language && language in languageExtensionMap
       ? languageExtensionMap[language]
       : "txt";
-  const filename = `file.${extension}`;
+  const filename = `${getDownloadFilename(controls, "code", "file")}.${extension}`;
   const mimeType = "text/plain";
 
   const downloadCode = () => {

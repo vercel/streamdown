@@ -137,6 +137,8 @@ export const normalizeHtmlIndentation = (content: string): string => {
   return content.replace(HTML_LINE_INDENT_PATTERN, "$1");
 };
 
+export type DownloadControlConfig = boolean | { filename: string };
+
 export type ControlsConfig =
   | boolean
   | {
@@ -145,19 +147,19 @@ export type ControlsConfig =
         | {
             copy?: boolean;
             csvSeparator?: CSVSeparator;
-            download?: boolean;
+            download?: DownloadControlConfig;
             fullscreen?: boolean;
           };
       code?:
         | boolean
         | {
             copy?: boolean;
-            download?: boolean;
+            download?: DownloadControlConfig;
           };
       mermaid?:
         | boolean
         | {
-            download?: boolean;
+            download?: DownloadControlConfig;
             copy?: boolean;
             fullscreen?: boolean;
             panZoom?: boolean;

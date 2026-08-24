@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
+import { getDownloadFilename } from "../controls";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
@@ -69,7 +70,11 @@ export const TableDownloadButton = ({
           extension = "csv";
       }
 
-      save(`${filename || "table"}.${extension}`, content, mimeType);
+      save(
+        `${filename || getDownloadFilename(controls, "table", "table")}.${extension}`,
+        content,
+        mimeType
+      );
 
       onDownload?.();
     } catch (error) {
@@ -136,10 +141,10 @@ export const TableDownloadDropdown = ({
           ? tableDataToCSV(tableData, csvSeparator)
           : tableDataToMarkdown(tableData);
       const extension = format === "csv" ? "csv" : "md";
-      const filename = `table.${extension}`;
+      const downloadFilename = `${getDownloadFilename(controls, "table", "table")}.${extension}`;
       const mimeType = format === "csv" ? "text/csv" : "text/markdown";
 
-      save(filename, content, mimeType);
+      save(downloadFilename, content, mimeType);
       setIsOpen(false);
       onDownload?.(format);
     } catch (error) {

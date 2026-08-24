@@ -1,6 +1,6 @@
 import { act, fireEvent, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { StreamdownContext } from "../index";
+import { type ControlsConfig, StreamdownContext } from "../index";
 import { TableCopyDropdown } from "../lib/table/copy-dropdown";
 import {
   TableDownloadButton,
@@ -15,12 +15,15 @@ vi.mock("../lib/utils", async () => {
   };
 });
 
-const renderInTableWrapper = (ui: React.ReactElement) => {
+const renderInTableWrapper = (
+  ui: React.ReactElement,
+  controls: ControlsConfig = true
+) => {
   return render(
     <StreamdownContext.Provider
       value={{
         shikiTheme: ["github-light", "github-dark"],
-        controls: true,
+        controls,
         isAnimating: false,
         mode: "streaming",
       }}
@@ -112,6 +115,33 @@ describe("TableDownloadDropdown", () => {
       "text/markdown"
     );
     expect(onDownload).toHaveBeenCalledWith("markdown");
+  });
+
+  it("should use custom filename from controls", async () => {
+    const { save } = await import("../lib/utils");
+    const onDownload = vi.fn();
+
+    const { container } = renderInTableWrapper(
+      <TableDownloadDropdown onDownload={onDownload} />,
+      { table: { download: { filename: "report" } } }
+    );
+
+    const toggleBtn = container.querySelector('button[title="Download table"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(toggleBtn!);
+
+    const csvBtn = container.querySelector(
+      'button[title="Download table as CSV"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(csvBtn!);
+
+    expect(save).toHaveBeenCalledWith(
+      "report.csv",
+      expect.any(String),
+      "text/csv"
+    );
+    expect(onDownload).toHaveBeenCalledWith("csv");
   });
 
   it("should use csvSeparator from controls for CSV downloads", async () => {
@@ -311,6 +341,29 @@ describe("TableDownloadButton with format='markdown'", () => {
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.click(btn!);
 
+    expect(onDownload).toHaveBeenCalled();
+  });
+
+  it("should use custom filename from controls when filename prop is omitted", async () => {
+    const { save } = await import("../lib/utils");
+    const onDownload = vi.fn();
+
+    const { container } = renderInTableWrapper(
+      <TableDownloadButton format="csv" onDownload={onDownload} />,
+      { table: { download: { filename: "export" } } }
+    );
+
+    const btn = container.querySelector(
+      'button[title="Download table as CSV"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(btn!);
+
+    expect(save).toHaveBeenCalledWith(
+      "export.csv",
+      expect.any(String),
+      "text/csv"
+    );
     expect(onDownload).toHaveBeenCalled();
   });
 

@@ -118,6 +118,16 @@ You can disable the table download button:
 </Streamdown>
 ```
 
+### Custom Download Filename
+
+By default, table downloads use `table.csv` and `table.md`. Set a custom base name with `download: { filename }`:
+
+```tsx
+<Streamdown controls={{ table: { download: { filename: "report" } } }}>
+  {markdown}
+</Streamdown>
+```
+
 ### Custom CSV Separator
 
 By default, copied and downloaded CSV uses a comma. Set `controls.table.csvSeparator` to `";"`, `"\t"`, or `"auto"` (picks `;` in comma-decimal locales):

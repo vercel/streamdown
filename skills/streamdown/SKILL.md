@@ -110,7 +110,7 @@ export default function Chat() {
 | `isAnimating` | `boolean` | `false` | Streaming indicator |
 | `caret` | `"block" \| "circle"` | — | Cursor style |
 | `components` | `Components` | — | Custom element overrides |
-| `controls` | `boolean \| object` | `true` | Interactive buttons |
+| `controls` | `boolean \| object` | `true` | Interactive buttons; `download: { filename }` sets custom download names |
 | `linkSafety` | `LinkSafetyConfig` | `{ enabled: true }` | Link confirmation modal |
 | `shikiTheme` | `[light, dark]` | `['github-light', 'github-dark']` | Code themes |
 | `className` | `string` | — | Container class |

@@ -153,7 +153,8 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       type: "MermaidOptions",
     },
     controls: {
-      description: "Control visibility of interactive buttons",
+      description:
+        "Control visibility of interactive buttons and custom download filenames for code, tables, and mermaid diagrams.",
       type: "ControlsConfig",
       default: "true",
     },
@@ -337,23 +338,23 @@ import { Streamdown, defaultUrlTransform } from 'streamdown';
   }}
 />
 
-The `controls` prop can be configured granularly:
+The `controls` prop can be configured granularly. Set a block type to `false` to hide all of its buttons, or pass an object to toggle individual actions. For downloads, pass `{ filename: "customName" }` to set a custom base filename — the file extension is added automatically.
 
 ```tsx title="app/page.tsx"
 <Streamdown
   controls={{
     table: {
       copy: true, // Show table copy button
-      download: true, // Show table download button
+      download: { filename: "report" }, // Download as report.csv / report.md
       fullscreen: true, // Show table fullscreen button
       csvSeparator: ",", // "," | ";" | "\t" | "auto"
     },
     code: {
       copy: true, // Show code copy button
-      download: true, // Show code download button
+      download: { filename: "myScript" }, // Download as myScript.js, myScript.py, etc.
     },
     mermaid: {
-      download: true, // Show mermaid download button
+      download: { filename: "flowchart" }, // Download as flowchart.svg / flowchart.png / flowchart.mmd
       copy: true, // Show mermaid copy button
       fullscreen: true, // Show mermaid fullscreen button
       panZoom: true, // Show mermaid pan/zoom controls
@@ -363,6 +364,8 @@ The `controls` prop can be configured granularly:
   {markdown}
 </Streamdown>
 ```
+
+You can still use `download: true` (or omit it) to keep the default filenames: `file.<ext>` for code, `table.csv` / `table.md` for tables, and `diagram.svg` / `diagram.png` / `diagram.mmd` for mermaid.
 
 ### Remend Options
 
