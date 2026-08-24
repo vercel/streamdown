@@ -1,10 +1,16 @@
 {
   "name": "streamdown",
   "version": "2.5.0",
+  "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
+  "homepage": "https://streamdown.ai",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vercel/streamdown.git",
+    "directory": "packages/streamdown"
+  },
+  "license": "Apache-2.0",
+  "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
   "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,53 +18,23 @@
     },
     "./styles.css": "./styles.css"
   },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "styles.css",
     "README.md"
   ],
-  "homepage": "https://streamdown.ai",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/vercel/streamdown.git",
-    "directory": "packages/streamdown"
-  },
   "scripts": {
-    "build": "tsup",
-    "postbuild": "node scripts/postbuild.js",
-    "test": "vitest run",
-    "test:ui": "vitest --ui run",
-    "test:coverage": "vitest --coverage run",
     "bench": "vitest bench --run > results.txt",
     "bench:ui": "vitest bench --ui --run",
-    "size": "node scripts/bundle-size.js"
-  },
-  "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
-  "license": "Apache-2.0",
-  "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
-  "devDependencies": {
-    "@streamdown/cjk": "workspace:*",
-    "@streamdown/math": "workspace:*",
-    "@streamdown/mermaid": "workspace:*",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.0",
-    "@types/hast": "^3.0.4",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.2",
-    "@vitest/coverage-v8": "^4.0.15",
-    "jsdom": "^27.3.0",
-    "react-markdown": "^10.1.0",
-    "rehype-parse": "^9.0.1",
-    "rehype-stringify": "^10.0.1",
-    "shiki": "^3.19.0",
-    "tsup": "^8.5.1",
-    "vitest": "^4.0.15"
-  },
-  "peerDependencies": {
-    "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
+    "build": "tsup",
+    "postbuild": "node scripts/postbuild.js",
+    "size": "node scripts/bundle-size.js",
+    "test": "vitest run",
+    "test:coverage": "vitest --coverage run",
+    "test:ui": "vitest --ui run"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -72,10 +48,32 @@
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
     "remend": "workspace:*",
-    "tailwind-merge": "^3.4.0",
+    "tailwind-merge": "^3.6.0",
     "unified": "^11.0.5",
-    "mermaid": "^11.12.2",
-    "unist-util-visit": "^5.0.0",
-    "unist-util-visit-parents": "^6.0.0"
+    "unist-util-visit": "^5.1.0",
+    "unist-util-visit-parents": "^6.0.2"
+  },
+  "devDependencies": {
+    "@streamdown/cjk": "workspace:*",
+    "@streamdown/math": "workspace:*",
+    "@streamdown/mermaid": "workspace:*",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/hast": "^3.0.5",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/coverage-v8": "^4.1.10",
+    "jsdom": "^27.3.0",
+    "react-dom": "^19.2.3",
+    "react-markdown": "^10.1.0",
+    "rehype-parse": "^9.0.1",
+    "rehype-stringify": "^10.0.1",
+    "tsup": "^8.5.1",
+    "vitest": "^4.1.10"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   }
 }

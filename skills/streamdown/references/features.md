@@ -121,6 +121,7 @@ Auto-added buttons for images, tables, code, and Mermaid.
     table: {
       copy: true,
       download: { filename: "report" }, // report.csv / report.md
+      csvSeparator: "auto", // "," | ";" | "\t" | "auto"
     },
     code: {
       copy: true,

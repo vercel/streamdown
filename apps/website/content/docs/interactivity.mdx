@@ -49,6 +49,14 @@ Tables can be downloaded in two formats: CSV and Markdown. The download button w
 
 This downloads `report.csv` or `report.md` depending on the format the user chooses.
 
+CSV copy and download use a comma by default. Customize the delimiter with `controls.table.csvSeparator` (`","`, `";"`, `"\t"`, or `"auto"`):
+
+```tsx
+<Streamdown controls={{ table: { csvSeparator: ";" } }}>
+  {markdown}
+</Streamdown>
+```
+
 ## Code Block Buttons
 
 ### Copy Code

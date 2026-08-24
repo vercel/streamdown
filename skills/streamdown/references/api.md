@@ -148,12 +148,14 @@ interface RemendOptions {
 
 ```tsx
 type DownloadControlConfig = boolean | { filename: string };
+type CSVSeparator = "," | ";" | "\t" | "auto";
 
 type ControlsConfig = boolean | {
   table?: boolean | {
     copy?: boolean;
     download?: DownloadControlConfig;
     fullscreen?: boolean;
+    csvSeparator?: CSVSeparator; // default: ","
   };
   code?: boolean | {
     copy?: boolean;

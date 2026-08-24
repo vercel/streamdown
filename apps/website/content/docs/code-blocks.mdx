@@ -274,8 +274,41 @@ Code blocks include:
 - **Line Numbers** - Optional line numbers for reference
 - **Rounded Corners** - Modern, polished appearance
 - **Proper Padding** - Comfortable spacing
-- **Scrolling** - Horizontal scroll for long lines
+- **Scrolling** - Horizontal scroll for long lines, vertical scroll when max height is set
 - **Responsive Design** - Adapts to container width
+
+## Max Height
+
+Long code blocks are capped at `400px` by default and scroll vertically. Customize (or disable) the limit with `codeBlockMaxHeight`:
+
+```tsx title="app/page.tsx"
+// Custom pixel height
+<Streamdown codeBlockMaxHeight={240}>{markdown}</Streamdown>
+
+// CSS length value
+<Streamdown codeBlockMaxHeight="50vh">{markdown}</Streamdown>
+
+// Disable the height constraint
+<Streamdown codeBlockMaxHeight={0}>{markdown}</Streamdown>
+// or
+<Streamdown codeBlockMaxHeight={Infinity}>{markdown}</Streamdown>
+```
+
+| Value | Behavior |
+| --- | --- |
+| `number` | Treated as pixels (`400` → `400px`) |
+| `string` | Passed through as a CSS value (`"50vh"`, `"20rem"`) |
+| `0` / `Infinity` / `"none"` | No max height |
+
+### Auto-scroll while streaming
+
+When `isAnimating` is true, code blocks stay pinned to the bottom as new lines arrive. If the user scrolls up, auto-scroll unpins until they return to the bottom (or a new streaming session starts).
+
+```tsx title="app/page.tsx"
+<Streamdown codeBlockMaxHeight={320} isAnimating={isStreaming}>
+  {markdown}
+</Streamdown>
+```
 
 ## Streaming Considerations
 
