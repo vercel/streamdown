@@ -15,6 +15,10 @@ const SPAN_GAP_CHAR_RE = /<\/span> <span[^>]*>t</;
 const HELLO_SPAN_RE = />Hello <\/span>/;
 const WORLD_SPAN_RE = />world<\/span>/;
 const I_SPACE_SPAN_RE = />i <\/span>/;
+const INLINE_CODE_ANIMATE_RE =
+  /<code[^>]*>[\s\S]*data-sd-animate[\s\S]*world[\s\S]*<\/code>/;
+const FENCED_PRE_BARE_RE = /<pre><code>block<\/code><\/pre>/;
+const PRE_ANIMATE_RE = /<pre>[\s\S]*data-sd-animate/;
 
 const INPUT_TAG_RE = /<input[^>]*>/;
 const INPUT_TAG_GLOBAL_RE = /<input[^>]*>/g;
@@ -130,9 +134,7 @@ describe("animate plugin", () => {
     });
 
     it("should not animate text inside pre > code (fenced blocks)", async () => {
-      const result = await processHtml(
-        "<pre><code>const x = 1</code></pre>"
-      );
+      const result = await processHtml("<pre><code>const x = 1</code></pre>");
       expect(result).not.toContain("data-sd-animate");
       expect(result).toContain("const x = 1");
     });
@@ -148,12 +150,10 @@ describe("animate plugin", () => {
       );
       expect(result).toContain("data-sd-animate");
       // Inline code is animated — its text sits inside animate spans.
-      expect(result).toMatch(
-        /<code[^>]*>[\s\S]*data-sd-animate[\s\S]*world[\s\S]*<\/code>/
-      );
+      expect(result).toMatch(INLINE_CODE_ANIMATE_RE);
       // Fenced block stays a bare text child (no animate spans under pre).
-      expect(result).toMatch(/<pre><code>block<\/code><\/pre>/);
-      expect(result).not.toMatch(/<pre>[\s\S]*data-sd-animate/);
+      expect(result).toMatch(FENCED_PRE_BARE_RE);
+      expect(result).not.toMatch(PRE_ANIMATE_RE);
     });
   });
 
