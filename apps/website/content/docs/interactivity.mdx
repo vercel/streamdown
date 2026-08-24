@@ -41,6 +41,14 @@ Tables include a copy button that opens a dropdown menu allowing users to copy t
 
 Tables can be downloaded in two formats: CSV and Markdown. The download button will be shown for tables in the top-right corner on hover. The download button opens a dropdown menu with options to download as CSV or Markdown, making it easy to export table data for use in spreadsheets or documentation.
 
+CSV copy and download use a comma by default. Customize the delimiter with `controls.table.csvSeparator` (`","`, `";"`, `"\t"`, or `"auto"`):
+
+```tsx
+<Streamdown controls={{ table: { csvSeparator: ";" } }}>
+  {markdown}
+</Streamdown>
+```
+
 ## Code Block Buttons
 
 ### Copy Code

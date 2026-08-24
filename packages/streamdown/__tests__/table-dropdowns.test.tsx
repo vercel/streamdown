@@ -79,7 +79,7 @@ describe("TableDownloadDropdown", () => {
 
     expect(save).toHaveBeenCalledWith(
       "table.csv",
-      expect.any(String),
+      "Name,Age\nAlice,30",
       "text/csv"
     );
     expect(onDownload).toHaveBeenCalledWith("csv");
@@ -112,6 +112,57 @@ describe("TableDownloadDropdown", () => {
       "text/markdown"
     );
     expect(onDownload).toHaveBeenCalledWith("markdown");
+  });
+
+  it("should use csvSeparator from controls for CSV downloads", async () => {
+    const { save } = await import("../lib/utils");
+    const onDownload = vi.fn();
+
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: { table: { csvSeparator: ";" } },
+          isAnimating: false,
+          mode: "streaming",
+        }}
+      >
+        <div data-streamdown="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Age</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Alice</td>
+                <td>30</td>
+              </tr>
+            </tbody>
+          </table>
+          <TableDownloadDropdown onDownload={onDownload} />
+        </div>
+      </StreamdownContext.Provider>
+    );
+
+    const toggleBtn = container.querySelector('button[title="Download table"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(toggleBtn!);
+
+    const csvBtn = container.querySelector(
+      'button[title="Download table as CSV"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(csvBtn!);
+
+    expect(save).toHaveBeenCalledWith(
+      "table.csv",
+      "Name;Age\nAlice;30",
+      "text/csv"
+    );
+    expect(onDownload).toHaveBeenCalledWith("csv");
   });
 
   it("should download when inside table-fullscreen", async () => {
@@ -263,6 +314,53 @@ describe("TableDownloadButton with format='markdown'", () => {
     expect(onDownload).toHaveBeenCalled();
   });
 
+  it("should use csvSeparator from controls for CSV button downloads", async () => {
+    const { save } = await import("../lib/utils");
+    const onDownload = vi.fn();
+
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: { table: { csvSeparator: ";" } },
+          isAnimating: false,
+          mode: "streaming",
+        }}
+      >
+        <div data-streamdown="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Age</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Alice</td>
+                <td>30</td>
+              </tr>
+            </tbody>
+          </table>
+          <TableDownloadButton format="csv" onDownload={onDownload} />
+        </div>
+      </StreamdownContext.Provider>
+    );
+
+    const btn = container.querySelector(
+      'button[title="Download table as CSV"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(btn!);
+
+    expect(save).toHaveBeenCalledWith(
+      "table.csv",
+      "Name;Age\nAlice;30",
+      "text/csv"
+    );
+    expect(onDownload).toHaveBeenCalled();
+  });
+
   it("should handle default format (fallback to csv)", () => {
     const { container } = renderInTableWrapper(
       <TableDownloadButton format={"unknown" as any} />
@@ -406,6 +504,20 @@ describe("TableCopyDropdown", () => {
 
   it("should copy as CSV when csv button clicked", async () => {
     const onCopy = vi.fn();
+    const OriginalBlob = globalThis.Blob;
+    const blobPartsByType: Record<string, BlobPart[]> = {};
+    const blobSpy = vi.spyOn(globalThis, "Blob").mockImplementation(function (
+      this: Blob,
+      parts?: BlobPart[],
+      opts?: BlobPropertyBag
+    ) {
+      const type = opts?.type ?? "";
+      if (parts) {
+        blobPartsByType[type] = parts;
+      }
+      return new OriginalBlob(parts, opts);
+    } as unknown as typeof Blob);
+
     const { container } = renderInTableWrapper(
       <TableCopyDropdown onCopy={onCopy} />
     );
@@ -421,7 +533,76 @@ describe("TableCopyDropdown", () => {
       fireEvent.click(csvBtn!);
     });
 
+    expect(navigator.clipboard.write).toHaveBeenCalled();
+    expect(String(blobPartsByType["text/plain"]?.[0] ?? "")).toBe(
+      "Name,Age\nAlice,30"
+    );
     expect(onCopy).toHaveBeenCalledWith("csv");
+    blobSpy.mockRestore();
+  });
+
+  it("should copy CSV when csvSeparator is configured", async () => {
+    const onCopy = vi.fn();
+    const OriginalBlob = globalThis.Blob;
+    const blobPartsByType: Record<string, BlobPart[]> = {};
+    const blobSpy = vi.spyOn(globalThis, "Blob").mockImplementation(function (
+      this: Blob,
+      parts?: BlobPart[],
+      opts?: BlobPropertyBag
+    ) {
+      const type = opts?.type ?? "";
+      if (parts) {
+        blobPartsByType[type] = parts;
+      }
+      return new OriginalBlob(parts, opts);
+    } as unknown as typeof Blob);
+
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: { table: { csvSeparator: ";" } },
+          isAnimating: false,
+          mode: "streaming",
+        }}
+      >
+        <div data-streamdown="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Age</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Alice</td>
+                <td>30</td>
+              </tr>
+            </tbody>
+          </table>
+          <TableCopyDropdown onCopy={onCopy} />
+        </div>
+      </StreamdownContext.Provider>
+    );
+
+    const toggleBtn = container.querySelector('button[title="Copy table"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(toggleBtn!);
+
+    const csvBtn = container.querySelector('button[title="Copy table as CSV"]');
+    // biome-ignore lint/suspicious/useAwait: act needs async to flush clipboard promises
+    await act(async () => {
+      // biome-ignore lint/style/noNonNullAssertion: test assertion
+      fireEvent.click(csvBtn!);
+    });
+
+    expect(navigator.clipboard.write).toHaveBeenCalled();
+    expect(String(blobPartsByType["text/plain"]?.[0] ?? "")).toBe(
+      "Name;Age\nAlice;30"
+    );
+    expect(onCopy).toHaveBeenCalledWith("csv");
+    blobSpy.mockRestore();
   });
 
   it("should copy as TSV when tsv button clicked", async () => {

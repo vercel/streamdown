@@ -118,7 +118,11 @@ Auto-added buttons for images, tables, code, and Mermaid.
 ```tsx
 <Streamdown
   controls={{
-    table: true,
+    table: {
+      copy: true,
+      download: true,
+      csvSeparator: "auto", // "," | ";" | "\t" | "auto"
+    },
     code: false, // No copy/download on code blocks
     mermaid: {
       download: true,

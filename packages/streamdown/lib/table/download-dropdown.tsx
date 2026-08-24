@@ -6,6 +6,7 @@ import { useTranslations } from "../translations-context";
 import { save } from "../utils";
 import {
   extractTableDataFromElement,
+  getTableCsvSeparator,
   tableDataToCSV,
   tableDataToMarkdown,
 } from "./utils";
@@ -28,10 +29,10 @@ export const TableDownloadButton = ({
   filename,
 }: TableDownloadButtonProps) => {
   const cn = useCn();
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, controls } = useContext(StreamdownContext);
   const t = useTranslations();
   const icons = useIcons();
-
+  const csvSeparator = getTableCsvSeparator(controls);
   const downloadTableData = (event: React.MouseEvent<HTMLButtonElement>) => {
     try {
       // Find the closest table element
@@ -53,7 +54,7 @@ export const TableDownloadButton = ({
 
       switch (format) {
         case "csv":
-          content = tableDataToCSV(tableData);
+          content = tableDataToCSV(tableData, csvSeparator);
           mimeType = "text/csv";
           extension = "csv";
           break;
@@ -63,7 +64,7 @@ export const TableDownloadButton = ({
           extension = "md";
           break;
         default:
-          content = tableDataToCSV(tableData);
+          content = tableDataToCSV(tableData, csvSeparator);
           mimeType = "text/csv";
           extension = "csv";
       }
@@ -110,9 +111,10 @@ export const TableDownloadDropdown = ({
   const cn = useCn();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, controls } = useContext(StreamdownContext);
   const t = useTranslations();
   const icons = useIcons();
+  const csvSeparator = getTableCsvSeparator(controls);
 
   const downloadTableData = (format: "csv" | "markdown") => {
     try {
@@ -131,7 +133,7 @@ export const TableDownloadDropdown = ({
       const tableData = extractTableDataFromElement(tableElement);
       const content =
         format === "csv"
-          ? tableDataToCSV(tableData)
+          ? tableDataToCSV(tableData, csvSeparator)
           : tableDataToMarkdown(tableData);
       const extension = format === "csv" ? "csv" : "md";
       const filename = `table.${extension}`;

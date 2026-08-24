@@ -147,9 +147,19 @@ interface RemendOptions {
 ## ControlsConfig
 
 ```tsx
+type CSVSeparator = "," | ";" | "\t" | "auto";
+
 type ControlsConfig = boolean | {
-  table?: boolean;
-  code?: boolean;
+  table?: boolean | {
+    copy?: boolean;
+    download?: boolean;
+    fullscreen?: boolean;
+    csvSeparator?: CSVSeparator; // default: ","
+  };
+  code?: boolean | {
+    copy?: boolean;
+    download?: boolean;
+  };
   mermaid?: boolean | {
     download?: boolean;
     copy?: boolean;
