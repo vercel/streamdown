@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Force Deploy to Vercel even if no packages were published"
+        type: boolean
+        default: true
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -71,7 +77,9 @@ jobs:
           NPM_TOKEN: "" # Workaround for https://github.com/changesets/action/pull/545
 
       - name: Deploy to Vercel
-        if: steps.changesets.outputs.published == 'true'
+        if: >-
+          steps.changesets.outputs.published == 'true' ||
+          (github.event_name == 'workflow_dispatch' && inputs.deploy)
         run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
