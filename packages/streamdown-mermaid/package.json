@@ -28,7 +28,7 @@
     "test:coverage": "vitest --coverage run"
   },
   "dependencies": {
-    "mermaid": "^11.16.1"
+    "mermaid": "^11.17.0"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.10",
