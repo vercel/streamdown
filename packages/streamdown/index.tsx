@@ -192,6 +192,7 @@ export interface MermaidOptions {
 }
 
 export type AllowedTags = Record<string, string[]>;
+export type PortalTarget = HTMLElement | null | (() => HTMLElement | null);
 
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
@@ -230,6 +231,11 @@ export type StreamdownProps = Options & {
   plugins?: PluginConfig;
   remend?: RemendOptions;
   linkSafety?: LinkSafetyConfig;
+  /**
+   * DOM node for Streamdown overlays, or a function returning one.
+   * Defaults to `document.body`.
+   */
+  portal?: PortalTarget;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
   /**
@@ -320,6 +326,7 @@ export interface StreamdownContextType {
   linkSafety?: LinkSafetyConfig;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
+  portal?: PortalTarget;
   shikiTheme: [ThemeInput, ThemeInput];
   /** Max height for tables. @default 300 */
   tableMaxHeight: number | string;
@@ -343,6 +350,7 @@ const defaultStreamdownContext: StreamdownContextType = {
   mode: "streaming",
   mermaid: undefined,
   linkSafety: defaultLinkSafetyConfig,
+  portal: undefined,
   tableMaxHeight: 300,
 };
 
@@ -496,6 +504,7 @@ export const Streamdown = memo(
     plugins,
     remend: remendOptions,
     linkSafety = defaultLinkSafetyConfig,
+    portal,
     lineNumbers = true,
     allowedTags,
     literalTagContent,
@@ -688,6 +697,7 @@ export const Streamdown = memo(
         mode,
         mermaid,
         linkSafety,
+        portal,
         tableMaxHeight,
       }),
       [
@@ -699,6 +709,7 @@ export const Streamdown = memo(
         mode,
         mermaid,
         linkSafety,
+        portal,
         plugins?.code,
         tableMaxHeight,
       ]
@@ -978,6 +989,7 @@ export const Streamdown = memo(
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
+    prevProps.portal === nextProps.portal &&
     prevProps.lineNumbers === nextProps.lineNumbers &&
     prevProps.codeBlockMaxHeight === nextProps.codeBlockMaxHeight &&
     prevProps.tableMaxHeight === nextProps.tableMaxHeight &&
