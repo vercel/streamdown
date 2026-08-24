@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.5",
-    "@changesets/cli": "^2.30.0",
+    "@changesets/cli": "^2.31.1",
     "turbo": "^2.10.10",
     "typescript": "5.9.3",
     "ultracite": "7.2.4"

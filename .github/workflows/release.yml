@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Force Deploy to Vercel even if no packages were published"
+        type: boolean
+        default: true
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -27,12 +33,20 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '24'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "24"
+          # Do not set registry-url: it writes
+          # //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN} into the runner
+          # npmrc. Under OIDC trusted publishing there is no NODE_AUTH_TOKEN, so
+          # that line poisons anonymous `npm info` reads that changesets uses to
+          # decide what is already on the registry (empty stdout → treated as
+          # unpublished → republish of already-released versions).
 
-      # Ensure npm 11.5.1 or later is installed
+      # Pin npm 11.x: trusted publishing needs >=11.5.1, but npm 12 changed
+      # `npm info <pkg> --json` to return an array. @changesets/cli <2.31 reads
+      # `.versions` off the top-level object, sees none, and tries to republish
+      # every package on every main push.
       - name: Update npm
-        run: npm install -g npm@latest
+        run: npm install -g npm@11
 
       - name: Install Dependencies
         run: pnpm i
@@ -63,7 +77,9 @@ jobs:
           NPM_TOKEN: "" # Workaround for https://github.com/changesets/action/pull/545
 
       - name: Deploy to Vercel
-        if: steps.changesets.outputs.published == 'true'
+        if: >-
+          steps.changesets.outputs.published == 'true' ||
+          (github.event_name == 'workflow_dispatch' && inputs.deploy)
         run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
