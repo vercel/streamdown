@@ -157,8 +157,8 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(next@16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       '@vercel/geistdocs':
-        specifier: 1.20.4
-        version: 1.20.4(@svta/cml-cta@1.0.1(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1))(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1)(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.3.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.9.0))
+        specifier: 1.23.1
+        version: 1.23.1(@svta/cml-cta@1.0.1(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1))(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1)(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.3.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.9.0))
       '@vercel/speed-insights':
         specifier: ^1.3.1
         version: 1.3.1(next@16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
@@ -742,9 +742,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@braintree/sanitize-url@7.1.1':
-    resolution: {integrity: sha512-i1L7noDNxtFyL5DmZafWy1wRVhGehQmzZaz1HiN5e7iylJMSZR7ekOV7NsIqa5qBldlLrsKv4HbgFUVlQrz8Mw==}
-
   '@braintree/sanitize-url@7.1.2':
     resolution: {integrity: sha512-jigsZK+sMF/cuiB7sERuo9V7N9jx+dhmHHnQyDSVdpZwVutaBu7WvNYqMDLSgFgfB30n452TP3vjDAvFC973mA==}
 
@@ -803,23 +800,8 @@ packages:
   '@changesets/write@0.4.0':
     resolution: {integrity: sha512-CdTLvIOPiCNuH71pyDu3rA+Q0n65cmAbXnwWH84rKGiFumFzkmHNT8KHTMEchcxN+Kl8I54xGUhJ7l3E7X396Q==}
 
-  '@chevrotain/cst-dts-gen@11.0.3':
-    resolution: {integrity: sha512-BvIKpRLeS/8UbfxXxgC33xOumsacaeCKAjAeLyOn7Pcp95HiRbrpl14S+9vaZLolnbssPIUuiUd8IvgkRyt6NQ==}
-
-  '@chevrotain/gast@11.0.3':
-    resolution: {integrity: sha512-+qNfcoNk70PyS/uxmj3li5NiECO+2YKZZQMbmjTqRI3Qchu8Hig/Q9vgkHpI3alNjr7M+a2St5pw5w5F6NL5/Q==}
-
-  '@chevrotain/regexp-to-ast@11.0.3':
-    resolution: {integrity: sha512-1fMHaBZxLFvWI067AVbGJav1eRY7N8DDvYCTwGBiE/ytKBgP8azTdgyrKyWZ9Mfh09eHWb5PgTSO8wi7U824RA==}
-
-  '@chevrotain/types@11.0.3':
-    resolution: {integrity: sha512-gsiM3G8b58kZC2HaWR50gu6Y1440cHiJ+i3JUvcp/35JchYejb2+5MVeJK0iKThYpAa/P2PYFV4hoi44HD+aHQ==}
-
   '@chevrotain/types@11.1.2':
     resolution: {integrity: sha512-U+HFai5+zmJCkK86QsaJtoITlboZHBqrVketcO2ROv865xfCMSFpELQoz1GkX5GzME8pTa+3kbKrZHQtI0gdbw==}
-
-  '@chevrotain/utils@11.0.3':
-    resolution: {integrity: sha512-YslZMgtJUyuMbZ+aKvfF3x1f5liK4mWNxghFRv7jqRR9C3R3fAOGTTKvxXDa2Y1s9zSbcpuO0cAxDYsc9SrXoQ==}
 
   '@clack/core@0.5.0':
     resolution: {integrity: sha512-p3y0FIOwaYRUPRcMO7+dlmLh8PSRcrjuTndsiA0WAFbWES0mLZlrjVoBRZ9DzkPFJZG6KGkJmoEAY0ZcVWTkow==}
@@ -1263,9 +1245,6 @@ packages:
 
   '@mdx-js/mdx@3.1.1':
     resolution: {integrity: sha512-f6ZO2ifpwAQIpzGWaBQT2TXxPv6z3RBzQKpVftEWN78Vl/YweF1uwussDx8ECAXVtr3Rs89fKyG9YlzUs9DyGQ==}
-
-  '@mermaid-js/parser@0.6.3':
-    resolution: {integrity: sha512-lnjOhe7zyHjc+If7yT4zoedx2vo4sHaTmtkl1+or8BRTnCtDmcTpAjpzDSfCZrshM5bCoz0GyidzadJAH1xobA==}
 
   '@mermaid-js/parser@1.2.0':
     resolution: {integrity: sha512-oYPyv8A4As1yH5Bx+04iQEQxXuIQDe0GKCNSRgao6z8AM9jixXIfP0vsppRLvGf+nKIOb9/LdpWA4YuJiVvESA==}
@@ -3558,6 +3537,25 @@ packages:
       next:
         optional: true
 
+  '@vercel/agent-readability@0.6.0':
+    resolution: {integrity: sha512-nNmgOHwAAvKstCcCa7AARAqUSyFdwRBbT8utdjiAFUMTsNgtc4O6RwgJ2AHc78sY5NdSQN2z959o6w61zAmOMw==}
+    engines: {node: '>=20.0.0'}
+    hasBin: true
+    peerDependencies:
+      '@sveltejs/kit': '>=2'
+      '@vercel/functions': ^3
+      h3: '>=1.8 <2'
+      next: '>=14'
+    peerDependenciesMeta:
+      '@sveltejs/kit':
+        optional: true
+      '@vercel/functions':
+        optional: true
+      h3:
+        optional: true
+      next:
+        optional: true
+
   '@vercel/analytics@1.6.1':
     resolution: {integrity: sha512-oH9He/bEM+6oKlv3chWuOOcp8Y6fo6/PSro8hEkgCW3pu9/OiCXiUpRUogDh3Fs3LH2sosDrx8CxeOLBEE+afg==}
     peerDependencies:
@@ -3591,11 +3589,11 @@ packages:
     resolution: {integrity: sha512-g9XerViJ/paZujufXYcu5XYI2vU2rtB4sgdpjUHde5RnOkdmpu0ngH46LCFGHoPXO/C+qDPSczIHIRN+8Q2YKQ==}
     engines: {node: '>= 18'}
 
-  '@vercel/geistdocs@1.20.4':
-    resolution: {integrity: sha512-W+4jWaH+9bgI9dJ5U6A7dkhhTzUURuiLjMzv8hKDre++fSZpDmsBNOkZowz4kFZBFgZgr4w3N8OWhXUIzGnVDA==}
+  '@vercel/geistdocs@1.23.1':
+    resolution: {integrity: sha512-XjXfZe7a4NrB0+dFoUthH5wQTVApxtTscbh4QPbtAjAgly6MJtL6R4+vPs88m4/x0HsaX76R7qllCv53DnISvw==}
     hasBin: true
     peerDependencies:
-      next: ^16.2.11
+      next: ^16.3.0
       react: ^19.2.3
       react-dom: ^19.2.3
       tailwindcss: ^4.1.17
@@ -3790,10 +3788,6 @@ packages:
   bidi-js@1.0.3:
     resolution: {integrity: sha512-RKshQI1R3YQ+n9YJz2QQ147P66ELpa1FQEg20Dk8oW9t2KgLbpDLLp9aGZ7y8WHSshDknG0bknqGw5/tyCs5tw==}
 
-  brace-expansion@5.0.2:
-    resolution: {integrity: sha512-Pdk8c9poy+YhOgVWw1JNN22/HcivgKWwpxKq04M/jTmHyCZn12WPJebZxdjSa5TmBqISrUSgNYU3eRORljfCCw==}
-    engines: {node: 20 || >=22}
-
   brace-expansion@5.0.9:
     resolution: {integrity: sha512-ScQ4IuvIEF1TMlP7Zt+vjJ//9zlPb2SDcxWxM3bk8s6t6GGdJ7KO1dCcTidOPJKePW30LE/2cT7wCyPho9/Wxg==}
     engines: {node: 20 || >=22}
@@ -3849,14 +3843,6 @@ packages:
 
   chardet@2.1.1:
     resolution: {integrity: sha512-PsezH1rqdV9VvyNhxxOW32/d75r01NY7TQCmOqomRo15ZSOKbpTFVsfjghxo6JloQUCGnH4k1LGu0R4yCLlWQQ==}
-
-  chevrotain-allstar@0.3.1:
-    resolution: {integrity: sha512-b7g+y9A0v4mxCW1qUhf3BSVPg+/NvGErk/dOkrDaHA0nQIQGAtrOjlX//9OQtRlSCy+x9rfB5N8yC71lH1nvMw==}
-    peerDependencies:
-      chevrotain: ^11.0.0
-
-  chevrotain@11.0.3:
-    resolution: {integrity: sha512-ci2iJH6LeIkvP9eJW6gpueU8cnZhv85ELY8w8WiFtNjMHA5ad6pQLaJo9mEly/9qUyCpvqX8/POVUTf18/HFdw==}
 
   chokidar@4.0.3:
     resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
@@ -3980,10 +3966,6 @@ packages:
     resolution: {integrity: sha512-ki1/VuRIHFCzxWNrsshHYPs6L7TvLu3DL+TyIGEsRcvVERmxokbf5Gdk7mFxZnTdiGtnA4cfSmjZJMviqSuZrQ==}
     peerDependencies:
       cytoscape: ^3.2.0
-
-  cytoscape@3.33.1:
-    resolution: {integrity: sha512-iJc4TwyANnOGR1OmWhsS9ayRS3s+XQ185FmuHObThD+5AeJCakAAbWv8KimMTt08xCCLNgneQwFp+JRJOr9qGQ==}
-    engines: {node: '>=0.10'}
 
   cytoscape@3.34.1:
     resolution: {integrity: sha512-Lr0RvH9H75y9ar8h9Toy6u4lxRSCcxUq+hHcQ26sVWo6BnaQp1gwEZOYqwuYTZhyW7npyKnNLP8oJ2p1/3OZ7g==}
@@ -4133,9 +4115,6 @@ packages:
     resolution: {integrity: sha512-e1U46jVP+w7Iut8Jt8ri1YsPOvFpg46k+K8TpCb0P+zjCkjkPnV7WzfDJzMHy1LnA+wj5pLT1wjO901gLXeEhA==}
     engines: {node: '>=12'}
 
-  dagre-d3-es@7.0.13:
-    resolution: {integrity: sha512-efEhnxpSuwpYOKRm/L5KbqoZmNNukHa/Flty4Wp62JRvgH2ojwVgPgdYyr4twpieZnyRDdIH7PY2mopX26+j2Q==}
-
   dagre-d3-es@7.0.14:
     resolution: {integrity: sha512-P4rFMVq9ESWqmOgK+dlXvOtLwYg0i7u0HBGJER0LZDJT2VHIPAMZ/riPxqJceWMStH5+E61QxFra9kIS3AqdMg==}
 
@@ -4148,9 +4127,6 @@ packages:
   data-urls@6.0.0:
     resolution: {integrity: sha512-BnBS08aLUM+DKamupXs3w2tJJoqU+AkaE/+6vQxi/G/DPmIZFJJp9Dkb1kM03AZx8ADehDUZgsNxju3mPXZYIA==}
     engines: {node: '>=20'}
-
-  dayjs@1.11.19:
-    resolution: {integrity: sha512-t5EcLVS6QPBNqM2z8fakk/NKel+Xzshgt8FFKAn+qwlD1pzZWxh0nVCrvFK7ZDb6XucZeF9z8C7CBWTRIVApAw==}
 
   dayjs@1.11.23:
     resolution: {integrity: sha512-QDTCU0M0MxR3hQfnlDJfwekQiaanm1ubOD231u73WBckQ/fsamwRLiE2GBz6D3a/xF1NgfiDLJjXBa1hYOYTtQ==}
@@ -4214,9 +4190,6 @@ packages:
 
   dom-accessibility-api@0.6.3:
     resolution: {integrity: sha512-7ZgogeTnjuHbo+ct10G9Ffp0mif17idi0IyWNVA/wcwcm7NPOD/WEHVP3n7n3MhXqxoIYm8d6MuZohYWIZ4T3w==}
-
-  dompurify@3.3.1:
-    resolution: {integrity: sha512-qkdCKzLNtrgPFP1Vo+98FRzJnBRGe4ffyCea9IwHB1fyxPOeNTHpLKYGd4Uk9xvNoH0ZoOjwZxNptyMwqrId1Q==}
 
   dompurify@3.4.13:
     resolution: {integrity: sha512-2vmYIoqjze2d+kakP8S/nS5shfsl587kzwEjcGlTdiksUVgFHnFCsLYDVj/JNqJVOQZGSYBTmuycv0PodwmnMQ==}
@@ -4790,10 +4763,6 @@ packages:
   khroma@2.1.0:
     resolution: {integrity: sha512-Ls993zuzfayK269Svk9hzpeGUKob/sIgZzyHYdjQoAdQetRKpOLj+k/QQQ/6Qi0Yz65mlROrfd+Ev+1+7dz9Kw==}
 
-  langium@3.3.1:
-    resolution: {integrity: sha512-QJv/h939gDpvT+9SiLVlY7tZC3xB2qK57v0J04Sh9wpMb6MP1q8gB21L3WIo8T5P1MSMg3Ep14L7KkDCFG3y4w==}
-    engines: {node: '>=16.0.0'}
-
   layout-base@1.0.2:
     resolution: {integrity: sha512-8h2oVEZNktL4BH2JCOI90iD1yXwL6iNW7KcCKT2QZgQJR2vbqDsldCTPRU9NifTCqHZci57XvQQ15YTu+sTYPg==}
 
@@ -5124,9 +5093,6 @@ packages:
     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
     engines: {node: '>= 8'}
 
-  mermaid@11.12.2:
-    resolution: {integrity: sha512-n34QPDPEKmaeCG4WDMGy0OT6PSyxKCfy2pJgShP+Qow2KLrvWjclwbc3yXfSIf4BanqWEhQEpngWwNp/XhZt6w==}
-
   mermaid@11.16.1:
     resolution: {integrity: sha512-TQsq6u22fAn3rek5VOubrhKPo1g5hwC3FXUN9hiyupTckcYiGuuKGkNQrKYwGJkXUxZdojwRG46gsSCFZMDp4g==}
 
@@ -5282,17 +5248,9 @@ packages:
     resolution: {integrity: sha512-I9jwMn07Sy/IwOj3zVkVik2JTvgpaykDZEigL6Rx6N9LbMywwUSMtxET+7lVoDLLd3O3IXwJwvuuns8UB/HeAg==}
     engines: {node: '>=4'}
 
-  minimatch@10.2.1:
-    resolution: {integrity: sha512-MClCe8IL5nRRmawL6ib/eT4oLyeKMGCghibcDWK+J0hh0Q8kqSdia6BvbRMVk6mPa6WqUa5uR2oxt6C5jd533A==}
-    engines: {node: 20 || >=22}
-
   minimatch@10.2.6:
     resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
     engines: {node: 18 || 20 || >=22}
-
-  minipass@7.1.2:
-    resolution: {integrity: sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==}
-    engines: {node: '>=16 || 14 >=14.17'}
 
   minipass@7.1.3:
     resolution: {integrity: sha512-tEBHqDnIoM/1rXME1zgka9g6Q2lcoCkxHLuc7ODJ5BxbP5d4c2Z5cGgtXAku59200Cx7diuHTOYfSBD8n6mm8A==}
@@ -5482,10 +5440,6 @@ packages:
   path-key@3.1.1:
     resolution: {integrity: sha512-ojmeN0qd+y0jszEtoY48r0Peq5dwMEkIlCOu6Q5f41lfkswXuKtYrhgoTpLnyIcHm24Uhqx+5Tqm2InSwLhE6Q==}
     engines: {node: '>=8'}
-
-  path-scurry@2.0.1:
-    resolution: {integrity: sha512-oWyT4gICAu+kaA7QWk/jvCHWarMKNs6pXOGWKDTr7cw4IGcUbW+PeTfbaQiLGheFRpjo6O9J0PmyMfQPjH71oA==}
-    engines: {node: 20 || >=22}
 
   path-scurry@2.0.2:
     resolution: {integrity: sha512-3O/iVVsJAPsOnpwWIeD+d6z/7PmqApyQePUtCndjatj/9I5LylHvt5qluFaBT3I5h3r1ejfR056c+FCv+NnNXg==}
@@ -6483,26 +6437,6 @@ packages:
       jsdom:
         optional: true
 
-  vscode-jsonrpc@8.2.0:
-    resolution: {integrity: sha512-C+r0eKJUIfiDIfwJhria30+TYWPtuHJXHtI7J0YlOmKAo7ogxP20T0zxB7HZQIFhIyvoBPwWskjxrvAtfjyZfA==}
-    engines: {node: '>=14.0.0'}
-
-  vscode-languageserver-protocol@3.17.5:
-    resolution: {integrity: sha512-mb1bvRJN8SVznADSGWM9u/b07H7Ecg0I3OgXDuLdn307rl/J3A9YD6/eYOssqhecL27hK1IPZAsaqh00i/Jljg==}
-
-  vscode-languageserver-textdocument@1.0.12:
-    resolution: {integrity: sha512-cxWNPesCnQCcMPeenjKKsOCKQZ/L6Tv19DTRIGuLWe32lyzWhihGVJ/rcckZXJxfdKCFvRLS3fpBIsV/ZGX4zA==}
-
-  vscode-languageserver-types@3.17.5:
-    resolution: {integrity: sha512-Ld1VelNuX9pdF39h2Hgaeb5hEZM2Z3jUrrMgWQAu82jMtZp7p3vJT3BzToKtZI7NgQssZje5o0zryOrhQvzQAg==}
-
-  vscode-languageserver@9.0.1:
-    resolution: {integrity: sha512-woByF3PDpkHFUreUa7Hos7+pUWdeWMXRd26+ZX2A8cFx6v/JPTtd4/uN0/jB6XQHYaOlHbio03NTHCqrgG5n7g==}
-    hasBin: true
-
-  vscode-uri@3.0.8:
-    resolution: {integrity: sha512-AyFQ0EVmsOZOlAnxoFOGOq1SQDWAB7C6aqMGS23svWAllfOaxbuFvcT8D1i8z3Gyn8fraVeZNNmN6e9bxxXkKw==}
-
   w3c-xmlserializer@5.0.0:
     resolution: {integrity: sha512-o8qghlI8NZHU1lLPrpi2+Uq7abh4GGPpYANlalzWxyWteJOCsr/P+oPBA49TOLu5FTZO4d3F9MnWJfiMo4BkmA==}
     engines: {node: '>=18'}
@@ -6857,8 +6791,6 @@ snapshots:
   '@biomejs/cli-win32-x64@2.4.5':
     optional: true
 
-  '@braintree/sanitize-url@7.1.1': {}
-
   '@braintree/sanitize-url@7.1.2': {}
 
   '@changesets/apply-release-plan@7.1.1':
@@ -7004,24 +6936,7 @@ snapshots:
       human-id: 4.1.3
       prettier: 2.8.8
 
-  '@chevrotain/cst-dts-gen@11.0.3':
-    dependencies:
-      '@chevrotain/gast': 11.0.3
-      '@chevrotain/types': 11.0.3
-      lodash-es: 4.17.23
-
-  '@chevrotain/gast@11.0.3':
-    dependencies:
-      '@chevrotain/types': 11.0.3
-      lodash-es: 4.17.23
-
-  '@chevrotain/regexp-to-ast@11.0.3': {}
-
-  '@chevrotain/types@11.0.3': {}
-
   '@chevrotain/types@11.1.2': {}
-
-  '@chevrotain/utils@11.0.3': {}
 
   '@clack/core@0.5.0':
     dependencies:
@@ -7366,10 +7281,6 @@ snapshots:
       vfile: 6.0.3
     transitivePeerDependencies:
       - supports-color
-
-  '@mermaid-js/parser@0.6.3':
-    dependencies:
-      langium: 3.3.1
 
   '@mermaid-js/parser@1.2.0':
     dependencies:
@@ -9413,7 +9324,7 @@ snapshots:
 
   '@ts-morph/common@0.28.1':
     dependencies:
-      minimatch: 10.2.1
+      minimatch: 10.2.6
       path-browserify: 1.0.1
       tinyglobby: 0.2.15
 
@@ -9650,6 +9561,10 @@ snapshots:
     optionalDependencies:
       next: 16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
 
+  '@vercel/agent-readability@0.6.0(next@16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))':
+    optionalDependencies:
+      next: 16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+
   '@vercel/analytics@1.6.1(next@16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)':
     optionalDependencies:
       next: 16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -9664,7 +9579,7 @@ snapshots:
     dependencies:
       execa: 5.1.1
 
-  '@vercel/geistdocs@1.20.4(@svta/cml-cta@1.0.1(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1))(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1)(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.3.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.9.0))':
+  '@vercel/geistdocs@1.23.1(@svta/cml-cta@1.0.1(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1))(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1)(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/mdast@4.0.4)(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(next@16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.3.3)(vite@7.3.1(@types/node@24.10.10)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.9.0))':
     dependencies:
       '@ai-sdk/react': 3.0.201(react@19.2.3)(zod@4.4.3)
       '@clack/prompts': 0.11.0
@@ -9672,7 +9587,7 @@ snapshots:
       '@orama/tokenizers': 3.1.18
       '@streamdown/cjk': 1.0.3(@types/mdast@4.0.4)(react@19.2.3)(unified@11.0.5)
       '@streamdown/code': 1.1.1(react@19.2.3)
-      '@vercel/agent-readability': 0.5.1(next@16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
+      '@vercel/agent-readability': 0.6.0(next@16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       '@vercel/oidc': 3.8.2
       ai: 6.0.199(zod@4.4.3)
       class-variance-authority: 0.7.1
@@ -9685,7 +9600,7 @@ snapshots:
       fumadocs-ui: 16.2.2(@tanstack/react-router@1.151.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(lucide-react@0.555.0(react@19.2.3))(next@16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(tailwindcss@4.3.3)
       glob: 11.1.0
       lucide-react: 0.555.0(react@19.2.3)
-      mermaid: 11.12.2
+      mermaid: 11.16.1
       motion: 12.27.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       next: 16.3.1(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       next-themes: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -9909,10 +9824,6 @@ snapshots:
     dependencies:
       require-from-string: 2.0.2
 
-  brace-expansion@5.0.2:
-    dependencies:
-      balanced-match: 4.0.3
-
   brace-expansion@5.0.9:
     dependencies:
       balanced-match: 4.0.3
@@ -9959,20 +9870,6 @@ snapshots:
   character-reference-invalid@2.0.1: {}
 
   chardet@2.1.1: {}
-
-  chevrotain-allstar@0.3.1(chevrotain@11.0.3):
-    dependencies:
-      chevrotain: 11.0.3
-      lodash-es: 4.17.23
-
-  chevrotain@11.0.3:
-    dependencies:
-      '@chevrotain/cst-dts-gen': 11.0.3
-      '@chevrotain/gast': 11.0.3
-      '@chevrotain/regexp-to-ast': 11.0.3
-      '@chevrotain/types': 11.0.3
-      '@chevrotain/utils': 11.0.3
-      lodash-es: 4.17.23
 
   chokidar@4.0.3:
     dependencies:
@@ -10075,27 +9972,15 @@ snapshots:
 
   custom-media-element@1.4.5: {}
 
-  cytoscape-cose-bilkent@4.1.0(cytoscape@3.33.1):
-    dependencies:
-      cose-base: 1.0.3
-      cytoscape: 3.33.1
-
   cytoscape-cose-bilkent@4.1.0(cytoscape@3.34.1):
     dependencies:
       cose-base: 1.0.3
       cytoscape: 3.34.1
 
-  cytoscape-fcose@2.2.0(cytoscape@3.33.1):
-    dependencies:
-      cose-base: 2.2.0
-      cytoscape: 3.33.1
-
   cytoscape-fcose@2.2.0(cytoscape@3.34.1):
     dependencies:
       cose-base: 2.2.0
       cytoscape: 3.34.1
-
-  cytoscape@3.33.1: {}
 
   cytoscape@3.34.1: {}
 
@@ -10272,11 +10157,6 @@ snapshots:
       d3-transition: 3.0.1(d3-selection@3.0.0)
       d3-zoom: 3.0.0
 
-  dagre-d3-es@7.0.13:
-    dependencies:
-      d3: 7.9.0
-      lodash-es: 4.17.23
-
   dagre-d3-es@7.0.14:
     dependencies:
       d3: 7.9.0
@@ -10319,8 +10199,6 @@ snapshots:
     dependencies:
       whatwg-mimetype: 4.0.0
       whatwg-url: 15.1.0
-
-  dayjs@1.11.19: {}
 
   dayjs@1.11.23: {}
 
@@ -10367,10 +10245,6 @@ snapshots:
   dom-accessibility-api@0.5.16: {}
 
   dom-accessibility-api@0.6.3: {}
-
-  dompurify@3.3.1:
-    optionalDependencies:
-      '@types/trusted-types': 2.0.7
 
   dompurify@3.4.13:
     optionalDependencies:
@@ -10713,10 +10587,10 @@ snapshots:
     dependencies:
       foreground-child: 3.3.1
       jackspeak: 4.2.3
-      minimatch: 10.2.1
-      minipass: 7.1.2
+      minimatch: 10.2.6
+      minipass: 7.1.3
       package-json-from-dist: 1.0.1
-      path-scurry: 2.0.1
+      path-scurry: 2.0.2
 
   glob@13.0.6:
     dependencies:
@@ -11081,14 +10955,6 @@ snapshots:
       commander: 8.3.0
 
   khroma@2.1.0: {}
-
-  langium@3.3.1:
-    dependencies:
-      chevrotain: 11.0.3
-      chevrotain-allstar: 0.3.1(chevrotain@11.0.3)
-      vscode-languageserver: 9.0.1
-      vscode-languageserver-textdocument: 1.0.12
-      vscode-uri: 3.0.8
 
   layout-base@1.0.2: {}
 
@@ -11488,29 +11354,6 @@ snapshots:
 
   merge2@1.4.1: {}
 
-  mermaid@11.12.2:
-    dependencies:
-      '@braintree/sanitize-url': 7.1.1
-      '@iconify/utils': 3.1.0
-      '@mermaid-js/parser': 0.6.3
-      '@types/d3': 7.4.3
-      cytoscape: 3.33.1
-      cytoscape-cose-bilkent: 4.1.0(cytoscape@3.33.1)
-      cytoscape-fcose: 2.2.0(cytoscape@3.33.1)
-      d3: 7.9.0
-      d3-sankey: 0.12.3
-      dagre-d3-es: 7.0.13
-      dayjs: 1.11.19
-      dompurify: 3.3.1
-      katex: 0.16.27
-      khroma: 2.1.0
-      lodash-es: 4.17.23
-      marked: 16.4.2
-      roughjs: 4.6.6
-      stylis: 4.3.6
-      ts-dedent: 2.2.0
-      uuid: 11.1.0
-
   mermaid@11.16.1:
     dependencies:
       '@braintree/sanitize-url': 7.1.2
@@ -11663,7 +11506,7 @@ snapshots:
 
   micromark-extension-mdx-expression@3.0.1:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       devlop: 1.1.0
       micromark-factory-mdx-expression: 2.0.3
       micromark-factory-space: 2.0.1
@@ -11674,7 +11517,7 @@ snapshots:
 
   micromark-extension-mdx-jsx@3.0.2:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       devlop: 1.1.0
       estree-util-is-identifier-name: 3.0.0
       micromark-factory-mdx-expression: 2.0.3
@@ -11691,7 +11534,7 @@ snapshots:
 
   micromark-extension-mdxjs-esm@3.0.0:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       devlop: 1.1.0
       micromark-core-commonmark: 2.0.3
       micromark-util-character: 2.1.1
@@ -11727,7 +11570,7 @@ snapshots:
 
   micromark-factory-mdx-expression@2.0.3:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       devlop: 1.1.0
       micromark-factory-space: 2.0.1
       micromark-util-character: 2.1.1
@@ -11791,7 +11634,7 @@ snapshots:
 
   micromark-util-events-to-acorn@2.0.3:
     dependencies:
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.9
       '@types/unist': 3.0.3
       devlop: 1.1.0
       estree-util-visit: 2.0.0
@@ -11857,15 +11700,9 @@ snapshots:
 
   min-indent@1.0.1: {}
 
-  minimatch@10.2.1:
-    dependencies:
-      brace-expansion: 5.0.2
-
   minimatch@10.2.6:
     dependencies:
       brace-expansion: 5.0.9
-
-  minipass@7.1.2: {}
 
   minipass@7.1.3: {}
 
@@ -12064,11 +11901,6 @@ snapshots:
   path-exists@4.0.0: {}
 
   path-key@3.1.1: {}
-
-  path-scurry@2.0.1:
-    dependencies:
-      lru-cache: 11.2.4
-      minipass: 7.1.2
 
   path-scurry@2.0.2:
     dependencies:
@@ -13464,23 +13296,6 @@ snapshots:
       jsdom: 27.4.0
     transitivePeerDependencies:
       - msw
-
-  vscode-jsonrpc@8.2.0: {}
-
-  vscode-languageserver-protocol@3.17.5:
-    dependencies:
-      vscode-jsonrpc: 8.2.0
-      vscode-languageserver-types: 3.17.5
-
-  vscode-languageserver-textdocument@1.0.12: {}
-
-  vscode-languageserver-types@3.17.5: {}
-
-  vscode-languageserver@9.0.1:
-    dependencies:
-      vscode-languageserver-protocol: 3.17.5
-
-  vscode-uri@3.0.8: {}
 
   w3c-xmlserializer@5.0.0:
     dependencies:
