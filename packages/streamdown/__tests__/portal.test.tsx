@@ -23,7 +23,7 @@ describe("portal target", () => {
     expect(getPortal).not.toHaveBeenCalled();
   });
 
-  it("should update the portal target when the prop changes", () => {
+  it("should treat portal as an initializing prop", () => {
     const firstRoot = document.createElement("div");
     const secondRoot = document.createElement("div");
     document.body.append(firstRoot, secondRoot);
@@ -41,10 +41,10 @@ describe("portal target", () => {
 
     expect(
       firstRoot.querySelector('[data-streamdown="table-fullscreen"]')
-    ).toBeNull();
+    ).toBeTruthy();
     expect(
       secondRoot.querySelector('[data-streamdown="table-fullscreen"]')
-    ).toBeTruthy();
+    ).toBeNull();
 
     unmount();
     firstRoot.remove();

@@ -989,7 +989,6 @@ export const Streamdown = memo(
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
-    prevProps.portal === nextProps.portal &&
     prevProps.lineNumbers === nextProps.lineNumbers &&
     prevProps.codeBlockMaxHeight === nextProps.codeBlockMaxHeight &&
     prevProps.tableMaxHeight === nextProps.tableMaxHeight &&

@@ -234,7 +234,7 @@ return (
 );
 ```
 
-The getter form is useful when the portal element is assigned after the first render. Returning `null` falls back to `document.body`. A custom `linkSafety.renderModal` controls its own placement and is not moved by this prop.
+The getter form is useful when the portal element is assigned after the first render. Returning `null` falls back to `document.body`. A custom `linkSafety.renderModal` controls its own placement and is not moved by this prop. Like `urlTransform` and `allowElement`, `portal` is an initializing prop: swapping it for a different target alone does not re-render, so prefer the getter form — it is resolved each time an overlay opens.
 
 ### Mermaid Options
 
