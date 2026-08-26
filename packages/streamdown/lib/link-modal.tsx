@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { StreamdownContext } from "../index";
 import { useIcons } from "./icon-context";
+import { resolvePortalTarget } from "./portal";
 import { useCn } from "./prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "./scroll-lock";
 import { useTranslations } from "./translations-context";
@@ -22,6 +24,7 @@ export const LinkSafetyModal = ({
   const cn = useCn();
   const [copied, setCopied] = useState(false);
   const t = useTranslations();
+  const { portal } = useContext(StreamdownContext);
 
   const handleCopy = useCallback(async () => {
     try {
@@ -150,5 +153,5 @@ export const LinkSafetyModal = ({
     </div>
   );
 
-  return createPortal(modal, document.body);
+  return createPortal(modal, resolvePortalTarget(portal));
 };

@@ -4,6 +4,7 @@ import { StreamdownContext } from "../../index";
 import { CodeBlockCopyButton } from "../code-block/copy-button";
 import { useIcons } from "../icon-context";
 import type { MermaidConfig } from "../plugin-types";
+import { resolvePortalTarget } from "../portal";
 import { useCn } from "../prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
 import { useTranslations } from "../translations-context";
@@ -28,8 +29,11 @@ export const MermaidFullscreenButton = ({
   const { Maximize2Icon, XIcon } = useIcons();
   const cn = useCn();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { isAnimating, controls: controlsConfig } =
-    useContext(StreamdownContext);
+  const {
+    isAnimating,
+    controls: controlsConfig,
+    portal,
+  } = useContext(StreamdownContext);
   const t = useTranslations();
   const showPanZoomControls = (() => {
     if (typeof controlsConfig === "boolean") {
@@ -179,7 +183,7 @@ export const MermaidFullscreenButton = ({
                 />
               </div>
             </div>,
-            document.body
+            resolvePortalTarget(portal)
           )
         : null}
     </>

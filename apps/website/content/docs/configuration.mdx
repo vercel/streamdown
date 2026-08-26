@@ -184,6 +184,12 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       type: "LinkSafetyConfig",
       default: "{ enabled: true }",
     },
+    portal: {
+      description:
+        "DOM node (or getter) used as the portal target for built-in overlays. Useful for micro-frontends and scoped or prefixed CSS.",
+      type: "HTMLElement | null | (() => HTMLElement | null)",
+      default: "document.body",
+    },
     plugins: {
       description: "Plugin configuration for math, mermaid, code highlighting, and CJK support. See [Plugins](/docs/plugins).",
       type: "PluginConfig",
@@ -212,6 +218,23 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
     },
   }}
 />
+
+### Portal Target
+
+By default, Mermaid fullscreen, table fullscreen, and the built-in link safety modal render into `document.body`. Use `portal` to keep these overlays inside a micro-frontend or another subtree that provides scoped CSS, prefixed Tailwind utilities, or a specific stacking context.
+
+```tsx title="app/page.tsx"
+const portalRef = useRef<HTMLDivElement>(null);
+
+return (
+  <div className="my-app">
+    <div ref={portalRef} />
+    <Streamdown portal={() => portalRef.current}>{markdown}</Streamdown>
+  </div>
+);
+```
+
+The getter form is useful when the portal element is assigned after the first render. Returning `null` falls back to `document.body`. A custom `linkSafety.renderModal` controls its own placement and is not moved by this prop. Like `urlTransform` and `allowElement`, `portal` is an initializing prop: swapping it for a different target alone does not re-render, so prefer the getter form — it is resolved each time an overlay opens.
 
 ### Mermaid Options
 
