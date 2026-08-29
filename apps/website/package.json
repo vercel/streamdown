@@ -34,7 +34,7 @@
     "react-dom": "^19.2.3",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
-    "shiki": "^3.19.0",
+    "shiki": "^4.4.3",
     "sonner": "^2.0.8",
     "streamdown": "workspace:*",
     "tailwind-merge": "^3.6.0",
