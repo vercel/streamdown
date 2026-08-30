@@ -1,5 +1,6 @@
 import type { DetailedHTMLProps, ImgHTMLAttributes } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { INCOMPLETE_IMAGE_PLACEHOLDER } from "remend";
 import { useIcons } from "./icon-context";
 import type { ExtraProps } from "./markdown";
 import { useCn } from "./prefix-context";
@@ -118,7 +119,7 @@ export const ImageComponent = ({
     return null;
   }
 
-  const isIncomplete = src === "streamdown:incomplete-image";
+  const isIncomplete = src === INCOMPLETE_IMAGE_PLACEHOLDER;
 
   if (isIncomplete) {
     return (
@@ -128,9 +129,7 @@ export const ImageComponent = ({
         data-streamdown="image-wrapper"
       >
         <div
-          className={cn(
-            "h-24 w-48 animate-pulse rounded-lg bg-muted"
-          )}
+          className={cn("h-24 w-48 animate-pulse rounded-lg bg-muted")}
           data-streamdown="image-placeholder"
         />
       </div>

@@ -199,7 +199,7 @@ describe("Markdown Components", () => {
       expect(link?.textContent).toBe("Incomplete link text");
     });
 
-    it("should render incomplete image placeholder when src is streamdown:incomplete-image", () => {
+    it("should render incomplete image placeholder when src is the incomplete-image placeholder", () => {
       const Img = components.img;
       if (!Img) {
         throw new Error("Img component not found");
@@ -208,7 +208,7 @@ describe("Markdown Components", () => {
         <Img
           alt="loading"
           node={null as any}
-          src="streamdown:incomplete-image"
+          src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
         />
       );
       const placeholder = container.querySelector(
@@ -216,7 +216,9 @@ describe("Markdown Components", () => {
       );
       expect(placeholder).toBeTruthy();
 
-      const wrapper = container.querySelector('[data-streamdown="image-wrapper"]');
+      const wrapper = container.querySelector(
+        '[data-streamdown="image-wrapper"]'
+      );
       expect(wrapper?.getAttribute("data-incomplete")).toBe("true");
     });
 

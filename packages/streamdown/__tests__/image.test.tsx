@@ -416,12 +416,12 @@ describe("ImageComponent", () => {
 });
 
 describe("incomplete image placeholder", () => {
-  it("should render a placeholder when src is streamdown:incomplete-image", () => {
+  it("should render a placeholder when src is the incomplete-image placeholder", () => {
     const { container } = render(
       <ImageComponent
         alt="loading..."
         node={null as any}
-        src="streamdown:incomplete-image"
+        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
       />
     );
 
@@ -436,7 +436,9 @@ describe("incomplete image placeholder", () => {
     expect(placeholder).toBeTruthy();
 
     // Wrapper should have data-incomplete="true"
-    const wrapper = container.querySelector('[data-streamdown="image-wrapper"]');
+    const wrapper = container.querySelector(
+      '[data-streamdown="image-wrapper"]'
+    );
     expect(wrapper?.getAttribute("data-incomplete")).toBe("true");
   });
 
@@ -445,7 +447,7 @@ describe("incomplete image placeholder", () => {
       <ImageComponent
         alt="loading..."
         node={null as any}
-        src="streamdown:incomplete-image"
+        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
       />
     );
 
@@ -458,7 +460,7 @@ describe("incomplete image placeholder", () => {
       <ImageComponent
         alt="loading..."
         node={null as any}
-        src="streamdown:incomplete-image"
+        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
       />
     );
 

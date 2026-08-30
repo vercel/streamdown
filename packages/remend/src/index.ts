@@ -14,14 +14,18 @@ import {
 } from "./katex-handler";
 import {
   handleIncompleteLinksAndImages,
+  INCOMPLETE_IMAGE_PLACEHOLDER,
   type LinkMode,
 } from "./link-image-handler";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleSingleTildeEscape } from "./single-tilde-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
 
-export type { LinkMode } from "./link-image-handler";
 // biome-ignore lint/performance/noBarrelFile: "Re-exports utility functions for public API convenience"
+export {
+  INCOMPLETE_IMAGE_PLACEHOLDER,
+  type LinkMode,
+} from "./link-image-handler";
 export {
   isWithinCodeBlock,
   isWithinLinkOrImageUrl,
@@ -158,7 +162,7 @@ const builtInHandlers: Array<{
     optionKey: "links",
     earlyReturn: (result) =>
       result.endsWith("](streamdown:incomplete-link)") ||
-      result.endsWith("](streamdown:incomplete-image)"),
+      result.endsWith(`](${INCOMPLETE_IMAGE_PLACEHOLDER})`),
   },
   {
     handler: {

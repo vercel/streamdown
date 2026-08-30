@@ -130,10 +130,10 @@ describe("link handling with linkMode: text-only", () => {
   it("should still use placeholder for incomplete images regardless of linkMode", () => {
     // Images use placeholder even in text-only mode (images can't show text-only)
     expect(remend("Text ![incomplete image", textOnlyOptions)).toBe(
-      "Text ![incomplete image](streamdown:incomplete-image)"
+      "Text ![incomplete image](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=)"
     );
     expect(remend("Text ![alt](http://partial", textOnlyOptions)).toBe(
-      "Text ![alt](streamdown:incomplete-image)"
+      "Text ![alt](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=)"
     );
   });
 });
