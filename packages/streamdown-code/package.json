@@ -22,13 +22,16 @@
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
     "test:coverage": "vitest --coverage run"
   },
   "dependencies": {
-    "shiki": "^3.19.0"
+    "shiki": "^4.4.3"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.10",
