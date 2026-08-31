@@ -156,6 +156,16 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
       }
     }
 
+    // marked v18 no longer absorbs a block token's trailing blank line(s) into
+    // its own `raw`; instead that whitespace surfaces as a separate `space`
+    // token immediately after (e.g. html/heading/table blocks). A bare space
+    // token is never meaningful content on its own, so fold it into the
+    // previous block to keep block boundaries/counts identical to v17.
+    if (token.type === "space" && mergedBlocksLen > 0) {
+      mergedBlocks[mergedBlocksLen - 1] += currentBlock;
+      continue;
+    }
+
     // Math block merging logic
     // If previous block has unclosed math (odd number of $$), merge current block into it.
     // This handles cases where marked's Lexer splits math blocks (e.g. = on its own line

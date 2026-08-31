@@ -149,4 +149,27 @@ Content for snippet 2
     expect(blocks[0]).toContain("</ai-thinking>");
     expect(blocks[1]).toContain("# Outside");
   });
+
+  it("does not create a standalone block from a trailing blank-line space token (marked v18)", () => {
+    // marked v18 no longer folds a block token's trailing blank line(s) into
+    // its own `raw`; it now emits that whitespace as a separate `space`
+    // token. Block boundaries/count must stay identical to marked v17.
+    const md = `<ai-thinking>
+
+**bold**
+
+</ai-thinking>
+
+# Outside`;
+
+    const blocks = parseMarkdownIntoBlocks(md);
+
+    expect(blocks.length).toBe(2);
+    // Lossless concat invariant: joining blocks must reconstruct the input.
+    expect(blocks.join("")).toBe(md);
+    // No block should be pure whitespace.
+    for (const block of blocks) {
+      expect(block.trim().length).toBeGreaterThan(0);
+    }
+  });
 });
