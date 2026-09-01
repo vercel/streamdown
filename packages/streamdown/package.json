@@ -1,6 +1,6 @@
 {
   "name": "streamdown",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "A drop-in replacement for react-markdown, designed for AI-powered streaming.",
   "homepage": "https://streamdown.ai",
   "repository": {
