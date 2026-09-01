@@ -6,12 +6,11 @@ import {
 
 export type LinkMode = "protocol" | "text-only";
 
-// 1x1 transparent PNG data URI used as a placeholder src for incomplete images.
-// Using a data: URI (instead of a custom streamdown: scheme) ensures the
-// placeholder survives strict URL-sanitizing rehype/remark plugins (e.g.
-// rehype-harden) that only allow http(s)/data schemes for image src.
-export const INCOMPLETE_IMAGE_PLACEHOLDER =
-  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+// Sentinel src for incomplete images during streaming. Mirrors
+// streamdown:incomplete-link for incomplete links. Streamdown allowlists the
+// `streamdown` protocol for img src in its sanitize schema so this marker
+// survives rehype-sanitize + rehype-harden under default config (same as links).
+export const INCOMPLETE_IMAGE_PLACEHOLDER = "streamdown:incomplete-image";
 
 // Helper function to handle incomplete URLs in links/images
 const handleIncompleteUrl = (

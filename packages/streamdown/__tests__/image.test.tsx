@@ -421,7 +421,7 @@ describe("incomplete image placeholder", () => {
       <ImageComponent
         alt="loading..."
         node={null as any}
-        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+        src="streamdown:incomplete-image"
       />
     );
 
@@ -447,7 +447,7 @@ describe("incomplete image placeholder", () => {
       <ImageComponent
         alt="loading..."
         node={null as any}
-        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+        src="streamdown:incomplete-image"
       />
     );
 
@@ -460,7 +460,7 @@ describe("incomplete image placeholder", () => {
       <ImageComponent
         alt="loading..."
         node={null as any}
-        src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+        src="streamdown:incomplete-image"
       />
     );
 

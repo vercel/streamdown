@@ -278,7 +278,10 @@ const defaultSanitizeSchema = {
   clobberPrefix: "",
   protocols: {
     ...defaultSchema.protocols,
+    // `streamdown:` is the remend sentinel scheme for incomplete links/images
+    // during streaming (streamdown:incomplete-link / incomplete-image).
     href: [...(defaultSchema.protocols?.href ?? []), "tel", "streamdown"],
+    src: [...(defaultSchema.protocols?.src ?? []), "streamdown"],
   },
   attributes: {
     ...defaultSchema.attributes,
