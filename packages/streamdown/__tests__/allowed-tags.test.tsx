@@ -193,13 +193,10 @@ Content for snippet 2
       </Streamdown>
     );
 
-    // rehype-sanitize prefixes id attributes with "user-content-"
-    const snippet1 = container.querySelector(
-      '[data-testid="snippet-user-content-1"]'
-    );
-    const snippet2 = container.querySelector(
-      '[data-testid="snippet-user-content-2"]'
-    );
+    // Sanitizer's clobberPrefix is disabled to keep footnote backref hrefs in
+    // sync with their targets, so user-provided ids are preserved as-is.
+    const snippet1 = container.querySelector('[data-testid="snippet-1"]');
+    const snippet2 = container.querySelector('[data-testid="snippet-2"]');
     expect(snippet1).toBeTruthy();
     expect(snippet2).toBeTruthy();
     // Ensure snippet 2's content isn't absorbed into snippet 1
@@ -337,5 +334,26 @@ describe("literalTagContent prop", () => {
     expect(mention).toBeTruthy();
     expect(mention?.querySelector("em")).toBeNull();
     expect(mention?.textContent).toBe("_handle_");
+  });
+  it("should render entire content when literalTagContent tag has double newlines", () => {
+    const AiThinking = (props: CustomComponentProps) => (
+      <div data-testid="ai-thinking">{props.children as React.ReactNode}</div>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ "ai-thinking": [] }}
+        components={{ "ai-thinking": AiThinking }}
+        literalTagContent={["ai-thinking"]}
+        mode="static"
+      >
+        {"<ai-thinking>first part\n\nsecond part</ai-thinking>"}
+      </Streamdown>
+    );
+
+    const el = container.querySelector('[data-testid="ai-thinking"]');
+    expect(el).toBeTruthy();
+    expect(el?.textContent).toContain("first part");
+    expect(el?.textContent).toContain("second part");
   });
 });

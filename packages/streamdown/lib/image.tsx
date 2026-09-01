@@ -13,7 +13,10 @@ type ImageComponentProps = DetailedHTMLProps<
   ImgHTMLAttributes<HTMLImageElement>,
   HTMLImageElement
 > &
-  ExtraProps;
+  ExtraProps & {
+    showControls?: boolean;
+    showDownloadControl?: boolean;
+  };
 
 export const ImageComponent = ({
   node,
@@ -22,6 +25,8 @@ export const ImageComponent = ({
   alt,
   onLoad: onLoadProp,
   onError: onErrorProp,
+  showControls = true,
+  showDownloadControl = true,
   ...props
 }: ImageComponentProps) => {
   const { DownloadIcon } = useIcons();
@@ -32,7 +37,8 @@ export const ImageComponent = ({
   const t = useTranslations();
 
   const hasExplicitDimensions = props.width != null || props.height != null;
-  const showDownload = (imageLoaded || hasExplicitDimensions) && !imageError;
+  const canDownload = (imageLoaded || hasExplicitDimensions) && !imageError;
+  const showDownload = canDownload && showControls && showDownloadControl;
   const showFallback = imageError && !hasExplicitDimensions;
 
   // Handle images already complete before React attaches event handlers (e.g. cached or SSR hydration)
@@ -166,11 +172,14 @@ export const ImageComponent = ({
           {t.imageNotAvailable}
         </span>
       )}
-      <div
-        className={cn(
-          "pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block"
-        )}
-      />
+      {showControls && (
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-0 hidden rounded-lg bg-black/10 group-hover:block"
+          )}
+          data-streamdown="image-overlay"
+        />
+      )}
       {showDownload && (
         <button
           className={cn(

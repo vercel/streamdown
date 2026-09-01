@@ -58,9 +58,43 @@ Result:
 
 Streamdown enhances tables with:
 - **Responsive scrolling** - Tables scroll horizontally on narrow screens
+- **Max height** - Tall tables scroll vertically (default `300px`)
 - **Download button** - Export tables as CSV, TSV, or Markdown
 - **Hover states** - Row highlighting for better readability
 - **Proper spacing** - Optimized cell padding
+
+### Max Height
+
+Tall tables are capped at `300px` by default and scroll vertically. Customize (or disable) the limit with `tableMaxHeight`:
+
+```tsx title="app/page.tsx"
+// Custom pixel height
+<Streamdown tableMaxHeight={200}>{markdown}</Streamdown>
+
+// CSS length value
+<Streamdown tableMaxHeight="40vh">{markdown}</Streamdown>
+
+// Disable the height constraint
+<Streamdown tableMaxHeight={0}>{markdown}</Streamdown>
+// or
+<Streamdown tableMaxHeight={Infinity}>{markdown}</Streamdown>
+```
+
+| Value | Behavior |
+| --- | --- |
+| `number` | Treated as pixels (`300` → `300px`) |
+| `string` | Passed through as a CSS value (`"40vh"`, `"20rem"`) |
+| `0` / `Infinity` / `"none"` | No max height |
+
+#### Auto-scroll while streaming
+
+When `isAnimating` is true, tables stay pinned to the bottom as new rows arrive. If the user scrolls up, auto-scroll unpins until they return to the bottom (or a new streaming session starts).
+
+```tsx title="app/page.tsx"
+<Streamdown isAnimating={isStreaming} tableMaxHeight={240}>
+  {markdown}
+</Streamdown>
+```
 
 ### Complex Tables
 
@@ -80,6 +114,26 @@ You can disable the table download button:
 
 ```tsx
 <Streamdown controls={{ table: false }}>
+  {markdown}
+</Streamdown>
+```
+
+### Custom Download Filename
+
+By default, table downloads use `table.csv` and `table.md`. Set a custom base name with `download: { filename }`:
+
+```tsx
+<Streamdown controls={{ table: { download: { filename: "report" } } }}>
+  {markdown}
+</Streamdown>
+```
+
+### Custom CSV Separator
+
+By default, copied and downloaded CSV uses a comma. Set `controls.table.csvSeparator` to `";"`, `"\t"`, or `"auto"` (picks `;` in comma-decimal locales):
+
+```tsx
+<Streamdown controls={{ table: { csvSeparator: "auto" } }}>
   {markdown}
 </Streamdown>
 ```

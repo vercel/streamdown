@@ -1,5 +1,166 @@
 # streamdown
 
+## 2.6.0
+
+### Minor Changes
+
+- 49bd143: fix(animate): serialize streaming animation across blocks
+
+  Word stagger now runs on a shared wall-clock timeline so sibling sections no longer fade in on top of each other during streaming. Related cleanup: trailing spaces stay inside animated spans (no early link underlines), animate wrappers drop when streaming ends, already-seen text stays steady under StrictMode, and un-animated streaming is no longer deferred behind a starvable transition.
+
+  Inspired by #493, #531, and #536.
+
+  Fixes #482
+  Fixes #535
+  Fixes #550
+  Fixes #570
+
+- b734cbf: - Add custom download filenames for code, table, and mermaid via the `controls` prop
+  - Configure downloads with `download: { filename: "customName" }` while keeping boolean `true`/`false` to show or hide
+  - Preserve automatic file-extension mapping based on language or export format
+  - Remove the `codeDownload` prop in favor of the unified `controls` API
+- 5faa6fa: Add `codeBlockMaxHeight` and `tableMaxHeight` props with streaming auto-scroll
+- 4436b56: - Add `controls.table.csvSeparator` (`"," | ";" | "\t" | "auto"`) for table copy and download CSV
+  - Reuse `tableDataToCSV` separator handling, including locale-aware `"auto"` mode
+  - Improve CSV escaping to respect the selected separator for Excel compatibility
+
+### Patch Changes
+
+- 6ec3c48: fix(animate): animate inline code during streaming
+
+  Skip the animate visitor on `pre` (and svg/math/annotation) only — not bare `code`. Fenced/highlighted blocks stay un-split via their `pre` ancestor; inline backtick spans now get the same per-word fade-in as surrounding prose.
+
+  Fixes #594
+
+- 725e390: Forward rest props through block code. The `code` component spread its rest props on the inline branch and dropped them on the block branch, so an attribute a consumer put on a fenced code element never reached the DOM. `CodeBlockBody` now takes part in that comparison, so a forwarded attribute updates instead of keeping the value it first rendered with.
+- 7e82400: Fix `dir="auto"` in static mode to detect text direction per semantic block (instead of once for the whole document), keep code LTR, and use content-majority direction for mixed-script prose.
+- fb5d7b9: Serialize Mermaid SVGs before download so HTML-style tags render as valid SVG markup.
+- fe38e75: Added accessibility improvements for code block controls by adding aria labels to copy/download buttons and announcing copy success state for screen readers.
+- b25dbdb: fix(custom-tags): render Markdown inside custom tags with multiline content
+
+  Adds a preprocessing step (`preprocessCustomTags`) that normalizes multiline
+  custom tags into a blank-line-sandwiched HTML block so CommonMark interrupts
+  the raw-HTML block and parses the nested content as Markdown, with
+  `parseMarkdownIntoBlocks` re-merging the interrupted open/content/close tokens
+  so streaming still treats the whole custom tag as one block. Previously, when a
+  custom tag contained multiline content (e.g. `<ai-thinking>
+**bold**</ai-thinking>`), CommonMark treated the block as raw HTML, stripping
+  Markdown formatting. Tags listed in `literalTagContent` are excluded from
+  re-parsing.
+
+  Closes #478
+
+- 26a8440: Fix doubled `user-content-` prefix on footnote ids
+
+  Footnote list items were rendered with `id="user-content-user-content-fn-1"` because both `remark-rehype` and `rehype-sanitize` default their `clobberPrefix` to `user-content-`, so the prefix was applied twice. Disabled `clobberPrefix` on `rehype-sanitize` so `remark-rehype` remains the single, consistent prefixer of both footnote ids and backref hrefs — restoring working footnote navigation.
+
+- f7d1fb5: fix(table): add `data-streamdown="table-wrapper"` to fullscreen portal so copy/download dropdowns can find the table
+- f0a726b: Add `aria-hidden="true"` to decorative SVG icon components so screen readers rely on parent button labels instead of unlabeled icons.
+- 2ed2faa: Allow remend's `streamdown:` incomplete-link sentinel through the default sanitize schema so streamed incomplete links render as pending instead of harden `[blocked]`.
+- 8fffa9d: Render the link safety modal through a portal to `document.body` so it is no longer nested inside the paragraph's `<p>` element. This fixes the React hydration error "In HTML, `<div>` cannot be a descendant of `<p>`" that occurred when a link with link safety enabled appeared inside a paragraph.
+- 2733922: fix(mermaid): add aria-hidden to decorative SVG icons in mermaid toolbar buttons
+
+  Mermaid toolbar buttons (download, fullscreen, pan/zoom controls) already have
+  accessible titles/labels, but the inline SVG icons were exposed to the accessibility
+  tree causing "Content with images must be labeled" warnings. Added aria-hidden={true}
+  to all decorative icon elements in download-button, fullscreen-button, and pan-zoom
+  components.
+
+  Fixes #485
+
+- 8d36719: fix(deps): remove `mermaid` as a hard runtime dependency
+
+  This patch replaces the type import with a local structural type for `MermaidConfig` so no type-level coupling to the `mermaid` package remains in the distributed typings. Users who want fully-typed mermaid config can still `import type { MermaidConfig } from 'mermaid'` themselves; the structural type is compatible.
+
+  Fixes #501
+
+- ea02609: Fix: `shikiTheme` prop priority chain is now fully reachable.
+
+  Previously, `shikiTheme` had a default value in the props destructuring (`= defaultShikiTheme`), making the `plugins?.code?.getThemes()` fallback unreachable in both orderings. The fix removes the destructuring default and moves it to the end of the nullish coalescing chain, so all three levels are reachable:
+
+  1. Explicit `shikiTheme` prop (highest priority)
+  2. Code plugin's `getThemes()` (second priority)
+  3. Built-in `defaultShikiTheme` (final fallback)
+
+- 9813dd6: Fix type declarations requiring a `shiki` install.
+
+  `BundledLanguage`, `BundledTheme`, and `ThemeRegistrationAny` are now defined locally and re-exported from `streamdown`, so consumers can type-check without installing `shiki`. Runtime highlighting remains in `@streamdown/code`, which still depends on `shiki`.
+
+- d893759: Fix mermaid fullscreen overlay accessibility and add stable selector
+
+  - Add `data-streamdown="mermaid-fullscreen"` to fullscreen overlay for stable CSS targeting
+  - Update fullscreen overlay semantics to match table fullscreen behavior
+  - Change `role` from `button` to `dialog`
+  - Add `aria-modal="true"` for correct screen reader modal behavior
+  - Improve accessibility consistency between mermaid and table fullscreen overlays
+
+- 79c8575: fix issue with list markers, task-list checkboxes, images, and hr animations
+- a1a7142: feat: add image control options (`controls.image`) to disable hover overlay and download button on images
+
+  Add `image` to the `controls` prop, matching existing `code`, `table`, and `mermaid` patterns:
+
+  - `controls={{ image: false }}` hides the hover overlay and download button
+  - `controls={{ image: { download: false } }}` keeps the hover overlay but hides the download button
+
+- b250038: Fix accessibility warnings for Mermaid toolbar icon buttons:
+
+  - Add `aria-hidden="true"` to all decorative SVG icons to hide them from screen readers
+  - Add `aria-label` attributes to all icon-only buttons for proper screen reader announcements
+  - Add translation keys (`zoomIn`, `zoomOut`, `resetView`) for zoom controls
+
+- 89c6877: Re-render memoized markdown components when their rendered output changes. The comparators compared source position, so a replacement of the same length — occupying the same lines and columns — was treated as unchanged and the component kept rendering the previous text.
+- e7bdf57: fix(mermaid): render the download and copy controls inside the Mermaid fullscreen portal so they're reachable when the diagram is expanded
+- 8f02c09: Fix table copy and download actions not working in fullscreen mode.
+
+  - Support table lookup inside the fullscreen portal container.
+  - Restore copy and download functionality for fullscreen tables.
+  - Keep existing inline table controls behavior unchanged.
+
+- f46cd3c: - Fixed table copy losing line breaks inside cells containing `<br>` elements.
+  - Preserved multiline content during table data extraction.
+  - Improved copied Markdown, CSV, and TSV output consistency for multiline cells.
+  - Added coverage for `<br>` handling in table extraction.
+- dc3f1d2: - Fix code block line wrapping when line numbers are disabled.
+  - Ensure code block lines are rendered as block elements regardless of the `lineNumbers` setting.
+  - Prevent multiple code lines from collapsing into a single visual line when `lineNumbers={false}`.
+- Updated dependencies [a99d675]
+- Updated dependencies [9f96409]
+- Updated dependencies [8093f2a]
+- Updated dependencies [57c3089]
+  - remend@1.3.1
+
+## 2.5.0
+
+### Minor Changes
+
+- d6666b6: Add `lineNumbers` prop to disable line numbers in code blocks
+- d4ec6c0: Add `meta` prop to `CustomRendererProps`. Custom renderers now receive the raw metastring from the code fence (everything after the language identifier, e.g. ` ```rust {1} title="foo" ` → `meta = '{1} title="foo"'`). The prop is optional (`meta?: string`) and is `undefined` when no metastring is present. Existing custom renderers are unaffected.
+
+### Patch Changes
+
+- ac8d839: Add staggered `animation-delay` to streaming word/character animations so new content cascades in sequentially instead of all animating simultaneously. Configurable via the new `stagger` option (default 40ms). Set `stagger: 0` to restore the previous behavior.
+- add5374: Enable horizontal scrolling on code blocks so long lines are accessible instead of being clipped by `overflow-hidden`.
+- 75845c0: Fix unnecessary re-renders of code blocks during streaming updates.
+
+  **Problem:** In streaming mode, when new content arrives (e.g. a paragraph is appended), completed code blocks that haven't changed were still re-rendering. This happened because the `Streamdown` component used inline object literals as default parameter values for `linkSafety` (`{ enabled: true }`). Every time `children` changed and `Streamdown` re-rendered, these inline defaults created new references, which caused the `contextValue` useMemo to recompute a new `StreamdownContext` object. Since React propagates context changes through `memo` boundaries, any context consumer inside a memoized `Block` (such as `CodeBlock`) would re-render even though the block's own props were unchanged.
+
+  **Fix:** Extract the inline default values for `linkSafety` into module-level constants (`defaultLinkSafetyConfig`). This ensures referential stability across renders, so `contextValue` only recomputes when the actual values change — not just because `children` updated.
+
+- 8b1c262: fix: prepend UTF-8 BOM to CSV downloads for Excel compatibility
+
+  - `save()` now prepends `\uFEFF` for `text/csv` string content so Excel on
+    Windows detects UTF-8 encoding instead of falling back to ANSI.
+  - `TableDownloadButton` refactored to use `save()` instead of inline Blob
+    creation, ensuring the public API also gets the BOM fix.
+
+- b105c64: Fix custom tag content being prematurely split when content follows the opening tag on the same line and contains double newlines (`\n\n`). The preprocessor now ensures proper HTML block structure so the parser treats the entire tag as a single unit.
+- 9e6f991: Increase dropdown z-index for table copy and download menus to prevent clipping by surrounding elements.
+- 9c18748: docs: document required CSS custom properties (shadcn/ui design tokens) in README
+- 7b62e9a: Replace Tailwind v4-only `*:last:` and `*:first:` variant syntax with `[&>*:last-child]:` and `[&>*:first-child]:` arbitrary variants for compatibility with both Tailwind CSS v3 and v4. Fixes caret rendering on every line instead of only the last child in v3.
+- Updated dependencies [e50b0c4]
+- Updated dependencies [716a5f0]
+  - remend@1.3.0
+
 ## 2.4.0
 
 ### Minor Changes

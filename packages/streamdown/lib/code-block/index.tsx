@@ -1,4 +1,11 @@
-import { type HTMLAttributes, lazy, Suspense, useMemo } from "react";
+import {
+  type HTMLAttributes,
+  lazy,
+  Suspense,
+  useContext,
+  useMemo,
+} from "react";
+import { StreamdownContext } from "../../index";
 import type { HighlightResult } from "../plugin-types";
 import { useCn } from "../prefix-context";
 import { CodeBlockBody } from "./body";
@@ -21,6 +28,8 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   isIncomplete?: boolean;
   /** Custom starting line number for line numbering (default: 1) */
   startLine?: number;
+  /** Show line numbers in code blocks. @default true */
+  lineNumbers?: boolean;
 };
 
 const HighlightedCodeBlockBody = lazy(() =>
@@ -36,14 +45,13 @@ export const CodeBlock = ({
   children,
   isIncomplete = false,
   startLine,
+  lineNumbers,
   ...rest
 }: CodeBlockProps) => {
   const cn = useCn();
+  const { codeBlockMaxHeight } = useContext(StreamdownContext);
   // Remove trailing newlines to prevent empty line at end of code blocks
-  const trimmedCode = useMemo(
-    () => trimTrailingNewlines(code),
-    [code]
-  );
+  const trimmedCode = useMemo(() => trimTrailingNewlines(code), [code]);
 
   // Memoize the raw fallback tokens to avoid recomputing on every render
   const raw: HighlightResult = useMemo(
@@ -65,7 +73,11 @@ export const CodeBlock = ({
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
-      <CodeBlockContainer isIncomplete={isIncomplete} language={language}>
+      <CodeBlockContainer
+        dir="ltr"
+        isIncomplete={isIncomplete}
+        language={language}
+      >
         <CodeBlockHeader language={language} />
         {children ? (
           <div
@@ -88,6 +100,8 @@ export const CodeBlock = ({
             <CodeBlockBody
               className={className}
               language={language}
+              lineNumbers={lineNumbers}
+              maxHeight={codeBlockMaxHeight}
               result={raw}
               startLine={startLine}
               {...rest}
@@ -98,6 +112,8 @@ export const CodeBlock = ({
             className={className}
             code={trimmedCode}
             language={language}
+            lineNumbers={lineNumbers}
+            maxHeight={codeBlockMaxHeight}
             raw={raw}
             startLine={startLine}
             {...rest}

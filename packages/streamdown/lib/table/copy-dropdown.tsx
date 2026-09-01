@@ -5,6 +5,7 @@ import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
 import {
   extractTableDataFromElement,
+  getTableCsvSeparator,
   tableDataToCSV,
   tableDataToMarkdown,
   tableDataToTSV,
@@ -30,8 +31,9 @@ export const TableCopyDropdown = ({
   const [isCopied, setIsCopied] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef(0);
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, controls } = useContext(StreamdownContext);
   const t = useTranslations();
+  const csvSeparator = getTableCsvSeparator(controls);
 
   const copyTableData = async (format: "csv" | "tsv" | "md") => {
     if (typeof window === "undefined" || !navigator?.clipboard?.write) {
@@ -53,14 +55,15 @@ export const TableCopyDropdown = ({
       }
 
       const tableData = extractTableDataFromElement(tableElement);
+      let content = "";
 
-      const formatters = {
-        csv: tableDataToCSV,
-        tsv: tableDataToTSV,
-        md: tableDataToMarkdown,
-      };
-      const formatter = formatters[format] || tableDataToMarkdown;
-      const content = formatter(tableData);
+      if (format === "csv") {
+        content = tableDataToCSV(tableData, csvSeparator);
+      } else if (format === "tsv") {
+        content = tableDataToTSV(tableData);
+      } else {
+        content = tableDataToMarkdown(tableData);
+      }
 
       const clipboardItemData = new ClipboardItem({
         "text/plain": new Blob([content], { type: "text/plain" }),
@@ -114,7 +117,7 @@ export const TableCopyDropdown = ({
       {isOpen ? (
         <div
           className={cn(
-            "absolute top-full right-0 z-10 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg"
+            "absolute top-full right-0 z-20 mt-1 min-w-[120px] overflow-hidden rounded-md border border-border bg-background shadow-lg"
           )}
         >
           <button

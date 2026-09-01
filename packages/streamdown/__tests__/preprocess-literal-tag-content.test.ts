@@ -66,4 +66,24 @@ describe("preprocessLiteralTagContent", () => {
     const result = preprocessLiteralTagContent(md, ["mention"]);
     expect(result).toBe("<mention>hello world</mention>");
   });
+
+  it("should replace double newlines with HTML entities to prevent paragraph splits", () => {
+    const md = "<ai-thinking>first part\n\nsecond part</ai-thinking>";
+    const result = preprocessLiteralTagContent(md, ["ai-thinking"]);
+    expect(result).toBe(
+      "<ai-thinking>first part&#10;&#10;second part</ai-thinking>"
+    );
+  });
+
+  it("should handle multiple double newlines within tag content", () => {
+    const md = "<tag>a\n\nb\n\nc</tag>";
+    const result = preprocessLiteralTagContent(md, ["tag"]);
+    expect(result).toBe("<tag>a&#10;&#10;b&#10;&#10;c</tag>");
+  });
+
+  it("should preserve single newlines unchanged", () => {
+    const md = "<tag>line1\nline2</tag>";
+    const result = preprocessLiteralTagContent(md, ["tag"]);
+    expect(result).toBe("<tag>line1\nline2</tag>");
+  });
 });

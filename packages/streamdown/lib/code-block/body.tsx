@@ -1,13 +1,27 @@
-import { type ComponentProps, type CSSProperties, memo, useMemo } from "react";
+import {
+  type ComponentProps,
+  type CSSProperties,
+  memo,
+  useContext,
+  useMemo,
+} from "react";
+import { StreamdownContext } from "../../index";
 import type { HighlightResult } from "../plugin-types";
 import { useCn } from "../prefix-context";
+import { resolveMaxHeight, usePinnedScroll } from "../use-pinned-scroll";
 import { cn as baseCn } from "../utils";
 
 type CodeBlockBodyProps = ComponentProps<"div"> & {
+  maxHeight?: number | string;
   result: HighlightResult;
   language: string;
   startLine?: number;
+  /** Show line numbers in code blocks. @default true */
+  lineNumbers?: boolean;
 };
+
+// Base line classes string (merged without prefix for memoization)
+const LINE_CLASSES_BASE = baseCn("block");
 
 // Base line numbers class string (merged without prefix for memoization)
 const LINE_NUMBER_CLASSES_BASE = baseCn(
@@ -49,13 +63,25 @@ export const CodeBlockBody = memo(
     result,
     language,
     className,
+    maxHeight,
     startLine,
+    lineNumbers = true,
     ...rest
   }: CodeBlockBodyProps) => {
     const cn = useCn();
+    const { isAnimating } = useContext(StreamdownContext);
+    const maxHeightStyle = resolveMaxHeight(maxHeight);
+    const scrollRef = usePinnedScroll(
+      isAnimating,
+      Boolean(maxHeightStyle),
+      result
+    );
 
     // Prefix the pre-computed line number classes
     const lineNumberClasses = useMemo(() => cn(LINE_NUMBER_CLASSES_BASE), [cn]);
+
+    // Prefix the base line classes string
+    const baseLineClasses = useMemo(() => cn(LINE_CLASSES_BASE), [cn]);
 
     // Use CSS custom properties instead of direct inline styles so that
     // dark-mode Tailwind classes can override without !important.
@@ -82,31 +108,38 @@ export const CodeBlockBody = memo(
       <div
         className={cn(
           className,
+          maxHeightStyle ? "overflow-y-auto" : null,
           "overflow-x-auto rounded-md border border-border bg-background p-4 text-sm"
         )}
         data-language={language}
         data-streamdown="code-block-body"
+        ref={scrollRef}
+        style={maxHeightStyle ? { maxHeight: maxHeightStyle } : undefined}
         {...rest}
       >
         <pre
           className={cn(
             className,
-            "bg-[var(--sdm-bg,inherit]",
-            "dark:bg-[var(--shiki-dark-bg,var(--sdm-bg,inherit)]"
+            "bg-[var(--sdm-bg,inherit)]",
+            "dark:bg-[var(--shiki-dark-bg,var(--sdm-bg,inherit))]"
           )}
           style={preStyle}
         >
           <code
-            className={cn("[counter-increment:line_0] [counter-reset:line]")}
+            className={
+              lineNumbers
+                ? cn("[counter-increment:line_0] [counter-reset:line]")
+                : undefined
+            }
             style={
-              startLine && startLine > 1
+              lineNumbers && startLine && startLine > 1
                 ? { counterReset: `line ${startLine - 1}` }
                 : undefined
             }
           >
             {result.tokens.map((row, index) => (
               <span
-                className={lineNumberClasses}
+                className={lineNumbers ? lineNumberClasses : baseLineClasses}
                 // biome-ignore lint/suspicious/noArrayIndexKey: "This is a stable key."
                 key={index}
               >
@@ -169,14 +202,9 @@ export const CodeBlockBody = memo(
         </pre>
       </div>
     );
-  },
-  (prevProps, nextProps) => {
-    // Custom comparison: only re-render if result tokens actually changed
-    return (
-      prevProps.result === nextProps.result &&
-      prevProps.language === nextProps.language &&
-      prevProps.className === nextProps.className &&
-      prevProps.startLine === nextProps.startLine
-    );
   }
+  // No custom comparator: React's default shallow comparison already compares
+  // `result` by reference — the tokens are memoized upstream, so an unchanged
+  // code string does not re-highlight — and, unlike a hand-written list of
+  // props, it also covers whatever the caller forwards through CodeBlock.
 );

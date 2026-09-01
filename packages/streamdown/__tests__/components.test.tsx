@@ -8,12 +8,15 @@ import type { Options } from "../lib/markdown";
 const createContextValue = (
   linkSafety?: StreamdownContextType["linkSafety"]
 ): StreamdownContextType => ({
+  codeBlockMaxHeight: 400,
   shikiTheme: ["github-light", "github-dark"],
   controls: true,
   isAnimating: false,
+  lineNumbers: true,
   mode: "streaming",
   mermaid: undefined,
   linkSafety,
+  tableMaxHeight: 300,
 });
 
 // Type assertion: we know all components are defined in our implementation

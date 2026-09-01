@@ -276,6 +276,22 @@ describe("Mermaid Component", () => {
     expect(firstCallId).not.toBe(secondCallId);
   });
 
+  it("should use fallback error message when non-Error is thrown", async () => {
+    // Throw a plain string instead of an Error instance → covers line 82-83
+    const mockRender = vi.fn().mockRejectedValue("something went wrong");
+    const plugin = createMockMermaidPlugin(mockRender);
+
+    const { container } = renderWithContext(
+      <Mermaid chart="invalid chart" />,
+      {},
+      { mermaid: plugin }
+    );
+
+    await waitFor(() => {
+      expect(container.textContent).toContain("Failed to render Mermaid chart");
+    });
+  });
+
   it("should not show loading indicator when SVG is already loaded", async () => {
     const { container, rerender } = renderWithContext(
       <Mermaid chart={simpleChart} />

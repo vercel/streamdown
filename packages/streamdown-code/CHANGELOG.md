@@ -1,5 +1,11 @@
 # @streamdown/code
 
+## 1.1.1
+
+### Patch Changes
+
+- 651873d: Fall back to plain text highlighting when the code block language identifier is unknown or truncated mid-stream, preventing Shiki from throwing on unsupported language names.
+
 ## 1.1.0
 
 ### Minor Changes

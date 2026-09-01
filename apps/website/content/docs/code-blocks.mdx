@@ -168,7 +168,32 @@ export default function Page() {
   Bundled theme names (strings) load from Shiki's built-in registry. Custom theme objects follow the `ThemeRegistrationAny` format from Shiki — any VS Code `.tmTheme` or JSON theme file works.
 </Callout>
 
-## Custom start line
+## Line Numbers
+
+Line numbers are shown by default on all code blocks.
+
+### Disable globally
+
+Turn off line numbers for every code block with the `lineNumbers` prop:
+
+```tsx title="app/page.tsx"
+<Streamdown lineNumbers={false}>{markdown}</Streamdown>
+```
+
+### Disable per block
+
+Add `noLineNumbers` to the code fence meta to hide line numbers on a single block:
+
+````markdown
+```typescript noLineNumbers
+const user = await getUser(id);
+const profile = await getProfile(user);
+```
+````
+
+When `lineNumbers` is set to `false` globally, all blocks hide line numbers regardless of the meta string.
+
+### Custom start line
 
 Set the starting line number for a code block using `startLine=N` in the code fence meta:
 
@@ -211,6 +236,22 @@ Disable individual code block buttons using the `controls` prop:
 <Streamdown controls={false}>{markdown}</Streamdown>
 ```
 
+### Custom Download Filename
+
+Pass `download: { filename }` to set a custom base name. Streamdown appends the language-appropriate extension automatically (for example `myScript.ts`). The default is `file.<ext>`.
+
+```tsx title="app/page.tsx"
+<Streamdown
+  controls={{
+    code: {
+      download: { filename: "myScript" },
+    },
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
 ## Inline Code
 
 Inline code uses backticks and receives subtle styling:
@@ -233,8 +274,41 @@ Code blocks include:
 - **Line Numbers** - Optional line numbers for reference
 - **Rounded Corners** - Modern, polished appearance
 - **Proper Padding** - Comfortable spacing
-- **Scrolling** - Horizontal scroll for long lines
+- **Scrolling** - Horizontal scroll for long lines, vertical scroll when max height is set
 - **Responsive Design** - Adapts to container width
+
+## Max Height
+
+Long code blocks are capped at `400px` by default and scroll vertically. Customize (or disable) the limit with `codeBlockMaxHeight`:
+
+```tsx title="app/page.tsx"
+// Custom pixel height
+<Streamdown codeBlockMaxHeight={240}>{markdown}</Streamdown>
+
+// CSS length value
+<Streamdown codeBlockMaxHeight="50vh">{markdown}</Streamdown>
+
+// Disable the height constraint
+<Streamdown codeBlockMaxHeight={0}>{markdown}</Streamdown>
+// or
+<Streamdown codeBlockMaxHeight={Infinity}>{markdown}</Streamdown>
+```
+
+| Value | Behavior |
+| --- | --- |
+| `number` | Treated as pixels (`400` → `400px`) |
+| `string` | Passed through as a CSS value (`"50vh"`, `"20rem"`) |
+| `0` / `Infinity` / `"none"` | No max height |
+
+### Auto-scroll while streaming
+
+When `isAnimating` is true, code blocks stay pinned to the bottom as new lines arrive. If the user scrolls up, auto-scroll unpins until they return to the bottom (or a new streaming session starts).
+
+```tsx title="app/page.tsx"
+<Streamdown codeBlockMaxHeight={320} isAnimating={isStreaming}>
+  {markdown}
+</Streamdown>
+```
 
 ## Streaming Considerations
 

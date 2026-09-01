@@ -138,9 +138,9 @@ describe("animate.ts remaining coverage", () => {
   it("should handle char splitting with trailing whitespace", async () => {
     const plugin = createAnimatePlugin({ sep: "char" });
     const result = await processHtml("<p>A B </p>", plugin);
-    // "A", " ", "B", " " should be the parts
-    expect(result).toContain(">A<");
-    expect(result).toContain(">B<");
+    // Trailing whitespace is glued onto the preceding char (#535).
+    expect(result).toContain(">A <");
+    expect(result).toContain(">B <");
   });
 
   it("should skip text inside math elements", async () => {
@@ -247,6 +247,51 @@ describe("copy-button timeout", () => {
 
     // Button should still be functional after reset
     expect(button).toBeTruthy();
+  });
+});
+
+describe("copy-button onError path", () => {
+  const originalClipboard = navigator.clipboard;
+
+  beforeEach(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: vi
+          .fn()
+          .mockRejectedValue(new Error("Clipboard write failed")),
+      },
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: originalClipboard,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it("should call onError when clipboard.writeText rejects", async () => {
+    const onError = vi.fn();
+    const { container } = render(
+      <CodeBlock code="test code" language="text">
+        <CodeBlockCopyButton onError={onError} />
+      </CodeBlock>
+    );
+
+    const button = container.querySelector("button");
+    expect(button).toBeTruthy();
+
+    await act(() => {
+      if (button) {
+        fireEvent.click(button);
+      }
+    });
+
+    expect(onError).toHaveBeenCalledWith(expect.any(Error));
+    expect(onError.mock.calls[0][0].message).toBe("Clipboard write failed");
   });
 });
 

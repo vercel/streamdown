@@ -58,8 +58,15 @@ export const preprocessLiteralTagContent = (
 
     result = result.replace(
       pattern,
-      (_match, open: string, content: string, close: string) =>
-        open + escapeMarkdown(content) + close
+      (_match, open: string, content: string, close: string) => {
+        // Escape markdown metacharacters, then replace \n\n with HTML newline
+        // entities so that blank lines inside the tag do not cause the markdown
+        // parser to split the tag's content across separate block tokens.
+        // rehype-raw decodes &#10; back to \n, so the literal text content is
+        // preserved exactly as authored.
+        const escaped = escapeMarkdown(content).replace(/\n\n/g, "&#10;&#10;");
+        return open + escaped + close;
+      }
     );
   }
 

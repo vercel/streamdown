@@ -54,11 +54,34 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
     },
     dir: {
       description:
-        "Text direction. 'auto' detects per-block using the first strong character algorithm.",
+        "Text direction. 'ltr'/'rtl' force a single direction. 'auto' detects per block (content-majority strong characters, first-strong on ties). Code is always LTR.",
       type: '"auto" | "ltr" | "rtl"',
     },
   }}
 />
+
+### Text direction (`dir`)
+
+Use `dir` when rendering RTL languages (Persian, Arabic, Hebrew, etc.) or mixed-script content:
+
+```tsx title="app/page.tsx"
+<Streamdown dir="auto" mode="static">
+  {markdown}
+</Streamdown>
+```
+
+| Value | Behavior |
+| --- | --- |
+| `"ltr"` / `"rtl"` | Applies that direction to the root (static) or each streaming block |
+| `"auto"` | Detects direction independently per block |
+| omitted | No `dir` attribute is set |
+
+With `dir="auto"`:
+
+- **Streaming mode** — direction is resolved once per parsed markdown block (same unit used for memoized streaming updates).
+- **Static mode** — a rehype pass assigns `dir` on each semantic block (headings, paragraphs, list items, blockquotes, definition terms/descriptions, captions, and table cells) so mixed Persian/Hebrew/Arabic/English documents keep the correct base direction without splitting the document (footnotes and cross-block references still resolve).
+- **Detection** — counts Unicode strong letters after stripping common markdown syntax. The majority wins; equal counts fall back to the first strong character. Fenced and inline code are excluded from the count so LTR identifiers do not skew surrounding RTL prose.
+- **Code** — fenced code blocks and code-related elements are always LTR so line numbers and syntax highlighting stay correct inside RTL documents.
 
 ## Styling Props
 
@@ -130,9 +153,27 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       type: "MermaidOptions",
     },
     controls: {
-      description: "Control visibility of interactive buttons",
+      description:
+        "Control visibility of interactive buttons and custom download filenames for code, tables, and mermaid diagrams.",
       type: "ControlsConfig",
       default: "true",
+    },
+    lineNumbers: {
+      description: "Show line numbers in code blocks. Can be overridden per block with the noLineNumbers meta string.",
+      type: "boolean",
+      default: "true",
+    },
+    codeBlockMaxHeight: {
+      description:
+        "Max height for fenced code blocks. Numbers are treated as px. Strings pass through as CSS values (e.g. `50vh`). Set to `0` or `Infinity` to disable. While streaming (`isAnimating`), the block auto-scrolls to the bottom and unpins if the user scrolls up. See [Code Blocks](/docs/code-blocks#max-height).",
+      type: "number | string",
+      default: "400",
+    },
+    tableMaxHeight: {
+      description:
+        "Max height for tables. Numbers are treated as px. Strings pass through as CSS values (e.g. `50vh`). Set to `0` or `Infinity` to disable. While streaming (`isAnimating`), the table body auto-scrolls to the bottom and unpins if the user scrolls up. See [GitHub Flavored Markdown](/docs/gfm#max-height).",
+      type: "number | string",
+      default: "300",
     },
     animated: {
       description: "Enable character-by-character animation for streaming content. See [Animation](/docs/animation).",
@@ -142,6 +183,12 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       description: "Configure link safety modals for external URLs. See [Link Safety](/docs/link-safety).",
       type: "LinkSafetyConfig",
       default: "{ enabled: true }",
+    },
+    portal: {
+      description:
+        "DOM node (or getter) used as the portal target for built-in overlays. Useful for micro-frontends and scoped or prefixed CSS.",
+      type: "HTMLElement | null | (() => HTMLElement | null)",
+      default: "document.body",
     },
     plugins: {
       description: "Plugin configuration for math, mermaid, code highlighting, and CJK support. See [Plugins](/docs/plugins).",
@@ -171,6 +218,23 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
     },
   }}
 />
+
+### Portal Target
+
+By default, Mermaid fullscreen, table fullscreen, and the built-in link safety modal render into `document.body`. Use `portal` to keep these overlays inside a micro-frontend or another subtree that provides scoped CSS, prefixed Tailwind utilities, or a specific stacking context.
+
+```tsx title="app/page.tsx"
+const portalRef = useRef<HTMLDivElement>(null);
+
+return (
+  <div className="my-app">
+    <div ref={portalRef} />
+    <Streamdown portal={() => portalRef.current}>{markdown}</Streamdown>
+  </div>
+);
+```
+
+The getter form is useful when the portal element is assigned after the first render. Returning `null` falls back to `document.body`. A custom `linkSafety.renderModal` controls its own placement and is not moved by this prop. Like `urlTransform` and `allowElement`, `portal` is an initializing prop: swapping it for a different target alone does not re-render, so prefer the getter form — it is resolved each time an overlay opens.
 
 ### Mermaid Options
 
@@ -297,22 +361,23 @@ import { Streamdown, defaultUrlTransform } from 'streamdown';
   }}
 />
 
-The `controls` prop can be configured granularly:
+The `controls` prop can be configured granularly. Set a block type to `false` to hide all of its buttons, or pass an object to toggle individual actions. For downloads, pass `{ filename: "customName" }` to set a custom base filename — the file extension is added automatically.
 
 ```tsx title="app/page.tsx"
 <Streamdown
   controls={{
     table: {
       copy: true, // Show table copy button
-      download: true, // Show table download button
+      download: { filename: "report" }, // Download as report.csv / report.md
       fullscreen: true, // Show table fullscreen button
+      csvSeparator: ",", // "," | ";" | "\t" | "auto"
     },
     code: {
       copy: true, // Show code copy button
-      download: true, // Show code download button
+      download: { filename: "myScript" }, // Download as myScript.js, myScript.py, etc.
     },
     mermaid: {
-      download: true, // Show mermaid download button
+      download: { filename: "flowchart" }, // Download as flowchart.svg / flowchart.png / flowchart.mmd
       copy: true, // Show mermaid copy button
       fullscreen: true, // Show mermaid fullscreen button
       panZoom: true, // Show mermaid pan/zoom controls
@@ -322,6 +387,8 @@ The `controls` prop can be configured granularly:
   {markdown}
 </Streamdown>
 ```
+
+You can still use `download: true` (or omit it) to keep the default filenames: `file.<ext>` for code, `table.csv` / `table.md` for tables, and `diagram.svg` / `diagram.png` / `diagram.mmd` for mermaid.
 
 ### Remend Options
 

@@ -469,7 +469,7 @@ Click the fullscreen button to view the diagram in an overlay with a dark backgr
 
 ### Download
 
-Download the diagram as an SVG file for use in presentations or documentation.
+Download the diagram as SVG, PNG, or Mermaid source. By default files are named `diagram.svg`, `diagram.png`, and `diagram.mmd`. Pass `download: { filename: "flowchart" }` to use a custom base name.
 
 ### Copy
 
@@ -485,7 +485,7 @@ You can customize which controls are shown:
   controls={{
     mermaid: {
       fullscreen: true,
-      download: true,
+      download: { filename: "flowchart" }, // Download as flowchart.svg / flowchart.png / flowchart.mmd
       copy: true,
       panZoom: true, // Enable pan and zoom controls
     },

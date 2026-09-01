@@ -147,17 +147,30 @@ interface RemendOptions {
 ## ControlsConfig
 
 ```tsx
+type DownloadControlConfig = boolean | { filename: string };
+type CSVSeparator = "," | ";" | "\t" | "auto";
+
 type ControlsConfig = boolean | {
-  table?: boolean;
-  code?: boolean;
+  table?: boolean | {
+    copy?: boolean;
+    download?: DownloadControlConfig;
+    fullscreen?: boolean;
+    csvSeparator?: CSVSeparator; // default: ","
+  };
+  code?: boolean | {
+    copy?: boolean;
+    download?: DownloadControlConfig;
+  };
   mermaid?: boolean | {
-    download?: boolean;
+    download?: DownloadControlConfig;
     copy?: boolean;
     fullscreen?: boolean;
     panZoom?: boolean;
   };
 };
 ```
+
+Use `download: { filename: "customName" }` to set a custom base filename. The file extension is appended automatically (`file.js`, `table.csv`, `diagram.svg`, etc.).
 
 ## LinkSafetyConfig
 

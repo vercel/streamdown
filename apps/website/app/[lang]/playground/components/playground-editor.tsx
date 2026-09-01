@@ -4,6 +4,14 @@ import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
+import { Button } from "@vercel/geistdocs/components/button";
+import { Input } from "@vercel/geistdocs/components/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@vercel/geistdocs/components/popover";
+import { Textarea } from "@vercel/geistdocs/components/textarea";
 import { SettingsIcon } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { CustomRenderer } from "streamdown";
@@ -12,13 +20,6 @@ import {
   Conversation,
   ConversationContent,
 } from "@/components/ai-elements/conversation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -26,7 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { VegaLiteRenderer } from "./vega-lite-renderer";
 
 const defaultMarkdown = `# Streamdown Feature Showcase
@@ -295,6 +295,7 @@ const renderers: CustomRenderer[] = [
 
 const PlaygroundEditor = () => {
   const [markdown, setMarkdown] = useState(defaultMarkdown);
+  const [markdownOutput, setMarkdownOutput] = useState(defaultMarkdown);
   const [mode, setMode] = useState<"static" | "streaming">("static");
   const [isStreaming, setIsStreaming] = useState(false);
   const [animated, setAnimated] = useState(false);
@@ -309,8 +310,8 @@ const PlaygroundEditor = () => {
   const streamRef = useRef<ReturnType<typeof setInterval>>(null);
   const indexRef = useRef(0);
   const tokens = useMemo(
-    () => defaultMarkdown.split(" ").map((token) => `${token} `),
-    []
+    () => markdown.split(" ").map((token) => `${token} `),
+    [markdown]
   );
 
   const stopStreaming = useCallback(() => {
@@ -323,7 +324,7 @@ const PlaygroundEditor = () => {
 
   const simulateStreaming = useCallback(() => {
     stopStreaming();
-    setMarkdown("");
+    setMarkdownOutput("");
     setMode("streaming");
     indexRef.current = 0;
     setIsStreaming(true);
@@ -332,14 +333,13 @@ const PlaygroundEditor = () => {
 
     streamRef.current = setInterval(() => {
       if (indexRef.current >= tokens.length) {
-        setMarkdown(defaultMarkdown);
         stopStreaming();
         return;
       }
 
       currentContent += tokens[indexRef.current];
       indexRef.current += 1;
-      setMarkdown(currentContent);
+      setMarkdownOutput(currentContent);
     }, streamSpeed);
   }, [stopStreaming, tokens, streamSpeed]);
 
@@ -541,9 +541,9 @@ const PlaygroundEditor = () => {
             </span>
           </div>
           <Conversation>
-            <ConversationContent>
+            <ConversationContent className="h-full">
               <Textarea
-                className="flex-1 resize-none rounded-none border-0 font-mono text-sm leading-relaxed shadow-none focus-visible:ring-0"
+                className="field-sizing-fixed min-h-0 flex-1 resize-none rounded-none border-0 font-mono text-sm leading-relaxed shadow-none focus-visible:ring-0"
                 onChange={(e) => setMarkdown(e.target.value)}
                 placeholder="Type your markdown here..."
                 spellCheck={false}
@@ -562,6 +562,9 @@ const PlaygroundEditor = () => {
           <Conversation>
             <ConversationContent>
               <Streamdown
+                allowedTags={{
+                  "playground-test": [],
+                }}
                 animated={
                   animated
                     ? {
@@ -577,7 +580,7 @@ const PlaygroundEditor = () => {
                 mode={mode}
                 plugins={{ code, mermaid, math, cjk, renderers }}
               >
-                {markdown}
+                {isStreaming ? markdownOutput : markdown}
               </Streamdown>
             </ConversationContent>
           </Conversation>
