@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
-import remend from "../src";
+import remend, { INCOMPLETE_IMAGE_PLACEHOLDER } from "../src";
+
+const incompleteImage = (alt: string) =>
+  `![${alt}](${INCOMPLETE_IMAGE_PLACEHOLDER})`;
 
 describe("image handling", () => {
-  it("should remove incomplete images", () => {
-    expect(remend("Text with ![incomplete image")).toBe("Text with ");
-    expect(remend("![partial")).toBe("");
+  it("should replace incomplete images with placeholder", () => {
+    expect(remend("Text with ![incomplete image")).toBe(
+      `Text with ${incompleteImage("incomplete image")}`
+    );
+    expect(remend("![partial")).toBe(incompleteImage("partial"));
   });
 
   it("should keep complete images unchanged", () => {
@@ -13,17 +18,23 @@ describe("image handling", () => {
   });
 
   it("should handle partial image at chunk boundary", () => {
-    expect(remend("See ![the diag")).toBe("See ");
-    // Images with partial URLs should be removed (images can't show skeleton)
-    expect(remend("![logo](./assets/log")).toBe("");
+    expect(remend("See ![the diag")).toBe(`See ${incompleteImage("the diag")}`);
+    // Images with partial URLs should use placeholder (not removed)
+    expect(remend("![logo](./assets/log")).toBe(incompleteImage("logo"));
   });
 
   it("should handle nested brackets in incomplete images", () => {
     // When findMatchingClosingBracket returns -1 for an image (lines 74-79)
     // For this to happen, we need an opening bracket with a ] but no proper matching
-    expect(remend("Text ![outer [inner]")).toBe("Text ");
-    expect(remend("![nested [brackets] text")).toBe("");
-    expect(remend("Start ![foo [bar] baz")).toBe("Start ");
+    expect(remend("Text ![outer [inner]")).toBe(
+      `Text ${incompleteImage("outer [inner]")}`
+    );
+    expect(remend("![nested [brackets] text")).toBe(
+      incompleteImage("nested [brackets] text")
+    );
+    expect(remend("Start ![foo [bar] baz")).toBe(
+      `Start ${incompleteImage("foo [bar] baz")}`
+    );
   });
 
   it("should not add trailing underscore for images with underscores in URL (#284)", () => {

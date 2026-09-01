@@ -415,6 +415,63 @@ describe("ImageComponent", () => {
   });
 });
 
+describe("incomplete image placeholder", () => {
+  it("should render a placeholder when src is the incomplete-image placeholder", () => {
+    const { container } = render(
+      <ImageComponent
+        alt="loading..."
+        node={null as any}
+        src="streamdown:incomplete-image"
+      />
+    );
+
+    // Should NOT render an img tag
+    const img = container.querySelector('img[data-streamdown="image"]');
+    expect(img).toBeNull();
+
+    // Should render the placeholder div
+    const placeholder = container.querySelector(
+      '[data-streamdown="image-placeholder"]'
+    );
+    expect(placeholder).toBeTruthy();
+
+    // Wrapper should have data-incomplete="true"
+    const wrapper = container.querySelector(
+      '[data-streamdown="image-wrapper"]'
+    );
+    expect(wrapper?.getAttribute("data-incomplete")).toBe("true");
+  });
+
+  it("should not render download button for incomplete images", () => {
+    const { container } = render(
+      <ImageComponent
+        alt="loading..."
+        node={null as any}
+        src="streamdown:incomplete-image"
+      />
+    );
+
+    const downloadButton = container.querySelector("button");
+    expect(downloadButton).toBeNull();
+  });
+
+  it("should render placeholder with correct CSS classes for animation", () => {
+    const { container } = render(
+      <ImageComponent
+        alt="loading..."
+        node={null as any}
+        src="streamdown:incomplete-image"
+      />
+    );
+
+    const placeholder = container.querySelector(
+      '[data-streamdown="image-placeholder"]'
+    );
+    expect(placeholder?.className).toContain("animate-pulse");
+    expect(placeholder?.className).toContain("rounded-lg");
+  });
+});
+
 describe("ImageComponent control props", () => {
   beforeEach(() => {
     vi.spyOn(console, "error").mockImplementation(() => {
