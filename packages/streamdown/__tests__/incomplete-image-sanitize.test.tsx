@@ -29,9 +29,7 @@ describe("Incomplete streaming images", () => {
     );
 
     expect(container.textContent).not.toContain("[Image blocked");
-    expect(
-      container.querySelector('[title^="Blocked URL"]')
-    ).toBeNull();
+    expect(container.querySelector('[title^="Blocked URL"]')).toBeNull();
 
     const placeholder = container.querySelector(
       '[data-streamdown="image-placeholder"]'
@@ -46,15 +44,11 @@ describe("Incomplete streaming images", () => {
 
   it("should render incomplete image URL tails via ImageComponent instead of harden [blocked]", () => {
     const { container } = render(
-      <Streamdown mode="streaming">
-        {"see ![logo](https://exam"}
-      </Streamdown>
+      <Streamdown mode="streaming">{"see ![logo](https://exam"}</Streamdown>
     );
 
     expect(container.textContent).not.toContain("[Image blocked");
-    expect(
-      container.querySelector('[title^="Blocked URL"]')
-    ).toBeNull();
+    expect(container.querySelector('[title^="Blocked URL"]')).toBeNull();
 
     const placeholder = container.querySelector(
       '[data-streamdown="image-placeholder"]'
