@@ -168,13 +168,18 @@ export const Mermaid = ({
 
   return (
     <div
-      className={cn("size-full", className)}
+      className={cn(
+        fullscreen ? "size-full" : "w-full max-h-[min(70vh,40rem)]",
+        className
+      )}
       data-streamdown="mermaid"
       ref={containerRef}
     >
       <PanZoom
         className={cn(
-          fullscreen ? "size-full overflow-hidden" : "overflow-hidden",
+          fullscreen
+            ? "size-full overflow-hidden"
+            : "max-h-[min(70vh,40rem)] overflow-hidden",
           className
         )}
         contentSize={svgSize}
@@ -182,7 +187,7 @@ export const Mermaid = ({
         fullscreen={fullscreen}
         isAutoFit={true}
         maxZoom={3}
-        minZoom={0.5}
+        minZoom={0.1}
         showControls={showControls}
         zoomStep={0.1}
       >
