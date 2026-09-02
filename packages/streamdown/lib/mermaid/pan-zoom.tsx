@@ -24,6 +24,46 @@ interface PanZoomProps {
   zoomStep?: number;
 }
 
+const positiveOrNull = (px: number): number | null => (px > 0 ? px : null);
+
+const parseLengthPx = (value: string, element: HTMLElement): number | null => {
+  if (value.endsWith("px")) {
+    return positiveOrNull(Number.parseFloat(value));
+  }
+
+  if (value.endsWith("rem")) {
+    const rootFontSize = Number.parseFloat(
+      getComputedStyle(document.documentElement).fontSize || "16"
+    );
+    return positiveOrNull(Number.parseFloat(value) * rootFontSize);
+  }
+
+  if (value.endsWith("em")) {
+    const fontSize = Number.parseFloat(
+      getComputedStyle(element).fontSize || "16"
+    );
+    return positiveOrNull(Number.parseFloat(value) * fontSize);
+  }
+
+  if (value.endsWith("vh")) {
+    return positiveOrNull(
+      (Number.parseFloat(value) / 100) * window.innerHeight
+    );
+  }
+
+  if (value.endsWith("%")) {
+    const parent = element.parentElement;
+    if (!(parent && parent.clientHeight > 0)) {
+      return null;
+    }
+    return positiveOrNull(
+      (Number.parseFloat(value) / 100) * parent.clientHeight
+    );
+  }
+
+  return null;
+};
+
 /**
  * Resolve CSS max-height to pixels when possible.
  * Returns null when max-height does not constrain the element.
@@ -37,59 +77,10 @@ const resolveMaxHeightPx = (
     return null;
   }
 
-  if (value.endsWith("px")) {
-    const px = Number.parseFloat(value);
-    return px > 0 ? px : null;
-  }
-
-  if (value.endsWith("rem")) {
-    const rem = Number.parseFloat(value);
-    const rootFontSize = Number.parseFloat(
-      getComputedStyle(document.documentElement).fontSize || "16"
-    );
-    const px = rem * rootFontSize;
-    return px > 0 ? px : null;
-  }
-
-  if (value.endsWith("em")) {
-    const em = Number.parseFloat(value);
-    const fontSize = Number.parseFloat(
-      getComputedStyle(element).fontSize || "16"
-    );
-    const px = em * fontSize;
-    return px > 0 ? px : null;
-  }
-
-  if (value.endsWith("vh")) {
-    const vh = Number.parseFloat(value);
-    const px = (vh / 100) * window.innerHeight;
-    return px > 0 ? px : null;
-  }
-
-  if (value.endsWith("%")) {
-    const percent = Number.parseFloat(value);
-    const parent = element.parentElement;
-    if (!parent) {
-      return null;
-    }
-    const parentHeight = parent.clientHeight;
-    if (!(parentHeight > 0)) {
-      return null;
-    }
-    const px = (percent / 100) * parentHeight;
-    return px > 0 ? px : null;
-  }
-
-  // min() / max() / calc() — fall back to the laid-out clientHeight when the
-  // element already has a constrained box; otherwise leave unconstrained.
-  if (element.clientHeight > 0 && element.style.height === "") {
-    // Only trust clientHeight if it looks capped (strictly less than content
-    // would demand). Caller still passes content-based candidate separately.
-    return null;
-  }
-
-  return null;
+  return parseLengthPx(value, element);
 };
+
+const MIN_MAX_HEIGHT_REGEX = /^min\(\s*([^,]+)\s*,\s*([^)]+)\s*\)$/i;
 
 /**
  * Evaluate simple `min(a, b)` max-height expressions used in Tailwind utilities
@@ -104,9 +95,7 @@ const resolveComplexMaxHeightPx = (
     return direct;
   }
 
-  const minMatch = maxHeight
-    .trim()
-    .match(/^min\(\s*([^,]+)\s*,\s*([^)]+)\s*\)$/i);
+  const minMatch = maxHeight.trim().match(MIN_MAX_HEIGHT_REGEX);
   if (!minMatch) {
     return null;
   }
@@ -170,11 +159,7 @@ const computeFit = (
       ? Math.min(heightAtWidthFit, maxHeightPx)
       : heightAtWidthFit;
 
-  const fitZoom = Math.min(
-    widthFit,
-    viewportHeight / contentSize.height,
-    1
-  );
+  const fitZoom = Math.min(widthFit, viewportHeight / contentSize.height, 1);
 
   if (!(fitZoom > 0) || Number.isNaN(fitZoom)) {
     return null;
@@ -332,7 +317,7 @@ export const PanZoom = ({
   }, [initialZoom, isAutoFit, minZoom]);
 
   useLayoutEffect(() => {
-    if (!isAutoFit || !contentSize) {
+    if (!(isAutoFit && contentSize)) {
       return;
     }
 
@@ -353,6 +338,8 @@ export const PanZoom = ({
     };
   }, [applyFit, contentSize, isAutoFit]);
 
+  // fitKey is an intentional trigger: new diagram identity should re-enable auto-fit.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fitKey resets interaction even though it is not read
   useEffect(() => {
     if (!isAutoFit) {
       return;
