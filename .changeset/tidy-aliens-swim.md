@@ -1,5 +1,5 @@
 ---
-"streamdown": minor
+"streamdown": patch
 ---
 
 Fix Mermaid diagrams so text is readable and diagrams auto-fit container.
