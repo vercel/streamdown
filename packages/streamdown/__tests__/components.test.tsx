@@ -8,12 +8,15 @@ import type { Options } from "../lib/markdown";
 const createContextValue = (
   linkSafety?: StreamdownContextType["linkSafety"]
 ): StreamdownContextType => ({
+  codeBlockMaxHeight: 400,
   shikiTheme: ["github-light", "github-dark"],
   controls: true,
   isAnimating: false,
+  lineNumbers: true,
   mode: "streaming",
   mermaid: undefined,
   linkSafety,
+  tableMaxHeight: 300,
 });
 
 // Type assertion: we know all components are defined in our implementation
@@ -197,6 +200,29 @@ describe("Markdown Components", () => {
       expect(link?.getAttribute("data-incomplete")).toBe("true");
       expect(link?.getAttribute("href")).toBe("streamdown:incomplete-link");
       expect(link?.textContent).toBe("Incomplete link text");
+    });
+
+    it("should render incomplete image placeholder when src is the incomplete-image placeholder", () => {
+      const Img = components.img;
+      if (!Img) {
+        throw new Error("Img component not found");
+      }
+      const { container } = render(
+        <Img
+          alt="loading"
+          node={null as any}
+          src="streamdown:incomplete-image"
+        />
+      );
+      const placeholder = container.querySelector(
+        '[data-streamdown="image-placeholder"]'
+      );
+      expect(placeholder).toBeTruthy();
+
+      const wrapper = container.querySelector(
+        '[data-streamdown="image-wrapper"]'
+      );
+      expect(wrapper?.getAttribute("data-incomplete")).toBe("true");
     });
 
     it("should render blockquote with correct classes", () => {
