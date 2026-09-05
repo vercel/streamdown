@@ -20,6 +20,7 @@ import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
 import { CodeBlockSkeleton } from "./code-block/skeleton";
+import { getCopyCallbacks } from "./controls";
 import { ImageComponent } from "./image";
 import { LinkSafetyModal } from "./link-modal";
 import type { ExtraProps, Options } from "./markdown";
@@ -947,7 +948,12 @@ const CodeComponent = ({
                     config={mermaidContext?.config}
                   />
                 ) : null}
-                {showCopy ? <CodeBlockCopyButton code={code} /> : null}
+                {showCopy ? (
+                  <CodeBlockCopyButton
+                    code={code}
+                    {...getCopyCallbacks(controlsConfig, "mermaid")}
+                  />
+                ) : null}
                 {showFullscreen ? (
                   <MermaidFullscreenButton
                     chart={code}
@@ -992,7 +998,11 @@ const CodeComponent = ({
           {showDownload ? (
             <CodeBlockDownloadButton code={code} language={language} />
           ) : null}
-          {showCopy ? <CodeBlockCopyButton /> : null}
+          {showCopy ? (
+            <CodeBlockCopyButton
+              {...getCopyCallbacks(controlsConfig, "code")}
+            />
+          ) : null}
         </>
       ) : null}
     </CodeBlock>

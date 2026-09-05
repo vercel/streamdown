@@ -467,6 +467,100 @@ graph TD
         expect(downloadBtn).toBeTruthy();
       });
     });
+
+    it("should wire onCopy from code.copy config to the default copy button", async () => {
+      const onCopy = vi.fn();
+      const originalClipboard = navigator.clipboard;
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: {
+          writeText: vi.fn().mockResolvedValue(undefined),
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      const { container } = render(
+        <Streamdown controls={{ code: { copy: { onCopy } } }}>
+          {markdownWithCode}
+        </Streamdown>
+      );
+
+      const button = await waitFor(() => {
+        const copyBtn = container.querySelector(
+          '[data-streamdown="code-block-copy-button"]'
+        );
+        expect(copyBtn).toBeTruthy();
+        expect(copyBtn?.hasAttribute("disabled")).toBe(false);
+        return copyBtn as HTMLButtonElement;
+      });
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(navigator.clipboard.writeText).toHaveBeenCalled();
+        expect(onCopy).toHaveBeenCalled();
+      });
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    it("should wire onError from code.copy config when clipboard is unavailable", async () => {
+      const onError = vi.fn();
+      const originalClipboard = navigator.clipboard;
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+
+      const { container } = render(
+        <Streamdown controls={{ code: { copy: { onError } } }}>
+          {markdownWithCode}
+        </Streamdown>
+      );
+
+      const button = await waitFor(() => {
+        const copyBtn = container.querySelector(
+          '[data-streamdown="code-block-copy-button"]'
+        );
+        expect(copyBtn).toBeTruthy();
+        expect(copyBtn?.hasAttribute("disabled")).toBe(false);
+        return copyBtn as HTMLButtonElement;
+      });
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledWith(expect.any(Error));
+      });
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    it("should still show the copy button when copy is an object config", async () => {
+      const { container } = render(
+        <Streamdown controls={{ code: { copy: { onCopy: () => undefined } } }}>
+          {markdownWithCode}
+        </Streamdown>
+      );
+
+      await waitFor(() => {
+        const copyBtn = container.querySelector(
+          '[data-streamdown="code-block-copy-button"]'
+        );
+        expect(copyBtn).toBeTruthy();
+      });
+    });
   });
 
   describe("image controls", () => {
