@@ -21,3 +21,27 @@ export const getDownloadFilename = (
 
   return downloadConfig.filename || fallback;
 };
+
+export const getCopyCallbacks = (
+  config: ControlsConfig,
+  type: "code" | "mermaid"
+): { onCopy?: () => void; onError?: (error: Error) => void } => {
+  if (typeof config === "boolean") {
+    return {};
+  }
+
+  const typeConfig = config[type];
+  if (typeof typeConfig !== "object") {
+    return {};
+  }
+
+  const copyConfig = typeConfig.copy;
+  if (typeof copyConfig !== "object" || copyConfig === null) {
+    return {};
+  }
+
+  return {
+    onCopy: copyConfig.onCopy,
+    onError: copyConfig.onError,
+  };
+};
