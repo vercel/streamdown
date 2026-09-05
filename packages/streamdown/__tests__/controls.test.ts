@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { getDownloadFilename } from "../lib/controls";
+import { describe, expect, it, vi } from "vitest";
+import { getCopyCallbacks, getDownloadFilename } from "../lib/controls";
 
 describe("getDownloadFilename", () => {
   it("returns the fallback when controls is a boolean", () => {
@@ -62,5 +62,55 @@ describe("getDownloadFilename", () => {
         "file"
       )
     ).toBe("file");
+  });
+});
+
+describe("getCopyCallbacks", () => {
+  it("returns empty callbacks when controls is a boolean", () => {
+    expect(getCopyCallbacks(true, "code")).toEqual({});
+    expect(getCopyCallbacks(false, "mermaid")).toEqual({});
+  });
+
+  it("returns empty callbacks when the block type is not configured", () => {
+    expect(getCopyCallbacks({}, "code")).toEqual({});
+    expect(getCopyCallbacks({ table: true }, "code")).toEqual({});
+  });
+
+  it("returns empty callbacks when the block type is a boolean", () => {
+    expect(getCopyCallbacks({ code: true }, "code")).toEqual({});
+    expect(getCopyCallbacks({ mermaid: false }, "mermaid")).toEqual({});
+  });
+
+  it("returns empty callbacks when copy is a boolean", () => {
+    expect(getCopyCallbacks({ code: { copy: true } }, "code")).toEqual({});
+    expect(getCopyCallbacks({ code: { copy: false } }, "code")).toEqual({});
+    expect(getCopyCallbacks({ mermaid: { copy: true } }, "mermaid")).toEqual(
+      {}
+    );
+  });
+
+  it("returns onCopy and onError from copy config", () => {
+    const onCopy = vi.fn();
+    const onError = vi.fn();
+
+    expect(
+      getCopyCallbacks({ code: { copy: { onCopy, onError } } }, "code")
+    ).toEqual({ onCopy, onError });
+    expect(
+      getCopyCallbacks({ mermaid: { copy: { onCopy, onError } } }, "mermaid")
+    ).toEqual({ onCopy, onError });
+  });
+
+  it("returns partial callbacks when only one is provided", () => {
+    const onCopy = vi.fn();
+    expect(getCopyCallbacks({ code: { copy: { onCopy } } }, "code")).toEqual({
+      onCopy,
+      onError: undefined,
+    });
+
+    const onError = vi.fn();
+    expect(
+      getCopyCallbacks({ mermaid: { copy: { onError } } }, "mermaid")
+    ).toEqual({ onCopy: undefined, onError });
   });
 });
