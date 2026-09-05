@@ -44,6 +44,7 @@ import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-conten
 import { rehypeBlockDirection } from "./lib/rehype/block-direction";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
+import { remarkDisableAutolinkProtocols } from "./lib/remark/disable-autolink-protocols";
 import type { CSVSeparator } from "./lib/table/utils";
 import {
   defaultTranslations,
@@ -254,6 +255,22 @@ export type StreamdownProps = Options & {
    * ```
    */
   literalTagContent?: string[];
+  /**
+   * Disable GFM autolinking for specific URL protocols (e.g. bare email
+   * addresses become `mailto:` autolinks). Accepts protocol names with or
+   * without a trailing colon, case-insensitive (`"mailto"` and `"mailto:"`
+   * are equivalent). Only affects literal autolinks created by `remark-gfm`
+   * (bare URLs/emails) — explicit markdown links (`[text](url)`) are left
+   * as links.
+   *
+   * @example
+   * ```tsx
+   * <Streamdown disableAutolinkProtocols={["mailto"]}>
+   *   {"Contact us at hello@example.com"}
+   * </Streamdown>
+   * ```
+   */
+  disableAutolinkProtocols?: string[];
   /** Override UI strings for i18n / custom labels */
   translations?: Partial<StreamdownTranslations>;
   /** Custom icons to override the default icons used in controls */
@@ -511,6 +528,7 @@ export const Streamdown = memo(
     lineNumbers = true,
     allowedTags,
     literalTagContent,
+    disableAutolinkProtocols,
     translations,
     icons: iconOverrides,
     prefix,
@@ -764,6 +782,16 @@ export const Streamdown = memo(
       }
       // Default plugins (includes remarkGfm)
       result = [...result, ...remarkPlugins];
+      // Optionally strip GFM autolink-literal links for disabled protocols
+      // (e.g. mailto). Runs right after remarkGfm since it inspects the
+      // link nodes remarkGfm's autolink-literal extension creates. Skipped
+      // entirely when unset so default behavior/pipeline is unchanged.
+      if (disableAutolinkProtocols && disableAutolinkProtocols.length > 0) {
+        result = [
+          ...result,
+          [remarkDisableAutolinkProtocols, disableAutolinkProtocols],
+        ];
+      }
       // CJK plugins that must run AFTER remarkGfm (e.g., autolink boundary)
       if (plugins?.cjk) {
         result = [...result, ...plugins.cjk.remarkPluginsAfter];
@@ -773,7 +801,7 @@ export const Streamdown = memo(
         result = [...result, plugins.math.remarkPlugin];
       }
       return result;
-    }, [remarkPlugins, plugins?.math, plugins?.cjk]);
+    }, [remarkPlugins, plugins?.math, plugins?.cjk, disableAutolinkProtocols]);
 
     const mergedRehypePlugins = useMemo(() => {
       let result = rehypePlugins;
@@ -997,6 +1025,7 @@ export const Streamdown = memo(
     prevProps.tableMaxHeight === nextProps.tableMaxHeight &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
     prevProps.literalTagContent === nextProps.literalTagContent &&
+    prevProps.disableAutolinkProtocols === nextProps.disableAutolinkProtocols &&
     JSON.stringify(prevProps.translations) ===
       JSON.stringify(nextProps.translations) &&
     prevProps.prefix === nextProps.prefix &&
