@@ -361,6 +361,38 @@ const getDollarMathContext = (
 const hasMathDelimiters = (text: string): boolean =>
   text.includes("$") || text.includes("\\(") || text.includes("\\[");
 
+// Recognizes a math delimiter or escaped dollar at position i, returning the
+// context after it and the number of characters it spans
+interface MathDelimiter {
+  /** Context in effect after the delimiter */
+  context: MathContext;
+  /** Number of characters the delimiter spans */
+  length: 1 | 2;
+}
+
+const mathDelimiterAt = (
+  text: string,
+  i: number,
+  context: MathContext
+): MathDelimiter | null => {
+  const next = text[i + 1];
+  if (text[i] === "\\") {
+    if (next === "$") {
+      return { context, length: 2 };
+    }
+    const latexContext = getLatexMathContext(context, next);
+    return latexContext === null ? null : { context: latexContext, length: 2 };
+  }
+  if (text[i] === "$" && !isLatexMathContext(context)) {
+    const isBlockDelimiter = next === "$";
+    return {
+      context: getDollarMathContext(context, isBlockDelimiter),
+      length: isBlockDelimiter ? 2 : 1,
+    };
+  }
+  return null;
+};
+
 // Math mask: for each position, whether it is inside $...$, $$...$$,
 // \(...\) or \[...\]. Delimiters inside code regions are literal and do
 // not change math state. A two-character delimiter marks its second
@@ -374,34 +406,17 @@ const buildMathMask = (scan: TextScan): Uint8Array => {
   let i = 0;
   while (i < n) {
     mask[i] = context === "none" ? 0 : 1;
-    if (regions[i] !== REGION.PROSE) {
+    const delimiter: MathDelimiter | null =
+      regions[i] === REGION.PROSE ? mathDelimiterAt(text, i, context) : null;
+    if (delimiter === null) {
       i += 1;
       continue;
     }
-    if (text[i] === "\\" && text[i + 1] === "$") {
-      mask[i + 1] = mask[i];
-      i += 2;
-      continue;
+    context = delimiter.context;
+    if (delimiter.length === 2) {
+      mask[i + 1] = context === "none" ? 0 : 1;
     }
-    if (text[i] === "\\") {
-      const nextContext = getLatexMathContext(context, text[i + 1]);
-      if (nextContext !== null) {
-        context = nextContext;
-        mask[i + 1] = context === "none" ? 0 : 1;
-        i += 2;
-        continue;
-      }
-    }
-    if (text[i] === "$" && !isLatexMathContext(context)) {
-      const isBlockDelimiter = text[i + 1] === "$";
-      context = getDollarMathContext(context, isBlockDelimiter);
-      if (isBlockDelimiter) {
-        mask[i + 1] = context === "none" ? 0 : 1;
-        i += 2;
-        continue;
-      }
-    }
-    i += 1;
+    i += delimiter.length;
   }
 
   return mask;

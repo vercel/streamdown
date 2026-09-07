@@ -502,46 +502,49 @@ export const handleIncompleteDoubleUnderscoreItalic = (
 };
 
 // Skips code regions when locating the asterisk.
+// A lone, unescaped asterisk in prose outside math: the only positions that
+// can open incomplete italic
+const isLoneProseAsterisk = (scan: TextScan, i: number): boolean => {
+  const { text } = scan;
+  return (
+    text[i] === "*" &&
+    scan.regions[i] === REGION.PROSE &&
+    text[i - 1] !== "*" &&
+    text[i + 1] !== "*" &&
+    text[i - 1] !== "\\" &&
+    !inMathAt(scan, i)
+  );
+};
+
 const findFirstSingleAsteriskIndex = (text: string): number => {
   const scan = getScan(text);
 
   for (let i = 0; i < text.length; i += 1) {
-    if (
-      text[i] === "*" &&
-      scan.regions[i] === REGION.PROSE &&
-      text[i - 1] !== "*" &&
-      text[i + 1] !== "*" &&
-      text[i - 1] !== "\\" &&
-      !inMathAt(scan, i)
-    ) {
-      const prevChar = i > 0 ? text[i - 1] : "";
-      const nextChar = i < text.length - 1 ? text[i + 1] : "";
-
-      // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter)
-      const prevIsWs = !prevChar || isWhitespaceChar(prevChar);
-      const nextIsWs = !nextChar || isWhitespaceChar(nextChar);
-      if (prevIsWs && nextIsWs) {
-        continue;
-      }
-
-      // Skip cold word-internal asterisks; they are not openers for completion.
-      // (Active-run closers are still counted in countSingleAsterisks.)
-      if (
-        prevChar &&
-        nextChar &&
-        isWordChar(prevChar) &&
-        isWordChar(nextChar)
-      ) {
-        continue;
-      }
-
-      // A right-flanking-only marker cannot open incomplete italic.
-      if (nextIsWs) {
-        continue;
-      }
-
-      return i;
+    if (!isLoneProseAsterisk(scan, i)) {
+      continue;
     }
+    const prevChar = i > 0 ? text[i - 1] : "";
+    const nextChar = i < text.length - 1 ? text[i + 1] : "";
+
+    // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter)
+    const prevIsWs = !prevChar || isWhitespaceChar(prevChar);
+    const nextIsWs = !nextChar || isWhitespaceChar(nextChar);
+    if (prevIsWs && nextIsWs) {
+      continue;
+    }
+
+    // Skip cold word-internal asterisks; they are not openers for completion.
+    // (Active-run closers are still counted in countSingleAsterisks.)
+    if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
+      continue;
+    }
+
+    // A right-flanking-only marker cannot open incomplete italic.
+    if (nextIsWs) {
+      continue;
+    }
+
+    return i;
   }
   return -1;
 };
