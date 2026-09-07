@@ -585,7 +585,10 @@ export const Streamdown = memo(
       // parses, plus <!----> placeholders for internal blank lines. Runs after
       // literal escaping so those markers are not corrupted.
       if (allowedTagNames.length > 0) {
-        result = preprocessCustomTags(result, allowedTagNames);
+        result = preprocessCustomTags(
+          result,
+          allowedTagNames.filter((tag) => !literalTagContent?.includes(tag))
+        );
       }
 
       return result;
