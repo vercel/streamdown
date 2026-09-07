@@ -93,10 +93,12 @@ describe("link handler edge cases", () => {
     expect(remend("](partial")).toBe("](partial");
   });
 
-  it("should remove incomplete images in text-only mode", () => {
-    // Stripping the inner bracket exposes an incomplete image, which is
-    // removed like any other
-    expect(remend("![img [text", { linkMode: "text-only" })).toBe("");
+  it("should heal an incomplete image exposed in text-only mode", () => {
+    // Stripping the inner bracket exposes an incomplete image, which gets
+    // the placeholder in the same call
+    expect(remend("![img [text", { linkMode: "text-only" })).toBe(
+      "![img text](streamdown:incomplete-image)"
+    );
   });
 
   it("should skip complete links in text-only mode", () => {
