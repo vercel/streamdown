@@ -145,3 +145,49 @@ export default function Chat() {
 ```
 
 For more info, see the [documentation](https://streamdown.ai/docs).
+
+## `defaultComponent` — unstyled / custom fallback rendering
+
+By default, Streamdown renders most HTML elements with Tailwind utility classes.
+If you use a different design system (or simply want unstyled output), you can
+provide a `defaultComponent` prop. It acts as a **fallback renderer** for any
+tag that does not have an explicit entry in the `components` map.
+
+`defaultComponent` applies to:
+
+- Custom tags declared via `allowedTags` that have no matching key in `components`.
+- Standard HTML tags not covered by the built-in Tailwind component set (e.g.
+  `<span>`, `<div>`, `<section>`).
+
+Explicit entries in `components` always take precedence over `defaultComponent`.
+
+```tsx
+import { createElement } from "react";
+import { Streamdown } from "streamdown";
+
+// Pass-through: renders every unhandled tag as plain HTML
+<Streamdown
+  defaultComponent={({ node, children, ...props }) =>
+    createElement(node!.tagName, props, children)
+  }
+>
+  {markdown}
+</Streamdown>
+```
+
+You can combine `defaultComponent` with explicit overrides for the tags that
+need special treatment:
+
+```tsx
+<Streamdown
+  defaultComponent={({ node, children, ...props }) =>
+    createElement(node!.tagName, props, children)
+  }
+  components={{
+    code: MyCodeBlock,
+    a: MyLink,
+  }}
+>
+  {markdown}
+</Streamdown>
+```
