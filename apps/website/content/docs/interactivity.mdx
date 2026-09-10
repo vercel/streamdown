@@ -63,6 +63,25 @@ CSV copy and download use a comma by default. Customize the delimiter with `cont
 
 Every code block includes a copy button that appears on hover. The copy button will be shown for code blocks in the top-right corner on hover. The copy button will copy the raw code without syntax highlighting. It will also show a checkmark for 2 seconds after successful copy. It will be disabled during streaming to prevent copying incomplete code.
 
+Pass callbacks through `controls.code.copy` to react to copy success or failure without replacing the default button:
+
+```tsx
+<Streamdown
+  controls={{
+    code: {
+      copy: {
+        onCopy: () => toast.success("Code copied"),
+        onError: (error) => toast.error(error.message),
+      },
+    },
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+You can still use `copy: true` / `copy: false` to show or hide the button without callbacks.
+
 ### Download Code
 
 Code blocks also include a download button that appears on hover. The download button will be shown for code blocks in the top-right corner on hover. The download button will download the code with the appropriate file extension based on language. It will also use "file.[extension]" as the filename by default. Customize the base name with `controls.code.download`:
@@ -80,6 +99,23 @@ A JavaScript block would download as `myScript.js`. It will preserve formatting 
 ### Copy Diagrams
 
 Mermaid diagrams include a copy button that allows users to copy the diagram source code. The copy button will be shown for Mermaid diagrams in the top-right corner on hover. The copy button will copy the raw Mermaid syntax for easy sharing and editing.
+
+Pass callbacks through `controls.mermaid.copy` the same way as code blocks:
+
+```tsx
+<Streamdown
+  controls={{
+    mermaid: {
+      copy: {
+        onCopy: () => toast.success("Diagram copied"),
+        onError: (error) => toast.error(error.message),
+      },
+    },
+  }}
+>
+  {markdown}
+</Streamdown>
+```
 
 ### Download Diagrams
 
