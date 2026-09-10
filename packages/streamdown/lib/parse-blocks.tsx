@@ -5,8 +5,9 @@ import { Lexer } from "marked";
 // Previously used [^\]\s] which incorrectly matched regex character classes like [^\s...]
 const footnoteReferencePattern = /\[\^[\w-]{1,200}\](?!:)/;
 const footnoteDefinitionPattern = /\[\^[\w-]{1,200}\]:/;
-const _closingTagPattern = /<\/(\w+)>/;
-const openingTagPattern = /<(\w+)[\s>]/;
+// Allow hyphens / colons so custom tags like <ai-thinking> are tracked across
+// blank-line interruptions (\w alone only matches [A-Za-z0-9_]).
+const openingTagPattern = /<([A-Za-z][\w:-]*)[\s>/]/;
 
 // HTML void elements (self-closing tags) that don't need closing tags
 const voidElements = new Set([
@@ -153,6 +154,16 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
           htmlStack.push(tagName);
         }
       }
+    }
+
+    // marked v18 no longer absorbs a block token's trailing blank line(s) into
+    // its own `raw`; instead that whitespace surfaces as a separate `space`
+    // token immediately after (e.g. html/heading/table blocks). A bare space
+    // token is never meaningful content on its own, so fold it into the
+    // previous block to keep block boundaries/counts identical to v17.
+    if (token.type === "space" && mergedBlocksLen > 0) {
+      mergedBlocks[mergedBlocksLen - 1] += currentBlock;
+      continue;
     }
 
     // Math block merging logic

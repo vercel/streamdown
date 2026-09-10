@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
+import { resolvePortalTarget } from "../portal";
 import { useCn } from "../prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
 import { useTranslations } from "../translations-context";
@@ -24,7 +25,7 @@ export const TableFullscreenButton = ({
   const { Maximize2Icon, XIcon } = useIcons();
   const cn = useCn();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, portal } = useContext(StreamdownContext);
   const t = useTranslations();
 
   const handleOpen = () => {
@@ -87,6 +88,7 @@ export const TableFullscreenButton = ({
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
               <div
                 className={cn("flex h-full flex-col")}
+                data-streamdown="table-wrapper"
                 onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e) => e.stopPropagation()}
                 role="presentation"
@@ -121,7 +123,7 @@ export const TableFullscreenButton = ({
                 </div>
               </div>
             </div>,
-            document.body
+            resolvePortalTarget(portal)
           )
         : null}
     </>

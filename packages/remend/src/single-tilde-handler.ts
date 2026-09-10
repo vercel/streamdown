@@ -12,7 +12,9 @@ import { isInsideCodeBlock } from "./code-block-utils";
 // - NOT followed by another ~ (to avoid matching ~~)
 // - followed by a word character
 // Uses Unicode-aware \p{L} and \p{N} for CJK and other scripts
-const SINGLE_TILDE_PATTERN = /(?<=[\p{L}\p{N}_])~(?!~)(?=[\p{L}\p{N}_])/gu;
+// Captures the preceding char instead of using a lookbehind: Safari < 16.3
+// throws on lookbehind, which would crash at module evaluation (#519).
+const SINGLE_TILDE_PATTERN = /([\p{L}\p{N}_])~(?!~)(?=[\p{L}\p{N}_])/gu;
 
 export const handleSingleTildeEscape = (text: string): string => {
   if (!text || typeof text !== "string") {
@@ -24,12 +26,14 @@ export const handleSingleTildeEscape = (text: string): string => {
     return text;
   }
 
-  return text.replace(SINGLE_TILDE_PATTERN, (match, offset) => {
+  return text.replace(SINGLE_TILDE_PATTERN, (match, precedingChar, offset) => {
+    const tildeOffset = offset + precedingChar.length;
+
     // Don't escape inside code blocks
-    if (isInsideCodeBlock(text, offset)) {
+    if (isInsideCodeBlock(text, tildeOffset)) {
       return match;
     }
 
-    return "\\~";
+    return `${precedingChar}\\~`;
   });
 };

@@ -42,4 +42,18 @@ describe("single tilde escape (#445)", () => {
   it("can be disabled via options", () => {
     expect(remend("20~25°C", { singleTilde: false })).toBe("20~25°C");
   });
+
+  it("should preserve Unicode letters around single ~", () => {
+    expect(remend("日本~語")).toBe("日本\\~語");
+    expect(remend("α~β")).toBe("α\\~β");
+    expect(remend("é~x")).toBe("é\\~x");
+  });
+
+  it("should preserve supplementary-plane Unicode letters around single ~", () => {
+    expect(remend("𐐀~a")).toBe("𐐀\\~a");
+  });
+
+  it("should escape multiple single tildes between letters", () => {
+    expect(remend("foo~bar~baz")).toBe("foo\\~bar\\~baz");
+  });
 });

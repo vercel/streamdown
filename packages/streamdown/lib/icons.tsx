@@ -5,6 +5,7 @@ type IconProps = SVGProps<SVGSVGElement>;
 
 export const CheckIcon = (props: IconProps) => (
   <svg
+    aria-hidden="true"
     color="currentColor"
     height={16}
     strokeLinejoin="round"
@@ -23,6 +24,7 @@ export const CheckIcon = (props: IconProps) => (
 
 export const CopyIcon = (props: IconProps) => (
   <svg
+    aria-hidden="true"
     color="currentColor"
     height={16}
     strokeLinejoin="round"
@@ -41,6 +43,7 @@ export const CopyIcon = (props: IconProps) => (
 
 export const DownloadIcon = (props: IconProps) => (
   <svg
+    aria-hidden="true"
     color="currentColor"
     height={16}
     strokeLinejoin="round"
@@ -59,6 +62,7 @@ export const DownloadIcon = (props: IconProps) => (
 
 export const Loader2Icon = (props: IconProps) => (
   <svg
+    aria-hidden="true"
     color="currentColor"
     height={16}
     strokeLinejoin="round"
@@ -121,6 +125,7 @@ export const Loader2Icon = (props: IconProps) => (
 
 export const Maximize2Icon = (props: IconProps) => (
   <svg
+    aria-hidden="true"
     color="currentColor"
     height={16}
     strokeLinejoin="round"
@@ -139,6 +144,7 @@ export const Maximize2Icon = (props: IconProps) => (
 
 export const RotateCcwIcon = (props: IconProps) => (
   <svg
+    aria-hidden="true"
     color="currentColor"
     height={16}
     strokeLinejoin="round"
@@ -157,6 +163,7 @@ export const RotateCcwIcon = (props: IconProps) => (
 
 export const XIcon = (props: IconProps) => (
   <svg
+    aria-hidden="true"
     color="currentColor"
     height={16}
     strokeLinejoin="round"
@@ -175,6 +182,7 @@ export const XIcon = (props: IconProps) => (
 
 export const ExternalLinkIcon = (props: IconProps) => (
   <svg
+    aria-hidden="true"
     color="currentColor"
     height={16}
     strokeLinejoin="round"
@@ -193,6 +201,7 @@ export const ExternalLinkIcon = (props: IconProps) => (
 
 export const ZoomInIcon = (props: IconProps) => (
   <svg
+    aria-hidden="true"
     color="currentColor"
     height={16}
     strokeLinejoin="round"
@@ -211,6 +220,7 @@ export const ZoomInIcon = (props: IconProps) => (
 
 export const ZoomOutIcon = (props: IconProps) => (
   <svg
+    aria-hidden="true"
     color="currentColor"
     height={16}
     strokeLinejoin="round"

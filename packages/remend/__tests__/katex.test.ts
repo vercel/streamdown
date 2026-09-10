@@ -286,3 +286,49 @@ describe("math blocks with asterisks", () => {
     expect(remend(text)).toBe("Start *italic with $$x^{*}$$*");
   });
 });
+
+describe("LaTeX delimited math with emphasis markers", () => {
+  it("should not complete underscores within paren-style inline math", () => {
+    const text = String.raw`\(P(x_{t+1})\)
+
+plain trailing text.`;
+
+    expect(remend(text)).toBe(text);
+  });
+
+  it("should not complete underscores within bracket-style display math", () => {
+    const text = String.raw`\[
+P(x_{t+1} | x_t)
+\]`;
+
+    expect(remend(text)).toBe(text);
+  });
+
+  it("should not complete asterisks within paren-style inline math", () => {
+    const text = String.raw`\(w^{*}\)
+
+plain trailing text.`;
+
+    expect(remend(text)).toBe(text);
+  });
+
+  it("should complete bold after LaTeX inline math without leaking subscripts", () => {
+    const text = [
+      String.raw`> Given tokens \(x_1, ..., x_t\), maximize \(P(x_{t+1} | x_1, ..., x_t)\)`,
+      "",
+      "**2. Instruction Tuning (SFT)**",
+      "- Dataset size is much smaller than pre-training",
+    ].join("\n");
+    const partial = text.slice(0, text.indexOf("(SFT)") + "(SFT".length);
+
+    expect(remend(partial)).toBe(`${partial}**`);
+  });
+
+  it("should complete ordinary underscore emphasis outside LaTeX math", () => {
+    const text = String.raw`Inline math \(x_1\) and _ordinary italic`;
+
+    expect(remend(text)).toBe(
+      String.raw`Inline math \(x_1\) and _ordinary italic_`
+    );
+  });
+});

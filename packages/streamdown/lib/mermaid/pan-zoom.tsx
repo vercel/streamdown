@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useIcons } from "../icon-context";
 import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 
 interface PanZoomProps {
   children: ReactNode;
@@ -26,6 +27,7 @@ export const PanZoom = ({
 }: PanZoomProps) => {
   const { RotateCcwIcon, ZoomInIcon, ZoomOutIcon } = useIcons();
   const cn = useCn();
+  const t = useTranslations();
   const containerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(initialZoom);
@@ -167,36 +169,39 @@ export const PanZoom = ({
           )}
         >
           <button
+            aria-label={t.zoomIn}
             className={cn(
               "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             )}
             disabled={zoom >= maxZoom}
             onClick={handleZoomIn}
-            title="Zoom in"
+            title={t.zoomIn}
             type="button"
           >
-            <ZoomInIcon size={16} />
+            <ZoomInIcon aria-hidden="true" size={16} />
           </button>
           <button
+            aria-label={t.zoomOut}
             className={cn(
               "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             )}
             disabled={zoom <= minZoom}
             onClick={handleZoomOut}
-            title="Zoom out"
+            title={t.zoomOut}
             type="button"
           >
-            <ZoomOutIcon size={16} />
+            <ZoomOutIcon aria-hidden="true" size={16} />
           </button>
           <button
+            aria-label={t.resetView}
             className={cn(
               "flex items-center justify-center rounded p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             )}
             onClick={handleReset}
-            title="Reset zoom and pan"
+            title={t.resetView}
             type="button"
           >
-            <RotateCcwIcon size={16} />
+            <RotateCcwIcon aria-hidden="true" size={16} />
           </button>
         </div>
       ) : null}

@@ -6,6 +6,12 @@ import {
 
 export type LinkMode = "protocol" | "text-only";
 
+// Sentinel src for incomplete images during streaming. Mirrors
+// streamdown:incomplete-link for incomplete links. Streamdown allowlists the
+// `streamdown` protocol for img src in its sanitize schema so this marker
+// survives rehype-sanitize + rehype-harden under default config (same as links).
+export const INCOMPLETE_IMAGE_PLACEHOLDER = "streamdown:incomplete-image";
+
 // Helper function to handle incomplete URLs in links/images
 const handleIncompleteUrl = (
   text: string,
@@ -32,17 +38,19 @@ const handleIncompleteUrl = (
   // Extract everything before this link/image
   const beforeLink = text.substring(0, startIndex);
 
+  // Extract the text between [ and ] (alt text for images, link text for links)
+  const altOrLinkText = text.substring(openBracketIndex + 1, lastParenIndex);
+
   if (isImage) {
-    // For images with incomplete URLs, remove them entirely
-    return beforeLink;
+    // For images with incomplete URLs, replace with placeholder marker
+    return `${beforeLink}![${altOrLinkText}](${INCOMPLETE_IMAGE_PLACEHOLDER})`;
   }
 
   // For links with incomplete URLs, handle based on linkMode
-  const linkText = text.substring(openBracketIndex + 1, lastParenIndex);
   if (linkMode === "text-only") {
-    return `${beforeLink}${linkText}`;
+    return `${beforeLink}${altOrLinkText}`;
   }
-  return `${beforeLink}[${linkText}](streamdown:incomplete-link)`;
+  return `${beforeLink}[${altOrLinkText}](streamdown:incomplete-link)`;
 };
 
 // Helper to find the first incomplete [ (for text-only mode)
@@ -91,8 +99,9 @@ const handleIncompleteText = (
     const beforeLink = text.substring(0, openIndex);
 
     if (isImage) {
-      // For images, we remove them as they can't show skeleton
-      return beforeLink;
+      // For images with incomplete alt text, replace with placeholder marker
+      const altText = text.substring(i + 1);
+      return `${beforeLink}![${altText}](${INCOMPLETE_IMAGE_PLACEHOLDER})`;
     }
 
     // For links, handle based on linkMode
@@ -115,7 +124,9 @@ const handleIncompleteText = (
     const beforeLink = text.substring(0, openIndex);
 
     if (isImage) {
-      return beforeLink;
+      // For images with no matching closing bracket, replace with placeholder marker
+      const altText = text.substring(i + 1);
+      return `${beforeLink}![${altText}](${INCOMPLETE_IMAGE_PLACEHOLDER})`;
     }
 
     if (linkMode === "text-only") {

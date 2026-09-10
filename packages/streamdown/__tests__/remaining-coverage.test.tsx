@@ -138,9 +138,9 @@ describe("animate.ts remaining coverage", () => {
   it("should handle char splitting with trailing whitespace", async () => {
     const plugin = createAnimatePlugin({ sep: "char" });
     const result = await processHtml("<p>A B </p>", plugin);
-    // "A", " ", "B", " " should be the parts
-    expect(result).toContain(">A<");
-    expect(result).toContain(">B<");
+    // Trailing whitespace is glued onto the preceding char (#535).
+    expect(result).toContain(">A <");
+    expect(result).toContain(">B <");
   });
 
   it("should skip text inside math elements", async () => {

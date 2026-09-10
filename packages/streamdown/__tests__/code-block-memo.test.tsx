@@ -18,6 +18,30 @@ vi.mock("../lib/code-block", () => ({
 }));
 
 describe("MemoCode in streaming mode", () => {
+  it("should re-render code blocks when their content changes in place", async () => {
+    codeBlockRenderCount = 0;
+
+    const initial = "```js\nfirst\n```";
+    const updated = "```js\nsecond\n```";
+
+    const { container, rerender } = render(<Streamdown>{initial}</Streamdown>);
+
+    await waitFor(() => {
+      expect(container.textContent).toContain("first");
+    });
+
+    const initialRenderCount = codeBlockRenderCount;
+
+    rerender(<Streamdown>{updated}</Streamdown>);
+
+    await waitFor(() => {
+      expect(container.textContent).toContain("second");
+    });
+
+    expect(container.textContent).not.toContain("first");
+    expect(codeBlockRenderCount).toBeGreaterThan(initialRenderCount);
+  });
+
   it("should not re-render unchanged code blocks on streaming updates", async () => {
     codeBlockRenderCount = 0;
 

@@ -30,6 +30,10 @@ describe("CodeBlockBody", () => {
     const pre = container.querySelector("pre");
     expect(pre?.style.getPropertyValue("--sdm-bg")).toBe("#1e1e1e");
     expect(pre?.style.getPropertyValue("--sdm-fg")).toBe("#d4d4d4");
+    expect(pre?.className).toContain("bg-[var(--sdm-bg,inherit)]");
+    expect(pre?.className).toContain(
+      "dark:bg-[var(--shiki-dark-bg,var(--sdm-bg,inherit))]"
+    );
   });
 
   it("should parse rootStyle CSS variables", () => {

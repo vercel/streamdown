@@ -1,23 +1,71 @@
 @import "tailwindcss";
 @import "./styles/geistdocs.css";
 
+/*
+ * Compatibility layer mapping the legacy shadcn theme tokens used by
+ * user-owned components (home page, playground, components/ui) onto the
+ * Geist design system tokens provided by @vercel/geistdocs styles.
+ */
+@theme inline {
+  --color-background: var(--ds-background-100);
+  --color-foreground: var(--ds-gray-1000);
+  --color-card: var(--ds-background-100);
+  --color-card-foreground: var(--ds-gray-1000);
+  --color-popover: var(--ds-background-100);
+  --color-popover-foreground: var(--ds-gray-1000);
+  --color-primary: var(--ds-blue-700);
+  --color-primary-foreground: var(--ds-background-100);
+  --color-secondary: var(--ds-gray-100);
+  --color-secondary-foreground: var(--ds-gray-1000);
+  --color-muted: var(--ds-gray-100);
+  --color-muted-foreground: var(--ds-gray-900);
+  --color-accent: var(--ds-gray-100);
+  --color-accent-foreground: var(--ds-gray-1000);
+  --color-destructive: var(--ds-red-800);
+  --color-border: var(--ds-gray-alpha-400);
+  --color-input: var(--ds-gray-alpha-400);
+  --color-ring: var(--ds-gray-600);
+  --color-sidebar: var(--ds-background-200);
+  --color-sidebar-foreground: var(--ds-gray-1000);
+  --color-sidebar-primary: var(--ds-gray-1000);
+  --color-sidebar-primary-foreground: var(--ds-background-100);
+  --color-sidebar-accent: var(--ds-gray-100);
+  --color-sidebar-accent-foreground: var(--ds-gray-1000);
+  --color-sidebar-border: var(--ds-gray-alpha-400);
+  --color-sidebar-ring: var(--ds-gray-600);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background-200 text-foreground;
   }
+}
+
+/*
+ * Homepage navbar: the sticky navbar has no bottom border at the top of the
+ * page and reveals it on scroll. `data-home-page` is server-rendered by the
+ * home layout (no flash); `data-scrolled` is toggled on <body> by
+ * NavbarScrollBorder while scrolling.
+ */
+body:has([data-home-page]) header.sticky {
+  transition: border-color 0.2s ease;
+}
+
+body:has([data-home-page]):not([data-scrolled]) header.sticky {
+  border-bottom-color: transparent;
 }
 
 .bg-dashed {
   background-image: linear-gradient(
     45deg,
-    var(--border) 12.5%,
+    var(--ds-gray-alpha-400) 12.5%,
     transparent 12.5%,
     transparent 50%,
-    var(--border) 50%,
-    var(--border) 62.5%,
+    var(--ds-gray-alpha-400) 50%,
+    var(--ds-gray-alpha-400) 62.5%,
     transparent 62.5%,
     transparent 100%
   );

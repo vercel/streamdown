@@ -1,51 +1,12 @@
-import { type InferPageType, loader } from "fumadocs-core/source";
-import { lucideIconsPlugin } from "fumadocs-core/source/lucide-icons";
+import { createSource } from "@vercel/geistdocs/source";
 import { docs } from "@/.source/server";
-import { basePath } from "@/geistdocs";
-import { i18n } from "./i18n";
+import { config } from "./config";
 
-// See https://fumadocs.dev/docs/headless/source-api for more info
-export const source = loader({
-  i18n,
-  baseUrl: "/docs",
-  source: docs.toFumadocsSource(),
-  plugins: [lucideIconsPlugin()],
+export const geistdocsSource = createSource({
+  docs,
+  config,
 });
 
-export const getPageImage = (page: InferPageType<typeof source>) => {
-  const segments = [...page.slugs, "image.png"];
-
-  return {
-    segments,
-    url: basePath
-      ? `${basePath}/og/${segments.join("/")}`
-      : `/og/${segments.join("/")}`,
-  };
-};
-
-export const getLLMText = async (page: InferPageType<typeof source>) => {
-  const processed = await page.data.getText("processed");
-  const { title, description, product, type, summary, prerequisites, related } =
-    page.data;
-
-  const frontmatter = [
-    "---",
-    `title: ${title}`,
-    description && `description: ${description}`,
-    product && `product: ${product}`,
-    type && `type: ${type}`,
-    summary && `summary: ${summary}`,
-    prerequisites?.length &&
-      `prerequisites:\n${prerequisites.map((p) => `  - ${p}`).join("\n")}`,
-    related?.length && `related:\n${related.map((r) => `  - ${r}`).join("\n")}`,
-    "---",
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  return `${frontmatter}
-
-# ${title}
-
-${processed}`;
-};
+export const source = geistdocsSource.source;
+export const getPageImage = geistdocsSource.getPageImage;
+export const getLLMText = geistdocsSource.getPageMarkdown;

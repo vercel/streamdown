@@ -615,4 +615,218 @@ describe("TableCopyDropdown", () => {
       expect.any(Function)
     );
   });
+
+  describe("line breaks inside table cells", () => {
+    const OriginalBlob = globalThis.Blob;
+    let blobPartsByType: Record<string, BlobPart[]>;
+    let blobSpy: ReturnType<typeof vi.spyOn>;
+
+    const getClipboardPlainText = (): string => {
+      const plainTextParts = blobPartsByType["text/plain"];
+      return String(plainTextParts?.[0] ?? "");
+    };
+
+    beforeEach(() => {
+      blobPartsByType = {};
+      blobSpy = vi.spyOn(globalThis, "Blob").mockImplementation(function (
+        this: Blob,
+        parts?: BlobPart[],
+        opts?: BlobPropertyBag
+      ) {
+        const type = opts?.type ?? "";
+        if (parts) {
+          blobPartsByType[type] = parts;
+        }
+        return new OriginalBlob(parts, opts);
+      } as unknown as typeof Blob);
+
+      mockTable.innerHTML = `
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Paragraph one.<br>Paragraph two.</td>
+          <td>Line A<br>Line B<br>Line C</td>
+        </tr>
+      </tbody>
+    `;
+    });
+
+    afterEach(() => {
+      blobSpy.mockRestore();
+    });
+
+    it("should preserve <br> as newlines when copying as Markdown", async () => {
+      const dropdownContainer = document.createElement("div");
+      mockWrapper.appendChild(dropdownContainer);
+
+      const { container, getByText } = render(
+        <StreamdownContext.Provider
+          value={{
+            isAnimating: false,
+            mode: "streaming",
+            shikiTheme: ["github-light", "github-dark"],
+            controls: true,
+          }}
+        >
+          <TableCopyDropdown />
+        </StreamdownContext.Provider>,
+        { container: dropdownContainer }
+      );
+
+      const button = container.querySelector('button[title="Copy table"]');
+      expect(button).toBeTruthy();
+      if (button) {
+        fireEvent.click(button);
+      }
+
+      fireEvent.click(getByText("Markdown"));
+
+      await waitFor(() => {
+        expect(navigator.clipboard.write).toHaveBeenCalled();
+      });
+
+      expect(blobPartsByType["text/plain"]).toBeDefined();
+
+      expect(getClipboardPlainText()).toBe(
+        "| Description | Notes |\n| --- | --- |\n| Paragraph one.<br>Paragraph two. | Line A<br>Line B<br>Line C |"
+      );
+
+      mockWrapper.removeChild(dropdownContainer);
+    });
+
+    it("should preserve <br> as newlines when copying as CSV", async () => {
+      const dropdownContainer = document.createElement("div");
+      mockWrapper.appendChild(dropdownContainer);
+
+      const { container, getByText } = render(
+        <StreamdownContext.Provider
+          value={{
+            isAnimating: false,
+            mode: "streaming",
+            shikiTheme: ["github-light", "github-dark"],
+            controls: true,
+          }}
+        >
+          <TableCopyDropdown />
+        </StreamdownContext.Provider>,
+        { container: dropdownContainer }
+      );
+
+      const button = container.querySelector('button[title="Copy table"]');
+      expect(button).toBeTruthy();
+      if (button) {
+        fireEvent.click(button);
+      }
+
+      fireEvent.click(getByText("CSV"));
+
+      await waitFor(() => {
+        expect(navigator.clipboard.write).toHaveBeenCalled();
+      });
+
+      expect(blobPartsByType["text/plain"]).toBeDefined();
+
+      expect(getClipboardPlainText()).toBe(
+        'Description,Notes\n"Paragraph one.\nParagraph two.","Line A\nLine B\nLine C"'
+      );
+
+      mockWrapper.removeChild(dropdownContainer);
+    });
+
+    it("should preserve <br> as escaped newlines when copying as TSV", async () => {
+      const dropdownContainer = document.createElement("div");
+      mockWrapper.appendChild(dropdownContainer);
+
+      const { container, getByText } = render(
+        <StreamdownContext.Provider
+          value={{
+            isAnimating: false,
+            mode: "streaming",
+            shikiTheme: ["github-light", "github-dark"],
+            controls: true,
+          }}
+        >
+          <TableCopyDropdown />
+        </StreamdownContext.Provider>,
+        { container: dropdownContainer }
+      );
+
+      const button = container.querySelector('button[title="Copy table"]');
+      expect(button).toBeTruthy();
+      if (button) {
+        fireEvent.click(button);
+      }
+
+      fireEvent.click(getByText("TSV"));
+
+      await waitFor(() => {
+        expect(navigator.clipboard.write).toHaveBeenCalled();
+      });
+
+      expect(blobPartsByType["text/plain"]).toBeDefined();
+
+      expect(getClipboardPlainText()).toBe(
+        "Description\tNotes\nParagraph one.\\nParagraph two.\tLine A\\nLine B\\nLine C"
+      );
+
+      mockWrapper.removeChild(dropdownContainer);
+    });
+
+    it("should not merge cell text across <br> tags", async () => {
+      mockTable.innerHTML = `
+        <thead>
+          <tr>
+            <th>Cell</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Paragraph one.<br>Paragraph two.</td>
+          </tr>
+        </tbody>
+      `;
+
+      const dropdownContainer = document.createElement("div");
+      mockWrapper.appendChild(dropdownContainer);
+
+      const { container, getByText } = render(
+        <StreamdownContext.Provider
+          value={{
+            isAnimating: false,
+            mode: "streaming",
+            shikiTheme: ["github-light", "github-dark"],
+            controls: true,
+          }}
+        >
+          <TableCopyDropdown />
+        </StreamdownContext.Provider>,
+        { container: dropdownContainer }
+      );
+
+      const button = container.querySelector('button[title="Copy table"]');
+      expect(button).toBeTruthy();
+      if (button) {
+        fireEvent.click(button);
+      }
+
+      fireEvent.click(getByText("CSV"));
+      await waitFor(() => {
+        expect(navigator.clipboard.write).toHaveBeenCalled();
+      });
+
+      expect(blobPartsByType["text/plain"]).toBeDefined();
+
+      const plainText = getClipboardPlainText();
+
+      expect(plainText).not.toContain("Paragraph one.Paragraph two.");
+      expect(plainText).toContain("Paragraph one.\nParagraph two.");
+
+      mockWrapper.removeChild(dropdownContainer);
+    });
+  });
 });

@@ -3,6 +3,24 @@ export interface TableData {
   rows: string[][];
 }
 
+function extractCellText(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) {
+    return node.textContent ?? "";
+  }
+
+  if (node.nodeType !== Node.ELEMENT_NODE) {
+    return "";
+  }
+
+  const element = node as HTMLElement;
+
+  if (element.tagName === "BR") {
+    return "\n";
+  }
+
+  return Array.from(element.childNodes).map(extractCellText).join("");
+}
+
 export const extractTableDataFromElement = (
   tableElement: HTMLElement
 ): TableData => {
@@ -12,7 +30,7 @@ export const extractTableDataFromElement = (
   // Extract headers
   const headerCells = tableElement.querySelectorAll("thead th");
   for (const cell of headerCells) {
-    headers.push(cell.textContent?.trim() || "");
+    headers.push(extractCellText(cell).trim());
   }
 
   // Extract rows
@@ -21,7 +39,7 @@ export const extractTableDataFromElement = (
     const rowData: string[] = [];
     const cells = row.querySelectorAll("td");
     for (const cell of cells) {
-      rowData.push(cell.textContent?.trim() || "");
+      rowData.push(extractCellText(cell).trim());
     }
     rows.push(rowData);
   }
@@ -29,35 +47,62 @@ export const extractTableDataFromElement = (
   return { headers, rows };
 };
 
-export const tableDataToCSV = (data: TableData): string => {
+export type CSVSeparator = "," | ";" | "\t" | "auto";
+
+export const getTableCsvSeparator = (
+  config: boolean | { table?: boolean | { csvSeparator?: CSVSeparator } }
+): CSVSeparator => {
+  if (typeof config !== "object") {
+    return ",";
+  }
+
+  const tableConfig = config.table;
+  if (typeof tableConfig !== "object") {
+    return ",";
+  }
+
+  return tableConfig.csvSeparator ?? ",";
+};
+
+export const tableDataToCSV = (
+  data: TableData,
+  separator: CSVSeparator = ","
+): string => {
+  let resolvedSeparator: string;
+
+  if (separator === "auto") {
+    const formatter = Intl.NumberFormat().format(1.1);
+
+    if (formatter.includes(",")) {
+      resolvedSeparator = ";";
+    } else {
+      resolvedSeparator = ",";
+    }
+  } else {
+    resolvedSeparator = separator;
+  }
   const { headers, rows } = data;
 
   const escapeCSV = (value: string): string => {
-    // OPTIMIZATION: Fast path for values that don't need escaping
-    // Check characters directly to avoid multiple string scans
     let needsEscaping = false;
-    let hasQuote = false;
 
     for (const char of value) {
-      if (char === '"') {
+      if (
+        char === resolvedSeparator ||
+        char === '"' ||
+        char === "\n" ||
+        char === "\r"
+      ) {
         needsEscaping = true;
-        hasQuote = true;
         break;
-      }
-      if (char === "," || char === "\n") {
-        needsEscaping = true;
       }
     }
 
     if (!needsEscaping) {
       return value;
     }
-
-    // If the value contains comma, quote, or newline, wrap in quotes and escape internal quotes
-    if (hasQuote) {
-      return `"${value.replace(/"/g, '""')}"`;
-    }
-    return `"${value}"`;
+    // Escape internal quotes by doubling them
+    return `"${value.replace(/"/g, '""')}"`;
   };
 
   // Pre-allocate array with known size
@@ -67,13 +112,13 @@ export const tableDataToCSV = (data: TableData): string => {
 
   // Add headers
   if (headers.length > 0) {
-    csvRows[rowIndex] = headers.map(escapeCSV).join(",");
+    csvRows[rowIndex] = headers.map(escapeCSV).join(resolvedSeparator);
     rowIndex += 1;
   }
 
   // Add data rows
   for (const row of rows) {
-    csvRows[rowIndex] = row.map(escapeCSV).join(",");
+    csvRows[rowIndex] = row.map(escapeCSV).join(resolvedSeparator);
     rowIndex += 1;
   }
 
@@ -139,7 +184,7 @@ export const escapeMarkdownTableCell = (cell: string): string => {
   // OPTIMIZATION: Fast path for cells that don't need escaping - check chars directly
   let needsEscaping = false;
   for (const char of cell) {
-    if (char === "\\" || char === "|") {
+    if (char === "\\" || char === "|" || char === "\n") {
       needsEscaping = true;
       break;
     }
@@ -149,13 +194,14 @@ export const escapeMarkdownTableCell = (cell: string): string => {
     return cell;
   }
 
-  // OPTIMIZATION: Use array building instead of string concatenation for better performance
   const parts: string[] = [];
   for (const char of cell) {
     if (char === "\\") {
       parts.push("\\\\");
     } else if (char === "|") {
       parts.push("\\|");
+    } else if (char === "\n") {
+      parts.push("<br>");
     } else {
       parts.push(char);
     }

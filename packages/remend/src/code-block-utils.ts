@@ -1,20 +1,34 @@
-// Check if a position is inside a code block (between ``` or `)
-export const isInsideCodeBlock = (text: string, position: number): boolean => {
-  // Check for inline code (backticks)
+// Builds the isInsideCodeBlock answer for every position in one linear pass.
+// lookup[p] === 1 means scanning chars [0, p) ends inside inline or fenced
+// code. Scanning per call is O(position), which makes callers that probe many
+// positions (e.g. the link handler walking every "[" of a long streamed code
+// block) quadratic overall.
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Mirrors the original scan's control flow exactly so the lookup is provably equivalent"
+const buildCodeBlockLookup = (text: string): Uint8Array => {
+  const lookup = new Uint8Array(text.length + 1);
   let inInlineCode = false;
   let inMultilineCode = false;
+  let i = 0;
 
-  for (let i = 0; i < position; i += 1) {
+  while (i < text.length) {
     // Skip escaped backticks
     if (text[i] === "\\" && i + 1 < text.length && text[i + 1] === "`") {
-      i += 1;
+      const state = inInlineCode || inMultilineCode ? 1 : 0;
+      lookup[i + 1] = state;
+      lookup[i + 2] = state;
+      i += 2;
       continue;
     }
 
     // Check for triple backticks (multiline code blocks)
     if (text.substring(i, i + 3) === "```") {
       inMultilineCode = !inMultilineCode;
-      i += 2; // Skip the next 2 backticks
+      const state = inInlineCode || inMultilineCode ? 1 : 0;
+      const next = Math.min(i + 3, text.length);
+      for (let p = i + 1; p <= next; p += 1) {
+        lookup[p] = state;
+      }
+      i = next;
       continue;
     }
 
@@ -22,9 +36,28 @@ export const isInsideCodeBlock = (text: string, position: number): boolean => {
     if (!inMultilineCode && text[i] === "`") {
       inInlineCode = !inInlineCode;
     }
+    lookup[i + 1] = inInlineCode || inMultilineCode ? 1 : 0;
+    i += 1;
   }
 
-  return inInlineCode || inMultilineCode;
+  return lookup;
+};
+
+// Handlers repeatedly probe positions of the same text within one remend()
+// call, so a single-entry cache converts each probe to O(1) after one O(n)
+// build per distinct text.
+let cache: { text: string; lookup: Uint8Array } | null = null;
+
+// Check if a position is inside a code block (between ``` or `)
+export const isInsideCodeBlock = (text: string, position: number): boolean => {
+  let current = cache;
+  if (current === null || current.text !== text) {
+    current = { text, lookup: buildCodeBlockLookup(text) };
+    cache = current;
+  }
+  // Positions past the end resolve to the state after scanning the full text,
+  // matching the previous per-call scan.
+  return current.lookup[Math.min(position, text.length)] === 1;
 };
 
 // Checks if a backtick at position i is part of a triple backtick sequence

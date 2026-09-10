@@ -27,6 +27,30 @@ test("happy path", async () => {
   ]);
 });
 
+test("allows numbers in changeset filename", async () => {
+  const event = {
+    pull_request: {
+      labels: [],
+    },
+  };
+  const env = {
+    CHANGED_FILES: ".changeset/fix-icons-aria-hidden.md",
+  };
+
+  const readFile = mock.fn(
+    async (_path) =>
+      "---\nai: patch\n@ai-sdk/provider: patch\n---\n## Test changeset"
+  );
+
+  await verifyChangesets(event, env, readFile);
+
+  assert.strictEqual(readFile.mock.callCount(), 1);
+  assert.deepStrictEqual(readFile.mock.calls[0].arguments, [
+    "../../../../.changeset/fix-icons-aria-hidden.md",
+    "utf-8",
+  ]);
+});
+
 test("ignores .changeset/README.md", async () => {
   const event = {
     pull_request: {
