@@ -5,6 +5,7 @@ import { useMermaidPlugin } from "../plugin-context";
 import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
 import { PanZoom } from "./pan-zoom";
+import { getMermaidSvgSize, normalizeMermaidInlineSvg } from "./utils";
 
 interface MermaidProps {
   chart: string;
@@ -25,6 +26,10 @@ export const Mermaid = ({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [svgContent, setSvgContent] = useState<string>("");
+  const [svgSize, setSvgSize] = useState<{
+    height: number;
+    width: number;
+  } | null>(null);
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const { mermaid: mermaidContext } = useContext(StreamdownContext);
@@ -67,10 +72,13 @@ export const Mermaid = ({
         const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
         const { svg } = await mermaid.render(uniqueId, chart);
+        const size = getMermaidSvgSize(svg);
+        const normalizedSvg = fullscreen ? svg : normalizeMermaidInlineSvg(svg);
 
         // Update both current and last valid SVG
-        setSvgContent(svg);
-        setLastValidSvg(svg);
+        setSvgContent(normalizedSvg);
+        setSvgSize(size);
+        setLastValidSvg(normalizedSvg);
       } catch (err) {
         // Silently fail and keep the last valid SVG
         // Don't update svgContent here - just keep what we have
@@ -161,18 +169,26 @@ export const Mermaid = ({
 
   return (
     <div
-      className={cn("size-full", className)}
+      className={cn(
+        fullscreen ? "size-full" : "max-h-[min(70vh,40rem)] w-full",
+        className
+      )}
       data-streamdown="mermaid"
       ref={containerRef}
     >
       <PanZoom
         className={cn(
-          fullscreen ? "size-full overflow-hidden" : "overflow-hidden",
+          fullscreen
+            ? "size-full overflow-hidden"
+            : "max-h-[min(70vh,40rem)] overflow-hidden",
           className
         )}
+        contentSize={svgSize}
+        fitKey={chart}
         fullscreen={fullscreen}
+        isAutoFit={true}
         maxZoom={3}
-        minZoom={0.5}
+        minZoom={0.1}
         showControls={showControls}
         zoomStep={0.1}
       >
