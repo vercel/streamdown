@@ -129,6 +129,11 @@ With `dir="auto"`:
       type: "Pluggable[]",
       default: "Object.values(defaultRemarkPlugins)",
     },
+    disableAutolinkProtocols: {
+      description:
+        "Disable GFM autolinking for specific URL protocols (e.g. ['mailto'] stops bare email addresses from becoming links). Accepts protocol names with or without a trailing colon, case-insensitive. Only affects literal autolinks created by remark-gfm; explicit [text](url) links are unaffected.",
+      type: "string[]",
+    },
   }}
 />
 
