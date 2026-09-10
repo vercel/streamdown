@@ -218,6 +218,25 @@ The copy button:
 - Provides visual feedback on successful copy
 - Is automatically disabled during streaming (when `isAnimating={true}`)
 
+### Copy Callbacks
+
+Pass `onCopy` and/or `onError` through `controls.code.copy` to run your own logic after the default copy button succeeds or fails. The button still renders — you do not need a custom component.
+
+```tsx title="app/page.tsx"
+<Streamdown
+  controls={{
+    code: {
+      copy: {
+        onCopy: () => toast.success("Copied to clipboard"),
+        onError: (error) => toast.error(error.message),
+      },
+    },
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
 ### Disable Controls
 
 Disable individual code block buttons using the `controls` prop:
