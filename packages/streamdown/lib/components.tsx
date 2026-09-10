@@ -932,7 +932,7 @@ const CodeComponent = ({
           {shouldShowMermaidControls ? (
             <div
               className={cn(
-                "pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end"
+                "pointer-events-none absolute top-2 right-2 z-10 flex items-center"
               )}
             >
               <div
