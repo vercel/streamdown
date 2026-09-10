@@ -1,0 +1,123 @@
+---
+title: "@streamdown/ascii"
+description: Render ASCII and Unicode box-drawing diagrams without breaking alignment.
+type: reference
+summary: Preformatted rendering for agent-generated ASCII/box-drawing diagrams and flowcharts.
+prerequisites:
+  - /docs/plugins
+related:
+  - /docs/plugins/mermaid
+  - /docs/custom-renderers
+---
+
+The `@streamdown/ascii` plugin renders ASCII and Unicode box-drawing diagrams (`┌─┐`, `│ │`, `└─┘`, `──►`) as stable preformatted blocks, so they don't break in the browser the way they do with typical web typography.
+
+- Binds to ```ascii, ```diagram, and ```chart code fences by default
+- Disables font ligatures so sequences like `-->` are never collapsed into a stylized arrow glyph
+- Renders a single, unbroken text node with no per-line span wrappers or syntax highlighting, so streaming appends never reflow existing rows
+- Uses an advance-consistent monospace font stack so box-drawing characters line up with plain ASCII
+
+## The problem
+
+LLMs and coding agents default to ASCII and Unicode box-drawing characters for architecture diagrams and flowcharts instead of Mermaid. Rendered as regular Markdown code, these break in a few common ways:
+
+- **Font ligatures** collapse ASCII sequences — `-->` renders as a single stylized arrow glyph, destroying column alignment
+- **Line-by-line span wrappers** (common in syntax highlighters) disrupt vertical alignment between rows
+- **Standard web monospace fonts** don't guarantee uniform advance widths for box-drawing characters (`─│┌┐└┘`) versus plain ASCII
+
+`@streamdown/ascii` renders these fences as plain `<pre>` blocks with ligatures disabled and an advance-consistent font stack, so the diagram looks the same as it did when the model generated it.
+
+## Install
+
+```package-install
+npm install @streamdown/ascii
+```
+
+## Usage
+
+```tsx title="chat.tsx" lineNumbers
+import { Streamdown } from "streamdown";
+import { ascii } from "@streamdown/ascii";
+
+<Streamdown plugins={{ renderers: [ascii] }}>
+  {markdown}
+</Streamdown>
+```
+
+For advanced configuration, use `createAsciiPlugin`:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from "streamdown";
+import { createAsciiPlugin } from "@streamdown/ascii";
+
+const ascii = createAsciiPlugin({
+  languages: ["ascii", "diagram", "chart", "box"],
+  className: "my-ascii-block",
+  fontFamily: "Menlo, Consolas, monospace",
+});
+
+export default function Page() {
+  return (
+    <Streamdown plugins={{ renderers: [ascii] }}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+Your AI can then output diagrams using any of the bound fences:
+
+````markdown
+```ascii
+┌─────────┐     ┌─────────┐
+│  Client │────►│  Server │
+└─────────┘     └─────────┘
+```
+````
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `languages` | `string[]` | `["ascii", "diagram", "chart"]` | Code fence languages bound to the renderer |
+| `className` | `string` | — | Extra class names applied to the rendered `<pre>` element |
+| `fontFamily` | `string` | `ui-monospace, "SF Mono", "Cascadia Mono", "DejaVu Sans Mono", "Liberation Mono", Menlo, Consolas, monospace` | Override the monospace font stack |
+
+## Streaming safety
+
+Diagrams stream in one character at a time along with the rest of the response. `@streamdown/ascii` keeps this stable in two ways:
+
+- The rendered `<pre>` always contains exactly one text child (`{code}`) — no per-line `<span>` wrappers, no syntax highlighting — so appending characters never causes existing rows to reflow.
+- The component's tree shape does not change between an incomplete and a complete fence. Incompleteness is only ever surfaced through a stable `data-incomplete` attribute, never by adding, removing, or swapping elements, so React never remounts the block mid-stream.
+
+## Styling
+
+The rendered `<pre>` sets:
+
+- `font-variant-ligatures: none` and `font-feature-settings: "liga" 0, "calt" 0` — prevents ASCII arrow sequences (`-->`, `<--`) from being collapsed into ligature glyphs
+- `white-space: pre` — preserves whitespace exactly as generated, without wrapping (wrapping destroys ASCII art column alignment)
+- `overflow-x: auto` — wide diagrams scroll horizontally instead of wrapping
+- `tab-size: 2` — consistent tab rendering
+
+## Plugin interface
+
+The ASCII plugin implements Streamdown's `CustomRenderer` shape, so it plugs into the existing `plugins.renderers` extension point with no core changes required:
+
+```tsx
+interface AsciiPlugin {
+  component: React.ComponentType<AsciiRendererProps>;
+  language: string[];
+}
+
+interface AsciiRendererProps {
+  code: string;
+  isIncomplete: boolean;
+  language: string;
+  meta?: string;
+}
+```
+
+## Related features
+
+- [Custom renderers](/docs/custom-renderers) - The general-purpose extension point this plugin uses
+- [Mermaid](/docs/plugins/mermaid) - Interactive diagram rendering for Mermaid syntax
