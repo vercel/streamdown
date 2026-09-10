@@ -1,5 +1,35 @@
 # streamdown
 
+## 2.6.1
+
+### Patch Changes
+
+- c971f42: Wire `onCopy` and `onError` through default code and Mermaid copy controls via `controls.code.copy` and `controls.mermaid.copy`.
+- 163c63b: fix(code-block): use absolute positioning for action buttons to fix click events in nested scroll containers
+
+  Switches the code block action button wrapper from `position: sticky` to
+  `position: absolute` (with `position: relative` on the container) so that
+  hit-testing works correctly in layouts with multiple nested `overflow: auto`
+  scroll containers. Previously, the `sticky` + `pointer-events-none/auto`
+  pattern caused browsers to mis-route click events to the code block wrapper
+  rather than the buttons when the component was embedded in 2+ nested scroll
+  containers.
+
+- e0ce123: Incomplete images during streaming now render a loading placeholder instead of being removed entirely. Incomplete images (e.g. `![alt](https://exampl`) are replaced with `![alt](streamdown:incomplete-image)` by remend, and the streamdown `ImageComponent` renders an animated skeleton for this special URL. This mirrors the existing behavior for incomplete links (`streamdown:incomplete-link`). The `streamdown` protocol is allowlisted for `img[src]` in the default sanitize schema so the sentinel survives rehype-sanitize + rehype-harden.
+- 18dcb20: Add a top-level `portal` prop for configuring the container used by Mermaid fullscreen, table fullscreen, and the built-in link safety modal.
+- fdf4e33: Fix Mermaid diagrams so text is readable and diagrams auto-fit container.
+  - Normalize SVG to remove responsive shrinking
+  - Extract intrinsic size from viewBox
+  - Add width-and-height auto-fit in PanZoom
+  - Preserve user zoom/pan after initial fit
+  - Add tests for SVG utilities and auto-fit behavior
+- a155a9e: Update `marked` from `^17.0.1` to `^18.0.11`.
+
+  marked v18 no longer folds a block token's trailing blank line(s) into its own `raw`; that whitespace now surfaces as a separate `space` token immediately following the block (e.g. after `html`, `heading`, and `table` tokens). This changed the token stream shape that `parseMarkdownIntoBlocks` consumes, causing a dangling `space` token after a closed custom-tag HTML block to be emitted as its own standalone block. `parseMarkdownIntoBlocks` now folds a `space` token into the preceding block instead of pushing it as a new one, restoring v17-identical block boundaries and counts. The lossless `token.raw` concatenation invariant is preserved.
+
+- Updated dependencies [e0ce123]
+  - remend@1.3.2
+
 ## 2.6.0
 
 ### Minor Changes
