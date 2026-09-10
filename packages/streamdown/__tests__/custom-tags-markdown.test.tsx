@@ -13,6 +13,25 @@ const LITERAL_BOLD_RE = /\*{2}bold\*{2}|\\?\*{1,2}bold\\?\*{1,2}/;
 const STRONG_SELECTOR = '[data-streamdown="strong"]';
 
 describe("Issue #478 - Markdown inside custom tags (multiline content)", () => {
+  it("preserves encoded JSON punctuation next to URLs in literal data tags", () => {
+    const LiteralData = (props: CustomComponentProps) => (
+      <div data-testid="literal-data">{props.children as React.ReactNode}</div>
+    );
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ "literal-data": [] }}
+        components={{ "literal-data": LiteralData }}
+        literalTagContent={["literal-data"]}
+        mode="static"
+      >
+        {'<literal-data>\n{"websites":&#91;"https://example.com"&#93;}\n</literal-data>'}
+      </Streamdown>
+    );
+    expect(
+      container.querySelector('[data-testid="literal-data"]')?.textContent?.trim()
+    ).toBe('{"websites":["https://example.com"]}');
+  });
+
   it("should render bold markdown inside custom tag with newline prefix", () => {
     const AiThinking = (props: CustomComponentProps) => (
       <div data-testid="ai-thinking">{props.children as React.ReactNode}</div>
