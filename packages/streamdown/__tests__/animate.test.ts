@@ -1,5 +1,7 @@
 import rehypeParse from "rehype-parse";
 import rehypeStringify from "rehype-stringify";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { describe, expect, it } from "vitest";
 import {
@@ -220,6 +222,17 @@ describe("animate plugin", () => {
   });
 
   describe("getLastRenderCharCount", () => {
+    it("counts source spaces without counting generated list padding", async () => {
+      const plugin = createAnimatePlugin();
+      const processor = unified()
+        .use(remarkParse)
+        .use(remarkRehype)
+        .use(plugin.rehypePlugin)
+        .use(rehypeStringify);
+      await processor.process("1. *One* **two**");
+      expect(plugin.getLastRenderCharCount()).toBe("One two".length);
+    });
+
     it("should return 0 before any render", () => {
       const plugin = createAnimatePlugin();
       expect(plugin.getLastRenderCharCount()).toBe(0);

@@ -75,13 +75,7 @@ describe("list animation retrigger fix (#410)", () => {
     // its entry animation: those characters carry --sd-duration:0ms.
     expect(container.querySelector("li > p")).toBeTruthy();
 
-    // One character at the transition boundary is not suppressed:
-    // prevContentLength counts inter-element whitespace, and the tight -> loose
-    // change alters how much of it the block contains, so the boundary lands one
-    // character early. That accounting lives in lib/animate.ts and is unchanged
-    // here; before this test was updated the transition was never rendered at
-    // all, so it could not be observed.
-    const previouslyVisible = afterSpans.slice(0, initialSpans.length - 1);
+    const previouslyVisible = afterSpans.slice(0, initialSpans.length);
     for (const span of previouslyVisible) {
       expect(
         (span as HTMLElement).style.getPropertyValue("--sd-duration")
