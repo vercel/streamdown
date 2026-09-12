@@ -261,7 +261,7 @@ describe("animate plugin", () => {
       const plugin = createAnimatePlugin();
       // First render: "Hello"
       await processHtml("<p>Hello</p>", plugin);
-      plugin.commit();
+      plugin.setPrevContentLength(plugin.getLastRenderCharCount());
 
       // Second render: "Hello world" — committed count drives the skip window
       const result = await processHtml("<p>Hello world</p>", plugin);
@@ -269,12 +269,52 @@ describe("animate plugin", () => {
       // "Hello" (chars 0-4) should have duration:0ms — already visible
       // " world" should have normal duration
       const spans = result.match(/--sd-duration:[^;"]*/g) ?? [];
-      expect(spans.some((s) => s.includes("0ms"))).toBe(true);
-      expect(spans.some((s) => s.includes("150ms"))).toBe(true);
+      expect(spans).toEqual(["--sd-duration:0ms", "--sd-duration:150ms"]);
     });
   });
 
   describe("stagger delay", () => {
+    it.each([
+      ["list marker", "<ul><li>Alpha beta", "</li></ul>", "li"],
+      [
+        "task checkbox",
+        '<ul><li><input type="checkbox">Alpha beta',
+        "</li></ul>",
+        "input",
+      ],
+      ["image", '<p><img src="/test.png">Alpha beta', "</p>", "img"],
+      ["rule", "<hr><p>Alpha beta", "</p>", "hr"],
+    ])("preserves a pending %s animation across updates", async (_name, prefix, suffix, selector) => {
+      let now = 1000;
+      const timeline = createAnimateTimeline({ now: () => now });
+      const plugin = createAnimatePlugin({ duration: 250, timeline });
+      timeline.beginPass(now);
+      const before = document.createElement("div");
+      before.innerHTML = await processHtml(prefix + suffix, plugin);
+      const style = before.querySelector(selector)?.getAttribute("style");
+      expect(style).toContain("250ms");
+      plugin.commit();
+      timeline.commitPass();
+
+      now += 50;
+      timeline.beginPass(now);
+      const after = document.createElement("div");
+      after.innerHTML = await processHtml(`${prefix} gamma${suffix}`, plugin);
+      expect(after.querySelector(selector)?.getAttribute("style")).toBe(style);
+      plugin.commit();
+      timeline.commitPass();
+
+      now += 500;
+      timeline.beginPass(now);
+      after.innerHTML = await processHtml(
+        `${prefix} gamma delta${suffix}`,
+        plugin
+      );
+      expect(after.querySelector(selector)?.getAttribute("style")).toContain(
+        "duration:0ms"
+      );
+    });
+
     it("should apply incremental delay to each word", async () => {
       const plugin = createAnimatePlugin({ stagger: 50 });
       const result = await processHtml("<p>Hello world foo</p>", plugin);
@@ -413,7 +453,7 @@ describe("animate plugin", () => {
       const result = await processHtml("<p>Hello world foo</p>", plugin);
       timeline.commitPass();
 
-      expect(delaysOf(result)).toEqual([70]);
+      expect(delaysOf(result)).toEqual([50, 70]);
     });
 
     it("per-plugin mark/rewind makes StrictMode double-rehype idempotent", async () => {
