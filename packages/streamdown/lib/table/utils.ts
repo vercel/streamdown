@@ -184,7 +184,14 @@ export const escapeMarkdownTableCell = (cell: string): string => {
   // OPTIMIZATION: Fast path for cells that don't need escaping - check chars directly
   let needsEscaping = false;
   for (const char of cell) {
-    if (char === "\\" || char === "|" || char === "\n") {
+    if (
+      char === "\\" ||
+      char === "|" ||
+      char === "\n" ||
+      char === "&" ||
+      char === "<" ||
+      char === ">"
+    ) {
       needsEscaping = true;
       break;
     }
@@ -202,6 +209,12 @@ export const escapeMarkdownTableCell = (cell: string): string => {
       parts.push("\\|");
     } else if (char === "\n") {
       parts.push("<br>");
+    } else if (char === "&") {
+      parts.push("&amp;");
+    } else if (char === "<") {
+      parts.push("&lt;");
+    } else if (char === ">") {
+      parts.push("&gt;");
     } else {
       parts.push(char);
     }
