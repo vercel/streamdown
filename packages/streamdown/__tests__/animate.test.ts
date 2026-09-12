@@ -19,7 +19,7 @@ const WORLD_SPAN_RE = />world<\/span>/;
 const I_SPACE_SPAN_RE = />i <\/span>/;
 const INLINE_CODE_ANIMATE_RE =
   /<code[^>]*>[\s\S]*data-sd-animate[\s\S]*world[\s\S]*<\/code>/;
-const FENCED_PRE_BARE_RE = /<pre><code>block<\/code><\/pre>/;
+const FENCED_PRE_BARE_RE = /<pre[^>]*><code>block<\/code><\/pre>/;
 const PRE_ANIMATE_RE = /<pre>[\s\S]*data-sd-animate/;
 
 const INPUT_TAG_RE = /<input[^>]*>/;
@@ -132,12 +132,14 @@ describe("animate plugin", () => {
 
     it("should not animate text inside pre elements", async () => {
       const result = await processHtml("<pre>some code</pre>");
-      expect(result).not.toContain("data-sd-animate");
+      expect(result).toContain("data-sd-animate");
+      expect(result).not.toContain("<span");
     });
 
     it("should not animate text inside pre > code (fenced blocks)", async () => {
       const result = await processHtml("<pre><code>const x = 1</code></pre>");
-      expect(result).not.toContain("data-sd-animate");
+      expect(result).toContain("data-sd-animate");
+      expect(result).not.toContain("<span");
       expect(result).toContain("const x = 1");
     });
 
@@ -787,5 +789,54 @@ describe("animate plugin", () => {
       const hr = result.match(HR_TAG_RE)?.[0] ?? "";
       expect(hr).toContain("--sd-duration:0ms");
     });
+  });
+});
+
+describe("code fence animation", () => {
+  it("reserves one timeline slot without changing highlighted code", async () => {
+    const plugin = createAnimatePlugin({ duration: 250, stagger: 10 });
+    const code = '<code><span class="token">const x = 1</span>\n</code>';
+    const result = await processHtml(
+      `<h3>Code example</h3><pre>${code}</pre><p>Following</p>`,
+      plugin
+    );
+    expect(delaysOf(result)).toEqual([10, 20, 30]);
+    expect(result).toContain(code);
+    expect(result.match(/data-sd-animate(?: |>|=)/g)).toHaveLength(4);
+  });
+
+  it("keeps code and following text timings when the fence grows", async () => {
+    let now = 1000;
+    const timeline = createAnimateTimeline({ now: () => now });
+    const plugin = createAnimatePlugin({
+      duration: 250,
+      stagger: 10,
+      timeline,
+    });
+    timeline.beginPass(now);
+    const initial = await processHtml(
+      "<pre><code>one</code></pre><p>Following</p>",
+      plugin
+    );
+    plugin.commit();
+    timeline.commitPass();
+    now += 50;
+    timeline.beginPass(now);
+    const growing = await processHtml(
+      "<pre><code>one two three four</code></pre><p>Following new</p>",
+      plugin
+    );
+    expect(delaysOf(initial)).toEqual([0, 10]);
+    expect(delaysOf(growing)).toEqual([0, 10]);
+    expect(growing.match(/--sd-duration:250ms/g)).toHaveLength(3);
+    plugin.commit();
+    timeline.commitPass();
+    now += 500;
+    timeline.beginPass(now);
+    const settled = await processHtml(
+      "<pre><code>one two three four five</code></pre><p>Following new</p>",
+      plugin
+    );
+    expect(settled.match(/--sd-duration:0ms/g)).toHaveLength(3);
   });
 });
