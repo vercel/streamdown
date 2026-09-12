@@ -840,3 +840,15 @@ describe("code fence animation", () => {
     expect(settled.match(/--sd-duration:0ms/g)).toHaveLength(3);
   });
 });
+
+it("schedules blocks against one clock even when rendering takes time", async () => {
+  let now = 1000;
+  const timeline = createAnimateTimeline({ now: () => now });
+  const heading = createAnimatePlugin({ stagger: 10, timeline });
+  const code = createAnimatePlugin({ stagger: 10, timeline });
+  timeline.beginPass(now);
+  await processHtml("<h3>Code example</h3>", heading);
+  now += 15;
+  const result = await processHtml("<pre><code>const x = 1</code></pre>", code);
+  expect(delaysOf(result)).toEqual([20]);
+});

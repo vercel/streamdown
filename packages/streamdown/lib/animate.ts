@@ -46,6 +46,7 @@ export interface AnimateTimeline {
   /** Snapshot of the working cursor (passNextStartAt). */
   mark: () => number;
   now: () => number;
+  passNow: () => number;
   /** Restore the working cursor to a prior mark. */
   rewind: (mark: number) => void;
   take: (wordCount: number, stagger: number, now: number) => ScheduleSlot;
@@ -69,10 +70,13 @@ export function createAnimateTimeline(
   let committedNextStartAt = 0;
   /** Working absolute time for the in-flight pass. */
   let passNextStartAt = 0;
+  let passStartedAt = nowFn();
 
   return {
     now: nowFn,
+    passNow: () => passStartedAt,
     beginPass(now: number) {
+      passStartedAt = now;
       // Resume from the last commit, but never more than maxBacklog ahead of
       // wall-clock — drops debt from a previous pass that overshot via the
       // min-step floor so a fast stream stays caught up on the next tick.
@@ -640,7 +644,8 @@ export function createAnimatePlugin(
     renderState.pendingAnimations = new Map();
 
     const timeline = config.timeline;
-    const now = timeline?.now() ?? defaultNow();
+    // All blocks paint in the same commit, so their CSS delays share an origin.
+    const now = timeline?.passNow() ?? defaultNow();
     renderState.now = now;
 
     // StrictMode / discarded render: first run marks the cursor; a re-run
