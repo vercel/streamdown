@@ -467,6 +467,12 @@ const animationTiming = (
   return { duration: config.duration, delay: timing.delay };
 };
 
+// remark-rehype pads block elements with positionless newlines. They are not
+// streamed content: trailing padding must not make the next word look old, and
+// adding <p> wrappers to a loose list must not shift existing animation offsets.
+const isLayoutWhitespace = (node: Text): boolean =>
+  !node.position && WHITESPACE_ONLY_RE.test(node.value);
+
 const isVoidAnimateElement = (node: Node): node is Element =>
   isElement(node) && VOID_ANIMATE_TAGS.has(node.tagName);
 
@@ -493,6 +499,9 @@ const countNewWords = (
           newWords += 1;
         }
         charPos += 1;
+        return;
+      }
+      if (isLayoutWhitespace(node as Text)) {
         return;
       }
       const text = (node as Text).value;
@@ -542,6 +551,9 @@ const processTextNode = (
     return;
   }
 
+  if (isLayoutWhitespace(node)) {
+    return;
+  }
   const text = node.value;
   if (!text.trim()) {
     charCounter.count += text.length;
