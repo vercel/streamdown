@@ -50,6 +50,7 @@ import {
   type StreamdownTranslations,
   TranslationsContext,
 } from "./lib/translations-context";
+import { useAnimationDrain } from "./lib/use-animation-drain";
 import { createCn } from "./lib/utils";
 
 export type { AnimateOptions } from "./lib/animate";
@@ -393,8 +394,8 @@ export const Block = memo(
     animatePlugin: animatePluginProp,
     ...props
   }: BlockProps) => {
-    // After rehype paints, commit the new char count so the *next* render
-    // treats already-visible text as settled. Commit lives outside the render
+    // After rehype paints, commit the char count and pending animation timings
+    // so the next render preserves their schedule. Commit lives outside the render
     // body so StrictMode double-invoke cannot wipe and re-seed prevContentLength
     // (#570 secondary). The plugin seeds prevContentLength from its own
     // committedCharCount at the start of every rehype run.
@@ -646,6 +647,9 @@ export const Streamdown = memo(
       return "";
     }, [animated]);
 
+    const { containerRef: animationContainerRef, animateText } =
+      useAnimationDrain(isAnimating, animatedKey, mode, children);
+
     // Shared wall-clock timeline: serializes stagger delays across sibling
     // blocks AND across streaming ticks (memoized earlier blocks don't
     // re-render, so a pure render-order counter would miss them). Fixes #482.
@@ -676,7 +680,7 @@ export const Streamdown = memo(
       // Reset the per-pass cursor from the last *committed* horizon so a
       // StrictMode double-render recomputes the same delays instead of
       // stacking (#482 + StrictMode).
-      if (isAnimating && animateTimelineRef.current) {
+      if (animateText && animateTimelineRef.current) {
         animateTimelineRef.current.beginPass(animateTimelineRef.current.now());
       }
     } else {
@@ -690,7 +694,22 @@ export const Streamdown = memo(
     // renders that called beginPass never reach this effect, so they can't
     // poison nextStartAt.
     useLayoutEffect(() => {
-      if (isAnimating) {
+      // Removed blocks have no DOM animations to preserve. Keeping their
+      // history makes a replay's first words look already settled.
+      blockAnimatePluginsRef.current.length = Math.min(
+        blockAnimatePluginsRef.current.length,
+        blocksToRender.length
+      );
+      blockRehypePluginsRef.current.length = Math.min(
+        blockRehypePluginsRef.current.length,
+        blocksToRender.length
+      );
+      if (blocksToRender.length === 0) {
+        animateTimelineRef.current = null;
+        prevAnimatedKeyRef.current = "";
+        return;
+      }
+      if (animateText) {
         animateTimelineRef.current?.commitPass();
       }
     });
@@ -860,7 +879,7 @@ export const Streamdown = memo(
       blockRehypePlugins: Pluggable[];
     } => {
       let blockAnimatePlugin: AnimatePlugin | null = null;
-      if (animateTimelineRef.current && isAnimating) {
+      if (animateTimelineRef.current && animateText) {
         if (!blockAnimatePluginsRef.current[index]) {
           // maxBacklogMs is consumed by the timeline factory, not the plugin.
           const rawOpts =
@@ -945,6 +964,7 @@ export const Streamdown = memo(
                       : null,
                     className
                   )}
+                  ref={animationContainerRef}
                   style={style}
                 >
                   {blocksToRender.length === 0 && caret && isAnimating && (
