@@ -129,7 +129,7 @@ export function createAnimateTimeline(
 export interface AnimatePlugin {
   /**
    * Commit the last rehype char count so the *next* rehype run treats that
-   * many characters as already-visible. Also clears the StrictMode rewind
+   * many characters as already-scheduled. Also clears the StrictMode rewind
    * mark so the next commit starts clean. Called from Block's useLayoutEffect.
    */
   commit: () => void;
@@ -283,14 +283,16 @@ const processVoidElement = (
   if (hasSkipAncestor(ancestors)) {
     return;
   }
-  const prevLen = renderState.prevContentLength;
   const partStart = charCounter.count;
   charCounter.count += 1;
-  const skipAnimation = prevLen > 0 && partStart < prevLen;
-  const delay = skipAnimation
-    ? 0
-    : schedule.baseDelay + charCounter.newIndex++ * schedule.step;
-  stampAnimation(element, config, skipAnimation ? 0 : config.duration, delay);
+  const timing = animationTiming(
+    partStart,
+    config,
+    renderState,
+    charCounter,
+    schedule
+  );
+  stampAnimation(element, config, timing.duration, timing.delay);
 };
 
 /**
@@ -387,10 +389,9 @@ const makeSpan = (
   animation: string,
   duration: number,
   easing: string,
-  skipAnimation?: boolean,
   delay?: number
 ): Element => {
-  let style = `--sd-animation:sd-${animation};--sd-duration:${skipAnimation ? 0 : duration}ms;--sd-easing:${easing}`;
+  let style = `--sd-animation:sd-${animation};--sd-duration:${duration}ms;--sd-easing:${easing}`;
   if (delay) {
     style += `;--sd-delay:${Math.round(delay)}ms`;
   }
@@ -414,9 +415,17 @@ interface AnimateConfig {
   timeline?: AnimateTimeline;
 }
 
+interface AnimationTiming {
+  delay: number;
+  endsAt: number;
+}
+
 interface AnimateRenderState {
+  committedAnimations: Map<number, AnimationTiming>;
   committedCharCount: number;
   lastRenderCharCount: number;
+  now: number;
+  pendingAnimations: Map<number, AnimationTiming>;
   /**
    * Timeline cursor snapshot from the first rehype run of the current commit.
    * null → not yet run this commit; number → rewind here on re-entry
@@ -433,6 +442,30 @@ interface Schedule {
 
 const isNewAnimateUnit = (prevLen: number, partStart: number): boolean =>
   !(prevLen > 0 && partStart < prevLen);
+
+const animationTiming = (
+  partStart: number,
+  config: AnimateConfig,
+  state: AnimateRenderState,
+  counter: { newIndex: number },
+  schedule: Schedule
+): { duration: number; delay: number } => {
+  let timing = state.committedAnimations.get(partStart);
+  if (isNewAnimateUnit(state.prevContentLength, partStart)) {
+    const delay = Math.round(
+      schedule.baseDelay + counter.newIndex++ * schedule.step
+    );
+    timing = { delay, endsAt: state.now + delay + config.duration };
+  }
+  if (!timing || timing.endsAt <= state.now) {
+    return { duration: 0, delay: 0 };
+  }
+  // Keep the original CSS timing on retained DOM nodes. Replacing it with
+  // duration:0 before the fade ends jumps to its final keyframe; subtracting
+  // elapsed time from the delay would advance an already-running animation.
+  state.pendingAnimations.set(partStart, timing);
+  return { duration: config.duration, delay: timing.delay };
+};
 
 const isVoidAnimateElement = (node: Node): node is Element =>
   isElement(node) && VOID_ANIMATE_TAGS.has(node.tagName);
@@ -516,7 +549,6 @@ const processTextNode = (
   }
 
   const parts = config.sep === "char" ? splitByChar(text) : splitByWord(text);
-  const prevLen = renderState.prevContentLength;
   let didAnimate = false;
 
   // Fade the list marker in with this item's first animated word. Only the
@@ -533,24 +565,25 @@ const processTextNode = (
     if (WHITESPACE_ONLY_RE.test(part)) {
       return { type: "text", value: part } as Text;
     }
-    const skipAnimation = prevLen > 0 && partStart < prevLen;
-    const delay = skipAnimation
-      ? 0
-      : schedule.baseDelay + charCounter.newIndex++ * schedule.step;
+    const timing = animationTiming(
+      partStart,
+      config,
+      renderState,
+      charCounter,
+      schedule
+    );
     didAnimate = true;
     if (liAncestor && needsMarker && !markerStamped) {
-      const itemDuration = skipAnimation ? 0 : config.duration;
-      stampMarker(liAncestor, itemDuration, delay, config.easing);
-      stampCheckbox(liAncestor, config, itemDuration, delay);
+      stampMarker(liAncestor, timing.duration, timing.delay, config.easing);
+      stampCheckbox(liAncestor, config, timing.duration, timing.delay);
       markerStamped = true;
     }
     return makeSpan(
       part,
       config.animation,
-      config.duration,
+      timing.duration,
       config.easing,
-      skipAnimation,
-      delay
+      timing.delay
     );
   });
 
@@ -581,21 +614,26 @@ export function createAnimatePlugin(
   };
 
   const renderState: AnimateRenderState = {
+    committedAnimations: new Map(),
     committedCharCount: 0,
     prevContentLength: 0,
     lastRenderCharCount: 0,
     pendingMark: null,
+    now: 0,
+    pendingAnimations: new Map(),
   };
 
   const id = instanceId++;
   const rehypeAnimate = () => (tree: Root) => {
     const charCounter = { count: 0, newIndex: 0 };
 
-    // Seed skip-window from the last committed paint (#570 secondary).
+    // Seed the scheduled prefix from the last committed paint (#570 secondary).
     renderState.prevContentLength = renderState.committedCharCount;
+    renderState.pendingAnimations = new Map();
 
     const timeline = config.timeline;
     const now = timeline?.now() ?? defaultNow();
+    renderState.now = now;
 
     // StrictMode / discarded render: first run marks the cursor; a re-run
     // rewinds so take() doesn't stack on itself. commit() clears the mark.
@@ -654,12 +692,14 @@ export function createAnimatePlugin(
     setPrevContentLength(length: number) {
       renderState.committedCharCount = length;
       renderState.prevContentLength = length;
+      renderState.committedAnimations.clear();
     },
     getLastRenderCharCount() {
       return renderState.lastRenderCharCount;
     },
     commit() {
       renderState.committedCharCount = renderState.lastRenderCharCount;
+      renderState.committedAnimations = renderState.pendingAnimations;
       renderState.pendingMark = null;
     },
   };

@@ -8,7 +8,7 @@
  * re-run their CSS entry animation.
  *
  * Fix: the animate plugin tracks prevContentLength and sets --sd-duration:0ms for
- * text-node positions that were already rendered in the previous pass, so
+ * text-node positions whose previous animation has finished, so
  * already-visible characters do not re-run their entry animation even when the
  * spans around them are rebuilt.
  *
@@ -20,7 +20,7 @@
  */
 
 import { act, render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 
 const animatedConfig = {
@@ -30,8 +30,11 @@ const animatedConfig = {
   sep: "char" as const,
 };
 
+afterEach(() => vi.restoreAllMocks());
+
 describe("list animation retrigger fix (#410)", () => {
-  it("does not remount spans for existing list items when a new item appears", async () => {
+  it("does not re-animate settled list items when a new item appears", async () => {
+    const clock = vi.spyOn(performance, "now").mockReturnValue(1000);
     const { rerender, container } = render(
       <Streamdown animated={animatedConfig} isAnimating={true}>
         {"1. Item 1\n2. Item 2\n"}
@@ -50,6 +53,7 @@ describe("list animation retrigger fix (#410)", () => {
     });
 
     // Simulate a new list group appearing (triggers tight→loose transition)
+    clock.mockReturnValue(3000);
     await act(() => {
       rerender(
         <Streamdown animated={animatedConfig} isAnimating={true}>
@@ -94,7 +98,8 @@ describe("list animation retrigger fix (#410)", () => {
     }
   });
 
-  it("sets --sd-duration:0ms on already-rendered content when item text grows", async () => {
+  it("sets --sd-duration:0ms on settled content when item text grows", async () => {
+    const clock = vi.spyOn(performance, "now").mockReturnValue(1000);
     // When a list item's text grows during streaming, its node position
     // changes (end column extends). This causes the memo'd MemoLi to
     // re-render, and the animate plugin applies 0ms to already-visible chars.
@@ -117,6 +122,7 @@ describe("list animation retrigger fix (#410)", () => {
 
     // Streaming update: item text grows from "AB" to "AB CD"
     // This changes the li node position → MemoLi re-renders
+    clock.mockReturnValue(3000);
     await act(() => {
       rerender(
         <Streamdown animated={animatedConfig} isAnimating={true}>
