@@ -165,10 +165,9 @@ const WHITESPACE_ONLY_RE = /^\s+$/;
 // `pre` (CommonMark always emits `pre > code`); raw inline `code` is safe to
 // animate — word spans inherit styles the same way surrounding prose does (#594).
 const SKIP_TAGS = new Set(["pre", "svg", "math", "annotation"]);
-// Elements with no text node of their own that should still animate in. They
-// honor opacity/filter/transform, so they reuse the standard [data-sd-animate]
-// rule and work with every animation type.
-const VOID_ANIMATE_TAGS = new Set(["img", "hr"]);
+// Code fences reserve one slot without touching syntax-highlighting spans.
+// Like images and rules, the whole element follows the shared timeline.
+const ATOMIC_ANIMATE_TAGS = new Set(["img", "hr", "pre"]);
 
 const isElement = (node: unknown): node is Element =>
   typeof node === "object" &&
@@ -267,12 +266,9 @@ const stampCheckbox = (
   }
 };
 
-// Images and rules have no text node, so they're tagged directly. Their
-// "already shown" state is judged by document position (charCounter.count)
-// rather than character length, since they contribute no characters.
-// Advance count by 1 so a trailing void at the prevLen boundary is treated as
-// already-shown on the next tick (avoids one-frame re-animate).
-const processVoidElement = (
+// Atomic elements occupy one position regardless of their contents, so growing
+// a code fence cannot restart its fade or move the following text's offset.
+const processAtomicElement = (
   element: Element,
   ancestors: Node[],
   config: AnimateConfig,
@@ -473,11 +469,11 @@ const animationTiming = (
 const isLayoutWhitespace = (node: Text): boolean =>
   !node.position && WHITESPACE_ONLY_RE.test(node.value);
 
-const isVoidAnimateElement = (node: Node): node is Element =>
-  isElement(node) && VOID_ANIMATE_TAGS.has(node.tagName);
+const isAtomicAnimateElement = (node: Node): node is Element =>
+  isElement(node) && ATOMIC_ANIMATE_TAGS.has(node.tagName);
 
 /**
- * Count newly-animated units (mirrors processTextNode / processVoidElement
+ * Count newly-animated units (mirrors processTextNode / processAtomicElement
  * skip logic) so timeline.take reserves the right number of slots.
  */
 const countNewWords = (
@@ -489,12 +485,12 @@ const countNewWords = (
   let charPos = 0;
   visitParents(
     tree,
-    (node: Node) => node.type === "text" || isVoidAnimateElement(node),
+    (node: Node) => node.type === "text" || isAtomicAnimateElement(node),
     (node: Node, ancestors) => {
       if (hasSkipAncestor(ancestors)) {
         return SKIP;
       }
-      if (isVoidAnimateElement(node)) {
+      if (isAtomicAnimateElement(node)) {
         if (isNewAnimateUnit(prevLen, charPos)) {
           newWords += 1;
         }
@@ -667,7 +663,7 @@ export function createAnimatePlugin(
 
     visitParents(
       tree,
-      (node: Node) => node.type === "text" || isVoidAnimateElement(node),
+      (node: Node) => node.type === "text" || isAtomicAnimateElement(node),
       (node: Node, ancestors) => {
         if (node.type === "text") {
           return processTextNode(
@@ -679,7 +675,7 @@ export function createAnimatePlugin(
             schedule
           );
         }
-        processVoidElement(
+        processAtomicElement(
           node as Element,
           ancestors,
           config,
