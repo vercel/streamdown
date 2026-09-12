@@ -1,3 +1,4 @@
+import { marked } from "marked";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   escapeMarkdownTableCell,
@@ -481,6 +482,26 @@ describe("Table Utils", () => {
   });
 
   describe("tableDataToMarkdown", () => {
+    it("should preserve literal HTML and entities when rendered again", () => {
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead><tr><th>Type &lt;T&gt;</th><th>Entities</th></tr></thead>
+        <tbody><tr>
+          <td><code>Array&lt;string&gt;</code></td>
+          <td>&amp;copy; and &amp;#124;</td>
+        </tr></tbody>
+      `;
+      const data = extractTableDataFromElement(table);
+      const markdown = tableDataToMarkdown(data);
+      const container = document.createElement("div");
+      container.innerHTML = marked.parse(markdown, { async: false });
+      const restoredTable = container.querySelector(
+        "table"
+      ) as HTMLTableElement;
+
+      expect(extractTableDataFromElement(restoredTable)).toEqual(data);
+    });
+
     it("should convert simple table data to Markdown", () => {
       const data: TableData = {
         headers: ["Name", "Age", "City"],
