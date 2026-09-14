@@ -10,8 +10,9 @@ const footnoteDefinitionPattern = /\[\^[\w-]{1,200}\]:/;
 const openingTagPattern = /<([A-Za-z][\w:-]*)[\s>/]/;
 // Link definitions are stored in the lexer; lexing a stream tail alone does not
 // see definitions from earlier blocks, so duplicate labels can diverge from a
-// full parse. Skip incremental reuse when any are present.
-const linkDefinitionPattern = /^\[[^\]]+\]:/m;
+// full parse. Skip incremental reuse when any are present. GFM allows 0–3
+// leading spaces before a definition (4+ is an indented code block).
+const linkDefinitionPattern = /^ {0,3}\[[^\]]+\]:/m;
 
 // HTML void elements (self-closing tags) that don't need closing tags
 const voidElements = new Set([

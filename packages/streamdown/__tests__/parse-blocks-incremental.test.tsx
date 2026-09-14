@@ -271,13 +271,20 @@ describe("parseMarkdownIntoBlocks incremental parsing", () => {
   });
 
   it("matches a full parse for documents with duplicate link definitions", () => {
-    const doc =
-      "[x]: /first\n\nSee [x].\n\n[x]: /second\n\nMore text after defs.\n";
-    parseMarkdownIntoBlocks("unrelated\n\ndocument\n");
+    const docs = [
+      "[x]: /first\n\nSee [x].\n\n[x]: /second\n\nMore text after defs.\n",
+      // GFM allows up to 3 leading spaces before a definition.
+      " [x]: /first\n\nSee [x].\n\n  [x]: /second\n\nMore text after defs.\n",
+      "   [x]: /first\n\nSee [x].\n\n   [x]: /second\n\nMore text after defs.\n",
+    ];
 
-    for (let i = 1; i <= doc.length; i += 1) {
-      const prefix = doc.slice(0, i);
-      expect(parseMarkdownIntoBlocks(prefix)).toEqual(parseFresh(prefix));
+    for (const doc of docs) {
+      parseMarkdownIntoBlocks("unrelated\n\ndocument\n");
+
+      for (let i = 1; i <= doc.length; i += 1) {
+        const prefix = doc.slice(0, i);
+        expect(parseMarkdownIntoBlocks(prefix)).toEqual(parseFresh(prefix));
+      }
     }
   });
 });
