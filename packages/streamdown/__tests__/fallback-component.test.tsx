@@ -17,13 +17,13 @@ const PassThrough = ({ node, children, ...rest }: FallbackProps) =>
     children as React.ReactNode
   );
 
-describe("defaultComponent prop", () => {
+describe("fallbackComponent prop", () => {
   describe("allowedTags without explicit component", () => {
-    it("uses defaultComponent for an allowedTags tag with no component entry", () => {
+    it("uses fallbackComponent for an allowedTags tag with no component entry", () => {
       const { container } = render(
         <Streamdown
           allowedTags={{ mention: [] }}
-          defaultComponent={PassThrough}
+          fallbackComponent={PassThrough}
           mode="static"
         >
           {"<mention>@alice</mention>"}
@@ -37,11 +37,11 @@ describe("defaultComponent prop", () => {
       expect(el?.textContent).toBe("@alice");
     });
 
-    it("uses defaultComponent for multiple allowedTags without components", () => {
+    it("uses fallbackComponent for multiple allowedTags without components", () => {
       const { container } = render(
         <Streamdown
           allowedTags={{ tag1: [], tag2: [] }}
-          defaultComponent={PassThrough}
+          fallbackComponent={PassThrough}
           mode="static"
         >
           {"<tag1>first</tag1> <tag2>second</tag2>"}
@@ -56,7 +56,7 @@ describe("defaultComponent prop", () => {
   });
 
   describe("explicit components take precedence", () => {
-    it("explicit component wins over defaultComponent", () => {
+    it("explicit component wins over fallbackComponent", () => {
       const ExplicitTag = ({ children }: FallbackProps) => (
         <span data-explicit="true">{children as React.ReactNode}</span>
       );
@@ -65,7 +65,7 @@ describe("defaultComponent prop", () => {
         <Streamdown
           allowedTags={{ mention: [] }}
           components={{ mention: ExplicitTag }}
-          defaultComponent={PassThrough}
+          fallbackComponent={PassThrough}
           mode="static"
         >
           {"<mention>@bob</mention>"}
@@ -82,7 +82,7 @@ describe("defaultComponent prop", () => {
       expect(fallback).toBeNull();
     });
 
-    it("explicit p component overrides defaultComponent for paragraph", () => {
+    it("explicit p component overrides fallbackComponent for paragraph", () => {
       const CustomP = ({ children }: React.PropsWithChildren) => (
         <p data-custom="true">{children}</p>
       );
@@ -90,7 +90,7 @@ describe("defaultComponent prop", () => {
       const { container } = render(
         <Streamdown
           components={{ p: CustomP as any }}
-          defaultComponent={PassThrough}
+          fallbackComponent={PassThrough}
           mode="static"
         >
           {"Hello world"}
@@ -99,16 +99,16 @@ describe("defaultComponent prop", () => {
 
       const p = container.querySelector('[data-custom="true"]');
       expect(p).toBeTruthy();
-      // defaultComponent must not have been used for <p>
+      // fallbackComponent must not have been used for <p>
       const fallback = container.querySelector('[data-fallback="true"]');
       expect(fallback).toBeNull();
     });
   });
 
   describe("HTML tags not in defaultComponents", () => {
-    it("uses defaultComponent for tags absent from the default map (e.g. <span>)", () => {
+    it("uses fallbackComponent for tags absent from the default map (e.g. <span>)", () => {
       const { container } = render(
-        <Streamdown defaultComponent={PassThrough} mode="static">
+        <Streamdown fallbackComponent={PassThrough} mode="static">
           {"<span>inline span</span>"}
         </Streamdown>
       );
@@ -119,24 +119,35 @@ describe("defaultComponent prop", () => {
     });
   });
 
-  describe("backward compatibility", () => {
-    it("behaves identically when defaultComponent is not provided", () => {
-      const { container: withProp } = render(
-        <Streamdown mode="static">{"# Hello"}</Streamdown>
+  describe("built-in components still win with fallbackComponent set", () => {
+    it("still uses the built-in h1 (Tailwind classes) when fallbackComponent is set", () => {
+      const { container } = render(
+        <Streamdown fallbackComponent={PassThrough} mode="static">
+          {"# Hello"}
+        </Streamdown>
       );
-      const { container: withoutProp } = render(
+
+      const h1 = container.querySelector("h1");
+      expect(h1).toBeTruthy();
+      expect(h1?.className).toContain("font-semibold");
+      // Must not have been rendered via the fallback
+      expect(h1?.getAttribute("data-fallback")).toBeNull();
+      expect(container.querySelector('[data-fallback="true"]')).toBeNull();
+    });
+  });
+
+  describe("backward compatibility", () => {
+    it("applies built-in Tailwind classes when fallbackComponent is absent", () => {
+      const { container } = render(
         <Streamdown mode="static">{"# Hello"}</Streamdown>
       );
 
-      // Both should produce equivalent output
-      expect(withProp.innerHTML).toBe(withoutProp.innerHTML);
-      // defaultComponents Tailwind classes should still be applied
-      const h1 = withProp.querySelector("h1");
+      const h1 = container.querySelector("h1");
       expect(h1).toBeTruthy();
       expect(h1?.className).toContain("font-semibold");
     });
 
-    it("does not add data-fallback when defaultComponent is absent", () => {
+    it("does not add data-fallback when fallbackComponent is absent", () => {
       const { container } = render(
         <Streamdown mode="static">{"Hello **world**"}</Streamdown>
       );
@@ -147,11 +158,11 @@ describe("defaultComponent prop", () => {
   });
 
   describe("streaming mode", () => {
-    it("applies defaultComponent in streaming mode for allowedTags", () => {
+    it("applies fallbackComponent in streaming mode for allowedTags", () => {
       const { container } = render(
         <Streamdown
           allowedTags={{ chip: [] }}
-          defaultComponent={PassThrough}
+          fallbackComponent={PassThrough}
           mode="streaming"
         >
           {"<chip>label</chip>"}
@@ -165,7 +176,7 @@ describe("defaultComponent prop", () => {
   });
 
   describe("node prop passthrough", () => {
-    it("receives node with tagName in defaultComponent", () => {
+    it("receives node with tagName in fallbackComponent", () => {
       const tagNames: string[] = [];
       const Inspector = ({ node, children }: FallbackProps) => {
         if (node?.tagName) {
@@ -181,7 +192,7 @@ describe("defaultComponent prop", () => {
       render(
         <Streamdown
           allowedTags={{ badge: [] }}
-          defaultComponent={Inspector}
+          fallbackComponent={Inspector}
           mode="static"
         >
           {"<badge>x</badge>"}
