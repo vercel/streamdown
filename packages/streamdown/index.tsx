@@ -2,6 +2,7 @@
 
 import {
   type ComponentProps,
+  type ComponentType,
   type CSSProperties,
   createContext,
   createElement,
@@ -30,7 +31,12 @@ import { components as defaultComponents } from "./lib/components";
 import { detectTextDirection } from "./lib/detect-direction";
 import { type IconMap, IconProvider } from "./lib/icon-context";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
-import { type ExtraProps, Markdown, type Options } from "./lib/markdown";
+import {
+  type Components,
+  type ExtraProps,
+  Markdown,
+  type Options,
+} from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
 import type {
@@ -108,6 +114,9 @@ export {
 } from "./lib/table/utils";
 export type { StreamdownTranslations } from "./lib/translations-context";
 export { defaultTranslations } from "./lib/translations-context";
+
+// Matches lowercase HTML / custom tag names (first char is a-z)
+const LOWERCASE_TAG_PATTERN = /^[a-z]/;
 
 // Patterns for HTML indentation normalization
 // Matches if content starts with an HTML tag (possibly with leading whitespace)
@@ -245,6 +254,31 @@ export type StreamdownProps = Options & {
   portal?: PortalTarget;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
+  /**
+   * Fallback component for HTML tags or `allowedTags` entries that have no
+   * matching key in the `components` map. Built-in and explicit `components`
+   * entries always win — this does not replace the default Tailwind renderers.
+   *
+   * When set, it applies to:
+   * - Custom tags declared via `allowedTags` that have no matching key in
+   *   `components`.
+   * - Standard HTML tags absent from both the built-in map and `components`
+   *   (e.g. `<span>`, `<em>`, `<div>`, `<br>`).
+   *
+   * @example
+   * ```tsx
+   * // Render missing map entries / allowedTags via a pass-through
+   * <Streamdown
+   *   allowedTags={{ mention: ["user_id"] }}
+   *   fallbackComponent={({ node, children, ...props }) =>
+   *     createElement(node!.tagName, props, children)
+   *   }
+   * >
+   *   {markdown}
+   * </Streamdown>
+   * ```
+   */
+  fallbackComponent?: React.ComponentType<Record<string, unknown> & ExtraProps>;
   /**
    * Tags whose children should be treated as plain text (no markdown parsing).
    * Useful for mention/entity tags in AI UIs where child content is a data
@@ -517,6 +551,7 @@ export const Streamdown = memo(
     portal,
     lineNumbers = true,
     allowedTags,
+    fallbackComponent,
     literalTagContent,
     translations,
     icons: iconOverrides,
@@ -742,13 +777,15 @@ export const Streamdown = memo(
     const mergedComponents = useMemo(() => {
       const { inlineCode, ...userComponents } = components ?? {};
 
-      const merged = {
+      const merged: Record<string, unknown> = {
         ...defaultComponents,
         ...userComponents,
       };
 
       if (inlineCode) {
-        const BlockCode = merged.code;
+        const BlockCode = merged.code as
+          | ComponentType<ComponentProps<"code"> & ExtraProps>
+          | undefined;
         merged.code = (props: ComponentProps<"code"> & ExtraProps) => {
           const isInline = !("data-block" in props);
           if (isInline) {
@@ -758,8 +795,56 @@ export const Streamdown = memo(
         };
       }
 
-      return merged;
-    }, [components]);
+      if (fallbackComponent) {
+        // Eagerly register fallbackComponent for allowedTags entries that have
+        // no explicit component in the user-supplied `components` map.
+        if (allowedTags) {
+          for (const tag of Object.keys(allowedTags)) {
+            if (!Object.hasOwn(merged, tag)) {
+              merged[tag] = fallbackComponent;
+            }
+          }
+        }
+
+        // Wrap in a Proxy so any other tag not explicitly covered (e.g. HTML
+        // tags absent from defaultComponents like <span>, <em>, <div>)
+        // also uses fallbackComponent instead of rendering as a bare intrinsic
+        // element. hast-util-to-jsx-runtime resolves components via
+        // hasOwnProperty (own.call), so we intercept getOwnPropertyDescriptor
+        // as well as get to satisfy both the presence check and the lookup.
+        const fallbackDesc: PropertyDescriptor = {
+          configurable: true,
+          enumerable: false,
+          value: fallbackComponent,
+          writable: false,
+        };
+        return new Proxy(merged as Components, {
+          getOwnPropertyDescriptor(target, prop) {
+            const ownProp = Object.getOwnPropertyDescriptor(target, prop);
+            if (ownProp) {
+              return ownProp;
+            }
+            // Intercept lowercase HTML / custom tag names only.
+            if (typeof prop === "string" && LOWERCASE_TAG_PATTERN.test(prop)) {
+              return fallbackDesc;
+            }
+            return undefined;
+          },
+          get(target, prop, receiver) {
+            if (
+              typeof prop === "string" &&
+              LOWERCASE_TAG_PATTERN.test(prop) &&
+              !Object.hasOwn(target, prop)
+            ) {
+              return fallbackComponent;
+            }
+            return Reflect.get(target, prop, receiver);
+          },
+        });
+      }
+
+      return merged as Components;
+    }, [components, fallbackComponent, allowedTags]);
 
     // Merge plugin remark plugins (math, cjk)
     // Order: CJK before -> default (remarkGfm) -> CJK after -> math
@@ -1007,6 +1092,7 @@ export const Streamdown = memo(
     JSON.stringify(prevProps.translations) ===
       JSON.stringify(nextProps.translations) &&
     prevProps.prefix === nextProps.prefix &&
-    prevProps.dir === nextProps.dir
+    prevProps.dir === nextProps.dir &&
+    prevProps.fallbackComponent === nextProps.fallbackComponent
 );
 Streamdown.displayName = "Streamdown";

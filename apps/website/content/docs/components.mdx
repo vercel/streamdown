@@ -325,6 +325,43 @@ You can allow multiple custom tags:
 </Streamdown>
 ```
 
+### Fallback for missing map entries
+
+When you only need a shared renderer for tags that are **not** already in the
+built-in map (or your `components` overrides), use `fallbackComponent` instead of
+enumerating every tag:
+
+```tsx title="app/page.tsx"
+import { createElement } from "react";
+
+<Streamdown
+  allowedTags={{
+    mention: ["user_id"],
+    chip: [],
+  }}
+  fallbackComponent={({ node, children, ...props }) =>
+    createElement(node!.tagName, props, children)
+  }
+  components={{
+    // Still wins over fallbackComponent for this tag
+    mention: ({ user_id, children }) => (
+      <UserMention userId={user_id as string}>{children}</UserMention>
+    ),
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+`fallbackComponent` also applies to standard HTML tags absent from both the
+built-in set and `components` (for example `<span>`, `<em>`, `<div>`, `<br>`).
+
+<Callout type="info">
+  This is **not** a full unstyled mode. Built-in renderers (`h1`, `p`, `code`,
+  …) and any explicit `components` entries always take precedence. To restyle
+  those tags, override them in `components`.
+</Callout>
+
 ### Data Attributes
 
 Use `data*` in the attributes array to allow all `data-*` attributes on a tag:
