@@ -2,16 +2,16 @@
 "streamdown": minor
 ---
 
-feat: add `defaultComponent` fallback prop for unstyled/custom tag rendering
+feat: add `fallbackComponent` prop for missing map entries / `allowedTags`
 
-Adds a new `defaultComponent` prop to `<Streamdown>`. When provided, it is
+Adds a new `fallbackComponent` prop to `<Streamdown>`. When provided, it is
 used as a fallback renderer for any HTML tag or allowed custom tag that does
-not have an explicit entry in the `components` map. This enables unstyled /
-passthrough rendering without enumerating every tag:
+not have an explicit entry in the `components` map:
 
 ```tsx
 <Streamdown
-  defaultComponent={({ node, children, ...props }) =>
+  allowedTags={{ mention: ["user_id"] }}
+  fallbackComponent={({ node, children, ...props }) =>
     createElement(node!.tagName, props, children)
   }
 >
@@ -19,8 +19,9 @@ passthrough rendering without enumerating every tag:
 </Streamdown>
 ```
 
-`defaultComponent` applies to custom tags declared via `allowedTags` (no
+`fallbackComponent` applies to custom tags declared via `allowedTags` (with no
 explicit component entry) and to standard HTML tags absent from the built-in
-Tailwind component set. Explicit `components` entries always win.
+component set (e.g. `<span>`, `<em>`, `<div>`, `<br>`). Built-in and explicit
+`components` entries always win — this is not a full unstyled mode.
 
 Refs #543

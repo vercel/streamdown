@@ -146,28 +146,25 @@ export default function Chat() {
 
 For more info, see the [documentation](https://streamdown.ai/docs).
 
-## `defaultComponent` — unstyled / custom fallback rendering
+## `fallbackComponent` — fallback for missing map entries
 
-By default, Streamdown renders most HTML elements with Tailwind utility classes.
-If you use a different design system (or simply want unstyled output), you can
-provide a `defaultComponent` prop. It acts as a **fallback renderer** for any
-tag that does not have an explicit entry in the `components` map.
+Streamdown ships built-in renderers for common markdown tags. For tags that are
+**not** in that map — and not overridden via `components` — you can provide a
+`fallbackComponent`. Useful for `allowedTags` custom elements and uncovered HTML
+tags like `<span>`, `<em>`, `<div>`, or `<br>`.
 
-`defaultComponent` applies to:
-
-- Custom tags declared via `allowedTags` that have no matching key in `components`.
-- Standard HTML tags not covered by the built-in Tailwind component set (e.g.
-  `<span>`, `<div>`, `<section>`).
-
-Explicit entries in `components` always take precedence over `defaultComponent`.
+This is **not** a full unstyled mode: built-in entries (and any explicit
+`components` overrides) still take precedence. To restyle tags that already have
+defaults (e.g. `h1`, `p`, `code`), pass them in `components`.
 
 ```tsx
 import { createElement } from "react";
 import { Streamdown } from "streamdown";
 
-// Pass-through: renders every unhandled tag as plain HTML
+// Render missing map entries / allowedTags via a pass-through
 <Streamdown
-  defaultComponent={({ node, children, ...props }) =>
+  allowedTags={{ mention: ["user_id"] }}
+  fallbackComponent={({ node, children, ...props }) =>
     createElement(node!.tagName, props, children)
   }
 >
@@ -175,12 +172,12 @@ import { Streamdown } from "streamdown";
 </Streamdown>
 ```
 
-You can combine `defaultComponent` with explicit overrides for the tags that
-need special treatment:
+Combine with explicit overrides when some tags need special treatment:
 
 ```tsx
 <Streamdown
-  defaultComponent={({ node, children, ...props }) =>
+  allowedTags={{ mention: ["user_id"] }}
+  fallbackComponent={({ node, children, ...props }) =>
     createElement(node!.tagName, props, children)
   }
   components={{
