@@ -215,23 +215,22 @@ export type StreamdownProps = Options & {
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
   /**
-   * Fallback component rendered for any HTML tag or allowed custom tag that
-   * does not have an explicit entry in the `components` map. Enables
-   * unstyled / passthrough rendering without enumerating every tag.
+   * Fallback component for HTML tags or `allowedTags` entries that have no
+   * matching key in the `components` map. Built-in and explicit `components`
+   * entries always win — this does not replace the default Tailwind renderers.
    *
    * When set, it applies to:
    * - Custom tags declared via `allowedTags` that have no matching key in
    *   `components`.
-   * - Any standard HTML tag that is not covered by the built-in Tailwind
-   *   component set (e.g. `<span>`, `<div>`, `<section>`).
-   *
-   * Explicit entries in `components` always take precedence.
+   * - Standard HTML tags absent from both the built-in map and `components`
+   *   (e.g. `<span>`, `<em>`, `<div>`, `<br>`).
    *
    * @example
    * ```tsx
-   * // Pass-through renderer — renders every unhandled tag as plain HTML
+   * // Render missing map entries / allowedTags via a pass-through
    * <Streamdown
-   *   defaultComponent={({ node, children, ...props }) =>
+   *   allowedTags={{ mention: ["user_id"] }}
+   *   fallbackComponent={({ node, children, ...props }) =>
    *     createElement(node!.tagName, props, children)
    *   }
    * >
@@ -239,7 +238,9 @@ export type StreamdownProps = Options & {
    * </Streamdown>
    * ```
    */
-  defaultComponent?: React.ComponentType<Record<string, unknown> & ExtraProps>;
+  fallbackComponent?: React.ComponentType<
+    Record<string, unknown> & ExtraProps
+  >;
   /**
    * Tags whose children should be treated as plain text (no markdown parsing).
    * Useful for mention/entity tags in AI UIs where child content is a data
@@ -486,7 +487,7 @@ export const Streamdown = memo(
     linkSafety = defaultLinkSafetyConfig,
     lineNumbers = true,
     allowedTags,
-    defaultComponent,
+    fallbackComponent,
     literalTagContent,
     translations,
     icons: iconOverrides,
@@ -700,27 +701,27 @@ export const Streamdown = memo(
         };
       }
 
-      if (defaultComponent) {
-        // Eagerly register defaultComponent for allowedTags entries that have
+      if (fallbackComponent) {
+        // Eagerly register fallbackComponent for allowedTags entries that have
         // no explicit component in the user-supplied `components` map.
         if (allowedTags) {
           for (const tag of Object.keys(allowedTags)) {
             if (!Object.hasOwn(merged, tag)) {
-              merged[tag] = defaultComponent;
+              merged[tag] = fallbackComponent;
             }
           }
         }
 
         // Wrap in a Proxy so any other tag not explicitly covered (e.g. HTML
-        // tags absent from defaultComponents like <span>, <div>, <section>)
-        // also uses defaultComponent instead of rendering as a bare intrinsic
+        // tags absent from defaultComponents like <span>, <em>, <div>)
+        // also uses fallbackComponent instead of rendering as a bare intrinsic
         // element. hast-util-to-jsx-runtime resolves components via
         // hasOwnProperty (own.call), so we intercept getOwnPropertyDescriptor
         // as well as get to satisfy both the presence check and the lookup.
         const fallbackDesc: PropertyDescriptor = {
           configurable: true,
           enumerable: false,
-          value: defaultComponent,
+          value: fallbackComponent,
           writable: false,
         };
         return new Proxy(merged as Components, {
@@ -741,7 +742,7 @@ export const Streamdown = memo(
               LOWERCASE_TAG_PATTERN.test(prop) &&
               !Object.hasOwn(target, prop)
             ) {
-              return defaultComponent;
+              return fallbackComponent;
             }
             return Reflect.get(target, prop, receiver);
           },
@@ -749,7 +750,7 @@ export const Streamdown = memo(
       }
 
       return merged as Components;
-    }, [components, defaultComponent, allowedTags]);
+    }, [components, fallbackComponent, allowedTags]);
 
     // Merge plugin remark plugins (math, cjk)
     // Order: CJK before -> default (remarkGfm) -> CJK after -> math
@@ -952,6 +953,6 @@ export const Streamdown = memo(
       JSON.stringify(nextProps.translations) &&
     prevProps.prefix === nextProps.prefix &&
     prevProps.dir === nextProps.dir &&
-    prevProps.defaultComponent === nextProps.defaultComponent
+    prevProps.fallbackComponent === nextProps.fallbackComponent
 );
 Streamdown.displayName = "Streamdown";
