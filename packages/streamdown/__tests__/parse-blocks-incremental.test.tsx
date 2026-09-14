@@ -250,4 +250,34 @@ describe("parseMarkdownIntoBlocks incremental parsing", () => {
       expect(parseMarkdownIntoBlocks(prefix)).toEqual(parseFresh(prefix));
     }
   });
+
+  it("returns the same block array instance for an unchanged input", () => {
+    const doc = "# Heading\n\nParagraph one.\n\nParagraph two.\n";
+    const first = parseMarkdownIntoBlocks(doc);
+    const second = parseMarkdownIntoBlocks(doc);
+    expect(second).toBe(first);
+  });
+
+  it("does not let a footnote parse poison a later stream", () => {
+    const before =
+      "# Heading\n\nParagraph one.\n\nParagraph two.\n\nParagraph three.\n";
+    const withFootnote = `${before}See note[^1].\n\n[^1]: footnote\n`;
+    const after = `${before}Paragraph four.\n`;
+
+    parseMarkdownIntoBlocks(before);
+    expect(parseMarkdownIntoBlocks(withFootnote)).toEqual([withFootnote]);
+    // Still matches a fresh full parse after the footnote early-return.
+    expect(parseMarkdownIntoBlocks(after)).toEqual(parseFresh(after));
+  });
+
+  it("matches a full parse for documents with duplicate link definitions", () => {
+    const doc =
+      "[x]: /first\n\nSee [x].\n\n[x]: /second\n\nMore text after defs.\n";
+    parseMarkdownIntoBlocks("unrelated\n\ndocument\n");
+
+    for (let i = 1; i <= doc.length; i += 1) {
+      const prefix = doc.slice(0, i);
+      expect(parseMarkdownIntoBlocks(prefix)).toEqual(parseFresh(prefix));
+    }
+  });
 });

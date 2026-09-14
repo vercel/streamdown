@@ -8,6 +8,10 @@ const footnoteDefinitionPattern = /\[\^[\w-]{1,200}\]:/;
 // Allow hyphens / colons so custom tags like <ai-thinking> are tracked across
 // blank-line interruptions (\w alone only matches [A-Za-z0-9_]).
 const openingTagPattern = /<([A-Za-z][\w:-]*)[\s>/]/;
+// Link definitions are stored in the lexer; lexing a stream tail alone does not
+// see definitions from earlier blocks, so duplicate labels can diverge from a
+// full parse. Skip incremental reuse when any are present.
+const linkDefinitionPattern = /^\[[^\]]+\]:/m;
 
 // HTML void elements (self-closing tags) that don't need closing tags
 const voidElements = new Set([
@@ -113,8 +117,7 @@ const lexBlocks = (markdown: string): Token[] =>
 // rest of the document is lexed again.
 //
 // A single cached entry covers one document streaming at a time; anything
-// else falls back to a full parse. The entry keeps the last document in
-// memory for the lifetime of the module.
+// else falls back to a full parse.
 interface ParseCache {
   blocks: string[];
   input: string;
@@ -141,9 +144,12 @@ const countStableBlocks = (blocks: string[]): number => {
 };
 
 // A block is a slice of the input it was lexed from, and V8 keeps that whole
-// input alive while the slice exists. Copy the blocks lexed from the tail so
-// the cache does not hold on to every intermediate document of a stream.
+// input alive while the slice exists. Copy strings stored in the cache so we
+// do not pin every intermediate document of a stream (or the full source of
+// a one-shot parse) via substring retainers.
 const copyString = (value: string): string => ` ${value}`.slice(1);
+
+const copyBlocks = (blocks: string[]): string[] => blocks.map(copyString);
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex parsing logic that handles multiple markdown edge cases"
 const mergeTokensIntoBlocks = (tokens: Token[]): string[] => {
@@ -240,8 +246,16 @@ const reuseParsedBlocks = (
     return null;
   }
 
+  // marked keeps link definitions on the lexer instance. A tail-only lex does
+  // not see defs from the stable prefix, so block lists can diverge (e.g. a
+  // duplicate `[label]: url` is dropped on a full parse but kept on a tail
+  // parse). Bail out whenever the document uses them.
+  if (!input.startsWith(previous.input) || linkDefinitionPattern.test(input)) {
+    return null;
+  }
+
   const stableCount = countStableBlocks(previous.blocks);
-  if (stableCount === 0 || !input.startsWith(previous.input)) {
+  if (stableCount === 0) {
     return null;
   }
 
@@ -270,12 +284,14 @@ const reuseParsedBlocks = (
     return null;
   }
 
-  const tailBlocks = mergeTokensIntoBlocks(
-    lexBlocks(input.slice(verifiedLength))
-  ).map(copyString);
+  const tailBlocks = copyBlocks(
+    mergeTokensIntoBlocks(lexBlocks(input.slice(verifiedLength)))
+  );
 
   return {
     input,
+    // Keep the same string instances for stable blocks so callers that identity-
+    // compare content (and the cache itself) do not churn allocations.
     blocks: previous.blocks.slice(0, stableCount).concat(tailBlocks),
     verifiedCount,
     verifiedLength,
@@ -291,7 +307,9 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   const hasFootnoteDefinition = footnoteDefinitionPattern.test(markdown);
 
   // If footnotes are present, return the entire document as a single block
-  // This ensures footnote references and definitions remain in the same mdast tree
+  // This ensures footnote references and definitions remain in the same mdast tree.
+  // Do not write the cache: footnote documents are not block-split, and leaving
+  // a prior entry avoids poisoning the next non-footnote stream extension check.
   if (hasFootnoteReference || hasFootnoteDefinition) {
     return [markdown];
   }
@@ -299,14 +317,24 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   const input = markdown.includes("\r")
     ? markdown.replace(lineEndingPattern, "\n")
     : markdown;
+
+  // Exact hit: return the same block array instance (useful under React
+  // StrictMode double-invoke and repeated layout passes with unchanged content).
+  if (lastParse?.input === input) {
+    return lastParse.blocks;
+  }
+
   const reused = lastParse ? reuseParsedBlocks(lastParse, input) : null;
-  const { blocks, verifiedCount, verifiedLength } = reused ?? {
-    blocks: mergeTokensIntoBlocks(lexBlocks(input)),
-    verifiedCount: 0,
-    verifiedLength: 0,
-  };
+  const entry =
+    reused ??
+    ({
+      input,
+      blocks: copyBlocks(mergeTokensIntoBlocks(lexBlocks(input))),
+      verifiedCount: 0,
+      verifiedLength: 0,
+    } satisfies ParseCache);
 
-  lastParse = { input, blocks, verifiedCount, verifiedLength };
+  lastParse = entry;
 
-  return blocks;
+  return entry.blocks;
 };
