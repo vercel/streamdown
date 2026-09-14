@@ -8,6 +8,7 @@ import {
   lazy,
   type MouseEvent,
   memo,
+  type ReactNode,
   Suspense,
   useCallback,
   useContext,
@@ -197,8 +198,10 @@ const MemoLi = memo<LiProps>(
     const normalizedChildren =
       childArray.length === 1 &&
       isValidElement(childArray[0]) &&
-      childArray[0].type === "p"
-        ? childArray[0].props.children
+      (childArray[0].type === MemoParagraph ||
+        (childArray[0].props as { node: { tagname: string } }).node?.tagname ===
+          "p")
+        ? (childArray[0].props as { children: ReactNode }).children
         : children;
 
     return (
