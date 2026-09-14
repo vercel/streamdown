@@ -238,9 +238,7 @@ export type StreamdownProps = Options & {
    * </Streamdown>
    * ```
    */
-  fallbackComponent?: React.ComponentType<
-    Record<string, unknown> & ExtraProps
-  >;
+  fallbackComponent?: React.ComponentType<Record<string, unknown> & ExtraProps>;
   /**
    * Tags whose children should be treated as plain text (no markdown parsing).
    * Useful for mention/entity tags in AI UIs where child content is a data
