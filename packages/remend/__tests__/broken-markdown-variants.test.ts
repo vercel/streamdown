@@ -580,17 +580,16 @@ describe("real-world AI streaming patterns", () => {
     expect(remend("## Important *note")).toBe("## Important *note*");
   });
 
-  it("should handle incomplete image (preserves newlines before removed image)", () => {
+  it("should handle incomplete image (placeholder keeps preceding content)", () => {
     expect(remend("Here's the diagram:\n\n![architecture")).toBe(
-      "Here's the diagram:\n\n"
+      "Here's the diagram:\n\n![architecture](streamdown:incomplete-image)"
     );
   });
 
-  it("should handle incomplete image with partial URL (preserves trailing space)", () => {
-    // Image is removed, leaving "See " - the trailing space remains
-    // because remend only trims single trailing space at the very start
-    // before handlers run, and the handler produces new trailing space
-    expect(remend("See ![diagram](http://example.com/img")).toBe("See ");
+  it("should handle incomplete image with partial URL (placeholder keeps preceding content)", () => {
+    expect(remend("See ![diagram](http://example.com/img")).toBe(
+      "See ![diagram](streamdown:incomplete-image)"
+    );
   });
 
   it("should handle link with incomplete formatting after it", () => {

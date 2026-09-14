@@ -50,6 +50,12 @@ beforeEach(() => {
   } as unknown as typeof IntersectionObserver;
 });
 
+// Mock scrollTo for jsdom (not implemented by default)
+beforeEach(() => {
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: intentional noop for jsdom mock
+  window.HTMLElement.prototype.scrollTo = () => {};
+});
+
 // Cleanup after each test
 afterEach(() => {
   cleanup();

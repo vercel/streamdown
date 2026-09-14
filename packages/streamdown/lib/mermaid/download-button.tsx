@@ -1,12 +1,13 @@
-import type { MermaidConfig } from "mermaid";
 import { useContext, useEffect, useRef, useState } from "react";
 import { StreamdownContext } from "../../index";
+import { getDownloadFilename } from "../controls";
 import { useIcons } from "../icon-context";
 import { useMermaidPlugin } from "../plugin-context";
+import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
 import { useTranslations } from "../translations-context";
 import { save } from "../utils";
-import { svgToPngBlob } from "./utils";
+import { serializeSvgForDownload, svgToPngBlob } from "./utils";
 
 interface MermaidDownloadDropdownProps {
   chart: string;
@@ -28,16 +29,17 @@ export const MermaidDownloadDropdown = ({
   const cn = useCn();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { isAnimating } = useContext(StreamdownContext);
+  const { isAnimating, controls } = useContext(StreamdownContext);
   const icons = useIcons();
   const mermaidPlugin = useMermaidPlugin();
   const t = useTranslations();
+  const baseFilename = getDownloadFilename(controls, "mermaid", "diagram");
 
   const downloadMermaid = async (format: "mmd" | "png" | "svg") => {
     try {
       if (format === "mmd") {
         // Download as Mermaid source code
-        const filename = "diagram.mmd";
+        const filename = `${baseFilename}.mmd`;
         const mimeType = "text/plain";
         save(filename, chart, mimeType);
         setIsOpen(false);
@@ -69,18 +71,20 @@ export const MermaidDownloadDropdown = ({
         return;
       }
 
+      const serializedSvg = serializeSvgForDownload(svg);
+
       if (format === "svg") {
-        const filename = "diagram.svg";
+        const filename = `${baseFilename}.svg`;
         const mimeType = "image/svg+xml";
-        save(filename, svg, mimeType);
+        save(filename, serializedSvg, mimeType);
         setIsOpen(false);
         onDownload?.(format);
         return;
       }
 
       if (format === "png") {
-        const blob = await svgToPngBlob(svg);
-        save("diagram.png", blob, "image/png");
+        const blob = await svgToPngBlob(serializedSvg);
+        save(`${baseFilename}.png`, blob, "image/png");
         onDownload?.(format);
         setIsOpen(false);
         return;
@@ -107,6 +111,7 @@ export const MermaidDownloadDropdown = ({
   return (
     <div className={cn("relative")} ref={dropdownRef}>
       <button
+        aria-label={t.downloadDiagram}
         className={cn(
           "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
           className
@@ -116,7 +121,7 @@ export const MermaidDownloadDropdown = ({
         title={t.downloadDiagram}
         type="button"
       >
-        {children ?? <icons.DownloadIcon size={14} />}
+        {children ?? <icons.DownloadIcon aria-hidden="true" size={14} />}
       </button>
       {isOpen ? (
         <div
@@ -125,6 +130,7 @@ export const MermaidDownloadDropdown = ({
           )}
         >
           <button
+            aria-label={t.downloadDiagramAsSvg}
             className={cn(
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}
@@ -135,6 +141,7 @@ export const MermaidDownloadDropdown = ({
             {t.mermaidFormatSvg}
           </button>
           <button
+            aria-label={t.downloadDiagramAsPng}
             className={cn(
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}
@@ -145,6 +152,7 @@ export const MermaidDownloadDropdown = ({
             {t.mermaidFormatPng}
           </button>
           <button
+            aria-label={t.downloadDiagramAsMmd}
             className={cn(
               "w-full px-3 py-2 text-left text-sm transition-colors hover:bg-muted/40"
             )}

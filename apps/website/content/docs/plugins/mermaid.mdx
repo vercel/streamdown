@@ -469,11 +469,27 @@ Click the fullscreen button to view the diagram in an overlay with a dark backgr
 
 ### Download
 
-Download the diagram as an SVG file for use in presentations or documentation.
+Download the diagram as SVG, PNG, or Mermaid source. By default files are named `diagram.svg`, `diagram.png`, and `diagram.mmd`. Pass `download: { filename: "flowchart" }` to use a custom base name.
 
 ### Copy
 
-Copy the diagram to your clipboard for pasting into other applications.
+Copy the diagram source to your clipboard for pasting into other applications. Pass callbacks through `controls.mermaid.copy` to react to success or failure without replacing the default button:
+
+```tsx
+<Streamdown
+  plugins={{ mermaid }}
+  controls={{
+    mermaid: {
+      copy: {
+        onCopy: () => toast.success("Diagram copied"),
+        onError: (error) => toast.error(error.message),
+      },
+    },
+  }}
+>
+  {markdown}
+</Streamdown>
+```
 
 ### Customizing Controls
 
@@ -485,8 +501,8 @@ You can customize which controls are shown:
   controls={{
     mermaid: {
       fullscreen: true,
-      download: true,
-      copy: true,
+      download: { filename: "flowchart" }, // Download as flowchart.svg / flowchart.png / flowchart.mmd
+      copy: true, // or { onCopy, onError } for callbacks
       panZoom: true, // Enable pan and zoom controls
     },
   }}

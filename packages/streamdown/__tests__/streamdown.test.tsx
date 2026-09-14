@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
-import type { MermaidConfig } from "mermaid";
 import { describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
+import type { MermaidConfig } from "../lib/plugin-types";
 
 // Mock the dependencies
 vi.mock("../lib/markdown", () => ({

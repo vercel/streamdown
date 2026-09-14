@@ -33,3 +33,21 @@
   animation: var(--sd-animation, sd-fadeIn) var(--sd-duration, 150ms)
     var(--sd-easing, ease) var(--sd-delay, 0ms) both;
 }
+
+/*
+ * List markers (the disc/decimal glyph) are painted by the browser's
+ * ::marker pseudo-element, which the animate plugin can't wrap in a
+ * span. ::marker also doesn't honor opacity/transform animations, so we
+ * fade it in via color (which it does support) instead, synced to the
+ * timing the plugin stamps from the item's first word.
+ */
+@keyframes sd-markerIn {
+  from {
+    color: transparent;
+  }
+}
+
+[data-sd-animate-marker]::marker {
+  animation: sd-markerIn var(--sd-marker-duration, 150ms)
+    var(--sd-marker-easing, ease) var(--sd-marker-delay, 0ms) both;
+}

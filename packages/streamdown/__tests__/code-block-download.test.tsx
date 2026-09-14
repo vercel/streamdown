@@ -137,4 +137,191 @@ describe("CodeBlockDownloadButton", () => {
     );
     expect(button?.hasAttribute("disabled")).toBe(true);
   });
+
+  it("should use custom filename from controls", async () => {
+    const { save } = await import("../lib/utils");
+
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: {
+            code: { download: { filename: "myScript" } },
+          },
+          isAnimating: false,
+          mode: "streaming",
+        }}
+      >
+        <CodeBlock code="console.log('test');" language="javascript">
+          <CodeBlockDownloadButton
+            code="console.log('test');"
+            language="javascript"
+          />
+        </CodeBlock>
+      </StreamdownContext.Provider>
+    );
+
+    await waitFor(() => {
+      const button = container.querySelector(
+        '[data-streamdown="code-block-download-button"]'
+      );
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
+    const button = container.querySelector(
+      '[data-streamdown="code-block-download-button"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(button!);
+
+    expect(save).toHaveBeenCalledWith(
+      "myScript.js",
+      "console.log('test');",
+      "text/plain"
+    );
+  });
+
+  it("should use custom filename with unknown language", async () => {
+    const { save } = await import("../lib/utils");
+
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: {
+            code: { download: { filename: "output" } },
+          },
+          isAnimating: false,
+          mode: "streaming",
+        }}
+      >
+        <CodeBlock code="some data" language="unknown">
+          <CodeBlockDownloadButton code="some data" language="unknown" />
+        </CodeBlock>
+      </StreamdownContext.Provider>
+    );
+
+    await waitFor(() => {
+      const button = container.querySelector(
+        '[data-streamdown="code-block-download-button"]'
+      );
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
+    const button = container.querySelector(
+      '[data-streamdown="code-block-download-button"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(button!);
+
+    expect(save).toHaveBeenCalledWith("output.txt", "some data", "text/plain");
+  });
+
+  it("should fall back to default filename when controls is true", async () => {
+    const { save } = await import("../lib/utils");
+
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+          isAnimating: false,
+          mode: "streaming",
+        }}
+      >
+        <CodeBlock code="python code" language="python">
+          <CodeBlockDownloadButton code="python code" language="python" />
+        </CodeBlock>
+      </StreamdownContext.Provider>
+    );
+
+    await waitFor(() => {
+      const button = container.querySelector(
+        '[data-streamdown="code-block-download-button"]'
+      );
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
+    const button = container.querySelector(
+      '[data-streamdown="code-block-download-button"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(button!);
+
+    expect(save).toHaveBeenCalledWith("file.py", "python code", "text/plain");
+  });
+
+  it("should fall back to default filename when download is enabled without a filename", async () => {
+    const { save } = await import("../lib/utils");
+
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: { code: { download: true } },
+          isAnimating: false,
+          mode: "streaming",
+        }}
+      >
+        <CodeBlock code="rust code" language="rust">
+          <CodeBlockDownloadButton code="rust code" language="rust" />
+        </CodeBlock>
+      </StreamdownContext.Provider>
+    );
+
+    await waitFor(() => {
+      const button = container.querySelector(
+        '[data-streamdown="code-block-download-button"]'
+      );
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
+    const button = container.querySelector(
+      '[data-streamdown="code-block-download-button"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(button!);
+
+    expect(save).toHaveBeenCalledWith("file.rs", "rust code", "text/plain");
+  });
+
+  it("should handle special characters in custom filename", async () => {
+    const { save } = await import("../lib/utils");
+
+    const { container } = render(
+      <StreamdownContext.Provider
+        value={{
+          shikiTheme: ["github-light", "github-dark"],
+          controls: {
+            code: { download: { filename: "my-config.backup" } },
+          },
+          isAnimating: false,
+          mode: "streaming",
+        }}
+      >
+        <CodeBlock code="config data" language="json">
+          <CodeBlockDownloadButton code="config data" language="json" />
+        </CodeBlock>
+      </StreamdownContext.Provider>
+    );
+
+    await waitFor(() => {
+      const button = container.querySelector(
+        '[data-streamdown="code-block-download-button"]'
+      );
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
+    const button = container.querySelector(
+      '[data-streamdown="code-block-download-button"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(button!);
+
+    expect(save).toHaveBeenCalledWith(
+      "my-config.backup.json",
+      "config data",
+      "text/plain"
+    );
+  });
 });

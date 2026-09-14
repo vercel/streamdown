@@ -66,19 +66,27 @@ export const CodeBlockCopyButton = ({
   const Icon = isCopied ? icons.CheckIcon : icons.CopyIcon;
 
   return (
-    <button
-      className={cn(
-        "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
-        className
+    <>
+      <button
+        aria-label={t.copyCode}
+        className={cn(
+          "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        data-streamdown="code-block-copy-button"
+        disabled={isAnimating}
+        onClick={copyToClipboard}
+        title={t.copyCode}
+        type="button"
+        {...props}
+      >
+        {children ?? <Icon aria-hidden="true" size={14} />}
+      </button>
+      {isCopied && (
+        <output aria-live="polite" className="sr-only">
+          {t.copied}
+        </output>
       )}
-      data-streamdown="code-block-copy-button"
-      disabled={isAnimating}
-      onClick={copyToClipboard}
-      title={t.copyCode}
-      type="button"
-      {...props}
-    >
-      {children ?? <Icon size={14} />}
-    </button>
+    </>
   );
 };

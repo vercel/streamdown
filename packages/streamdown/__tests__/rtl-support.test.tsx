@@ -178,6 +178,26 @@ Mixed paragraph: Hello مرحبا World عالم.
       expect(wrapper?.getAttribute("dir")).toBe("ltr");
     });
 
+    it("applies auto direction per semantic block in static mode", () => {
+      const content =
+        "# שלום עולם\n\nEnglish paragraph.\n\nReact یک کتابخانه جاوااسکریپت بسیار محبوب است.\n\n```js\nconsole.log('hello');\n```";
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {content}
+        </Streamdown>
+      );
+
+      const heading = container.querySelector("h1");
+      const paragraphs = container.querySelectorAll("p");
+      const code = container.querySelector('[data-streamdown="code-block"]');
+
+      expect(container.firstElementChild?.hasAttribute("dir")).toBe(false);
+      expect(heading?.getAttribute("dir")).toBe("rtl");
+      expect(paragraphs[0]?.getAttribute("dir")).toBe("ltr");
+      expect(paragraphs[1]?.getAttribute("dir")).toBe("rtl");
+      expect(code?.getAttribute("dir")).toBe("ltr");
+    });
+
     it('applies per-block dir in streaming mode with dir="auto"', () => {
       const content = "مرحبا بالعالم\n\nHello world";
       const { container } = render(
