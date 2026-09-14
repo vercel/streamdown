@@ -74,9 +74,14 @@ Streamdown can be configured to suit your needs. This guide will walk you throug
       description: "Custom component overrides for Markdown elements",
       type: "object",
     },
+    fallbackComponent: {
+      description:
+        "Fallback renderer for HTML tags or allowedTags entries that have no matching key in components. Built-in and explicit components entries always win — this is not a full unstyled mode. See Components.",
+      type: "React.ComponentType<Record<string, unknown> & ExtraProps>",
+    },
     allowedTags: {
       description:
-        "Custom HTML tags to allow through sanitization, with their permitted attributes. Use with 'components' to render custom tags like <ref> or <mention>. Only works with default rehype plugins.",
+        "Custom HTML tags to allow through sanitization, with their permitted attributes. Use with 'components' or 'fallbackComponent' to render custom tags like <ref> or <mention>. Only works with default rehype plugins.",
       type: "Record<string, string[]>",
     },
     literalTagContent: {
