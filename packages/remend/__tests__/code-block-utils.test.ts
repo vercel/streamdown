@@ -1,47 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { isInsideCodeBlock } from "../src/code-block-utils";
 
-// Reference implementation: the previous per-call scan, kept verbatim so the
-// lookup-based rewrite can be checked against it position by position.
-const referenceIsInsideCodeBlock = (
-  text: string,
-  position: number
-): boolean => {
-  let inInlineCode = false;
-  let inMultilineCode = false;
-
-  for (let i = 0; i < position; i += 1) {
-    if (text[i] === "\\" && i + 1 < text.length && text[i + 1] === "`") {
-      i += 1;
-      continue;
-    }
-    if (text.substring(i, i + 3) === "```") {
-      inMultilineCode = !inMultilineCode;
-      i += 2;
-      continue;
-    }
-    if (!inMultilineCode && text[i] === "`") {
-      inInlineCode = !inInlineCode;
-    }
-  }
-
-  return inInlineCode || inMultilineCode;
-};
-
-// Returns positions where the rewrite disagrees with the reference scan.
-const parityMismatches = (text: string): number[] => {
-  const mismatches: number[] = [];
-  for (let p = 0; p <= text.length + 1; p += 1) {
-    if (isInsideCodeBlock(text, p) !== referenceIsInsideCodeBlock(text, p)) {
-      mismatches.push(p);
-    }
-  }
-  return mismatches;
-};
-
 describe("isInsideCodeBlock", () => {
   it("reports positions inside a fenced code block", () => {
-    const text = "before ```js\nconst x = arr[0];\n``` after";
+    const text = "before\n```js\nconst x = arr[0];\n```\nafter";
     expect(isInsideCodeBlock(text, text.indexOf("arr"))).toBe(true);
     expect(isInsideCodeBlock(text, text.indexOf("before"))).toBe(false);
     expect(isInsideCodeBlock(text, text.indexOf("after"))).toBe(false);
@@ -64,17 +26,10 @@ describe("isInsideCodeBlock", () => {
     expect(isInsideCodeBlock(text, text.length)).toBe(true);
   });
 
-  it("matches the per-call scan at every position on mixed input", () => {
-    const cases = [
-      "a `b` c ```\nd [e] `f`\n``` g \\` h ``` i",
-      "``````",
-      "\\`",
-      "`unclosed inline [x]",
-      "text \\``real` code",
-    ];
-    for (const text of cases) {
-      expect(parityMismatches(text)).toEqual([]);
-    }
+  it("treats a backtick run that is not at line start as inline code", () => {
+    const text = "before ```js const x = arr[0]; ``` after";
+    expect(isInsideCodeBlock(text, text.indexOf("arr"))).toBe(true);
+    expect(isInsideCodeBlock(text, text.indexOf("after"))).toBe(false);
   });
 
   it("stays correct when queried texts alternate", () => {
