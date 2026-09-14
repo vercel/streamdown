@@ -348,4 +348,27 @@ describe("MermaidFullscreenButton", () => {
       document.querySelector('button[title="Download diagram"]')
     ).toBeFalsy();
   });
+
+  it("should portal fullscreen overlay to the configured portal target", async () => {
+    const portalRoot = document.createElement("div");
+    document.body.appendChild(portalRoot);
+
+    const { container, unmount } = renderWithContext(
+      { chart: "graph TD; A-->B" },
+      { portal: () => portalRoot }
+    );
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      expect(
+        portalRoot.querySelector('[data-streamdown="mermaid-fullscreen"]')
+      ).toBeTruthy();
+    });
+
+    unmount();
+    portalRoot.remove();
+  });
 });

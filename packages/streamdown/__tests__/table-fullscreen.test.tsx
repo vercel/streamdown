@@ -390,6 +390,27 @@ describe("TableFullscreenButton", () => {
       overlay?.querySelector('button[title="Download table as Markdown"]')
     ).toBeTruthy();
   });
+
+  it("should portal fullscreen overlay to the configured portal target", () => {
+    const portalRoot = document.createElement("div");
+    document.body.appendChild(portalRoot);
+
+    const { container, unmount } = render(
+      <Streamdown portal={portalRoot}>{markdownWithTable}</Streamdown>
+    );
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    expect(
+      portalRoot.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeTruthy();
+
+    unmount();
+    portalRoot.remove();
+  });
 });
 
 describe("TableFullscreenButton copy and download", () => {

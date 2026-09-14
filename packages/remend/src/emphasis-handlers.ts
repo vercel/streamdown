@@ -60,11 +60,6 @@ const shouldSkipAsterisk = (
     return true;
   }
 
-  // Skip if asterisk is word-internal (between word characters)
-  if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
-    return true;
-  }
-
   // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter per CommonMark)
   // This also catches list markers (e.g., "* item") since they have whitespace on both sides
   const prevIsWhitespace =
@@ -78,12 +73,50 @@ const shouldSkipAsterisk = (
   return false;
 };
 
+const isWhitespaceChar = (char: string): boolean =>
+  char === " " || char === "\t" || char === "\n";
+
+const isWordInternalAsterisk = (prevChar: string, nextChar: string): boolean =>
+  Boolean(prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar));
+
+// Decide whether a candidate single-asterisk delimiter should participate in the
+// open/close parity count used by incomplete-italic completion.
+//
+// Intraword asterisks only count while resolving an active emphasis chain:
+// they can close an open run and may reopen within the same word after a close.
+// Cold (unmatched) intraword asterisks stay literal (hello*world / #189).
+// Trailing right-flanking-only markers after a closed run also stay literal
+// (*foo*bar* / a *b*c*).
+const shouldCountSingleAsterisk = (
+  prevChar: string,
+  nextChar: string,
+  count: number,
+  inWordAsteriskChain: boolean
+): { count: true; inWordAsteriskChain: boolean } | { count: false } => {
+  const isWordInternal = isWordInternalAsterisk(prevChar, nextChar);
+  const canOpen = Boolean(nextChar) && !isWhitespaceChar(nextChar);
+  const canClose = Boolean(prevChar) && !isWhitespaceChar(prevChar);
+
+  // Do not start emphasis from a cold word-internal asterisk.
+  if (isWordInternal && count % 2 === 0 && !inWordAsteriskChain) {
+    return { count: false };
+  }
+
+  // Prefer closing an active run; only open when left-flanking.
+  if ((canClose && count % 2 === 1) || canOpen) {
+    return { count: true, inWordAsteriskChain: isWordInternal };
+  }
+
+  return { count: false };
+};
+
 // OPTIMIZATION: Counts single asterisks without split("").reduce()
-// Counts single asterisks that are not part of double asterisks, not escaped, not list markers, not word-internal,
-// and not inside fenced code blocks
+// Counts single asterisks that are not part of double asterisks, escaped, or list markers,
+// and not inside fenced code blocks.
 export const countSingleAsterisks = (text: string): number => {
   let count = 0;
   let inCodeBlock = false;
+  let inWordAsteriskChain = false;
   const len = text.length;
 
   for (let index = 0; index < len; index += 1) {
@@ -105,14 +138,28 @@ export const countSingleAsterisks = (text: string): number => {
     }
 
     if (text[index] !== "*") {
+      if (!isWordChar(text[index])) {
+        inWordAsteriskChain = false;
+      }
       continue;
     }
 
     const prevChar = index > 0 ? text[index - 1] : "";
     const nextChar = index < len - 1 ? text[index + 1] : "";
 
-    if (!shouldSkipAsterisk(text, index, prevChar, nextChar)) {
+    if (shouldSkipAsterisk(text, index, prevChar, nextChar)) {
+      continue;
+    }
+
+    const decision = shouldCountSingleAsterisk(
+      prevChar,
+      nextChar,
+      count,
+      inWordAsteriskChain
+    );
+    if (decision.count) {
       count += 1;
+      inWordAsteriskChain = decision.inWordAsteriskChain;
     }
   }
 
@@ -483,21 +530,25 @@ const findFirstSingleAsteriskIndex = (text: string): number => {
       const nextChar = i < text.length - 1 ? text[i + 1] : "";
 
       // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter)
-      const prevIsWs =
-        !prevChar || prevChar === " " || prevChar === "\t" || prevChar === "\n";
-      const nextIsWs =
-        !nextChar || nextChar === " " || nextChar === "\t" || nextChar === "\n";
+      const prevIsWs = !prevChar || isWhitespaceChar(prevChar);
+      const nextIsWs = !nextChar || isWhitespaceChar(nextChar);
       if (prevIsWs && nextIsWs) {
         continue;
       }
 
-      // Check if asterisk is word-internal (between word characters)
+      // Skip cold word-internal asterisks; they are not openers for completion.
+      // (Active-run closers are still counted in countSingleAsterisks.)
       if (
         prevChar &&
         nextChar &&
         isWordChar(prevChar) &&
         isWordChar(nextChar)
       ) {
+        continue;
+      }
+
+      // A right-flanking-only marker cannot open incomplete italic.
+      if (nextIsWs) {
         continue;
       }
 

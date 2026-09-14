@@ -1,5 +1,6 @@
 import { fireEvent, render, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { Streamdown } from "../index";
 import { LinkSafetyModal } from "../lib/link-modal";
 
 describe("LinkSafetyModal keyboard and interaction", () => {
@@ -227,5 +228,27 @@ describe("LinkSafetyModal keyboard and interaction", () => {
     // Fire on document level (the useEffect handler)
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("should portal the default modal to the configured portal target", () => {
+    const portalRoot = document.createElement("div");
+    document.body.appendChild(portalRoot);
+
+    const { container, unmount } = render(
+      <Streamdown portal={() => portalRoot}>
+        {"[External link](https://example.com)"}
+      </Streamdown>
+    );
+
+    const link = container.querySelector('[data-streamdown="link"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(link!);
+
+    expect(
+      portalRoot.querySelector('[data-streamdown="link-safety-modal"]')
+    ).toBeTruthy();
+
+    unmount();
+    portalRoot.remove();
   });
 });

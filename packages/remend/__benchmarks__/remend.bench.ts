@@ -279,3 +279,20 @@ ${"Regular paragraph text with some [links](https://example.com) and more conten
     { iterations: 1000 }
   );
 });
+
+describe("Streamed Code Blocks", () => {
+  // An unclosed fence full of brackets is the pathological case for the
+  // code-block scan: every "[" probes isInsideCodeBlock, which previously
+  // rescanned the whole prefix per probe (quadratic overall).
+  const bracketHeavyLine =
+    "const x = arr[i]; if (map[key]) { list[j] = grid[a][b]; }\n";
+  const streamingCodeBlock = `\`\`\`ts\n${bracketHeavyLine.repeat(1000)}`;
+
+  bench(
+    "unclosed bracket-heavy code block (58k chars)",
+    () => {
+      remend(streamingCodeBlock);
+    },
+    { iterations: 10 }
+  );
+});

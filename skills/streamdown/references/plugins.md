@@ -126,12 +126,17 @@ const mermaid = createMermaidPlugin({
 
 **Supported diagram types:** Flowcharts, sequence, state, class, pie, Gantt, ER, git graphs.
 
-**Interactive controls:** Fullscreen, download SVG, copy source, pan/zoom. Customize via `controls` prop:
+**Interactive controls:** Fullscreen, download SVG/PNG/MMD, copy source, pan/zoom. Customize via `controls` prop:
 ```tsx
 <Streamdown
   plugins={{ mermaid }}
   controls={{
-    mermaid: { download: true, copy: true, fullscreen: true, panZoom: false },
+    mermaid: {
+      download: { filename: "flowchart" },
+      copy: true,
+      fullscreen: true,
+      panZoom: false,
+    },
   }}
 >
 ```

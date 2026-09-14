@@ -9,6 +9,7 @@ import {
   useDeferredValue,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from "react";
@@ -21,7 +22,9 @@ import type { Pluggable } from "unified";
 import {
   type AnimateOptions,
   type AnimatePlugin,
+  type AnimateTimeline,
   createAnimatePlugin,
+  createAnimateTimeline,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as defaultComponents } from "./lib/components";
@@ -42,6 +45,7 @@ import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-conten
 import { rehypeBlockDirection } from "./lib/rehype/block-direction";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
+import type { CSVSeparator } from "./lib/table/utils";
 import {
   defaultTranslations,
   type StreamdownTranslations,
@@ -95,6 +99,7 @@ export {
   type TableDownloadDropdownProps,
 } from "./lib/table/download-dropdown";
 export {
+  type CSVSeparator,
   escapeMarkdownTableCell,
   extractTableDataFromElement,
   type TableData,
@@ -133,6 +138,15 @@ export const normalizeHtmlIndentation = (content: string): string => {
   return content.replace(HTML_LINE_INDENT_PATTERN, "$1");
 };
 
+export type DownloadControlConfig = boolean | { filename: string };
+
+export type CopyControlConfig =
+  | boolean
+  | {
+      onCopy?: () => void;
+      onError?: (error: Error) => void;
+    };
+
 export type ControlsConfig =
   | boolean
   | {
@@ -140,20 +154,21 @@ export type ControlsConfig =
         | boolean
         | {
             copy?: boolean;
-            download?: boolean;
+            csvSeparator?: CSVSeparator;
+            download?: DownloadControlConfig;
             fullscreen?: boolean;
           };
       code?:
         | boolean
         | {
-            copy?: boolean;
-            download?: boolean;
+            copy?: CopyControlConfig;
+            download?: DownloadControlConfig;
           };
       mermaid?:
         | boolean
         | {
-            download?: boolean;
-            copy?: boolean;
+            download?: DownloadControlConfig;
+            copy?: CopyControlConfig;
             fullscreen?: boolean;
             panZoom?: boolean;
           };
@@ -185,6 +200,7 @@ export interface MermaidOptions {
 }
 
 export type AllowedTags = Record<string, string[]>;
+export type PortalTarget = HTMLElement | null | (() => HTMLElement | null);
 
 export type StreamdownProps = Options & {
   mode?: "static" | "streaming";
@@ -206,13 +222,28 @@ export type StreamdownProps = Options & {
   className?: string;
   shikiTheme?: [ThemeInput, ThemeInput];
   mermaid?: MermaidOptions;
+  /**
+   * Max height for fenced code blocks. Numbers are treated as px.
+   * Set to `0` or `Infinity` to disable. @default 400
+   */
+  codeBlockMaxHeight?: number | string;
   controls?: ControlsConfig;
   isAnimating?: boolean;
+  /**
+   * Max height for tables. Numbers are treated as px.
+   * Set to `0` or `Infinity` to disable. @default 300
+   */
+  tableMaxHeight?: number | string;
   animated?: boolean | AnimateOptions;
   caret?: keyof typeof carets;
   plugins?: PluginConfig;
   remend?: RemendOptions;
   linkSafety?: LinkSafetyConfig;
+  /**
+   * DOM node for Streamdown overlays, or a function returning one.
+   * Defaults to `document.body`.
+   */
+  portal?: PortalTarget;
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
   /**
@@ -255,7 +286,10 @@ const defaultSanitizeSchema = {
   clobberPrefix: "",
   protocols: {
     ...defaultSchema.protocols,
-    href: [...(defaultSchema.protocols?.href ?? []), "tel"],
+    // `streamdown:` is the remend sentinel scheme for incomplete links/images
+    // during streaming (streamdown:incomplete-link / incomplete-image).
+    href: [...(defaultSchema.protocols?.href ?? []), "tel", "streamdown"],
+    src: [...(defaultSchema.protocols?.src ?? []), "streamdown"],
   },
   attributes: {
     ...defaultSchema.attributes,
@@ -294,6 +328,8 @@ const carets = {
 
 // Combined context for better performance - reduces React tree depth from 5 nested providers to 1
 export interface StreamdownContextType {
+  /** Max height for fenced code blocks. @default 400 */
+  codeBlockMaxHeight: number | string;
   controls: ControlsConfig;
   isAnimating: boolean;
   /** Show line numbers in code blocks. @default true */
@@ -301,7 +337,10 @@ export interface StreamdownContextType {
   linkSafety?: LinkSafetyConfig;
   mermaid?: MermaidOptions;
   mode: "static" | "streaming";
+  portal?: PortalTarget;
   shikiTheme: [ThemeInput, ThemeInput];
+  /** Max height for tables. @default 300 */
+  tableMaxHeight: number | string;
 }
 
 const defaultShikiTheme: [ThemeInput, ThemeInput] = [
@@ -314,6 +353,7 @@ const defaultLinkSafetyConfig: LinkSafetyConfig = {
 };
 
 const defaultStreamdownContext: StreamdownContextType = {
+  codeBlockMaxHeight: 400,
   shikiTheme: defaultShikiTheme,
   controls: true,
   isAnimating: false,
@@ -321,6 +361,8 @@ const defaultStreamdownContext: StreamdownContextType = {
   mode: "streaming",
   mermaid: undefined,
   linkSafety: defaultLinkSafetyConfig,
+  portal: undefined,
+  tableMaxHeight: 300,
 };
 
 export const StreamdownContext = createContext<StreamdownContextType>(
@@ -352,18 +394,18 @@ export const Block = memo(
     animatePlugin: animatePluginProp,
     ...props
   }: BlockProps) => {
-    // Tell the animate plugin how many HAST characters were already rendered
-    // so it can skip their animation (duration=0ms) on this render pass.
+    // After rehype paints, commit the new char count so the *next* render
+    // treats already-visible text as settled. Commit lives outside the render
+    // body so StrictMode double-invoke cannot wipe and re-seed prevContentLength
+    // (#570 secondary). The plugin seeds prevContentLength from its own
+    // committedCharCount at the start of every rehype run.
     //
-    // getLastRenderCharCount() returns the char count from the PREVIOUS
-    // rehype run then resets to 0. React renders depth-first: this Block's
-    // body runs, then its child Markdown calls processor.runSync (which
-    // runs rehypeAnimate synchronously). So the value here is from the
-    // previous render — exactly what we need as prevContentLength.
-    if (animatePluginProp) {
-      const prevCount = animatePluginProp.getLastRenderCharCount();
-      animatePluginProp.setPrevContentLength(prevCount);
-    }
+    // Span teardown on settle (#570 primary) is handled by stamping
+    // data-sd-animated on ancestors in the plugin and comparing that prop in
+    // sameClassAndNode — no Markdown remount key needed.
+    useLayoutEffect(() => {
+      animatePluginProp?.commit();
+    });
 
     // Note: remend is already applied to the entire markdown before parsing into blocks
     // in the Streamdown component, so we don't need to apply it again here
@@ -437,6 +479,12 @@ export const Block = memo(
       return false;
     }
 
+    // Animate plugin presence toggles with isAnimating — must re-render so
+    // settled blocks drop their data-sd-animate spans (#570).
+    if (!!prevProps.animatePlugin !== !!nextProps.animatePlugin) {
+      return false;
+    }
+
     return true;
   }
 );
@@ -456,8 +504,10 @@ export const Streamdown = memo(
     className,
     shikiTheme,
     mermaid,
+    codeBlockMaxHeight = 400,
     controls = true,
     isAnimating = false,
+    tableMaxHeight = 300,
     animated,
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
@@ -465,6 +515,7 @@ export const Streamdown = memo(
     plugins,
     remend: remendOptions,
     linkSafety = defaultLinkSafetyConfig,
+    portal,
     lineNumbers = true,
     allowedTags,
     literalTagContent,
@@ -538,9 +589,9 @@ export const Streamdown = memo(
         result = preprocessLiteralTagContent(result, literalTagContent);
       }
 
-      // Preprocess custom tags to prevent blank lines from splitting HTML blocks.
-      // Runs after preprocessLiteralTagContent so that the inserted <!---->
-      // markers are not corrupted by markdown metacharacter escaping.
+      // Normalize multi-line custom tags: blank-line sandwich so nested markdown
+      // parses, plus <!----> placeholders for internal blank lines. Runs after
+      // literal escaping so those markers are not corrupted.
       if (allowedTagNames.length > 0) {
         result = preprocessCustomTags(result, allowedTagNames);
       }
@@ -574,26 +625,64 @@ export const Streamdown = memo(
       return "";
     }, [animated]);
 
-    // biome-ignore lint/correctness/useExhaustiveDependencies: keyed by animatedKey for value equality
-    const animatePlugin = useMemo(() => {
-      if (!animatedKey) {
-        return null;
+    // Shared wall-clock timeline: serializes stagger delays across sibling
+    // blocks AND across streaming ticks (memoized earlier blocks don't
+    // re-render, so a pure render-order counter would miss them). Fixes #482.
+    const animateTimelineRef = useRef<AnimateTimeline | null>(null);
+    // One AnimatePlugin per block so each tracks its own prevContentLength.
+    const blockAnimatePluginsRef = useRef<AnimatePlugin[]>([]);
+    // Per-block rehype plugin arrays (base + that block's animate plugin).
+    // Stable references keep Block's memo from thrashing.
+    const blockRehypePluginsRef = useRef<Pluggable[][]>([]);
+    const prevMergedRehypePluginsRef = useRef<Pluggable[] | null>(null);
+    const prevAnimatedKeyRef = useRef<string>("");
+
+    if (animatedKey) {
+      if (prevAnimatedKeyRef.current !== animatedKey) {
+        prevAnimatedKeyRef.current = animatedKey;
+        const backlog =
+          animatedKey !== "true"
+            ? (animated as AnimateOptions).maxBacklogMs
+            : undefined;
+        animateTimelineRef.current = createAnimateTimeline({
+          maxBacklogMs: backlog,
+        });
+        blockAnimatePluginsRef.current = [];
+        blockRehypePluginsRef.current = [];
+      } else if (!animateTimelineRef.current) {
+        animateTimelineRef.current = createAnimateTimeline();
       }
-      if (animatedKey === "true") {
-        return createAnimatePlugin();
+      // Reset the per-pass cursor from the last *committed* horizon so a
+      // StrictMode double-render recomputes the same delays instead of
+      // stacking (#482 + StrictMode).
+      if (isAnimating && animateTimelineRef.current) {
+        animateTimelineRef.current.beginPass(animateTimelineRef.current.now());
       }
-      return createAnimatePlugin(animated as AnimateOptions);
-    }, [animatedKey]);
+    } else {
+      animateTimelineRef.current = null;
+      blockAnimatePluginsRef.current = [];
+      blockRehypePluginsRef.current = [];
+      prevAnimatedKeyRef.current = "";
+    }
+
+    // Commit the in-flight pass horizon after paint. Discarded concurrent
+    // renders that called beginPass never reach this effect, so they can't
+    // poison nextStartAt.
+    useLayoutEffect(() => {
+      if (isAnimating) {
+        animateTimelineRef.current?.commitPass();
+      }
+    });
 
     // Defer the blocks reference during streaming so React can drop intermediate
     // values under load. Replaces the previous useState+useEffect+startTransition
     // dance, which fired setDisplayBlocks on every render where `blocks` was a new
     // ref and could exceed React's 50-nested-update limit (React #185) when SSE
-    // tokens arrived in bursts faster than commit time. animatePlugin path keeps
-    // the synchronous path because the plugin reads block content per-render.
+    // tokens arrived in bursts faster than commit time. Animated path stays
+    // synchronous because per-block animate plugins read content per-render.
     const deferredBlocks = useDeferredValue(blocks);
     const blocksToRender =
-      mode === "streaming" && !animatePlugin ? deferredBlocks : blocks;
+      mode === "streaming" && !animatedKey ? deferredBlocks : blocks;
 
     // Pre-compute per-block text directions when dir="auto" so detection
     // runs once per block change rather than on every render pass.
@@ -615,6 +704,7 @@ export const Streamdown = memo(
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
       () => ({
+        codeBlockMaxHeight,
         shikiTheme:
           shikiTheme ?? plugins?.code?.getThemes() ?? defaultShikiTheme,
         controls,
@@ -623,8 +713,11 @@ export const Streamdown = memo(
         mode,
         mermaid,
         linkSafety,
+        portal,
+        tableMaxHeight,
       }),
       [
+        codeBlockMaxHeight,
         shikiTheme,
         controls,
         isAnimating,
@@ -632,7 +725,9 @@ export const Streamdown = memo(
         mode,
         mermaid,
         linkSafety,
+        portal,
         plugins?.code,
+        tableMaxHeight,
       ]
     );
 
@@ -729,9 +824,8 @@ export const Streamdown = memo(
         result = [...result, plugins.math.rehypePlugin];
       }
 
-      if (animatePlugin && isAnimating) {
-        result = [...result, animatePlugin.rehypePlugin];
-      }
+      // Animate plugins are attached per-block in getBlockPlugins() so each
+      // block owns its prevContentLength while sharing one timeline.
 
       if (dir === "auto" && mode === "static") {
         result = [...result, rehypeBlockDirection];
@@ -741,8 +835,6 @@ export const Streamdown = memo(
     }, [
       rehypePlugins,
       plugins?.math,
-      animatePlugin,
-      isAnimating,
       allowedTags,
       literalTagContent,
       dir,
@@ -766,6 +858,49 @@ export const Streamdown = memo(
           : undefined,
       [caret, isAnimating, shouldHideCaret]
     );
+
+    const getBlockPlugins = (
+      index: number
+    ): {
+      blockAnimatePlugin: AnimatePlugin | null;
+      blockRehypePlugins: Pluggable[];
+    } => {
+      let blockAnimatePlugin: AnimatePlugin | null = null;
+      if (animateTimelineRef.current && isAnimating) {
+        if (!blockAnimatePluginsRef.current[index]) {
+          // maxBacklogMs is consumed by the timeline factory, not the plugin.
+          const rawOpts =
+            animatedKey && animatedKey !== "true"
+              ? (animated as AnimateOptions)
+              : ({} as AnimateOptions);
+          const { maxBacklogMs: _, ...pluginOpts } = rawOpts;
+          blockAnimatePluginsRef.current[index] = createAnimatePlugin({
+            ...pluginOpts,
+            timeline: animateTimelineRef.current,
+          });
+        }
+        blockAnimatePlugin = blockAnimatePluginsRef.current[index];
+      }
+
+      if (prevMergedRehypePluginsRef.current !== mergedRehypePlugins) {
+        blockRehypePluginsRef.current = [];
+        prevMergedRehypePluginsRef.current = mergedRehypePlugins;
+      }
+
+      if (blockAnimatePlugin && !blockRehypePluginsRef.current[index]) {
+        blockRehypePluginsRef.current[index] = [
+          ...mergedRehypePlugins,
+          blockAnimatePlugin.rehypePlugin,
+        ];
+      }
+
+      const blockRehypePlugins =
+        blockAnimatePlugin && blockRehypePluginsRef.current[index]
+          ? blockRehypePluginsRef.current[index]
+          : mergedRehypePlugins;
+
+      return { blockAnimatePlugin, blockRehypePlugins };
+    };
 
     // Static mode: simple rendering without streaming features
     if (mode === "static") {
@@ -827,9 +962,11 @@ export const Streamdown = memo(
                       isAnimating &&
                       isLastBlock &&
                       hasIncompleteCodeFence(block);
+                    const { blockAnimatePlugin, blockRehypePlugins } =
+                      getBlockPlugins(index);
                     return (
                       <BlockComponent
-                        animatePlugin={animatePlugin}
+                        animatePlugin={blockAnimatePlugin}
                         components={mergedComponents}
                         content={block}
                         dir={
@@ -839,7 +976,7 @@ export const Streamdown = memo(
                         index={index}
                         isIncomplete={isIncomplete}
                         key={blockKeys[index]}
-                        rehypePlugins={mergedRehypePlugins}
+                        rehypePlugins={blockRehypePlugins}
                         remarkPlugins={mergedRemarkPlugins}
                         shouldNormalizeHtmlIndentation={
                           shouldNormalizeHtmlIndentation
@@ -869,6 +1006,8 @@ export const Streamdown = memo(
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
     prevProps.lineNumbers === nextProps.lineNumbers &&
+    prevProps.codeBlockMaxHeight === nextProps.codeBlockMaxHeight &&
+    prevProps.tableMaxHeight === nextProps.tableMaxHeight &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
     prevProps.literalTagContent === nextProps.literalTagContent &&
     JSON.stringify(prevProps.translations) ===
