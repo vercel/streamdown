@@ -1,5 +1,9 @@
+import { render } from "@testing-library/react";
 import { marked } from "marked";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Markdown } from "../lib/markdown";
 import {
   escapeMarkdownTableCell,
   extractTableDataFromElement,
@@ -506,6 +510,33 @@ describe("Table Utils", () => {
       const markdown = tableDataToMarkdown(data);
       const container = document.createElement("div");
       container.innerHTML = marked.parse(markdown, { async: false });
+      const restoredTable = container.querySelector(
+        "table"
+      ) as HTMLTableElement;
+
+      expect(extractTableDataFromElement(restoredTable)).toEqual(data);
+    });
+
+    it("should preserve literal HTML and entities via Streamdown Markdown", () => {
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead><tr><th>Type &lt;T&gt;</th><th>Entities</th></tr></thead>
+        <tbody><tr>
+          <td><code>Array&lt;string&gt;</code></td>
+          <td>&amp;copy; and &amp;#124;</td>
+        </tr></tbody>
+      `;
+      const data = extractTableDataFromElement(table);
+      const markdown = tableDataToMarkdown(data);
+
+      // Same fixture through Streamdown's production pipeline (remark-gfm + rehype-raw)
+      const { container } = render(
+        Markdown({
+          children: markdown,
+          remarkPlugins: [remarkGfm],
+          rehypePlugins: [rehypeRaw],
+        })
+      );
       const restoredTable = container.querySelector(
         "table"
       ) as HTMLTableElement;
