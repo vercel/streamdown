@@ -102,14 +102,11 @@ describe("Disable Autolink Protocols (#607)", () => {
       expect(link).toBeTruthy();
       expect(link?.getAttribute("href")).toBe("https://example.com/");
       expect(link?.textContent).toBe("https://example.com");
-      expect(container.textContent).toBe(
-        "See https://example.com for details"
-      );
+      expect(container.textContent).toBe("See https://example.com for details");
     });
 
     it("still unwraps bare-email and bare-url autolinks after the explicit-link guard", () => {
-      const content =
-        "Email foo@example.com or visit https://example.com";
+      const content = "Email foo@example.com or visit https://example.com";
       const { container } = render(
         <Markdown
           children={content}
