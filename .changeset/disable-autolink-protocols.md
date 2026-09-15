@@ -10,6 +10,6 @@ Add a `disableAutolinkProtocols` prop to `<Streamdown>` for disabling GFM autoli
 </Streamdown>
 ```
 
-Bare emails and bare URLs whose protocol matches the list (case-insensitive, `"mailto"` and `"mailto:"` are equivalent) are unwrapped back to plain text. Explicit markdown links (`[text](mailto:...)`) are left as links. When the prop is omitted, autolinking behavior is completely unchanged.
+Bare emails and bare URLs whose protocol matches the list (case-insensitive, `"mailto"` and `"mailto:"` are equivalent) are unwrapped back to plain text. Explicit markdown links (`[text](url)`) are left as links, including when the label reconstructs the URL (e.g. `[foo@x.com](mailto:foo@x.com)`). When the prop is omitted, autolinking behavior is completely unchanged.
 
 Closes #607.

@@ -62,6 +62,69 @@ describe("Disable Autolink Protocols (#607)", () => {
       expect(link?.textContent).toBe("Email us");
     });
 
+    it("keeps explicit [email](mailto:email) links whose label matches the address", () => {
+      // mdast-identical to a bare-email GFM autolink — distinguished via source position
+      const content =
+        "Write to [foo@example.com](mailto:foo@example.com) please";
+      const { container } = render(
+        <Markdown
+          children={content}
+          rehypePlugins={rehypePlugins}
+          remarkPlugins={[
+            remarkGfm,
+            [remarkDisableAutolinkProtocols, ["mailto"]],
+          ]}
+        />
+      );
+
+      const link = container.querySelector("a");
+      expect(link).toBeTruthy();
+      expect(link?.getAttribute("href")).toBe("mailto:foo@example.com");
+      expect(link?.textContent).toBe("foo@example.com");
+      expect(container.textContent).toBe("Write to foo@example.com please");
+    });
+
+    it("keeps explicit [url](url) https links when https is disabled", () => {
+      const content =
+        "See [https://example.com](https://example.com) for details";
+      const { container } = render(
+        <Markdown
+          children={content}
+          rehypePlugins={rehypePlugins}
+          remarkPlugins={[
+            remarkGfm,
+            [remarkDisableAutolinkProtocols, ["https"]],
+          ]}
+        />
+      );
+
+      const link = container.querySelector("a");
+      expect(link).toBeTruthy();
+      expect(link?.getAttribute("href")).toBe("https://example.com/");
+      expect(link?.textContent).toBe("https://example.com");
+      expect(container.textContent).toBe(
+        "See https://example.com for details"
+      );
+    });
+
+    it("still unwraps bare-email and bare-url autolinks after the explicit-link guard", () => {
+      const content =
+        "Email foo@example.com or visit https://example.com";
+      const { container } = render(
+        <Markdown
+          children={content}
+          rehypePlugins={rehypePlugins}
+          remarkPlugins={[
+            remarkGfm,
+            [remarkDisableAutolinkProtocols, ["mailto", "https"]],
+          ]}
+        />
+      );
+
+      expect(container.querySelector("a")).toBeNull();
+      expect(container.textContent).toBe(content);
+    });
+
     it("still links http/https autolinks when only mailto is disabled", () => {
       const content = "Visit https://example.com for more";
       const { container } = render(

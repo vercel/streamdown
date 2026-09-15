@@ -256,12 +256,12 @@ export type StreamdownProps = Options & {
    */
   literalTagContent?: string[];
   /**
-   * Disable GFM autolinking for specific URL protocols (e.g. bare email
-   * addresses become `mailto:` autolinks). Accepts protocol names with or
-   * without a trailing colon, case-insensitive (`"mailto"` and `"mailto:"`
-   * are equivalent). Only affects literal autolinks created by `remark-gfm`
-   * (bare URLs/emails) — explicit markdown links (`[text](url)`) are left
-   * as links.
+   * Disable GFM / CommonMark autolinking for specific URL protocols (e.g. bare
+   * email addresses become `mailto:` autolinks). Accepts protocol names with
+   * or without a trailing colon, case-insensitive (`"mailto"` and `"mailto:"`
+   * are equivalent). Only affects autolinks (bare URLs/emails and `<...>`
+   * forms) — explicit markdown links (`[text](url)`), including cases where
+   * the label reconstructs the URL, are left as links.
    *
    * @example
    * ```tsx

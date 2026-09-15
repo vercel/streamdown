@@ -19,25 +19,28 @@ export const normalizeAutolinkProtocols = (protocols: string[]): Set<string> =>
   );
 
 /**
- * Determines whether a `link` node is a GFM autolink-literal (created by
- * `remark-gfm`'s autolink-literal extension for bare URLs/emails) whose
- * protocol is in the disabled set.
+ * Determines whether a `link` node is an autolink (GFM autolink-literal or
+ * CommonMark `<...>`) whose protocol is in the disabled set.
  *
- * `mdast-util-gfm-autolink-literal` does not tag the nodes it creates, so
- * autolinks are identified structurally: they have exactly one `text` child
- * whose visible value reconstructs the node's `url`. Bare emails become
- * `{ url: "mailto:<email>", children: [{ type: "text", value: "<email>" }] }`;
- * bare http(s)/www URLs become a link whose single text child equals the URL
- * (optionally without the `http://` prefix that GFM adds for `www.` links).
- *
- * Explicit markdown links (`[text](url)`) are intentionally left untouched
- * unless their visible text happens to exactly reconstruct the URL, in which
- * case they are indistinguishable from an autolink at the mdast level.
+ * GFM / CommonMark autolinks and explicit markdown links can be mdast-
+ * identical when the label reconstructs the URL (e.g. bare `foo@x.com` vs
+ * `[foo@x.com](mailto:foo@x.com)`). When position info is present we reject
+ * any node whose source opens with `[` — that is always an intentional
+ * resource link. Autolinks are then identified structurally: a single `text`
+ * child whose value reconstructs `url` (accounting for the `mailto:` /
+ * `http://` prefixes GFM adds).
  */
 function isDisabledAutolink(
   node: Link,
-  disabledProtocols: Set<string>
+  disabledProtocols: Set<string>,
+  source: string
 ): boolean {
+  // Explicit `[label](url)` resource links always open with `[` in source.
+  const start = node.position?.start?.offset;
+  if (typeof start === "number" && source.charCodeAt(start) === 91 /* [ */) {
+    return false;
+  }
+
   if (node.children.length !== 1) {
     return false;
   }
@@ -61,14 +64,19 @@ function isDisabledAutolink(
     return node.url === `mailto:${child.value}`;
   }
 
+  // Bare `https://...` (text === url) or `www....` (url === `http://` + text).
   return node.url === child.value || node.url === `${protocol}//${child.value}`;
 }
 
 /**
- * Remark plugin that removes GFM autolink-literal links whose protocol
+ * Remark plugin that removes GFM / CommonMark autolinks whose protocol
  * matches one of the configured `protocols`, unwrapping them back to plain
- * text. Must run AFTER `remark-gfm` in the plugin pipeline so the autolink
+ * text. Must run AFTER `remark-gfm` in the plugin pipeline so GFM autolink
  * nodes exist for it to inspect.
+ *
+ * Explicit markdown links (`[text](url)`) are left alone, including cases
+ * where the label text reconstructs the URL — those are distinguished via
+ * source positions (`[` opener) rather than mdast shape alone.
  *
  * Uses the standard unified `[plugin, options]` tuple form (rather than a
  * plugin factory) so Streamdown's internal processor cache — which keys
@@ -84,16 +92,18 @@ export const remarkDisableAutolinkProtocols: Plugin<[string[]?], Root> = (
 ) => {
   const disabledProtocols = normalizeAutolinkProtocols(protocols);
 
-  return (tree: Root) => {
+  return (tree: Root, file: { value?: unknown }) => {
     if (disabledProtocols.size === 0) {
       return;
     }
+
+    const source = String(file.value ?? "");
 
     visit(tree, "link", (node, index, parent) => {
       if (!parent || index === undefined) {
         return;
       }
-      if (!isDisabledAutolink(node, disabledProtocols)) {
+      if (!isDisabledAutolink(node, disabledProtocols, source)) {
         return;
       }
       parent.children.splice(index, 1, ...node.children);
