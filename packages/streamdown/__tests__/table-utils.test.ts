@@ -1,4 +1,9 @@
+import { render } from "@testing-library/react";
+import { marked } from "marked";
+import rehypeRaw from "rehype-raw";
+import remarkGfm from "remark-gfm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Markdown } from "../lib/markdown";
 import {
   escapeMarkdownTableCell,
   extractTableDataFromElement,
@@ -478,9 +483,98 @@ describe("Table Utils", () => {
       const result = escapeMarkdownTableCell("Paragraph one.\nParagraph two.");
       expect(result).toBe("Paragraph one.<br>Paragraph two.");
     });
+
+    it("should escape HTML-sensitive characters as entities", () => {
+      expect(escapeMarkdownTableCell("Array<string>")).toBe(
+        "Array&lt;string&gt;"
+      );
+      expect(escapeMarkdownTableCell("&copy;")).toBe("&amp;copy;");
+      expect(escapeMarkdownTableCell("a<br>b")).toBe("a&lt;br&gt;b");
+      expect(escapeMarkdownTableCell("x < y & z > w")).toBe(
+        "x &lt; y &amp; z &gt; w"
+      );
+    });
   });
 
   describe("tableDataToMarkdown", () => {
+    it("should preserve literal HTML and entities when rendered again", () => {
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead><tr><th>Type &lt;T&gt;</th><th>Entities</th></tr></thead>
+        <tbody><tr>
+          <td><code>Array&lt;string&gt;</code></td>
+          <td>&amp;copy; and &amp;#124;</td>
+        </tr></tbody>
+      `;
+      const data = extractTableDataFromElement(table);
+      const markdown = tableDataToMarkdown(data);
+      const container = document.createElement("div");
+      container.innerHTML = marked.parse(markdown, { async: false });
+      const restoredTable = container.querySelector(
+        "table"
+      ) as HTMLTableElement;
+
+      expect(extractTableDataFromElement(restoredTable)).toEqual(data);
+    });
+
+    it("should preserve literal HTML and entities via Streamdown Markdown", () => {
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead><tr><th>Type &lt;T&gt;</th><th>Entities</th></tr></thead>
+        <tbody><tr>
+          <td><code>Array&lt;string&gt;</code></td>
+          <td>&amp;copy; and &amp;#124;</td>
+        </tr></tbody>
+      `;
+      const data = extractTableDataFromElement(table);
+      const markdown = tableDataToMarkdown(data);
+
+      // Same fixture through Streamdown's production pipeline (remark-gfm + rehype-raw)
+      const { container } = render(
+        Markdown({
+          children: markdown,
+          remarkPlugins: [remarkGfm],
+          rehypePlugins: [rehypeRaw],
+        })
+      );
+      const restoredTable = container.querySelector(
+        "table"
+      ) as HTMLTableElement;
+
+      expect(extractTableDataFromElement(restoredTable)).toEqual(data);
+    });
+
+    it("documents that other Markdown syntax is still re-parsed on render", () => {
+      // Pre-existing limitation: export escapes HTML (&/< />) and table syntax
+      // (|, \, newlines), but not general Markdown metacharacters. So pasted
+      // cells like **bold**, `code`, and [link](url) re-interpret on render.
+      // Broader metachar escaping is out of scope for the HTML-literal fix.
+      const data: TableData = {
+        headers: ["Cell"],
+        rows: [["**bold**"], ["`code`"], ["[link](https://example.com)"]],
+      };
+      const markdown = tableDataToMarkdown(data);
+
+      expect(markdown).toContain("**bold**");
+      expect(markdown).toContain("`code`");
+      expect(markdown).toContain("[link](https://example.com)");
+
+      const { container } = render(
+        Markdown({
+          children: markdown,
+          remarkPlugins: [remarkGfm],
+          rehypePlugins: [rehypeRaw],
+        })
+      );
+      const cells = [...container.querySelectorAll("tbody td")].map(
+        (cell) => cell.innerHTML
+      );
+
+      expect(cells[0]).toContain("<strong>");
+      expect(cells[1]).toContain("<code>");
+      expect(cells[2]).toContain("<a ");
+    });
+
     it("should convert simple table data to Markdown", () => {
       const data: TableData = {
         headers: ["Name", "Age", "City"],
