@@ -479,6 +479,17 @@ describe("Table Utils", () => {
       const result = escapeMarkdownTableCell("Paragraph one.\nParagraph two.");
       expect(result).toBe("Paragraph one.<br>Paragraph two.");
     });
+
+    it("should escape HTML-sensitive characters as entities", () => {
+      expect(escapeMarkdownTableCell("Array<string>")).toBe(
+        "Array&lt;string&gt;"
+      );
+      expect(escapeMarkdownTableCell("&copy;")).toBe("&amp;copy;");
+      expect(escapeMarkdownTableCell("a<br>b")).toBe("a&lt;br&gt;b");
+      expect(escapeMarkdownTableCell("x < y & z > w")).toBe(
+        "x &lt; y &amp; z &gt; w"
+      );
+    });
   });
 
   describe("tableDataToMarkdown", () => {
