@@ -27,7 +27,7 @@ import {
   createAnimateTimeline,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
-import { components as defaultComponents } from "./lib/components";
+import { components as builtinComponents } from "./lib/components";
 import { detectTextDirection } from "./lib/detect-direction";
 import { type IconMap, IconProvider } from "./lib/icon-context";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
@@ -114,6 +114,7 @@ export {
 } from "./lib/table/utils";
 export type { StreamdownTranslations } from "./lib/translations-context";
 export { defaultTranslations } from "./lib/translations-context";
+export const defaultComponents = builtinComponents as Components;
 
 // Matches lowercase HTML / custom tag names (first char is a-z)
 const LOWERCASE_TAG_PATTERN = /^[a-z]/;
