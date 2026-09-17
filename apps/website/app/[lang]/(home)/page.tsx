@@ -25,7 +25,7 @@ import VibeCodingPlatform from "./images/vibe-coding-platform.png";
 
 const title = "Streamdown";
 const description =
-  "A markdown renderer designed for streaming content from AI models. Highly interactive, customizable, and easy to use.";
+  "Beautiful, secure Markdown rendering built for streaming AI interfaces.";
 
 const COMMAND_FOR_HUMANS = "npm i streamdown";
 const COMMAND_FOR_AGENTS = "npx skills add vercel/streamdown@streamdown";
