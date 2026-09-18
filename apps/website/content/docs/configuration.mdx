@@ -184,6 +184,11 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       description: "Enable character-by-character animation for streaming content. See [Animation](/docs/animation).",
       type: "boolean | AnimateOptions",
     },
+    smooth: {
+      description: "Reveal text that arrives in large chunks a word at a time, at the rate it has been arriving. See [Smooth streaming](/docs/smooth-streaming).",
+      type: "boolean",
+      default: "false",
+    },
     linkSafety: {
       description: "Configure link safety modals for external URLs. See [Link Safety](/docs/link-safety).",
       type: "LinkSafetyConfig",
