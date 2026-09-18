@@ -54,7 +54,7 @@ import { useAnimationDrain } from "./lib/use-animation-drain";
 import { useSmoothStream } from "./lib/use-smooth-stream";
 import { createCn } from "./lib/utils";
 
-export type { AnimateOptions } from "./lib/animate";
+export type { AnimateOptions, AnimationEffect } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
 export { createAnimatePlugin } from "./lib/animate";
 export { useIsCodeFenceIncomplete } from "./lib/block-incomplete-context";
