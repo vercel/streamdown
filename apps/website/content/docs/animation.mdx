@@ -36,7 +36,7 @@ The animation is a rehype transformer that:
 1. Walks the HAST tree, visiting text nodes
 2. Splits each text node into per-word `<span>` elements with `data-sd-animate`
 3. Sets CSS custom properties for animation name, duration, and easing
-4. Skips text inside `code`, `pre`, `svg`, `math`, and `annotation` elements
+4. Skips text inside `pre`, `svg`, `math`, and `annotation` elements (inline `code` is animated with surrounding prose)
 
 React's reconciliation ensures only newly-mounted spans trigger the CSS animation. Combined with a short default duration (150ms), this makes batch token arrivals look smooth rather than "chunky."
 
@@ -197,13 +197,14 @@ const animate = createAnimatePlugin({
 
 The animation skips text inside these elements to avoid breaking their layout:
 
-- `<code>` — inline and block code
-- `<pre>` — preformatted text
+- `<pre>` — preformatted / fenced code blocks (CommonMark always emits `pre > code`, so Shiki-highlighted blocks stay un-split)
 - `<svg>` — vector graphics
 - `<math>` — MathML elements
 - `<annotation>` — MathML annotations
 
-This means code blocks, syntax-highlighted code, math equations, and diagrams render without animation spans.
+Inline `<code>` (backtick spans) **is** animated — wrapping words in style-inheriting spans is layout-neutral, same as surrounding paragraphs.
+
+This means fenced code blocks, syntax-highlighted code, math equations, and diagrams render without animation spans, while inline code fades in with the prose.
 
 ## Fast-streaming models
 

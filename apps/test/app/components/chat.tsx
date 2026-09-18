@@ -5,9 +5,17 @@ import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
-import { DefaultChatTransport } from "ai";
+import { DefaultChatTransport, type UIMessage } from "ai";
+import { CheckIcon, Columns3Icon, CopyIcon, RotateCcwIcon } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import { harden } from "rehype-harden";
 import rehypeKatex from "rehype-katex";
@@ -29,7 +37,13 @@ import {
   ComboboxList,
   ComboboxTrigger,
 } from "@/components/ui/kibo-ui/combobox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { Column } from "./column";
 
 interface ChatProps {
@@ -39,6 +53,176 @@ interface ChatProps {
   }[];
 }
 
+const COLUMN_IDS = [
+  "raw",
+  "react-markdown",
+  "react-markdown-plugins",
+  "streamdown",
+  "streamdown-plugins",
+] as const;
+
+type ColumnId = (typeof COLUMN_IDS)[number];
+
+const COLUMN_LABELS: Record<ColumnId, string> = {
+  raw: "Raw",
+  "react-markdown": "React Markdown",
+  "react-markdown-plugins": "React Markdown with Plugins",
+  streamdown: "Streamdown",
+  "streamdown-plugins": "Streamdown with plugins",
+};
+
+const DEFAULT_VISIBLE_COLUMNS: ColumnId[] = [...COLUMN_IDS];
+const VISIBLE_COLUMNS_STORAGE_KEY = "chat-visible-columns";
+const MODEL_STORAGE_KEY = "chat-model";
+const RESTREAM_SPEED_MS = 40;
+const TOKEN_SPLIT_RE = /(\s+)/;
+
+const gridColsClassName: Record<number, string> = {
+  1: "grid-cols-1",
+  2: "grid-cols-2",
+  3: "grid-cols-3",
+  4: "grid-cols-4",
+  5: "grid-cols-5",
+};
+
+const tokenize = (text: string) => text.split(TOKEN_SPLIT_RE).filter(Boolean);
+
+const readStoredColumns = (): ColumnId[] | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const saved = localStorage.getItem(VISIBLE_COLUMNS_STORAGE_KEY);
+    if (!saved) {
+      return null;
+    }
+
+    const parsed: unknown = JSON.parse(saved);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    const next = COLUMN_IDS.filter((id) => parsed.includes(id));
+    return next.length > 0 ? next : null;
+  } catch {
+    return null;
+  }
+};
+
+const getMessageText = (message: UIMessage) =>
+  message.parts
+    .filter((part) => part.type === "text")
+    .map((part) => part.text)
+    .join("");
+
+const MessageLabel = ({
+  role,
+  markdown,
+  onReplay,
+  canReplay,
+  isReplaying,
+}: {
+  role: UIMessage["role"];
+  markdown?: string;
+  onReplay?: () => void;
+  canReplay?: boolean;
+  isReplaying?: boolean;
+}) => {
+  const [copied, setCopied] = useState(false);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (copiedTimeoutRef.current) {
+        clearTimeout(copiedTimeoutRef.current);
+      }
+    },
+    []
+  );
+
+  const handleCopy = async () => {
+    if (!markdown) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(markdown);
+      setCopied(true);
+      if (copiedTimeoutRef.current) {
+        clearTimeout(copiedTimeoutRef.current);
+      }
+      copiedTimeoutRef.current = setTimeout(() => {
+        setCopied(false);
+      }, 1500);
+    } catch {
+      // Clipboard may be unavailable in some environments.
+    }
+  };
+
+  return (
+    <div className="mb-1 flex items-center gap-1.5">
+      <span className="font-bold">{role === "user" ? "User: " : "AI: "}</span>
+      {role === "assistant" ? (
+        <div className="flex items-center gap-0.5">
+          <Button
+            aria-label="Copy markdown"
+            className="h-5 gap-1 px-1.5 text-[11px]"
+            disabled={!markdown}
+            onClick={handleCopy}
+            size="sm"
+            type="button"
+            variant="ghost"
+          >
+            {copied ? (
+              <CheckIcon className="size-3" />
+            ) : (
+              <CopyIcon className="size-3" />
+            )}
+            {copied ? "Copied" : "Copy"}
+          </Button>
+          {onReplay ? (
+            <Button
+              aria-label="Replay message"
+              className="h-5 gap-1 px-1.5 text-[11px]"
+              disabled={!canReplay}
+              onClick={onReplay}
+              size="sm"
+              type="button"
+              variant="ghost"
+            >
+              <RotateCcwIcon
+                className={cn("size-3", isReplaying && "animate-spin")}
+              />
+              Replay
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+const FilePart = ({
+  part,
+}: {
+  part: Extract<UIMessage["parts"][number], { type: "file" }>;
+}) => (
+  <div>
+    {part.mediaType.startsWith("image") ? (
+      <Image
+        alt={part.filename ?? "An image attachment"}
+        height={100}
+        src={part.url}
+        unoptimized
+        width={100}
+      />
+    ) : (
+      <div>File: {part.filename}</div>
+    )}
+  </div>
+);
+
 export const Chat = ({ models }: ChatProps) => {
   const { messages, sendMessage, status, setMessages } = useChat({
     transport: new DefaultChatTransport({
@@ -46,37 +230,178 @@ export const Chat = ({ models }: ChatProps) => {
     }),
   });
   const [input, setInput] = useState("");
-  const [model, setModel] = useState(models[0].value);
+  // SSR-safe defaults; restored from localStorage after mount via prefsReady gate.
+  const [model, setModel] = useState(models[0]?.value ?? "");
+  const [visibleColumns, setVisibleColumns] = useState<ColumnId[]>(
+    DEFAULT_VISIBLE_COLUMNS
+  );
+  // Prevents the save effects from overwriting stored prefs with defaults on first paint.
+  const [prefsReady, setPrefsReady] = useState(false);
+  const [restreamId, setRestreamId] = useState<string | null>(null);
+  const [restreamText, setRestreamText] = useState("");
+  const restreamIntervalRef = useRef<ReturnType<typeof setInterval> | null>(
+    null
+  );
+
+  const stopRestream = useCallback(() => {
+    if (restreamIntervalRef.current) {
+      clearInterval(restreamIntervalRef.current);
+      restreamIntervalRef.current = null;
+    }
+    setRestreamId(null);
+    setRestreamText("");
+  }, []);
+
+  const startRestream = useCallback(
+    (message: UIMessage) => {
+      const fullText = getMessageText(message);
+      if (!fullText || status === "streaming") {
+        return;
+      }
+
+      if (restreamIntervalRef.current) {
+        clearInterval(restreamIntervalRef.current);
+        restreamIntervalRef.current = null;
+      }
+
+      const tokens = tokenize(fullText);
+      let index = 0;
+      let current = "";
+
+      setRestreamId(message.id);
+      setRestreamText("");
+
+      restreamIntervalRef.current = setInterval(() => {
+        if (index >= tokens.length) {
+          if (restreamIntervalRef.current) {
+            clearInterval(restreamIntervalRef.current);
+            restreamIntervalRef.current = null;
+          }
+          setRestreamId(null);
+          setRestreamText("");
+          return;
+        }
+
+        current += tokens[index];
+        index += 1;
+        setRestreamText(current);
+      }, RESTREAM_SPEED_MS);
+    },
+    [status]
+  );
+
+  useEffect(() => () => stopRestream(), [stopRestream]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("chat-model");
-    if (saved && models.some((m) => m.value === saved)) {
-      setModel(saved);
+    if (status === "streaming") {
+      stopRestream();
     }
+  }, [status, stopRestream]);
+
+  useEffect(() => {
+    const savedModel = localStorage.getItem(MODEL_STORAGE_KEY);
+    if (savedModel && models.some((m) => m.value === savedModel)) {
+      setModel(savedModel);
+    } else if (models[0]) {
+      setModel((current) =>
+        models.some((m) => m.value === current) ? current : models[0].value
+      );
+    }
+
+    const savedColumns = readStoredColumns();
+    if (savedColumns) {
+      setVisibleColumns(savedColumns);
+    }
+
+    setPrefsReady(true);
+    // Restore once when models are available; don't re-run on model changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount/models bootstrap only
   }, [models]);
 
   useEffect(() => {
-    localStorage.setItem("chat-model", model);
-  }, [model]);
+    if (!(prefsReady && model)) {
+      return;
+    }
+    localStorage.setItem(MODEL_STORAGE_KEY, model);
+  }, [model, prefsReady]);
 
-  return (
-    <div className="mx-auto flex h-screen flex-col divide-y overflow-hidden border-x">
-      <div className="grid h-full flex-1 grid-cols-5 divide-x overflow-hidden">
-        <Column title="Raw">
-          {messages.map((message) => (
+  useEffect(() => {
+    if (!prefsReady) {
+      return;
+    }
+    localStorage.setItem(
+      VISIBLE_COLUMNS_STORAGE_KEY,
+      JSON.stringify(visibleColumns)
+    );
+  }, [visibleColumns, prefsReady]);
+
+  const toggleColumn = (id: ColumnId) => {
+    setVisibleColumns((current) => {
+      if (current.includes(id)) {
+        if (current.length === 1) {
+          return current;
+        }
+        return current.filter((columnId) => columnId !== id);
+      }
+
+      return COLUMN_IDS.filter(
+        (columnId) => columnId === id || current.includes(columnId)
+      );
+    });
+  };
+
+  const getPartText = useCallback(
+    (message: UIMessage, partText: string, isFirstTextPart: boolean) => {
+      if (restreamId !== message.id) {
+        return partText;
+      }
+      // During replay, stream the joined message text through the first text part.
+      return isFirstTextPart ? restreamText : "";
+    },
+    [restreamId, restreamText]
+  );
+
+  const isLiveStreaming = status === "streaming" || restreamId !== null;
+  const canReplay = status === "ready" && restreamId === null;
+
+  const columns = useMemo(() => {
+    const renderLabel = (message: UIMessage) => {
+      const markdown = getMessageText(message);
+      return (
+        <MessageLabel
+          canReplay={canReplay && Boolean(markdown)}
+          isReplaying={restreamId === message.id}
+          markdown={markdown}
+          onReplay={
+            message.role === "assistant"
+              ? () => startRestream(message)
+              : undefined
+          }
+          role={message.role}
+        />
+      );
+    };
+
+    const items: { id: ColumnId; content: ReactNode }[] = [
+      {
+        id: "raw",
+        content: messages.map((message) => {
+          let textPartSeen = false;
+          return (
             <div key={message.id}>
-              <span className="font-bold">
-                {message.role === "user" ? "User: " : "AI: "}
-              </span>
+              {renderLabel(message)}
               {message.parts.map((part, index) => {
                 const key = `${message.id}-${index}`;
                 switch (part.type) {
-                  case "text":
+                  case "text": {
+                    const isFirstTextPart = !textPartSeen;
+                    textPartSeen = true;
                     return (
                       <pre className="whitespace-pre-wrap" key={key}>
-                        {part.text}
+                        {getPartText(message, part.text, isFirstTextPart)}
                       </pre>
                     );
+                  }
                   case "reasoning":
                     return (
                       <pre className="italic" key={key}>
@@ -84,40 +409,34 @@ export const Chat = ({ models }: ChatProps) => {
                       </pre>
                     );
                   case "file":
-                    return (
-                      <div key={key}>
-                        {part.mediaType.startsWith("image") ? (
-                          <Image
-                            alt={part.filename ?? "An image attachment"}
-                            height={100}
-                            src={part.url}
-                            unoptimized
-                            width={100}
-                          />
-                        ) : (
-                          <div>File: {part.filename}</div>
-                        )}
-                      </div>
-                    );
+                    return <FilePart key={key} part={part} />;
                   default:
                     return null;
                 }
               })}
             </div>
-          ))}
-        </Column>
-
-        <Column title="React Markdown">
-          {messages.map((message) => (
+          );
+        }),
+      },
+      {
+        id: "react-markdown",
+        content: messages.map((message) => {
+          let textPartSeen = false;
+          return (
             <div key={message.id}>
-              <span className="font-bold">
-                {message.role === "user" ? "User: " : "AI: "}
-              </span>
+              {renderLabel(message)}
               {message.parts.map((part, index) => {
                 const key = `${message.id}-${index}`;
                 switch (part.type) {
-                  case "text":
-                    return <ReactMarkdown key={key}>{part.text}</ReactMarkdown>;
+                  case "text": {
+                    const isFirstTextPart = !textPartSeen;
+                    textPartSeen = true;
+                    return (
+                      <ReactMarkdown key={key}>
+                        {getPartText(message, part.text, isFirstTextPart)}
+                      </ReactMarkdown>
+                    );
+                  }
                   case "reasoning":
                     return (
                       <pre className="italic" key={key}>
@@ -125,39 +444,28 @@ export const Chat = ({ models }: ChatProps) => {
                       </pre>
                     );
                   case "file":
-                    return (
-                      <div key={key}>
-                        {part.mediaType.startsWith("image") ? (
-                          <Image
-                            alt={part.filename ?? "An image attachment"}
-                            height={100}
-                            src={part.url}
-                            unoptimized
-                            width={100}
-                          />
-                        ) : (
-                          <div>File: {part.filename}</div>
-                        )}
-                      </div>
-                    );
+                    return <FilePart key={key} part={part} />;
                   default:
                     return null;
                 }
               })}
             </div>
-          ))}
-        </Column>
-
-        <Column title="React Markdown with Plugins">
-          {messages.map((message) => (
+          );
+        }),
+      },
+      {
+        id: "react-markdown-plugins",
+        content: messages.map((message) => {
+          let textPartSeen = false;
+          return (
             <div key={message.id}>
-              <span className="font-bold">
-                {message.role === "user" ? "User: " : "AI: "}
-              </span>
+              {renderLabel(message)}
               {message.parts.map((part, index) => {
                 const key = `${message.id}-${index}`;
                 switch (part.type) {
-                  case "text":
+                  case "text": {
+                    const isFirstTextPart = !textPartSeen;
+                    textPartSeen = true;
                     return (
                       <ReactMarkdown
                         key={key}
@@ -185,9 +493,10 @@ export const Chat = ({ models }: ChatProps) => {
                           [remarkCjkFriendlyGfmStrikethrough, {}],
                         ]}
                       >
-                        {part.text}
+                        {getPartText(message, part.text, isFirstTextPart)}
                       </ReactMarkdown>
                     );
+                  }
                   case "reasoning":
                     return (
                       <pre className="italic" key={key}>
@@ -195,53 +504,43 @@ export const Chat = ({ models }: ChatProps) => {
                       </pre>
                     );
                   case "file":
-                    return (
-                      <div key={key}>
-                        {part.mediaType.startsWith("image") ? (
-                          <Image
-                            alt={part.filename ?? "An image attachment"}
-                            height={100}
-                            src={part.url}
-                            unoptimized
-                            width={100}
-                          />
-                        ) : (
-                          <div>File: {part.filename}</div>
-                        )}
-                      </div>
-                    );
+                    return <FilePart key={key} part={part} />;
                   default:
                     return null;
                 }
               })}
             </div>
-          ))}
-        </Column>
+          );
+        }),
+      },
+      {
+        id: "streamdown",
+        content: messages.map((message, messageIndex) => {
+          let textPartSeen = false;
+          const isActiveAssistant =
+            message.role === "assistant" &&
+            (restreamId === message.id ||
+              (status === "streaming" && messageIndex === messages.length - 1));
 
-        <Column title="Streamdown">
-          {messages.map((message, messageIndex) => (
+          return (
             <div key={message.id}>
-              <span className="font-bold">
-                {message.role === "user" ? "User: " : "AI: "}
-              </span>
+              {renderLabel(message)}
               {message.parts.map((part, index) => {
                 const key = `${message.id}-${index}`;
                 switch (part.type) {
-                  case "text":
+                  case "text": {
+                    const isFirstTextPart = !textPartSeen;
+                    textPartSeen = true;
                     return (
                       <Streamdown
-                        caret={
-                          message.role === "assistant" &&
-                          messageIndex === messages.length - 1
-                            ? "block"
-                            : undefined
-                        }
-                        isAnimating={status === "streaming"}
+                        caret={isActiveAssistant ? "block" : undefined}
+                        isAnimating={isActiveAssistant && isLiveStreaming}
                         key={key}
                       >
-                        {part.text}
+                        {getPartText(message, part.text, isFirstTextPart)}
                       </Streamdown>
                     );
+                  }
                   case "reasoning":
                     return (
                       <Streamdown className="italic" key={key}>
@@ -249,55 +548,45 @@ export const Chat = ({ models }: ChatProps) => {
                       </Streamdown>
                     );
                   case "file":
-                    return (
-                      <div key={key}>
-                        {part.mediaType.startsWith("image") ? (
-                          <Image
-                            alt={part.filename ?? "An image attachment"}
-                            height={100}
-                            src={part.url}
-                            unoptimized
-                            width={100}
-                          />
-                        ) : (
-                          <div>File: {part.filename}</div>
-                        )}
-                      </div>
-                    );
+                    return <FilePart key={key} part={part} />;
                   default:
                     return null;
                 }
               })}
             </div>
-          ))}
-        </Column>
+          );
+        }),
+      },
+      {
+        id: "streamdown-plugins",
+        content: messages.map((message, messageIndex) => {
+          let textPartSeen = false;
+          const isActiveAssistant =
+            message.role === "assistant" &&
+            (restreamId === message.id ||
+              (status === "streaming" && messageIndex === messages.length - 1));
 
-        <Column title="Streamdown with plugins">
-          {messages.map((message, messageIndex) => (
+          return (
             <div key={message.id}>
-              <span className="font-bold">
-                {message.role === "user" ? "User: " : "AI: "}
-              </span>
+              {renderLabel(message)}
               {message.parts.map((part, index) => {
                 const key = `${message.id}-${index}`;
                 switch (part.type) {
-                  case "text":
+                  case "text": {
+                    const isFirstTextPart = !textPartSeen;
+                    textPartSeen = true;
                     return (
                       <Streamdown
                         animated
-                        caret={
-                          message.role === "assistant" &&
-                          messageIndex === messages.length - 1
-                            ? "block"
-                            : undefined
-                        }
-                        isAnimating={status === "streaming"}
+                        caret={isActiveAssistant ? "block" : undefined}
+                        isAnimating={isActiveAssistant && isLiveStreaming}
                         key={key}
                         plugins={{ code, mermaid, math, cjk }}
                       >
-                        {part.text}
+                        {getPartText(message, part.text, isFirstTextPart)}
                       </Streamdown>
                     );
+                  }
                   case "reasoning":
                     return (
                       <Streamdown className="italic" key={key}>
@@ -305,34 +594,49 @@ export const Chat = ({ models }: ChatProps) => {
                       </Streamdown>
                     );
                   case "file":
-                    return (
-                      <div key={key}>
-                        {part.mediaType.startsWith("image") ? (
-                          <Image
-                            alt={part.filename ?? "An image attachment"}
-                            height={100}
-                            src={part.url}
-                            unoptimized
-                            width={100}
-                          />
-                        ) : (
-                          <div>File: {part.filename}</div>
-                        )}
-                      </div>
-                    );
+                    return <FilePart key={key} part={part} />;
                   default:
                     return null;
                 }
               })}
             </div>
-          ))}
-        </Column>
+          );
+        }),
+      },
+    ];
+
+    return items.filter((column) => visibleColumns.includes(column.id));
+  }, [
+    canReplay,
+    getPartText,
+    isLiveStreaming,
+    messages,
+    restreamId,
+    startRestream,
+    status,
+    visibleColumns,
+  ]);
+
+  return (
+    <div className="mx-auto flex h-screen flex-col divide-y overflow-hidden border-x">
+      <div
+        className={cn(
+          "grid h-full flex-1 divide-x overflow-hidden",
+          gridColsClassName[columns.length] ?? "grid-cols-1"
+        )}
+      >
+        {columns.map((column) => (
+          <Column key={column.id} title={COLUMN_LABELS[column.id]}>
+            {column.content}
+          </Column>
+        ))}
       </div>
       <form
         className="grid shrink-0 items-center gap-2 divide-y p-4"
         onSubmit={(e) => {
           e.preventDefault();
           if (input.trim()) {
+            stopRestream();
             sendMessage({ text: input }, { body: { model } });
             setInput("");
           }
@@ -341,40 +645,101 @@ export const Chat = ({ models }: ChatProps) => {
         <Textarea
           disabled={status !== "ready"}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Say something..."
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              e.currentTarget.form?.requestSubmit();
+            }
+          }}
+          placeholder="Say something... (⌘↵ to send)"
           value={input}
         />
         <div className="flex items-center justify-between gap-2">
-          <Combobox
-            data={models}
-            onValueChange={setModel}
-            type="model"
-            value={model}
-          >
-            <ComboboxTrigger className="w-full max-w-sm" />
-            <ComboboxContent>
-              <ComboboxInput />
-              <ComboboxEmpty />
-              <ComboboxList>
-                <ComboboxGroup>
-                  {models.map((currentModel) => (
-                    <ComboboxItem
-                      key={currentModel.value}
-                      value={currentModel.value}
-                    >
-                      {currentModel.label}
-                    </ComboboxItem>
-                  ))}
-                </ComboboxGroup>
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <Combobox
+              data={models}
+              onValueChange={setModel}
+              type="model"
+              value={model}
+            >
+              <ComboboxTrigger className="w-full max-w-sm" />
+              <ComboboxContent>
+                <ComboboxInput />
+                <ComboboxEmpty />
+                <ComboboxList>
+                  <ComboboxGroup>
+                    {models.map((currentModel) => (
+                      <ComboboxItem
+                        key={currentModel.value}
+                        value={currentModel.value}
+                      >
+                        {currentModel.label}
+                      </ComboboxItem>
+                    ))}
+                  </ComboboxGroup>
+                </ComboboxList>
+              </ComboboxContent>
+            </Combobox>
+
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button type="button" variant="outline">
+                  <Columns3Icon />
+                  Columns
+                  <span className="text-muted-foreground">
+                    {visibleColumns.length}/{COLUMN_IDS.length}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-72 p-2">
+                <div className="px-2 py-1.5 font-medium text-muted-foreground text-xs">
+                  Toggle columns
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  {COLUMN_IDS.map((id) => {
+                    const checked = visibleColumns.includes(id);
+                    const disableUncheck =
+                      checked && visibleColumns.length === 1;
+
+                    return (
+                      <button
+                        aria-pressed={checked}
+                        className={cn(
+                          "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
+                          disableUncheck && "opacity-50"
+                        )}
+                        disabled={disableUncheck}
+                        key={id}
+                        onClick={() => toggleColumn(id)}
+                        type="button"
+                      >
+                        <span
+                          className={cn(
+                            "flex size-4 shrink-0 items-center justify-center rounded-sm border border-input",
+                            checked &&
+                              "border-primary bg-primary text-primary-foreground"
+                          )}
+                        >
+                          {checked ? <CheckIcon className="size-3" /> : null}
+                        </span>
+                        <span className="min-w-0 flex-1 truncate">
+                          {COLUMN_LABELS[id]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
 
           <div className="flex items-center justify-between gap-2">
             <Button
               onClick={() => {
+                stopRestream();
                 setMessages([]);
               }}
+              type="button"
               variant="outline"
             >
               Clear Chat

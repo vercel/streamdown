@@ -1,8 +1,8 @@
 ---
 title: Internationalization
-description: Override default English labels with your own translations.
+description: Localize UI labels and set text direction for RTL and mixed-script content.
 type: reference
-summary: Localize all UI labels in Streamdown controls and modals.
+summary: Localize UI labels and configure text direction (dir) for RTL content.
 prerequisites:
   - /docs/getting-started
 related:
@@ -240,6 +240,20 @@ function CustomCodeBlock({ children }) {
   );
 }
 ```
+
+## Text direction
+
+For right-to-left languages or mixed-script Markdown, set the `dir` prop. Prefer `dir="auto"` so each block gets its own base direction:
+
+```tsx title="app/page.tsx"
+<Streamdown dir="auto">
+  {markdown}
+</Streamdown>
+```
+
+In static mode, Streamdown keeps the document as one Markdown parse (so footnotes and references still resolve) and assigns `dir` per heading, paragraph, list item, quote, and table cell. Code blocks stay LTR. Detection uses a majority count of strong Unicode letters, with first-strong as the tie-breaker.
+
+See [Configuration → Text direction](/docs/configuration#text-direction-dir) for the full behavior matrix.
 
 ## Exported types and values
 

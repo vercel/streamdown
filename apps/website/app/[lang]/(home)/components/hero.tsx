@@ -1,5 +1,5 @@
+import { Badge } from "@vercel/geistdocs/components/badge";
 import type { ReactNode } from "react";
-import { Badge } from "@/components/ui/badge";
 
 interface HeroProps {
   badge?: string;
@@ -17,7 +17,7 @@ export const Hero = ({ badge, title, description, children }: HeroProps) => (
           <p>{badge}</p>
         </Badge>
       ) : null}
-      <h1 className="text-balance text-center font-semibold text-[40px]! leading-[1.1] tracking-tight sm:text-5xl! lg:font-semibold xl:text-6xl!">
+      <h1 className="text-balance text-center font-[450] text-[40px]! leading-[1.1] tracking-tight sm:text-5xl! lg:font-[450] xl:text-6xl!">
         {title}
       </h1>
       <p className="mx-auto max-w-3xl text-balance text-muted-foreground leading-relaxed sm:text-xl">

@@ -2,36 +2,36 @@
   "name": "streamdown-monorepo",
   "private": true,
   "scripts": {
+    "bench": "turbo run bench",
+    "bench:ui": "turbo run bench:ui",
     "build": "turbo run build",
     "build:packages": "pnpm build --filter streamdown --filter @streamdown/math --filter @streamdown/code --filter @streamdown/cjk --filter @streamdown/mermaid",
-    "dev": "turbo run dev",
+    "bump-deps": "npx npm-check-updates -u --deep -x \"recharts\" && pnpm i",
+    "changeset": "changeset",
+    "changeset:publish": "pnpm build && changeset publish",
+    "changeset:version": "changeset version",
     "check": "ultracite check",
+    "check-types": "turbo run check-types",
+    "dev": "turbo run dev",
     "fix": "ultracite fix",
     "test": "turbo run test",
     "test:coverage": "turbo run test:coverage",
-    "test:ui": "turbo run test:ui",
-    "check-types": "turbo run check-types",
-    "changeset": "changeset",
-    "changeset:version": "changeset version",
-    "changeset:publish": "pnpm build && changeset publish",
-    "bench": "turbo run bench",
-    "bench:ui": "turbo run bench:ui",
-    "bump-deps": "npx npm-check-updates -u --deep -x \"recharts\" && pnpm i"
+    "test:ui": "turbo run test:ui"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.5",
-    "@changesets/cli": "^2.30.0",
-    "turbo": "^2.8.13",
+    "@changesets/cli": "^2.31.1",
+    "turbo": "^2.10.10",
     "typescript": "5.9.3",
     "ultracite": "7.2.4"
+  },
+  "packageManager": "pnpm@10.30.3",
+  "engines": {
+    "node": ">=20"
   },
   "pnpm": {
     "overrides": {
       "lodash-es": ">=4.17.23"
     }
-  },
-  "packageManager": "pnpm@10.30.3",
-  "engines": {
-    "node": ">=18"
   }
 }

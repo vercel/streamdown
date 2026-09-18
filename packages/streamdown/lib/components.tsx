@@ -8,6 +8,7 @@ import {
   lazy,
   type MouseEvent,
   memo,
+  type ReactNode,
   Suspense,
   useCallback,
   useContext,
@@ -20,6 +21,7 @@ import { CodeBlock } from "./code-block";
 import { CodeBlockCopyButton } from "./code-block/copy-button";
 import { CodeBlockDownloadButton } from "./code-block/download-button";
 import { CodeBlockSkeleton } from "./code-block/skeleton";
+import { getCopyCallbacks } from "./controls";
 import { ImageComponent } from "./image";
 import { LinkSafetyModal } from "./link-modal";
 import type { ExtraProps, Options } from "./markdown";
@@ -39,16 +41,7 @@ const Mermaid = lazy(() =>
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
 
-interface MarkdownPoint {
-  column?: number;
-  line?: number;
-}
-interface MarkdownPosition {
-  end?: MarkdownPoint;
-  start?: MarkdownPoint;
-}
 interface MarkdownNode {
-  position?: MarkdownPosition;
   properties?: { className?: string; metastring?: string };
 }
 
@@ -58,40 +51,67 @@ type WithNode<T> = T & {
   className?: string;
 };
 
-function sameNodePosition(prev?: MarkdownNode, next?: MarkdownNode): boolean {
-  if (!(prev?.position || next?.position)) {
-    return true;
-  }
-  if (!(prev?.position && next?.position)) {
+// Shared comparators
+
+/**
+ * The `node` prop is a fresh object on every parse, so comparing it by identity
+ * would defeat memoization entirely. Nothing here renders it directly; the one
+ * value read off it that reaches the output — a code fence's meta string — is
+ * compared explicitly by `sameCodeMeta` below.
+ */
+const IGNORED_PROP = "node";
+
+/**
+ * A memoized markup component may skip rendering only when every prop capable of
+ * changing its rendered output is equivalent.
+ *
+ * This is React's own shallow prop comparison — what `memo` does with no
+ * comparator at all — minus the `node` prop. Source position is not a substitute:
+ * a replacement of the same length occupies the same lines and columns, so a
+ * position-based comparator reports "unchanged" for content that changed and the
+ * component keeps rendering the previous text.
+ *
+ * The skip that matters is not lost. An unchanged block is memoized a level up
+ * and is never re-rendered, so these comparators only run for a block that was
+ * re-parsed — exactly the case where the output can differ.
+ */
+function sameRenderedProps(prev: object, next: object): boolean {
+  const prevKeys = Object.keys(prev);
+
+  if (prevKeys.length !== Object.keys(next).length) {
     return false;
   }
 
-  const prevStart = prev.position.start;
-  const nextStart = next.position.start;
-  const prevEnd = prev.position.end;
-  const nextEnd = next.position.end;
+  const prevRecord = prev as Record<string, unknown>;
+  const nextRecord = next as Record<string, unknown>;
 
-  return (
-    prevStart?.line === nextStart?.line &&
-    prevStart?.column === nextStart?.column &&
-    prevEnd?.line === nextEnd?.line &&
-    prevEnd?.column === nextEnd?.column
-  );
+  for (const key of prevKeys) {
+    if (key === IGNORED_PROP) {
+      continue;
+    }
+    if (!Object.is(prevRecord[key], nextRecord[key])) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
-// Shared comparators
-function sameClassAndNode(
-  prev: { className?: string; node?: MarkdownNode },
-  next: { className?: string; node?: MarkdownNode }
-) {
-  return (
-    prev.className === next.className && sameNodePosition(prev.node, next.node)
-  );
+/**
+ * A code fence's meta string (```ts startLine=10) changes the rendered output
+ * without changing the code element's children or className, so it is the one
+ * part of `node` that has to participate in the comparison.
+ */
+function sameCodeMeta(
+  prev?: { properties?: { metastring?: unknown } },
+  next?: { properties?: { metastring?: unknown } }
+): boolean {
+  return prev?.properties?.metastring === next?.properties?.metastring;
 }
 
 const shouldShowControls = (
   config: ControlsConfig,
-  type: "table" | "code" | "mermaid"
+  type: "table" | "code" | "mermaid" | "image"
 ) => {
   if (typeof config === "boolean") {
     return config;
@@ -163,6 +183,27 @@ const shouldShowMermaidControl = (
   return mermaidConfig[controlType] !== false;
 };
 
+const shouldShowImageControl = (
+  config: ControlsConfig,
+  controlType: "download"
+): boolean => {
+  if (typeof config === "boolean") {
+    return config;
+  }
+
+  const imageConfig = config.image;
+
+  if (imageConfig === false) {
+    return false;
+  }
+
+  if (imageConfig === true || imageConfig === undefined) {
+    return true;
+  }
+
+  return imageConfig[controlType] !== false;
+};
+
 type OlProps = WithNode<JSX.IntrinsicElements["ol"]>;
 const MemoOl = memo<OlProps>(
   ({ children, className, node, ...props }: OlProps) => {
@@ -180,7 +221,7 @@ const MemoOl = memo<OlProps>(
       </ol>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoOl.displayName = "MarkdownOl";
 
@@ -189,17 +230,31 @@ type LiProps = WithNode<JSX.IntrinsicElements["li"]>;
 const MemoLi = memo<LiProps>(
   ({ children, className, node, ...props }: LiProps) => {
     const cn = useCn();
+
+    const childArray = Array.isArray(children)
+      ? children.filter((child) => child !== "\n" && child !== "")
+      : [children];
+
+    const normalizedChildren =
+      childArray.length === 1 &&
+      isValidElement(childArray[0]) &&
+      (childArray[0].type === MemoParagraph ||
+        (childArray[0].props as { node: { tagname: string } }).node?.tagname ===
+          "p")
+        ? (childArray[0].props as { children: ReactNode }).children
+        : children;
+
     return (
       <li
         className={cn("py-1 [&>p]:inline", className)}
         data-streamdown="list-item"
         {...props}
       >
-        {children}
+        {normalizedChildren}
       </li>
     );
   },
-  (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoLi.displayName = "MarkdownLi";
 
@@ -220,7 +275,7 @@ const MemoUl = memo<UlProps>(
       </ul>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoUl.displayName = "MarkdownUl";
 
@@ -236,7 +291,7 @@ const MemoHr = memo<HrProps>(
       />
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoHr.displayName = "MarkdownHr";
 
@@ -254,7 +309,7 @@ const MemoStrong = memo<StrongProps>(
       </span>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoStrong.displayName = "MarkdownStrong";
 
@@ -353,10 +408,7 @@ const LinkComponent = ({
   );
 };
 
-const MemoA = memo<AProps>(
-  LinkComponent,
-  (p, n) => sameClassAndNode(p, n) && p.href === n.href
-);
+const MemoA = memo<AProps>(LinkComponent, (p, n) => sameRenderedProps(p, n));
 MemoA.displayName = "MarkdownA";
 
 type HeadingProps<TTag extends keyof JSX.IntrinsicElements> = WithNode<
@@ -376,7 +428,7 @@ const MemoH1 = memo<HeadingProps<"h1">>(
       </h1>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH1.displayName = "MarkdownH1";
 
@@ -393,7 +445,7 @@ const MemoH2 = memo<HeadingProps<"h2">>(
       </h2>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH2.displayName = "MarkdownH2";
 
@@ -410,7 +462,7 @@ const MemoH3 = memo<HeadingProps<"h3">>(
       </h3>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH3.displayName = "MarkdownH3";
 
@@ -427,7 +479,7 @@ const MemoH4 = memo<HeadingProps<"h4">>(
       </h4>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH4.displayName = "MarkdownH4";
 
@@ -444,7 +496,7 @@ const MemoH5 = memo<HeadingProps<"h5">>(
       </h5>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH5.displayName = "MarkdownH5";
 
@@ -461,14 +513,15 @@ const MemoH6 = memo<HeadingProps<"h6">>(
       </h6>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoH6.displayName = "MarkdownH6";
 
 type TableComponentProps = WithNode<JSX.IntrinsicElements["table"]>;
 const MemoTable = memo<TableComponentProps>(
   ({ children, className, node, ...props }: TableComponentProps) => {
-    const { controls: controlsConfig } = useContext(StreamdownContext);
+    const { controls: controlsConfig, tableMaxHeight } =
+      useContext(StreamdownContext);
     const showTableControls = shouldShowControls(controlsConfig, "table");
     const showCopy = shouldShowTableControl(controlsConfig, "copy");
     const showDownload = shouldShowTableControl(controlsConfig, "download");
@@ -477,6 +530,7 @@ const MemoTable = memo<TableComponentProps>(
     return (
       <Table
         className={className}
+        maxHeight={tableMaxHeight}
         showControls={showTableControls}
         showCopy={showCopy}
         showDownload={showDownload}
@@ -487,7 +541,7 @@ const MemoTable = memo<TableComponentProps>(
       </Table>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoTable.displayName = "MarkdownTable";
 
@@ -505,7 +559,7 @@ const MemoThead = memo<TheadProps>(
       </thead>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoThead.displayName = "MarkdownThead";
 
@@ -523,7 +577,7 @@ const MemoTbody = memo<TbodyProps>(
       </tbody>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoTbody.displayName = "MarkdownTbody";
 
@@ -541,7 +595,7 @@ const MemoTr = memo<TrProps>(
       </tr>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoTr.displayName = "MarkdownTr";
 
@@ -562,7 +616,7 @@ const MemoTh = memo<ThProps>(
       </th>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoTh.displayName = "MarkdownTh";
 
@@ -580,7 +634,7 @@ const MemoTd = memo<TdProps>(
       </td>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoTd.displayName = "MarkdownTd";
 
@@ -601,7 +655,7 @@ const MemoBlockquote = memo<BlockquoteProps>(
       </blockquote>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoBlockquote.displayName = "MarkdownBlockquote";
 
@@ -619,7 +673,7 @@ const MemoSup = memo<SupProps>(
       </sup>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoSup.displayName = "MarkdownSup";
 
@@ -637,7 +691,7 @@ const MemoSub = memo<SubProps>(
       </sub>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoSub.displayName = "MarkdownSub";
 
@@ -771,7 +825,7 @@ const MemoSection = memo<SectionProps>(
       </section>
     );
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoSection.displayName = "MarkdownSection";
 
@@ -894,7 +948,7 @@ const CodeComponent = ({
           {shouldShowMermaidControls ? (
             <div
               className={cn(
-                "pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end"
+                "pointer-events-none absolute top-2 right-2 z-10 flex items-center"
               )}
             >
               <div
@@ -909,7 +963,12 @@ const CodeComponent = ({
                     config={mermaidContext?.config}
                   />
                 ) : null}
-                {showCopy ? <CodeBlockCopyButton code={code} /> : null}
+                {showCopy ? (
+                  <CodeBlockCopyButton
+                    code={code}
+                    {...getCopyCallbacks(controlsConfig, "mermaid")}
+                  />
+                ) : null}
                 {showFullscreen ? (
                   <MermaidFullscreenButton
                     chart={code}
@@ -919,7 +978,11 @@ const CodeComponent = ({
               </div>
             </div>
           ) : null}
-          <div className={cn("rounded-md border border-border bg-background")}>
+          <div
+            className={cn(
+              "overflow-hidden rounded-md border border-border bg-background"
+            )}
+          >
             <Mermaid
               chart={code}
               config={mermaidContext?.config}
@@ -935,6 +998,10 @@ const CodeComponent = ({
   const showDownload = shouldShowCodeControl(controlsConfig, "download");
   const showCopy = shouldShowCodeControl(controlsConfig, "copy");
 
+  // `data-block` is the marker the custom `pre` component sets to identify a
+  // fenced block. It is internal, so it is the one prop not forwarded on.
+  const { "data-block": _blockMarker, ...forwarded } = props;
+
   return (
     <CodeBlock
       className={className}
@@ -943,13 +1010,18 @@ const CodeComponent = ({
       language={language}
       lineNumbers={showLineNumbers}
       startLine={startLine}
+      {...forwarded}
     >
       {showCodeControls ? (
         <>
           {showDownload ? (
             <CodeBlockDownloadButton code={code} language={language} />
           ) : null}
-          {showCopy ? <CodeBlockCopyButton /> : null}
+          {showCopy ? (
+            <CodeBlockCopyButton
+              {...getCopyCallbacks(controlsConfig, "code")}
+            />
+          ) : null}
         </>
       ) : null}
     </CodeBlock>
@@ -960,17 +1032,34 @@ const MemoCode = memo<
   DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & ExtraProps
 >(
   CodeComponent,
-  (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
+  (p, n) => sameRenderedProps(p, n) && sameCodeMeta(p.node, n.node)
 );
 MemoCode.displayName = "MarkdownCode";
 
-const MemoImg = memo<
-  DetailedHTMLProps<ImgHTMLAttributes<HTMLImageElement>, HTMLImageElement> &
-    ExtraProps
->(
-  ImageComponent,
-  (p, n) => p.className === n.className && sameNodePosition(p.node, n.node)
-);
+type ImgProps = DetailedHTMLProps<
+  ImgHTMLAttributes<HTMLImageElement>,
+  HTMLImageElement
+> &
+  ExtraProps;
+
+const ImageWrapper = ({ node, className, ...props }: ImgProps) => {
+  const { controls: controlsConfig } = useContext(StreamdownContext);
+  const showImageControls = shouldShowControls(controlsConfig, "image");
+  const showDownloadControl =
+    showImageControls && shouldShowImageControl(controlsConfig, "download");
+
+  return (
+    <ImageComponent
+      className={className}
+      node={node}
+      showControls={showImageControls}
+      showDownloadControl={showDownloadControl}
+      {...props}
+    />
+  );
+};
+
+const MemoImg = memo<ImgProps>(ImageWrapper, (p, n) => sameRenderedProps(p, n));
 
 MemoImg.displayName = "MarkdownImg";
 
@@ -1012,7 +1101,7 @@ const MemoParagraph = memo<ParagraphProps>(
 
     return <p {...props}>{children}</p>;
   },
-  (p, n) => sameClassAndNode(p, n)
+  (p, n) => sameRenderedProps(p, n)
 );
 MemoParagraph.displayName = "MarkdownParagraph";
 

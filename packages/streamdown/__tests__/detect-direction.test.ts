@@ -42,6 +42,20 @@ describe("detectTextDirection", () => {
     expect(detectTextDirection("مرحبا Hello")).toBe("rtl");
   });
 
+  it("uses the content majority when an RTL sentence starts with an English identifier", () => {
+    expect(
+      detectTextDirection("React یک کتابخانه جاوااسکریپت بسیار محبوب است.")
+    ).toBe("rtl");
+  });
+
+  it("does not let fenced code skew the direction of surrounding prose", () => {
+    expect(
+      detectTextDirection(
+        "این یک نمونه است.\n\n```js\nconst example = true;\n```"
+      )
+    ).toBe("rtl");
+  });
+
   it("handles Thaana script", () => {
     expect(detectTextDirection("ދިވެހި")).toBe("rtl");
   });

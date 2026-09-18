@@ -4,7 +4,11 @@ import { source } from "@/lib/geistdocs/source";
 const Layout = async ({ children, params }: LayoutProps<"/[lang]/docs">) => {
   const { lang } = await params;
 
-  return <DocsLayout tree={source.pageTree[lang]}>{children}</DocsLayout>;
+  return (
+    <div className="bg-background-200">
+      <DocsLayout tree={source.pageTree[lang]}>{children}</DocsLayout>
+    </div>
+  );
 };
 
 export default Layout;

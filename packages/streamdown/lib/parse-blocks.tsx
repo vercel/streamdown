@@ -1,12 +1,18 @@
-import { Lexer } from "marked";
+import { Lexer, type Token } from "marked";
 
 // Regex patterns moved to top level for performance
 // Footnote identifiers must be alphanumeric, underscore, or hyphen (e.g., [^1], [^note], [^my-note])
 // Previously used [^\]\s] which incorrectly matched regex character classes like [^\s...]
 const footnoteReferencePattern = /\[\^[\w-]{1,200}\](?!:)/;
 const footnoteDefinitionPattern = /\[\^[\w-]{1,200}\]:/;
-const _closingTagPattern = /<\/(\w+)>/;
-const openingTagPattern = /<(\w+)[\s>]/;
+// Allow hyphens / colons so custom tags like <ai-thinking> are tracked across
+// blank-line interruptions (\w alone only matches [A-Za-z0-9_]).
+const openingTagPattern = /<([A-Za-z][\w:-]*)[\s>/]/;
+// Link definitions are stored in the lexer; lexing a stream tail alone does not
+// see definitions from earlier blocks, so duplicate labels can diverge from a
+// full parse. Skip incremental reuse when any are present. GFM allows 0–3
+// leading spaces before a definition (4+ is an indented code block).
+const linkDefinitionPattern = /^ {0,3}\[[^\]]+\]:/m;
 
 // HTML void elements (self-closing tags) that don't need closing tags
 const voidElements = new Set([
@@ -92,23 +98,62 @@ const countDoubleDollars = (str: string): number => {
   return count;
 };
 
-// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex parsing logic that handles multiple markdown edge cases"
-export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
-  // Check if the markdown contains footnotes (references or definitions)
-  // Footnote references: [^1], [^label], etc.
-  // Footnote definitions: [^1]: text, [^label]: text, etc.
-  // Use atomic groups or possessive quantifiers to prevent backtracking
-  const hasFootnoteReference = footnoteReferencePattern.test(markdown);
-  const hasFootnoteDefinition = footnoteDefinitionPattern.test(markdown);
+// marked's `Lexer.lex` normalizes line endings before tokenizing. Do the same
+// here so that the `raw` text of the block tokens joins back into the input.
+const lineEndingPattern = /\r\n|\r/g;
 
-  // If footnotes are present, return the entire document as a single block
-  // This ensures footnote references and definitions remain in the same mdast tree
-  if (hasFootnoteReference || hasFootnoteDefinition) {
-    return [markdown];
+// Only the block-level tokens are needed here: each block is rendered from its
+// `raw` text by its own remark pipeline later. `Lexer.lex` would also run the
+// inline tokenizer over every block, which is wasted work, so call the block
+// tokenizer directly.
+const lexBlocks = (markdown: string): Token[] =>
+  new Lexer({ gfm: true }).blockTokens(markdown);
+
+// Streaming appends text to the end of the document. Text before the tail can
+// still change meaning: a lone "#" is a heading that ends the paragraph above
+// it, while "#x" continues that paragraph; "2" after a list is a paragraph,
+// while "2." is another item of that list. A block is only final once it ends
+// with a blank line and the block after it is complete, that is, followed by
+// another block. Blocks before the last such boundary are reused and only the
+// rest of the document is lexed again.
+//
+// A single cached entry covers one document streaming at a time; anything
+// else falls back to a full parse.
+interface ParseCache {
+  blocks: string[];
+  input: string;
+  // How many leading blocks have been checked to sit at their expected
+  // offsets in `input`. marked trims a few raws (a bare "- " lexes to "-\n"),
+  // so the offsets used below are checked before they are trusted, but only
+  // for blocks that are about to be reused.
+  verifiedCount: number;
+  verifiedLength: number;
+}
+
+let lastParse: ParseCache | null = null;
+
+const blankLineEnding = "\n\n";
+
+// Number of leading blocks that cannot change when text is appended.
+const countStableBlocks = (blocks: string[]): number => {
+  for (let i = blocks.length - 3; i >= 0; i -= 1) {
+    if (blocks[i].endsWith(blankLineEnding)) {
+      return i + 1;
+    }
   }
+  return 0;
+};
 
-  const tokens = Lexer.lex(markdown, { gfm: true });
+// A block is a slice of the input it was lexed from, and V8 keeps that whole
+// input alive while the slice exists. Copy strings stored in the cache so we
+// do not pin every intermediate document of a stream (or the full source of
+// a one-shot parse) via substring retainers.
+const copyString = (value: string): string => ` ${value}`.slice(1);
 
+const copyBlocks = (blocks: string[]): string[] => blocks.map(copyString);
+
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Complex parsing logic that handles multiple markdown edge cases"
+const mergeTokensIntoBlocks = (tokens: Token[]): string[] => {
   // Post-process to merge consecutive blocks that belong together
   const mergedBlocks: string[] = [];
   const htmlStack: string[] = []; // Track opening HTML tags
@@ -155,6 +200,16 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
       }
     }
 
+    // marked v18 no longer absorbs a block token's trailing blank line(s) into
+    // its own `raw`; instead that whitespace surfaces as a separate `space`
+    // token immediately after (e.g. html/heading/table blocks). A bare space
+    // token is never meaningful content on its own, so fold it into the
+    // previous block to keep block boundaries/counts identical to v17.
+    if (token.type === "space" && mergedBlocksLen > 0) {
+      mergedBlocks[mergedBlocksLen - 1] += currentBlock;
+      continue;
+    }
+
     // Math block merging logic
     // If previous block has unclosed math (odd number of $$), merge current block into it.
     // This handles cases where marked's Lexer splits math blocks (e.g. = on its own line
@@ -180,4 +235,107 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   }
 
   return mergedBlocks;
+};
+
+// Reuses the blocks of the previous parse that cannot have changed and lexes
+// only the rest of the input. Returns null when nothing can be reused.
+const reuseParsedBlocks = (
+  previous: ParseCache,
+  input: string
+): ParseCache | null => {
+  if (input.length <= previous.input.length) {
+    return null;
+  }
+
+  // marked keeps link definitions on the lexer instance. A tail-only lex does
+  // not see defs from the stable prefix, so block lists can diverge (e.g. a
+  // duplicate `[label]: url` is dropped on a full parse but kept on a tail
+  // parse). Bail out whenever the document uses them.
+  if (!input.startsWith(previous.input) || linkDefinitionPattern.test(input)) {
+    return null;
+  }
+
+  const stableCount = countStableBlocks(previous.blocks);
+  if (stableCount === 0) {
+    return null;
+  }
+
+  let verifiedCount = previous.verifiedCount;
+  let verifiedLength = previous.verifiedLength;
+
+  // The tail can shrink the stable region (a setext underline can pull
+  // several blocks into one), so never trust more blocks than are stable.
+  if (verifiedCount > stableCount) {
+    verifiedCount = stableCount;
+    verifiedLength = 0;
+    for (let i = 0; i < verifiedCount; i += 1) {
+      verifiedLength += previous.blocks[i].length;
+    }
+  }
+
+  while (
+    verifiedCount < stableCount &&
+    input.startsWith(previous.blocks[verifiedCount], verifiedLength)
+  ) {
+    verifiedLength += previous.blocks[verifiedCount].length;
+    verifiedCount += 1;
+  }
+
+  if (verifiedCount !== stableCount) {
+    return null;
+  }
+
+  const tailBlocks = copyBlocks(
+    mergeTokensIntoBlocks(lexBlocks(input.slice(verifiedLength)))
+  );
+
+  return {
+    input,
+    // Keep the same string instances for stable blocks so callers that identity-
+    // compare content (and the cache itself) do not churn allocations.
+    blocks: previous.blocks.slice(0, stableCount).concat(tailBlocks),
+    verifiedCount,
+    verifiedLength,
+  };
+};
+
+export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
+  // Check if the markdown contains footnotes (references or definitions)
+  // Footnote references: [^1], [^label], etc.
+  // Footnote definitions: [^1]: text, [^label]: text, etc.
+  // Use atomic groups or possessive quantifiers to prevent backtracking
+  const hasFootnoteReference = footnoteReferencePattern.test(markdown);
+  const hasFootnoteDefinition = footnoteDefinitionPattern.test(markdown);
+
+  // If footnotes are present, return the entire document as a single block
+  // This ensures footnote references and definitions remain in the same mdast tree.
+  // Do not write the cache: footnote documents are not block-split, and leaving
+  // a prior entry avoids poisoning the next non-footnote stream extension check.
+  if (hasFootnoteReference || hasFootnoteDefinition) {
+    return [markdown];
+  }
+
+  const input = markdown.includes("\r")
+    ? markdown.replace(lineEndingPattern, "\n")
+    : markdown;
+
+  // Exact hit: return the same block array instance (useful under React
+  // StrictMode double-invoke and repeated layout passes with unchanged content).
+  if (lastParse?.input === input) {
+    return lastParse.blocks;
+  }
+
+  const reused = lastParse ? reuseParsedBlocks(lastParse, input) : null;
+  const entry =
+    reused ??
+    ({
+      input,
+      blocks: copyBlocks(mergeTokensIntoBlocks(lexBlocks(input))),
+      verifiedCount: 0,
+      verifiedLength: 0,
+    } satisfies ParseCache);
+
+  lastParse = entry;
+
+  return entry.blocks;
 };

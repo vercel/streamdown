@@ -1,9 +1,9 @@
 "use client";
 
+import { Button } from "@vercel/geistdocs/components/button";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 
 export const CopyButton = ({ code }: { code: string }) => {
   const [isCopied, setIsCopied] = useState(false);

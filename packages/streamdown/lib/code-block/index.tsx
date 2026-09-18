@@ -1,4 +1,11 @@
-import { type HTMLAttributes, lazy, Suspense, useMemo } from "react";
+import {
+  type HTMLAttributes,
+  lazy,
+  Suspense,
+  useContext,
+  useMemo,
+} from "react";
+import { StreamdownContext } from "../../index";
 import type { HighlightResult } from "../plugin-types";
 import { useCn } from "../prefix-context";
 import { CodeBlockBody } from "./body";
@@ -42,6 +49,7 @@ export const CodeBlock = ({
   ...rest
 }: CodeBlockProps) => {
   const cn = useCn();
+  const { codeBlockMaxHeight } = useContext(StreamdownContext);
   // Remove trailing newlines to prevent empty line at end of code blocks
   const trimmedCode = useMemo(() => trimTrailingNewlines(code), [code]);
 
@@ -65,12 +73,16 @@ export const CodeBlock = ({
 
   return (
     <CodeBlockContext.Provider value={{ code }}>
-      <CodeBlockContainer isIncomplete={isIncomplete} language={language}>
+      <CodeBlockContainer
+        dir="ltr"
+        isIncomplete={isIncomplete}
+        language={language}
+      >
         <CodeBlockHeader language={language} />
         {children ? (
           <div
             className={cn(
-              "pointer-events-none sticky top-2 z-10 -mt-10 flex h-8 items-center justify-end"
+              "pointer-events-none absolute top-2 right-2 z-10 flex items-center"
             )}
           >
             <div
@@ -89,6 +101,7 @@ export const CodeBlock = ({
               className={className}
               language={language}
               lineNumbers={lineNumbers}
+              maxHeight={codeBlockMaxHeight}
               result={raw}
               startLine={startLine}
               {...rest}
@@ -100,6 +113,7 @@ export const CodeBlock = ({
             code={trimmedCode}
             language={language}
             lineNumbers={lineNumbers}
+            maxHeight={codeBlockMaxHeight}
             raw={raw}
             startLine={startLine}
             {...rest}

@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { fireEvent, render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 
@@ -351,6 +351,19 @@ graph TD
       expect(downloadBtn).toBeTruthy();
     });
 
+    it("should show download when table.download is a filename config", () => {
+      const { container } = render(
+        <Streamdown controls={{ table: { download: { filename: "report" } } }}>
+          {markdownWithTable}
+        </Streamdown>
+      );
+
+      const downloadBtn = container.querySelector(
+        'button[title="Download table"]'
+      );
+      expect(downloadBtn).toBeTruthy();
+    });
+
     it("should hide all table controls when no sub-controls are visible", () => {
       const { container } = render(
         <Streamdown
@@ -438,6 +451,247 @@ graph TD
         '[data-streamdown="code-block-actions"] button'
       );
       expect(buttons?.length).toBe(0);
+    });
+
+    it("should show download when code.download is a filename config", async () => {
+      const { container } = render(
+        <Streamdown controls={{ code: { download: { filename: "myScript" } } }}>
+          {markdownWithCode}
+        </Streamdown>
+      );
+
+      await waitFor(() => {
+        const downloadBtn = container.querySelector(
+          'button[title="Download file"]'
+        );
+        expect(downloadBtn).toBeTruthy();
+      });
+    });
+
+    it("should wire onCopy from code.copy config to the default copy button", async () => {
+      const onCopy = vi.fn();
+      const originalClipboard = navigator.clipboard;
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: {
+          writeText: vi.fn().mockResolvedValue(undefined),
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      const { container } = render(
+        <Streamdown controls={{ code: { copy: { onCopy } } }}>
+          {markdownWithCode}
+        </Streamdown>
+      );
+
+      const button = await waitFor(() => {
+        const copyBtn = container.querySelector(
+          '[data-streamdown="code-block-copy-button"]'
+        );
+        expect(copyBtn).toBeTruthy();
+        expect(copyBtn?.hasAttribute("disabled")).toBe(false);
+        return copyBtn as HTMLButtonElement;
+      });
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(navigator.clipboard.writeText).toHaveBeenCalled();
+        expect(onCopy).toHaveBeenCalled();
+      });
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    it("should wire onError from code.copy config when clipboard is unavailable", async () => {
+      const onError = vi.fn();
+      const originalClipboard = navigator.clipboard;
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: undefined,
+        writable: true,
+        configurable: true,
+      });
+
+      const { container } = render(
+        <Streamdown controls={{ code: { copy: { onError } } }}>
+          {markdownWithCode}
+        </Streamdown>
+      );
+
+      const button = await waitFor(() => {
+        const copyBtn = container.querySelector(
+          '[data-streamdown="code-block-copy-button"]'
+        );
+        expect(copyBtn).toBeTruthy();
+        expect(copyBtn?.hasAttribute("disabled")).toBe(false);
+        return copyBtn as HTMLButtonElement;
+      });
+
+      fireEvent.click(button);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledWith(expect.any(Error));
+      });
+
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    });
+
+    it("should still show the copy button when copy is an object config", async () => {
+      const { container } = render(
+        <Streamdown controls={{ code: { copy: { onCopy: () => undefined } } }}>
+          {markdownWithCode}
+        </Streamdown>
+      );
+
+      await waitFor(() => {
+        const copyBtn = container.querySelector(
+          '[data-streamdown="code-block-copy-button"]'
+        );
+        expect(copyBtn).toBeTruthy();
+      });
+    });
+  });
+
+  describe("image controls", () => {
+    const markdownWithImage = "![alt text](https://example.com/image.png)";
+
+    it("controls={false} hides image overlay and download button", async () => {
+      const { container } = render(
+        <Streamdown controls={false}>{markdownWithImage}</Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const buttons = wrapper?.querySelectorAll("button");
+        const overlay = wrapper?.querySelector(
+          '[data-streamdown="image-overlay"]'
+        );
+        expect(buttons?.length).toBe(0);
+        expect(overlay).toBeFalsy();
+      });
+    });
+
+    it("controls={{ image: false }} hides image controls", async () => {
+      const { container } = render(
+        <Streamdown controls={{ image: false }}>{markdownWithImage}</Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const buttons = wrapper?.querySelectorAll("button");
+        const overlay = wrapper?.querySelector(
+          '[data-streamdown="image-overlay"]'
+        );
+        expect(buttons?.length).toBe(0);
+        expect(overlay).toBeFalsy();
+      });
+    });
+
+    it("controls={{ image: true }} shows image download button after load", async () => {
+      const { container } = render(
+        <Streamdown controls={{ image: true }}>{markdownWithImage}</Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const button = wrapper?.querySelector('button[title="Download image"]');
+        expect(button).toBeTruthy();
+      });
+    });
+
+    it("controls={{ image: { download: false } }} hides only download button but keeps overlay", async () => {
+      const { container } = render(
+        <Streamdown controls={{ image: { download: false } }}>
+          {markdownWithImage}
+        </Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const button = wrapper?.querySelector('button[title="Download image"]');
+        const overlay = wrapper?.querySelector(
+          '[data-streamdown="image-overlay"]'
+        );
+        expect(button).toBeFalsy();
+        expect(overlay).toBeTruthy();
+      });
+    });
+
+    it("unspecified image key defaults to showing controls", async () => {
+      const { container } = render(
+        <Streamdown controls={{ code: false }}>{markdownWithImage}</Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const button = wrapper?.querySelector('button[title="Download image"]');
+        expect(button).toBeTruthy();
+      });
+    });
+
+    it("controls={true} shows image controls by default", async () => {
+      const { container } = render(
+        <Streamdown controls={true}>{markdownWithImage}</Streamdown>
+      );
+
+      const img = container.querySelector('[data-streamdown="image"]');
+      if (img) {
+        fireEvent.load(img);
+      }
+
+      await waitFor(() => {
+        const wrapper = container.querySelector(
+          '[data-streamdown="image-wrapper"]'
+        );
+        const button = wrapper?.querySelector('button[title="Download image"]');
+        expect(button).toBeTruthy();
+      });
     });
   });
 

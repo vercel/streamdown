@@ -201,7 +201,7 @@ describe("ImageComponent translations", () => {
 
 describe("LinkSafetyModal translations", () => {
   it("should show default translations in link safety modal", () => {
-    const { container } = render(
+    render(
       <LinkSafetyModal
         isOpen={true}
         onClose={vi.fn()}
@@ -210,12 +210,12 @@ describe("LinkSafetyModal translations", () => {
       />
     );
 
-    expect(container.textContent).toContain("Open external link?");
-    expect(container.textContent).toContain(
+    expect(document.body.textContent).toContain("Open external link?");
+    expect(document.body.textContent).toContain(
       "You're about to visit an external website."
     );
-    expect(container.textContent).toContain("Copy link");
-    expect(container.textContent).toContain("Open link");
+    expect(document.body.textContent).toContain("Copy link");
+    expect(document.body.textContent).toContain("Open link");
   });
 
   it("should use custom translations in link safety modal", () => {
@@ -228,7 +228,7 @@ describe("LinkSafetyModal translations", () => {
       close: "Schließen",
     };
 
-    const { container } = render(
+    render(
       <TranslationsContext.Provider value={customTranslations}>
         <LinkSafetyModal
           isOpen={true}
@@ -239,12 +239,12 @@ describe("LinkSafetyModal translations", () => {
       </TranslationsContext.Provider>
     );
 
-    expect(container.textContent).toContain("Externen Link öffnen?");
-    expect(container.textContent).toContain(
+    expect(document.body.textContent).toContain("Externen Link öffnen?");
+    expect(document.body.textContent).toContain(
       "Sie besuchen eine externe Website."
     );
-    expect(container.textContent).toContain("Link kopieren");
-    expect(container.textContent).toContain("Link öffnen");
+    expect(document.body.textContent).toContain("Link kopieren");
+    expect(document.body.textContent).toContain("Link öffnen");
   });
 });
 
