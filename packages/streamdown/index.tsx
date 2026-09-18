@@ -380,6 +380,30 @@ export const StreamdownContext = createContext<StreamdownContextType>(
   defaultStreamdownContext
 );
 
+const getAnimatedKey = (
+  animated: StreamdownProps["animated"],
+  smooth: boolean
+): string => {
+  if (!animated) {
+    return "";
+  }
+  const options = animated === true ? "true" : JSON.stringify(animated);
+  // Block plugins bake in a stagger default that depends on smooth.
+  return smooth ? `${options}:smooth` : options;
+};
+
+/** Options for one block's animate plugin; maxBacklogMs goes to the timeline. */
+const getBlockAnimateOptions = (
+  animated: StreamdownProps["animated"],
+  smooth: boolean
+): AnimateOptions => {
+  const { maxBacklogMs: _, ...options }: AnimateOptions =
+    typeof animated === "object" ? animated : {};
+  // Smooth already spaces words out; a stagger would queue them a second
+  // time behind the reveal.
+  return { ...options, stagger: options.stagger ?? (smooth ? 0 : undefined) };
+};
+
 export type BlockProps = Options & {
   content: string;
   shouldParseIncompleteMarkdown: boolean;
@@ -661,15 +685,10 @@ export const Streamdown = memo(
     // plugin from being recreated when the user passes an inline object
     // literal (e.g. animated={{ animation: 'fadeIn' }}) whose reference
     // changes on every parent render.
-    const animatedKey = useMemo(() => {
-      if (animated === true) {
-        return "true";
-      }
-      if (animated) {
-        return JSON.stringify(animated);
-      }
-      return "";
-    }, [animated]);
+    const animatedKey = useMemo(
+      () => getAnimatedKey(animated, smooth),
+      [animated, smooth]
+    );
 
     const { containerRef: animationContainerRef, animateText } =
       useAnimationDrain(isAnimating, animatedKey, mode, children);
@@ -690,9 +709,7 @@ export const Streamdown = memo(
       if (prevAnimatedKeyRef.current !== animatedKey) {
         prevAnimatedKeyRef.current = animatedKey;
         const backlog =
-          animatedKey !== "true"
-            ? (animated as AnimateOptions).maxBacklogMs
-            : undefined;
+          typeof animated === "object" ? animated.maxBacklogMs : undefined;
         animateTimelineRef.current = createAnimateTimeline({
           maxBacklogMs: backlog,
         });
@@ -906,13 +923,8 @@ export const Streamdown = memo(
       if (animateTimelineRef.current && animateText) {
         if (!blockAnimatePluginsRef.current[index]) {
           // maxBacklogMs is consumed by the timeline factory, not the plugin.
-          const rawOpts =
-            animatedKey && animatedKey !== "true"
-              ? (animated as AnimateOptions)
-              : ({} as AnimateOptions);
-          const { maxBacklogMs: _, ...pluginOpts } = rawOpts;
           blockAnimatePluginsRef.current[index] = createAnimatePlugin({
-            ...pluginOpts,
+            ...getBlockAnimateOptions(animated, smooth),
             timeline: animateTimelineRef.current,
           });
         }
