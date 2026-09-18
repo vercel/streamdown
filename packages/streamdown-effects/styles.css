@@ -1,0 +1,89 @@
+@keyframes sd-diffuse {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+  }
+  55% {
+    opacity: 0.75;
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/*
+ * scramble: the real word is laid out but unpainted while noise glyphs,
+ * drawn over it from data attributes, change once and then resolve. The text
+ * stays in the DOM, so selection, copy and assistive tech get real words; the
+ * glyphs use empty alt text.
+ */
+@keyframes sd-scramble {
+  from {
+    -webkit-text-fill-color: transparent;
+    animation-timing-function: step-end;
+  }
+  to {
+    -webkit-text-fill-color: currentcolor;
+  }
+}
+
+@keyframes sd-glyphs {
+  from {
+    opacity: 1;
+  }
+  50%,
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes sd-glyphs-alt {
+  from {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+[data-sd-glyphs] {
+  position: relative;
+}
+
+[data-sd-glyphs]::before,
+[data-sd-glyphs]::after {
+  /* Block offset stays auto: the static position starts at the top of the
+     line box, so the glyphs share the text's baseline. */
+  position: absolute;
+  inset-inline-start: 0;
+  -webkit-text-fill-color: currentcolor;
+  white-space: pre;
+  pointer-events: none;
+  animation: sd-glyphs var(--sd-duration, 320ms) step-end var(--sd-delay, 0ms)
+    both;
+}
+
+[data-sd-glyphs]::before {
+  content: attr(data-sd-glyphs) / "";
+}
+
+[data-sd-glyphs]::after {
+  content: attr(data-sd-glyphs-alt) / "";
+  animation-name: sd-glyphs-alt;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-sd-glyphs] {
+    animation-name: sd-fadeIn;
+  }
+
+  [data-sd-glyphs]::before,
+  [data-sd-glyphs]::after {
+    content: none;
+  }
+}
