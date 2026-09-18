@@ -6,6 +6,7 @@ import {
   type CSSProperties,
   createContext,
   createElement,
+  type JSX,
   memo,
   useEffect,
   useId,
@@ -27,7 +28,7 @@ import {
   createAnimateTimeline,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
-import { components as defaultComponents } from "./lib/components";
+import { components as builtinComponents } from "./lib/components";
 import { detectTextDirection } from "./lib/detect-direction";
 import { type IconMap, IconProvider } from "./lib/icon-context";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
@@ -114,6 +115,50 @@ export {
 } from "./lib/table/utils";
 export type { StreamdownTranslations } from "./lib/translations-context";
 export { defaultTranslations } from "./lib/translations-context";
+
+/**
+ * Element component typed against the real intrinsic props + `ExtraProps`.
+ * Avoids `Components[K]`, whose string index signature collapses props into a
+ * useless intersection (e.g. HTMLHeadingElement & SVGSymbolElement).
+ */
+type DefaultElementComponent<K extends keyof JSX.IntrinsicElements> =
+  ComponentType<JSX.IntrinsicElements[K] & ExtraProps>;
+
+/**
+ * Built-in Streamdown components with known keys required.
+ * Prefer composing these inside custom `components` overrides instead of
+ * re-applying default styles by hand.
+ */
+export interface DefaultComponents {
+  a: DefaultElementComponent<"a">;
+  blockquote: DefaultElementComponent<"blockquote">;
+  code: DefaultElementComponent<"code">;
+  h1: DefaultElementComponent<"h1">;
+  h2: DefaultElementComponent<"h2">;
+  h3: DefaultElementComponent<"h3">;
+  h4: DefaultElementComponent<"h4">;
+  h5: DefaultElementComponent<"h5">;
+  h6: DefaultElementComponent<"h6">;
+  hr: DefaultElementComponent<"hr">;
+  img: DefaultElementComponent<"img">;
+  li: DefaultElementComponent<"li">;
+  ol: DefaultElementComponent<"ol">;
+  p: DefaultElementComponent<"p">;
+  pre: DefaultElementComponent<"pre">;
+  section: DefaultElementComponent<"section">;
+  strong: DefaultElementComponent<"strong">;
+  sub: DefaultElementComponent<"sub">;
+  sup: DefaultElementComponent<"sup">;
+  table: DefaultElementComponent<"table">;
+  tbody: DefaultElementComponent<"tbody">;
+  td: DefaultElementComponent<"td">;
+  th: DefaultElementComponent<"th">;
+  thead: DefaultElementComponent<"thead">;
+  tr: DefaultElementComponent<"tr">;
+  ul: DefaultElementComponent<"ul">;
+}
+
+export const defaultComponents = builtinComponents as DefaultComponents;
 
 // Matches lowercase HTML / custom tag names (first char is a-z)
 const LOWERCASE_TAG_PATTERN = /^[a-z]/;
@@ -778,7 +823,7 @@ export const Streamdown = memo(
       const { inlineCode, ...userComponents } = components ?? {};
 
       const merged: Record<string, unknown> = {
-        ...defaultComponents,
+        ...builtinComponents,
         ...userComponents,
       };
 
