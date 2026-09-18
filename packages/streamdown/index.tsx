@@ -51,6 +51,7 @@ import {
   TranslationsContext,
 } from "./lib/translations-context";
 import { useAnimationDrain } from "./lib/use-animation-drain";
+import { useSmoothStream } from "./lib/use-smooth-stream";
 import { createCn } from "./lib/utils";
 
 export type { AnimateOptions } from "./lib/animate";
@@ -235,6 +236,16 @@ export type StreamdownProps = Options & {
    */
   tableMaxHeight?: number | string;
   animated?: boolean | AnimateOptions;
+  /**
+   * Pace bursty streams. Text that arrives in large chunks is revealed a word
+   * at a time at the rate it has been arriving, instead of all at once.
+   * Adds roughly one chunk interval of display latency. Uses `isAnimating`
+   * to know when the stream ends. Until the held-back text is shown,
+   * Streamdown stays in streaming mode (caret, animation, incomplete-Markdown
+   * handling) even if `mode` is `"static"`, and `onAnimationEnd` waits for
+   * it. @default false
+   */
+  smooth?: boolean;
   caret?: keyof typeof carets;
   plugins?: PluginConfig;
   remend?: RemendOptions;
@@ -494,7 +505,7 @@ Block.displayName = "Block";
 export const Streamdown = memo(
   ({
     children,
-    mode = "streaming",
+    mode: modeProp = "streaming",
     dir,
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     normalizeHtmlIndentation: shouldNormalizeHtmlIndentation = false,
@@ -506,9 +517,10 @@ export const Streamdown = memo(
     mermaid,
     codeBlockMaxHeight = 400,
     controls = true,
-    isAnimating = false,
+    isAnimating: isAnimatingProp = false,
     tableMaxHeight = 300,
     animated,
+    smooth = false,
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     caret,
@@ -528,6 +540,17 @@ export const Streamdown = memo(
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
     const generatedId = useId();
+
+    const {
+      text: smoothed,
+      isAnimating,
+      mode,
+    } = useSmoothStream({
+      children,
+      isAnimating: isAnimatingProp,
+      mode: modeProp,
+      smooth,
+    });
 
     const prefixedCn = useMemo(() => createCn(prefix), [prefix]);
 
@@ -578,8 +601,8 @@ export const Streamdown = memo(
       }
       let result =
         mode === "streaming" && shouldParseIncompleteMarkdown
-          ? remend(children, remendOptions)
-          : children;
+          ? remend(smoothed, remendOptions)
+          : smoothed;
 
       // Escape markdown metacharacters inside literal-tag-content tags so that
       // children are rendered as plain text rather than parsed as markdown.
@@ -599,6 +622,7 @@ export const Streamdown = memo(
       return result;
     }, [
       children,
+      smoothed,
       mode,
       shouldParseIncompleteMarkdown,
       remendOptions,
@@ -1015,6 +1039,7 @@ export const Streamdown = memo(
     prevProps.shikiTheme === nextProps.shikiTheme &&
     prevProps.isAnimating === nextProps.isAnimating &&
     prevProps.animated === nextProps.animated &&
+    prevProps.smooth === nextProps.smooth &&
     prevProps.mode === nextProps.mode &&
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&
