@@ -149,8 +149,30 @@ export interface AnimatePlugin {
   type: "animate";
 }
 
+/**
+ * An animation packaged with the per-word behavior its keyframes need, such
+ * as the ones in `@streamdown/effects`. Pass it as `animated.animation`.
+ */
+export interface AnimationEffect {
+  /**
+   * Extra attributes for each word while it animates, such as text for
+   * styles to draw. Must return the same attributes for the same arguments:
+   * words are re-rendered while they animate.
+   */
+  decorate?: (text: string, seed: number) => Record<`data-${string}`, string>;
+  /** Default duration in ms. `animated.duration` overrides it. */
+  duration?: number;
+  /** `@keyframes` name without the `sd-` prefix. */
+  name: string;
+  /**
+   * Maximum extra delay in ms per word, hashed from its position, so words
+   * resolve in scattered order instead of left to right.
+   */
+  scatter?: number;
+}
+
 export interface AnimateOptions {
-  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {});
+  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {}) | AnimationEffect;
   duration?: number;
   easing?: string;
   /**
@@ -389,27 +411,39 @@ const makeSpan = (
   animation: string,
   duration: number,
   easing: string,
-  delay?: number
+  delay?: number,
+  attributes?: Record<string, string>
 ): Element => {
   let style = `--sd-animation:sd-${animation};--sd-duration:${duration}ms;--sd-easing:${easing}`;
   if (delay) {
     style += `;--sd-delay:${Math.round(delay)}ms`;
   }
+  const properties: Element["properties"] = {
+    "data-sd-animate": true,
+    style,
+  };
+  for (const [key, value] of Object.entries(attributes ?? {})) {
+    // Effects run after sanitization, so only data attributes pass through.
+    if (key.startsWith("data-")) {
+      properties[key] = value;
+    }
+  }
   return {
     type: "element",
     tagName: "span",
-    properties: {
-      "data-sd-animate": true,
-      style,
-    },
+    properties,
     children: [{ type: "text", value: word }],
   };
 };
 
 interface AnimateConfig {
   animation: string;
+  decorate?: AnimationEffect["decorate"];
   duration: number;
   easing: string;
+  scatter: number;
+  /** Per-block salt for position hashes. */
+  seed: number;
   sep: "word" | "char";
   stagger: number;
   timeline?: AnimateTimeline;
@@ -440,6 +474,12 @@ interface Schedule {
   step: number;
 }
 
+/** Deterministic [0, 1) hash, so StrictMode re-runs and re-renders agree. */
+const hash01 = (a: number, b: number): number => {
+  const x = Math.sin(a * 12.9898 + b * 78.233) * 43_758.5453;
+  return x - Math.floor(x);
+};
+
 const isNewAnimateUnit = (prevLen: number, partStart: number): boolean =>
   !(prevLen > 0 && partStart < prevLen);
 
@@ -452,8 +492,10 @@ const animationTiming = (
 ): { duration: number; delay: number } => {
   let timing = state.committedAnimations.get(partStart);
   if (isNewAnimateUnit(state.prevContentLength, partStart)) {
+    const scatter =
+      config.scatter > 0 ? config.scatter * hash01(config.seed, partStart) : 0;
     const delay = Math.round(
-      schedule.baseDelay + counter.newIndex++ * schedule.step
+      schedule.baseDelay + counter.newIndex++ * schedule.step + scatter
     );
     timing = { delay, endsAt: state.now + delay + config.duration };
   }
@@ -595,7 +637,10 @@ const processTextNode = (
       config.animation,
       timing.duration,
       config.easing,
-      timing.delay
+      timing.delay,
+      config.decorate && timing.duration > 0
+        ? config.decorate(part.trimEnd(), config.seed * 100_003 + partStart)
+        : undefined
     );
   });
 
@@ -616,10 +661,16 @@ let instanceId = 0;
 export function createAnimatePlugin(
   options?: AnimateOptions & { timeline?: AnimateTimeline }
 ): AnimatePlugin {
+  const id = instanceId++;
+  const animation = options?.animation ?? "fadeIn";
+  const effect = typeof animation === "string" ? undefined : animation;
   const config: AnimateConfig = {
-    animation: options?.animation ?? "fadeIn",
-    duration: options?.duration ?? 150,
+    animation: typeof animation === "string" ? animation : animation.name,
+    decorate: effect?.decorate,
+    duration: options?.duration ?? effect?.duration ?? 150,
     easing: options?.easing ?? "ease",
+    scatter: effect?.scatter ?? 0,
+    seed: id,
     sep: options?.sep ?? "word",
     stagger: options?.stagger ?? 40,
     timeline: options?.timeline,
@@ -635,7 +686,6 @@ export function createAnimatePlugin(
     pendingAnimations: new Map(),
   };
 
-  const id = instanceId++;
   const rehypeAnimate = () => (tree: Root) => {
     const charCounter = { count: 0, newIndex: 0 };
 
