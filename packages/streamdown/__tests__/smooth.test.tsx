@@ -118,6 +118,33 @@ describe("smooth", () => {
     expect(onAnimationEnd).toHaveBeenCalledTimes(1);
   });
 
+  it("reveals words without a stagger queue when animated", () => {
+    const maxDelay = (animated: boolean | { stagger: number }) => {
+      const { container, rerender, unmount } = render(
+        <Streamdown animated={animated} isAnimating smooth>
+          {first}
+        </Streamdown>
+      );
+      advance(500);
+      rerender(
+        <Streamdown animated={animated} isAnimating smooth>
+          {`${full} `}
+        </Streamdown>
+      );
+      advance(60);
+      const delays = Array.from(
+        container.querySelectorAll<HTMLElement>("[data-sd-animate]"),
+        (span) =>
+          Number.parseInt(span.style.getPropertyValue("--sd-delay") || "0", 10)
+      );
+      unmount();
+      return Math.max(0, ...delays);
+    };
+    expect(maxDelay(true)).toBe(0);
+    // An explicit stagger is still honored.
+    expect(maxDelay({ stagger: 40 })).toBeGreaterThan(0);
+  });
+
   it("shows a change that is not an append immediately", () => {
     const { container, rerender } = render(
       <Streamdown isAnimating smooth>
