@@ -1,0 +1,45 @@
+---
+title: Smooth streaming
+description: Reveal streams that arrive in large chunks a word at a time.
+type: reference
+summary: Paces text that arrives in large, infrequent chunks so it appears at a steady rate.
+related:
+  - /docs/animation
+  - /docs/carets
+---
+
+Some providers and relays deliver text in large chunks, such as 150 characters every half second. Rendered as it arrives, the text jumps forward and then pauses, and the caret jumps with it. Set `smooth` to reveal each chunk a word at a time, at the rate text has been arriving.
+
+## Enable smooth streaming
+
+```tsx title="app/page.tsx"
+import { Streamdown } from "streamdown";
+
+export default function Page() {
+  return (
+    <Streamdown smooth isAnimating={status === "streaming"}>
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+`smooth` works with or without [`animated`](/docs/animation).
+
+## How it works
+
+- Streamdown measures the time between chunks and reveals the text it has not shown yet so that it finishes about when the next chunk is expected.
+- Text appears in whole words. While streaming, a word split across two chunks is held until it's complete.
+- Only appended text is paced. Any other change renders immediately, such as a new message, an edit, or a model that resends the full text on every update.
+- Content that exists when the component mounts renders immediately.
+- Browsers pause animation frames in background tabs, so text that arrives there renders immediately.
+
+## Latency
+
+Pacing delays text by about one chunk interval: each chunk finishes appearing around when the next one arrives. For a stream that sends a chunk every 500 ms, that's about 500 ms. For a stream that sends tokens every few milliseconds, it's a frame or two.
+
+## When the stream ends
+
+Streamdown uses `isAnimating` to know when the stream ends. When it becomes `false`, the remaining text appears within 250 ms. Until then, Streamdown keeps its streaming behavior, including the caret, animations, and incomplete Markdown handling, even if you set `mode="static"` in the same update.
+
+`onAnimationEnd` fires after the remaining text appears. As with other animation callbacks, it's suppressed in `mode="static"`.
