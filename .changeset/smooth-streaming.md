@@ -15,5 +15,6 @@ Some providers and relays deliver text in bursts, such as ~150 characters every 
 - Off by default. When off, rendering is unchanged.
 - Only appends are paced. Resets, edits and full-text replacements render immediately, as does content present on mount.
 - A word split across chunks is held until it's complete.
+- With `animated`, `stagger` defaults to `0`, since pacing already spaces words out. An explicit `stagger` still applies.
 - When `isAnimating` becomes `false`, the remaining text appears within 250 ms. Until then, caret, animation and incomplete-Markdown handling stay active, even if `mode` switches to `"static"` in the same update.
 - Hidden tabs render immediately, since browsers pause animation frames there.
