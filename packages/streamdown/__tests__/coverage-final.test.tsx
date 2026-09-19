@@ -9,6 +9,12 @@ import { Markdown } from "../lib/markdown";
 import { parseMarkdownIntoBlocks } from "../lib/parse-blocks";
 import { PluginContext } from "../lib/plugin-context";
 
+vi.mock("../lib/mermaid", () => ({
+  Mermaid: ({ chart }: { chart: string }) => (
+    <div data-testid="mermaid-mock">{chart}</div>
+  ),
+}));
+
 const components = importedComponents as Required<
   NonNullable<Options["components"]>
 >;
@@ -574,12 +580,6 @@ describe("shouldShowMermaidControl with mermaid: undefined (line 136)", () => {
   it("should default to showing controls when mermaid key is not in config", () => {
     // When controls is an object but mermaid is not specified,
     // shouldShowMermaidControl should return true (line 136)
-    vi.mock("../lib/mermaid", () => ({
-      Mermaid: ({ chart }: { chart: string }) => (
-        <div data-testid="mermaid-mock">{chart}</div>
-      ),
-    }));
-
     const { container } = render(
       <PluginContext.Provider
         value={{

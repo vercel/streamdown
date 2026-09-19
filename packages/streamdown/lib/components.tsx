@@ -8,6 +8,7 @@ import {
   lazy,
   type MouseEvent,
   memo,
+  type ReactNode,
   Suspense,
   useCallback,
   useContext,
@@ -229,13 +230,27 @@ type LiProps = WithNode<JSX.IntrinsicElements["li"]>;
 const MemoLi = memo<LiProps>(
   ({ children, className, node, ...props }: LiProps) => {
     const cn = useCn();
+
+    const childArray = Array.isArray(children)
+      ? children.filter((child) => child !== "\n" && child !== "")
+      : [children];
+
+    const normalizedChildren =
+      childArray.length === 1 &&
+      isValidElement(childArray[0]) &&
+      (childArray[0].type === MemoParagraph ||
+        (childArray[0].props as { node: { tagname: string } }).node?.tagname ===
+          "p")
+        ? (childArray[0].props as { children: ReactNode }).children
+        : children;
+
     return (
       <li
         className={cn("py-1 [&>p]:inline", className)}
         data-streamdown="list-item"
         {...props}
       >
-        {children}
+        {normalizedChildren}
       </li>
     );
   },

@@ -97,9 +97,14 @@ With `dir="auto"`:
       description: "Custom component overrides for Markdown elements",
       type: "object",
     },
+    fallbackComponent: {
+      description:
+        "Fallback renderer for HTML tags or allowedTags entries that have no matching key in components. Built-in and explicit components entries always win — this is not a full unstyled mode. See Components.",
+      type: "React.ComponentType<Record<string, unknown> & ExtraProps>",
+    },
     allowedTags: {
       description:
-        "Custom HTML tags to allow through sanitization, with their permitted attributes. Use with 'components' to render custom tags like <ref> or <mention>. Only works with default rehype plugins.",
+        "Custom HTML tags to allow through sanitization, with their permitted attributes. Use with 'components' or 'fallbackComponent' to render custom tags like <ref> or <mention>. Only works with default rehype plugins.",
       type: "Record<string, string[]>",
     },
     literalTagContent: {
@@ -128,6 +133,11 @@ With `dir="auto"`:
       description: "Remark plugins for Markdown processing",
       type: "Pluggable[]",
       default: "Object.values(defaultRemarkPlugins)",
+    },
+    disableAutolinkProtocols: {
+      description:
+        "Disable GFM / CommonMark autolinking for specific URL protocols (e.g. ['mailto'] stops bare email addresses from becoming links). Accepts protocol names with or without a trailing colon, case-insensitive. Only affects autolinks (bare URLs/emails and <...> forms); explicit [text](url) links are unaffected, even when the label reconstructs the URL.",
+      type: "string[]",
     },
   }}
 />

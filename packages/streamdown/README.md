@@ -145,3 +145,46 @@ export default function Chat() {
 ```
 
 For more info, see the [documentation](https://streamdown.ai/docs).
+
+## `fallbackComponent` — fallback for missing map entries
+
+Streamdown ships built-in renderers for common markdown tags. For tags that are
+**not** in that map — and not overridden via `components` — you can provide a
+`fallbackComponent`. Useful for `allowedTags` custom elements and uncovered HTML
+tags like `<span>`, `<em>`, `<div>`, or `<br>`.
+
+This is **not** a full unstyled mode: built-in entries (and any explicit
+`components` overrides) still take precedence. To restyle tags that already have
+defaults (e.g. `h1`, `p`, `code`), pass them in `components`.
+
+```tsx
+import { createElement } from "react";
+import { Streamdown } from "streamdown";
+
+// Render missing map entries / allowedTags via a pass-through
+<Streamdown
+  allowedTags={{ mention: ["user_id"] }}
+  fallbackComponent={({ node, children, ...props }) =>
+    createElement(node!.tagName, props, children)
+  }
+>
+  {markdown}
+</Streamdown>
+```
+
+Combine with explicit overrides when some tags need special treatment:
+
+```tsx
+<Streamdown
+  allowedTags={{ mention: ["user_id"] }}
+  fallbackComponent={({ node, children, ...props }) =>
+    createElement(node!.tagName, props, children)
+  }
+  components={{
+    code: MyCodeBlock,
+    a: MyLink,
+  }}
+>
+  {markdown}
+</Streamdown>
+```

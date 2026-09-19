@@ -70,10 +70,11 @@ describe("list animation retrigger fix (#410)", () => {
     // There should be MORE spans after (new item appeared)
     expect(afterSpans.length).toBeGreaterThan(initialSpans.length);
 
-    // The list is loose once a second group appears, so the items are rebuilt
-    // around a <p>. What must not happen is the already-visible text re-running
-    // its entry animation: those characters carry --sd-duration:0ms.
-    expect(container.querySelector("li > p")).toBeTruthy();
+    // The list is loose once a second group appears, so rehype rebuilds items
+    // around a <p>; MemoLi then unwraps a single paragraph child. What must not
+    // happen is the already-visible text re-running its entry animation: those
+    // characters carry --sd-duration:0ms.
+    expect(container.querySelector("li > p")).toBeNull();
 
     const previouslyVisible = afterSpans.slice(0, initialSpans.length);
     for (const span of previouslyVisible) {

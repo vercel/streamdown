@@ -2,9 +2,11 @@
 
 import {
   type ComponentProps,
+  type ComponentType,
   type CSSProperties,
   createContext,
   createElement,
+  type JSX,
   memo,
   useEffect,
   useId,
@@ -26,11 +28,16 @@ import {
   createAnimateTimeline,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
-import { components as defaultComponents } from "./lib/components";
+import { components as builtinComponents } from "./lib/components";
 import { detectTextDirection } from "./lib/detect-direction";
 import { type IconMap, IconProvider } from "./lib/icon-context";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
-import { type ExtraProps, Markdown, type Options } from "./lib/markdown";
+import {
+  type Components,
+  type ExtraProps,
+  Markdown,
+  type Options,
+} from "./lib/markdown";
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
 import type {
@@ -44,6 +51,7 @@ import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-conten
 import { rehypeBlockDirection } from "./lib/rehype/block-direction";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
+import { remarkDisableAutolinkProtocols } from "./lib/remark/disable-autolink-protocols";
 import type { CSVSeparator } from "./lib/table/utils";
 import {
   defaultTranslations,
@@ -110,6 +118,53 @@ export {
 } from "./lib/table/utils";
 export type { StreamdownTranslations } from "./lib/translations-context";
 export { defaultTranslations } from "./lib/translations-context";
+
+/**
+ * Element component typed against the real intrinsic props + `ExtraProps`.
+ * Avoids `Components[K]`, whose string index signature collapses props into a
+ * useless intersection (e.g. HTMLHeadingElement & SVGSymbolElement).
+ */
+type DefaultElementComponent<K extends keyof JSX.IntrinsicElements> =
+  ComponentType<JSX.IntrinsicElements[K] & ExtraProps>;
+
+/**
+ * Built-in Streamdown components with known keys required.
+ * Prefer composing these inside custom `components` overrides instead of
+ * re-applying default styles by hand.
+ */
+export interface DefaultComponents {
+  a: DefaultElementComponent<"a">;
+  blockquote: DefaultElementComponent<"blockquote">;
+  code: DefaultElementComponent<"code">;
+  h1: DefaultElementComponent<"h1">;
+  h2: DefaultElementComponent<"h2">;
+  h3: DefaultElementComponent<"h3">;
+  h4: DefaultElementComponent<"h4">;
+  h5: DefaultElementComponent<"h5">;
+  h6: DefaultElementComponent<"h6">;
+  hr: DefaultElementComponent<"hr">;
+  img: DefaultElementComponent<"img">;
+  li: DefaultElementComponent<"li">;
+  ol: DefaultElementComponent<"ol">;
+  p: DefaultElementComponent<"p">;
+  pre: DefaultElementComponent<"pre">;
+  section: DefaultElementComponent<"section">;
+  strong: DefaultElementComponent<"strong">;
+  sub: DefaultElementComponent<"sub">;
+  sup: DefaultElementComponent<"sup">;
+  table: DefaultElementComponent<"table">;
+  tbody: DefaultElementComponent<"tbody">;
+  td: DefaultElementComponent<"td">;
+  th: DefaultElementComponent<"th">;
+  thead: DefaultElementComponent<"thead">;
+  tr: DefaultElementComponent<"tr">;
+  ul: DefaultElementComponent<"ul">;
+}
+
+export const defaultComponents = builtinComponents as DefaultComponents;
+
+// Matches lowercase HTML / custom tag names (first char is a-z)
+const LOWERCASE_TAG_PATTERN = /^[a-z]/;
 
 // Patterns for HTML indentation normalization
 // Matches if content starts with an HTML tag (possibly with leading whitespace)
@@ -258,6 +313,31 @@ export type StreamdownProps = Options & {
   /** Custom tags to allow through sanitization with their permitted attributes */
   allowedTags?: AllowedTags;
   /**
+   * Fallback component for HTML tags or `allowedTags` entries that have no
+   * matching key in the `components` map. Built-in and explicit `components`
+   * entries always win — this does not replace the default Tailwind renderers.
+   *
+   * When set, it applies to:
+   * - Custom tags declared via `allowedTags` that have no matching key in
+   *   `components`.
+   * - Standard HTML tags absent from both the built-in map and `components`
+   *   (e.g. `<span>`, `<em>`, `<div>`, `<br>`).
+   *
+   * @example
+   * ```tsx
+   * // Render missing map entries / allowedTags via a pass-through
+   * <Streamdown
+   *   allowedTags={{ mention: ["user_id"] }}
+   *   fallbackComponent={({ node, children, ...props }) =>
+   *     createElement(node!.tagName, props, children)
+   *   }
+   * >
+   *   {markdown}
+   * </Streamdown>
+   * ```
+   */
+  fallbackComponent?: React.ComponentType<Record<string, unknown> & ExtraProps>;
+  /**
    * Tags whose children should be treated as plain text (no markdown parsing).
    * Useful for mention/entity tags in AI UIs where child content is a data
    * label rather than prose. Requires the tag to also be listed in `allowedTags`.
@@ -273,6 +353,22 @@ export type StreamdownProps = Options & {
    * ```
    */
   literalTagContent?: string[];
+  /**
+   * Disable GFM / CommonMark autolinking for specific URL protocols (e.g. bare
+   * email addresses become `mailto:` autolinks). Accepts protocol names with
+   * or without a trailing colon, case-insensitive (`"mailto"` and `"mailto:"`
+   * are equivalent). Only affects autolinks (bare URLs/emails and `<...>`
+   * forms) — explicit markdown links (`[text](url)`), including cases where
+   * the label reconstructs the URL, are left as links.
+   *
+   * @example
+   * ```tsx
+   * <Streamdown disableAutolinkProtocols={["mailto"]}>
+   *   {"Contact us at hello@example.com"}
+   * </Streamdown>
+   * ```
+   */
+  disableAutolinkProtocols?: string[];
   /** Override UI strings for i18n / custom labels */
   translations?: Partial<StreamdownTranslations>;
   /** Custom icons to override the default icons used in controls */
@@ -554,7 +650,9 @@ export const Streamdown = memo(
     portal,
     lineNumbers = true,
     allowedTags,
+    fallbackComponent,
     literalTagContent,
+    disableAutolinkProtocols,
     translations,
     icons: iconOverrides,
     prefix,
@@ -802,13 +900,15 @@ export const Streamdown = memo(
     const mergedComponents = useMemo(() => {
       const { inlineCode, ...userComponents } = components ?? {};
 
-      const merged = {
-        ...defaultComponents,
+      const merged: Record<string, unknown> = {
+        ...builtinComponents,
         ...userComponents,
       };
 
       if (inlineCode) {
-        const BlockCode = merged.code;
+        const BlockCode = merged.code as
+          | ComponentType<ComponentProps<"code"> & ExtraProps>
+          | undefined;
         merged.code = (props: ComponentProps<"code"> & ExtraProps) => {
           const isInline = !("data-block" in props);
           if (isInline) {
@@ -818,8 +918,56 @@ export const Streamdown = memo(
         };
       }
 
-      return merged;
-    }, [components]);
+      if (fallbackComponent) {
+        // Eagerly register fallbackComponent for allowedTags entries that have
+        // no explicit component in the user-supplied `components` map.
+        if (allowedTags) {
+          for (const tag of Object.keys(allowedTags)) {
+            if (!Object.hasOwn(merged, tag)) {
+              merged[tag] = fallbackComponent;
+            }
+          }
+        }
+
+        // Wrap in a Proxy so any other tag not explicitly covered (e.g. HTML
+        // tags absent from defaultComponents like <span>, <em>, <div>)
+        // also uses fallbackComponent instead of rendering as a bare intrinsic
+        // element. hast-util-to-jsx-runtime resolves components via
+        // hasOwnProperty (own.call), so we intercept getOwnPropertyDescriptor
+        // as well as get to satisfy both the presence check and the lookup.
+        const fallbackDesc: PropertyDescriptor = {
+          configurable: true,
+          enumerable: false,
+          value: fallbackComponent,
+          writable: false,
+        };
+        return new Proxy(merged as Components, {
+          getOwnPropertyDescriptor(target, prop) {
+            const ownProp = Object.getOwnPropertyDescriptor(target, prop);
+            if (ownProp) {
+              return ownProp;
+            }
+            // Intercept lowercase HTML / custom tag names only.
+            if (typeof prop === "string" && LOWERCASE_TAG_PATTERN.test(prop)) {
+              return fallbackDesc;
+            }
+            return undefined;
+          },
+          get(target, prop, receiver) {
+            if (
+              typeof prop === "string" &&
+              LOWERCASE_TAG_PATTERN.test(prop) &&
+              !Object.hasOwn(target, prop)
+            ) {
+              return fallbackComponent;
+            }
+            return Reflect.get(target, prop, receiver);
+          },
+        });
+      }
+
+      return merged as Components;
+    }, [components, fallbackComponent, allowedTags]);
 
     // Merge plugin remark plugins (math, cjk)
     // Order: CJK before -> default (remarkGfm) -> CJK after -> math
@@ -831,6 +979,16 @@ export const Streamdown = memo(
       }
       // Default plugins (includes remarkGfm)
       result = [...result, ...remarkPlugins];
+      // Optionally strip GFM autolink-literal links for disabled protocols
+      // (e.g. mailto). Runs right after remarkGfm since it inspects the
+      // link nodes remarkGfm's autolink-literal extension creates. Skipped
+      // entirely when unset so default behavior/pipeline is unchanged.
+      if (disableAutolinkProtocols && disableAutolinkProtocols.length > 0) {
+        result = [
+          ...result,
+          [remarkDisableAutolinkProtocols, disableAutolinkProtocols],
+        ];
+      }
       // CJK plugins that must run AFTER remarkGfm (e.g., autolink boundary)
       if (plugins?.cjk) {
         result = [...result, ...plugins.cjk.remarkPluginsAfter];
@@ -840,7 +998,7 @@ export const Streamdown = memo(
         result = [...result, plugins.math.remarkPlugin];
       }
       return result;
-    }, [remarkPlugins, plugins?.math, plugins?.cjk]);
+    }, [remarkPlugins, plugins?.math, plugins?.cjk, disableAutolinkProtocols]);
 
     const mergedRehypePlugins = useMemo(() => {
       let result = rehypePlugins;
@@ -1061,9 +1219,11 @@ export const Streamdown = memo(
     prevProps.tableMaxHeight === nextProps.tableMaxHeight &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
     prevProps.literalTagContent === nextProps.literalTagContent &&
+    prevProps.disableAutolinkProtocols === nextProps.disableAutolinkProtocols &&
     JSON.stringify(prevProps.translations) ===
       JSON.stringify(nextProps.translations) &&
     prevProps.prefix === nextProps.prefix &&
-    prevProps.dir === nextProps.dir
+    prevProps.dir === nextProps.dir &&
+    prevProps.fallbackComponent === nextProps.fallbackComponent
 );
 Streamdown.displayName = "Streamdown";

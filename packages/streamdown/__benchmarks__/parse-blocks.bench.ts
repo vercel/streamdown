@@ -299,6 +299,27 @@ describe("parseMarkdownIntoBlocks - Streaming Simulation", () => {
     { iterations: 1000 }
   );
 
+  // A long document that keeps growing at the end, which is what a streamed
+  // response looks like once it is a few hundred lines in.
+  const longDocument = Array.from(
+    { length: 100 },
+    (_, i) => `## Section ${i}\n\nParagraph ${i} with some text.`
+  ).join("\n\n");
+  const longStreamingSteps = Array.from(
+    { length: 30 },
+    (_, i) => `${longDocument}\n\n${"More streamed text. ".repeat(i + 1)}`
+  );
+
+  bench(
+    "streaming text after a long document (30 incremental steps)",
+    () => {
+      for (const step of longStreamingSteps) {
+        parseMarkdownIntoBlocks(step);
+      }
+    },
+    { iterations: 100 }
+  );
+
   const codeStreamingSteps = [
     "```javascript",
     "```javascript\n",
