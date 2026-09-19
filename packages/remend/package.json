@@ -36,6 +36,6 @@
     "@vitest/coverage-v8": "^4.1.10",
     "mdast-util-from-markdown": "^2.0.3",
     "tsup": "^8.5.1",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.0"
   }
 }
