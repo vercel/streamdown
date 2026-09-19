@@ -36,10 +36,11 @@ function parseVersionBumps(frontmatter, path, content) {
     const [packageName, versionBump] = line.split(":").map((s) => s.trim());
     if (!(packageName && versionBump)) {
       throw Object.assign(
-        new Error("Invalid .changeset file - invalid frontmatter", {
+        new Error("Invalid .changeset file - invalid frontmatter"),
+        {
           path,
           content,
-        })
+        }
       );
     }
 
@@ -123,7 +124,7 @@ export async function verifyChangesets(
   env = process.env,
   readFile = fs.readFile
 ) {
-  // Skip check if pull request has "minor-release" label
+  // Skip check if pull request carries one of the bypass labels
   const byPassLabel = event.pull_request.labels.find((label) =>
     BYPASS_LABELS.includes(label.name)
   );
