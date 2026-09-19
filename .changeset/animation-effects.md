@@ -1,5 +1,5 @@
 ---
-"streamdown": minor
+"streamdown": patch
 ---
 
 feat: accept animation effect objects in `animated.animation`
