@@ -46,6 +46,7 @@ export interface AnimateTimeline {
   /** Snapshot of the working cursor (passNextStartAt). */
   mark: () => number;
   now: () => number;
+  passNow: () => number;
   /** Restore the working cursor to a prior mark. */
   rewind: (mark: number) => void;
   take: (wordCount: number, stagger: number, now: number) => ScheduleSlot;
@@ -69,10 +70,13 @@ export function createAnimateTimeline(
   let committedNextStartAt = 0;
   /** Working absolute time for the in-flight pass. */
   let passNextStartAt = 0;
+  let passStartedAt = nowFn();
 
   return {
     now: nowFn,
+    passNow: () => passStartedAt,
     beginPass(now: number) {
+      passStartedAt = now;
       // Resume from the last commit, but never more than maxBacklog ahead of
       // wall-clock — drops debt from a previous pass that overshot via the
       // min-step floor so a fast stream stays caught up on the next tick.
@@ -129,7 +133,7 @@ export function createAnimateTimeline(
 export interface AnimatePlugin {
   /**
    * Commit the last rehype char count so the *next* rehype run treats that
-   * many characters as already-visible. Also clears the StrictMode rewind
+   * many characters as already-scheduled. Also clears the StrictMode rewind
    * mark so the next commit starts clean. Called from Block's useLayoutEffect.
    */
   commit: () => void;
@@ -145,8 +149,30 @@ export interface AnimatePlugin {
   type: "animate";
 }
 
+/**
+ * An animation packaged with the per-word behavior its keyframes need, such
+ * as the ones in `@streamdown/effects`. Pass it as `animated.animation`.
+ */
+export interface AnimationEffect {
+  /**
+   * Extra attributes for each word while it animates, such as text for
+   * styles to draw. Must return the same attributes for the same arguments:
+   * words are re-rendered while they animate.
+   */
+  decorate?: (text: string, seed: number) => Record<`data-${string}`, string>;
+  /** Default duration in ms. `animated.duration` overrides it. */
+  duration?: number;
+  /** `@keyframes` name without the `sd-` prefix. */
+  name: string;
+  /**
+   * Maximum extra delay in ms per word, hashed from its position, so words
+   * resolve in scattered order instead of left to right.
+   */
+  scatter?: number;
+}
+
 export interface AnimateOptions {
-  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {});
+  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {}) | AnimationEffect;
   duration?: number;
   easing?: string;
   /**
@@ -165,10 +191,9 @@ const WHITESPACE_ONLY_RE = /^\s+$/;
 // `pre` (CommonMark always emits `pre > code`); raw inline `code` is safe to
 // animate — word spans inherit styles the same way surrounding prose does (#594).
 const SKIP_TAGS = new Set(["pre", "svg", "math", "annotation"]);
-// Elements with no text node of their own that should still animate in. They
-// honor opacity/filter/transform, so they reuse the standard [data-sd-animate]
-// rule and work with every animation type.
-const VOID_ANIMATE_TAGS = new Set(["img", "hr"]);
+// Code fences reserve one slot without touching syntax-highlighting spans.
+// Like images and rules, the whole element follows the shared timeline.
+const ATOMIC_ANIMATE_TAGS = new Set(["img", "hr", "pre"]);
 
 const isElement = (node: unknown): node is Element =>
   typeof node === "object" &&
@@ -267,12 +292,9 @@ const stampCheckbox = (
   }
 };
 
-// Images and rules have no text node, so they're tagged directly. Their
-// "already shown" state is judged by document position (charCounter.count)
-// rather than character length, since they contribute no characters.
-// Advance count by 1 so a trailing void at the prevLen boundary is treated as
-// already-shown on the next tick (avoids one-frame re-animate).
-const processVoidElement = (
+// Atomic elements occupy one position regardless of their contents, so growing
+// a code fence cannot restart its fade or move the following text's offset.
+const processAtomicElement = (
   element: Element,
   ancestors: Node[],
   config: AnimateConfig,
@@ -283,14 +305,16 @@ const processVoidElement = (
   if (hasSkipAncestor(ancestors)) {
     return;
   }
-  const prevLen = renderState.prevContentLength;
   const partStart = charCounter.count;
   charCounter.count += 1;
-  const skipAnimation = prevLen > 0 && partStart < prevLen;
-  const delay = skipAnimation
-    ? 0
-    : schedule.baseDelay + charCounter.newIndex++ * schedule.step;
-  stampAnimation(element, config, skipAnimation ? 0 : config.duration, delay);
+  const timing = animationTiming(
+    partStart,
+    config,
+    renderState,
+    charCounter,
+    schedule
+  );
+  stampAnimation(element, config, timing.duration, timing.delay);
 };
 
 /**
@@ -387,36 +411,55 @@ const makeSpan = (
   animation: string,
   duration: number,
   easing: string,
-  skipAnimation?: boolean,
-  delay?: number
+  delay?: number,
+  attributes?: Record<string, string>
 ): Element => {
-  let style = `--sd-animation:sd-${animation};--sd-duration:${skipAnimation ? 0 : duration}ms;--sd-easing:${easing}`;
+  let style = `--sd-animation:sd-${animation};--sd-duration:${duration}ms;--sd-easing:${easing}`;
   if (delay) {
     style += `;--sd-delay:${Math.round(delay)}ms`;
+  }
+  const properties: Element["properties"] = {
+    "data-sd-animate": true,
+    style,
+  };
+  for (const [key, value] of Object.entries(attributes ?? {})) {
+    // Effects run after sanitization, so only data attributes pass through.
+    if (key.startsWith("data-")) {
+      properties[key] = value;
+    }
   }
   return {
     type: "element",
     tagName: "span",
-    properties: {
-      "data-sd-animate": true,
-      style,
-    },
+    properties,
     children: [{ type: "text", value: word }],
   };
 };
 
 interface AnimateConfig {
   animation: string;
+  decorate?: AnimationEffect["decorate"];
   duration: number;
   easing: string;
+  scatter: number;
+  /** Per-block salt for position hashes. */
+  seed: number;
   sep: "word" | "char";
   stagger: number;
   timeline?: AnimateTimeline;
 }
 
+interface AnimationTiming {
+  delay: number;
+  endsAt: number;
+}
+
 interface AnimateRenderState {
+  committedAnimations: Map<number, AnimationTiming>;
   committedCharCount: number;
   lastRenderCharCount: number;
+  now: number;
+  pendingAnimations: Map<number, AnimationTiming>;
   /**
    * Timeline cursor snapshot from the first rehype run of the current commit.
    * null → not yet run this commit; number → rewind here on re-entry
@@ -431,14 +474,52 @@ interface Schedule {
   step: number;
 }
 
+/** Deterministic [0, 1) hash, so StrictMode re-runs and re-renders agree. */
+const hash01 = (a: number, b: number): number => {
+  const x = Math.sin(a * 12.9898 + b * 78.233) * 43_758.5453;
+  return x - Math.floor(x);
+};
+
 const isNewAnimateUnit = (prevLen: number, partStart: number): boolean =>
   !(prevLen > 0 && partStart < prevLen);
 
-const isVoidAnimateElement = (node: Node): node is Element =>
-  isElement(node) && VOID_ANIMATE_TAGS.has(node.tagName);
+const animationTiming = (
+  partStart: number,
+  config: AnimateConfig,
+  state: AnimateRenderState,
+  counter: { newIndex: number },
+  schedule: Schedule
+): { duration: number; delay: number } => {
+  let timing = state.committedAnimations.get(partStart);
+  if (isNewAnimateUnit(state.prevContentLength, partStart)) {
+    const scatter =
+      config.scatter > 0 ? config.scatter * hash01(config.seed, partStart) : 0;
+    const delay = Math.round(
+      schedule.baseDelay + counter.newIndex++ * schedule.step + scatter
+    );
+    timing = { delay, endsAt: state.now + delay + config.duration };
+  }
+  if (!timing || timing.endsAt <= state.now) {
+    return { duration: 0, delay: 0 };
+  }
+  // Keep the original CSS timing on retained DOM nodes. Replacing it with
+  // duration:0 before the fade ends jumps to its final keyframe; subtracting
+  // elapsed time from the delay would advance an already-running animation.
+  state.pendingAnimations.set(partStart, timing);
+  return { duration: config.duration, delay: timing.delay };
+};
+
+// remark-rehype pads block elements with positionless newlines. They are not
+// streamed content: trailing padding must not make the next word look old, and
+// adding <p> wrappers to a loose list must not shift existing animation offsets.
+const isLayoutWhitespace = (node: Text): boolean =>
+  !node.position && WHITESPACE_ONLY_RE.test(node.value);
+
+const isAtomicAnimateElement = (node: Node): node is Element =>
+  isElement(node) && ATOMIC_ANIMATE_TAGS.has(node.tagName);
 
 /**
- * Count newly-animated units (mirrors processTextNode / processVoidElement
+ * Count newly-animated units (mirrors processTextNode / processAtomicElement
  * skip logic) so timeline.take reserves the right number of slots.
  */
 const countNewWords = (
@@ -450,16 +531,19 @@ const countNewWords = (
   let charPos = 0;
   visitParents(
     tree,
-    (node: Node) => node.type === "text" || isVoidAnimateElement(node),
+    (node: Node) => node.type === "text" || isAtomicAnimateElement(node),
     (node: Node, ancestors) => {
       if (hasSkipAncestor(ancestors)) {
         return SKIP;
       }
-      if (isVoidAnimateElement(node)) {
+      if (isAtomicAnimateElement(node)) {
         if (isNewAnimateUnit(prevLen, charPos)) {
           newWords += 1;
         }
         charPos += 1;
+        return;
+      }
+      if (isLayoutWhitespace(node as Text)) {
         return;
       }
       const text = (node as Text).value;
@@ -509,6 +593,9 @@ const processTextNode = (
     return;
   }
 
+  if (isLayoutWhitespace(node)) {
+    return;
+  }
   const text = node.value;
   if (!text.trim()) {
     charCounter.count += text.length;
@@ -516,7 +603,6 @@ const processTextNode = (
   }
 
   const parts = config.sep === "char" ? splitByChar(text) : splitByWord(text);
-  const prevLen = renderState.prevContentLength;
   let didAnimate = false;
 
   // Fade the list marker in with this item's first animated word. Only the
@@ -533,24 +619,28 @@ const processTextNode = (
     if (WHITESPACE_ONLY_RE.test(part)) {
       return { type: "text", value: part } as Text;
     }
-    const skipAnimation = prevLen > 0 && partStart < prevLen;
-    const delay = skipAnimation
-      ? 0
-      : schedule.baseDelay + charCounter.newIndex++ * schedule.step;
+    const timing = animationTiming(
+      partStart,
+      config,
+      renderState,
+      charCounter,
+      schedule
+    );
     didAnimate = true;
     if (liAncestor && needsMarker && !markerStamped) {
-      const itemDuration = skipAnimation ? 0 : config.duration;
-      stampMarker(liAncestor, itemDuration, delay, config.easing);
-      stampCheckbox(liAncestor, config, itemDuration, delay);
+      stampMarker(liAncestor, timing.duration, timing.delay, config.easing);
+      stampCheckbox(liAncestor, config, timing.duration, timing.delay);
       markerStamped = true;
     }
     return makeSpan(
       part,
       config.animation,
-      config.duration,
+      timing.duration,
       config.easing,
-      skipAnimation,
-      delay
+      timing.delay,
+      config.decorate && timing.duration > 0
+        ? config.decorate(part.trimEnd(), config.seed * 100_003 + partStart)
+        : undefined
     );
   });
 
@@ -571,31 +661,42 @@ let instanceId = 0;
 export function createAnimatePlugin(
   options?: AnimateOptions & { timeline?: AnimateTimeline }
 ): AnimatePlugin {
+  const id = instanceId++;
+  const animation = options?.animation ?? "fadeIn";
+  const effect = typeof animation === "string" ? undefined : animation;
   const config: AnimateConfig = {
-    animation: options?.animation ?? "fadeIn",
-    duration: options?.duration ?? 150,
+    animation: typeof animation === "string" ? animation : animation.name,
+    decorate: effect?.decorate,
+    duration: options?.duration ?? effect?.duration ?? 150,
     easing: options?.easing ?? "ease",
+    scatter: effect?.scatter ?? 0,
+    seed: id,
     sep: options?.sep ?? "word",
     stagger: options?.stagger ?? 40,
     timeline: options?.timeline,
   };
 
   const renderState: AnimateRenderState = {
+    committedAnimations: new Map(),
     committedCharCount: 0,
     prevContentLength: 0,
     lastRenderCharCount: 0,
     pendingMark: null,
+    now: 0,
+    pendingAnimations: new Map(),
   };
 
-  const id = instanceId++;
   const rehypeAnimate = () => (tree: Root) => {
     const charCounter = { count: 0, newIndex: 0 };
 
-    // Seed skip-window from the last committed paint (#570 secondary).
+    // Seed the scheduled prefix from the last committed paint (#570 secondary).
     renderState.prevContentLength = renderState.committedCharCount;
+    renderState.pendingAnimations = new Map();
 
     const timeline = config.timeline;
-    const now = timeline?.now() ?? defaultNow();
+    // All blocks paint in the same commit, so their CSS delays share an origin.
+    const now = timeline?.passNow() ?? defaultNow();
+    renderState.now = now;
 
     // StrictMode / discarded render: first run marks the cursor; a re-run
     // rewinds so take() doesn't stack on itself. commit() clears the mark.
@@ -617,7 +718,7 @@ export function createAnimatePlugin(
 
     visitParents(
       tree,
-      (node: Node) => node.type === "text" || isVoidAnimateElement(node),
+      (node: Node) => node.type === "text" || isAtomicAnimateElement(node),
       (node: Node, ancestors) => {
         if (node.type === "text") {
           return processTextNode(
@@ -629,7 +730,7 @@ export function createAnimatePlugin(
             schedule
           );
         }
-        processVoidElement(
+        processAtomicElement(
           node as Element,
           ancestors,
           config,
@@ -654,12 +755,14 @@ export function createAnimatePlugin(
     setPrevContentLength(length: number) {
       renderState.committedCharCount = length;
       renderState.prevContentLength = length;
+      renderState.committedAnimations.clear();
     },
     getLastRenderCharCount() {
       return renderState.lastRenderCharCount;
     },
     commit() {
       renderState.committedCharCount = renderState.lastRenderCharCount;
+      renderState.committedAnimations = renderState.pendingAnimations;
       renderState.pendingMark = null;
     },
   };
