@@ -185,6 +185,39 @@ describe("CJK autolink boundary splitting", () => {
     expect(links[1].url).toBe("https://test.com");
   });
 
+  it("should re-linkify URLs after fullwidth semicolon splits", async () => {
+    // GFM treats the whole sequence as one autolink; after splitting at ；
+    // subsequent bare URLs must become links too (issue #623).
+    const tree = await processMarkdown(
+      "参考资料：https://example.com/a；https://example.com/b；https://example.com/c"
+    );
+    const links = getLinks(tree);
+    const texts = getTexts(tree);
+
+    expect(links.length).toBe(3);
+    expect(links[0].url).toBe("https://example.com/a");
+    expect(links[1].url).toBe("https://example.com/b");
+    expect(links[2].url).toBe("https://example.com/c");
+
+    // Semicolons remain as standalone text between the three links
+    const standalone = texts
+      .filter((t) => t.value === "；" || t.value.startsWith("参考"))
+      .map((t) => t.value);
+    expect(standalone.join("")).toContain("；");
+    expect(standalone.filter((v) => v === "；").length).toBe(2);
+  });
+
+  it("should re-linkify URLs after ideographic full stop when another URL follows", async () => {
+    const tree = await processMarkdown(
+      "https://example.com。https://test.com"
+    );
+    const links = getLinks(tree);
+
+    expect(links.length).toBe(2);
+    expect(links[0].url).toBe("https://example.com");
+    expect(links[1].url).toBe("https://test.com");
+  });
+
   it("should handle mailto links", async () => {
     const tree = await processMarkdown("邮件：mailto:test@example.com。谢谢");
     const links = getLinks(tree);
