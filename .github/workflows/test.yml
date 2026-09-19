@@ -37,5 +37,11 @@ jobs:
       - name: Run Tests
         run: pnpm test
 
+      # The action is outside the pnpm workspace (apps/*, packages/*), so
+      # `pnpm test` does not reach it. It has no dependencies of its own.
+      - name: Run verify-changesets Action Tests
+        working-directory: .github/workflows/actions/verify-changesets
+        run: node --test test.js
+
       - name: Check Linting and Formatting
         run: pnpm check
