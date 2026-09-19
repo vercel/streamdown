@@ -1,5 +1,5 @@
 ---
-"@streamdown/effects": minor
+"@streamdown/effects": patch
 ---
 
 feat: add `@streamdown/effects` with `diffuse` and `scramble`

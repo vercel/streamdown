@@ -1,5 +1,5 @@
 ---
-"streamdown": minor
+"streamdown": patch
 ---
 
 feat: add `smooth` prop to pace streams that arrive in large chunks
