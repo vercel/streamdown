@@ -1,11 +1,10 @@
-import rehypeKatex from "rehype-katex";
+import { math } from "@streamdown/math";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import { bench, describe } from "vitest";
+import { test } from "vitest";
 import { Markdown } from "../lib/markdown";
 
-describe("Markdown - Basic Parsing", () => {
+test("Markdown - Basic Parsing", async ({ bench }) => {
   const simpleMarkdown =
     "# Heading\n\nThis is a paragraph with **bold** and *italic* text.";
   const complexMarkdown = `
@@ -26,43 +25,43 @@ This has **bold**, *italic*, and \`code\`.
 [Link](https://example.com)
 `;
 
-  bench("simple markdown", () => {
+  await bench("simple markdown", () => {
     Markdown({ children: simpleMarkdown });
-  });
+  }).run();
 
-  bench("complex markdown", () => {
+  await bench("complex markdown", () => {
     Markdown({ children: complexMarkdown });
-  });
+  }).run();
 });
 
-describe("Markdown - Plugin Configurations", () => {
+test("Markdown - Plugin Configurations", async ({ bench }) => {
   const markdown = "# Test\n\n**Bold** and *italic* with `code`.";
 
-  bench("no plugins", () => {
+  await bench("no plugins", () => {
     Markdown({
       children: markdown,
       rehypePlugins: [],
       remarkPlugins: [],
     });
-  });
+  }).run();
 
-  bench("with remark-gfm", () => {
+  await bench("with remark-gfm", () => {
     Markdown({
       children: markdown,
       remarkPlugins: [remarkGfm],
     });
-  });
+  }).run();
 
-  bench("with all common plugins", () => {
+  await bench("with all common plugins", () => {
     Markdown({
       children: markdown,
-      rehypePlugins: [rehypeRaw, rehypeKatex],
-      remarkPlugins: [remarkGfm, remarkMath],
+      rehypePlugins: [rehypeRaw, math.rehypePlugin],
+      remarkPlugins: [remarkGfm, math.remarkPlugin],
     });
-  });
+  }).run();
 });
 
-describe("Markdown - GFM Features", () => {
+test("Markdown - GFM Features", async ({ bench }) => {
   const table = `
 | Header 1 | Header 2 | Header 3 |
 |----------|----------|----------|
@@ -80,36 +79,36 @@ describe("Markdown - GFM Features", () => {
 
   const autolink = "Check out https://example.com for more info.";
 
-  bench("table parsing", () => {
+  await bench("table parsing", () => {
     Markdown({
       children: table,
       remarkPlugins: [remarkGfm],
     });
-  });
+  }).run();
 
-  bench("strikethrough parsing", () => {
+  await bench("strikethrough parsing", () => {
     Markdown({
       children: strikethrough,
       remarkPlugins: [remarkGfm],
     });
-  });
+  }).run();
 
-  bench("task list parsing", () => {
+  await bench("task list parsing", () => {
     Markdown({
       children: taskList,
       remarkPlugins: [remarkGfm],
     });
-  });
+  }).run();
 
-  bench("autolink parsing", () => {
+  await bench("autolink parsing", () => {
     Markdown({
       children: autolink,
       remarkPlugins: [remarkGfm],
     });
-  });
+  }).run();
 });
 
-describe("Markdown - Math Rendering", () => {
+test("Markdown - Math Rendering", async ({ bench }) => {
   const inlineMath = "The equation $E = mc^2$ is famous.";
   const blockMath = `
 $$
@@ -126,61 +125,61 @@ c & d
 $$
 `;
 
-  bench("inline math", () => {
+  await bench("inline math", () => {
     Markdown({
       children: inlineMath,
-      remarkPlugins: [remarkMath],
-      rehypePlugins: [rehypeKatex],
+      remarkPlugins: [math.remarkPlugin],
+      rehypePlugins: [math.rehypePlugin],
     });
-  });
+  }).run();
 
-  bench("block math", () => {
+  await bench("block math", () => {
     Markdown({
       children: blockMath,
-      remarkPlugins: [remarkMath],
-      rehypePlugins: [rehypeKatex],
+      remarkPlugins: [math.remarkPlugin],
+      rehypePlugins: [math.rehypePlugin],
     });
-  });
+  }).run();
 
-  bench("complex math", () => {
+  await bench("complex math", () => {
     Markdown({
       children: complexMath,
-      remarkPlugins: [remarkMath],
-      rehypePlugins: [rehypeKatex],
+      remarkPlugins: [math.remarkPlugin],
+      rehypePlugins: [math.rehypePlugin],
     });
-  });
+  }).run();
 });
 
-describe("Markdown - Processor Caching", () => {
+test("Markdown - Processor Caching", async ({ bench }) => {
   const markdown = "# Test\n\nSome content with **bold** text.";
-  const plugins = [remarkGfm, remarkMath];
+  const plugins = [remarkGfm, math.remarkPlugin];
 
-  bench("first parse (cache miss)", () => {
+  await bench("first parse (cache miss)", () => {
     Markdown({
       children: markdown,
       remarkPlugins: plugins,
     });
-  });
+  }).run();
 
   // Warm up cache
   Markdown({ children: markdown, remarkPlugins: plugins });
 
-  bench("subsequent parse (cache hit)", () => {
+  await bench("subsequent parse (cache hit)", () => {
     Markdown({
       children: markdown,
       remarkPlugins: plugins,
     });
-  });
+  }).run();
 
-  bench("different content, same plugins (cache hit)", () => {
+  await bench("different content, same plugins (cache hit)", () => {
     Markdown({
       children: "Different **content**",
       remarkPlugins: plugins,
     });
-  });
+  }).run();
 });
 
-describe("Markdown - Content Size", () => {
+test("Markdown - Content Size", async ({ bench }) => {
   const small = "# Small\n\nJust a paragraph.";
   const medium = `
 # Medium Document
@@ -193,20 +192,20 @@ ${"## Section\n\nParagraph with **bold** and *italic* text.\n\n".repeat(10)}
 ${"## Section\n\nParagraph with **bold** and *italic* text.\n\n".repeat(100)}
 `;
 
-  bench("small content", () => {
+  await bench("small content", () => {
     Markdown({ children: small });
-  });
+  }).run();
 
-  bench("medium content", () => {
+  await bench("medium content", () => {
     Markdown({ children: medium });
-  });
+  }).run();
 
-  bench("large content", () => {
+  await bench("large content", () => {
     Markdown({ children: large });
-  });
+  }).run();
 });
 
-describe("Markdown - HTML Raw Content", () => {
+test("Markdown - HTML Raw Content", async ({ bench }) => {
   const simpleHTML = "<div>Simple HTML</div>";
   const complexHTML = `
 <div class="container">
@@ -217,22 +216,22 @@ describe("Markdown - HTML Raw Content", () => {
 </div>
 `;
 
-  bench("simple HTML", () => {
+  await bench("simple HTML", () => {
     Markdown({
       children: simpleHTML,
       rehypePlugins: [rehypeRaw],
     });
-  });
+  }).run();
 
-  bench("complex HTML", () => {
+  await bench("complex HTML", () => {
     Markdown({
       children: complexHTML,
       rehypePlugins: [rehypeRaw],
     });
-  });
+  }).run();
 });
 
-describe("Markdown - Lists", () => {
+test("Markdown - Lists", async ({ bench }) => {
   const simpleList = `
 - Item 1
 - Item 2
@@ -252,20 +251,20 @@ describe("Markdown - Lists", () => {
     (_, i) => `- Item ${i + 1}`
   ).join("\n");
 
-  bench("simple list", () => {
+  await bench("simple list", () => {
     Markdown({ children: simpleList });
-  });
+  }).run();
 
-  bench("nested list", () => {
+  await bench("nested list", () => {
     Markdown({ children: nestedList });
-  });
+  }).run();
 
-  bench("long list (100 items)", () => {
+  await bench("long list (100 items)", () => {
     Markdown({ children: longList });
-  });
+  }).run();
 });
 
-describe("Markdown - Links and Images", () => {
+test("Markdown - Links and Images", async ({ bench }) => {
   const links = `
 [Link 1](https://example.com)
 [Link 2](https://example.org)
@@ -285,15 +284,15 @@ Here's a [link](https://example.com) and an image:
 And another [link](https://example.org).
 `;
 
-  bench("multiple links", () => {
+  await bench("multiple links", () => {
     Markdown({ children: links });
-  });
+  }).run();
 
-  bench("multiple images", () => {
+  await bench("multiple images", () => {
     Markdown({ children: images });
-  });
+  }).run();
 
-  bench("mixed links and images", () => {
+  await bench("mixed links and images", () => {
     Markdown({ children: mixed });
-  });
+  }).run();
 });
