@@ -117,14 +117,25 @@ const getDollarMathContext = (
   return context === "inlineDollar" ? "none" : "inlineDollar";
 };
 
-// Check if a position is within a math block (between $, $$, \(, or \[)
-export const isWithinMathBlock = (text: string, position: number): boolean => {
+// Builds the isWithinMathBlock answer for every position in one linear pass.
+// lookup[p] === 1 means scanning chars [0, p) ends inside a math block.
+// Scanning per call is O(position), which makes callers that probe many
+// positions (the single asterisk and underscore counters probe every marker
+// in the text) quadratic overall.
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Mirrors the original scan's control flow exactly so the lookup is provably equivalent"
+const buildMathBlockLookup = (text: string): Uint8Array => {
+  const lookup = new Uint8Array(text.length + 1);
   let mathContext: MathContext = "none";
+  let i = 0;
 
-  for (let i = 0; i < text.length && i < position; i += 1) {
+  while (i < text.length) {
     // Skip escaped dollar signs
     if (text[i] === "\\" && text[i + 1] === "$") {
-      i += 1; // Skip the next character
+      // Context is unchanged; positions inside the pair see the same state.
+      const state = mathContext !== "none" ? 1 : 0;
+      lookup[i + 1] = state;
+      lookup[i + 2] = state;
+      i += 2;
       continue;
     }
 
@@ -132,7 +143,10 @@ export const isWithinMathBlock = (text: string, position: number): boolean => {
       const nextContext = getLatexMathContext(mathContext, text[i + 1]);
       if (nextContext !== null) {
         mathContext = nextContext;
-        i += 1;
+        const state = mathContext !== "none" ? 1 : 0;
+        lookup[i + 1] = state;
+        lookup[i + 2] = state;
+        i += 2;
         continue;
       }
     }
@@ -141,12 +155,50 @@ export const isWithinMathBlock = (text: string, position: number): boolean => {
       const isBlockDelimiter = text[i + 1] === "$";
       mathContext = getDollarMathContext(mathContext, isBlockDelimiter);
       if (isBlockDelimiter) {
-        i += 1; // Skip the second $
+        const state = mathContext !== "none" ? 1 : 0;
+        lookup[i + 1] = state;
+        lookup[i + 2] = state;
+        i += 2;
+        continue;
       }
     }
+
+    lookup[i + 1] = mathContext !== "none" ? 1 : 0;
+    i += 1;
   }
 
-  return mathContext !== "none";
+  return lookup;
+};
+
+// Handlers repeatedly probe positions of the same text within one remend()
+// call, so a single-entry cache converts each probe to O(1) after one O(n)
+// build per distinct text. A null lookup records a text with no math
+// delimiters at all, for which every position is outside math.
+let mathCache: { text: string; lookup: Uint8Array | null } | null = null;
+
+// Check if a position is within a math block (between $, $$, \(, or \[)
+export const isWithinMathBlock = (text: string, position: number): boolean => {
+  let current = mathCache;
+  if (current === null || current.text !== text) {
+    const lookup =
+      text.includes("$") || text.includes("\\")
+        ? buildMathBlockLookup(text)
+        : null;
+    current = { text, lookup };
+    mathCache = current;
+  } else {
+    // A hit by content costs a full compare. Streaming produces equal
+    // strings across calls (a stripped trailing space, or a marker the
+    // stream closes after remend already closed it), so keep the latest
+    // object and let later probes compare by identity.
+    current.text = text;
+  }
+  if (current.lookup === null) {
+    return false;
+  }
+  // Positions past the end resolve to the state after scanning the full text,
+  // matching the previous per-call scan.
+  return current.lookup[Math.min(Math.max(position, 0), text.length)] === 1;
 };
 
 // Helper to check if position is before closing paren on same line
