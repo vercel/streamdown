@@ -54,6 +54,12 @@ export const isInsideCodeBlock = (text: string, position: number): boolean => {
   if (current === null || current.text !== text) {
     current = { text, lookup: buildCodeBlockLookup(text) };
     cache = current;
+  } else {
+    // A hit by content costs a full compare. Streaming produces equal
+    // strings across calls (a stripped trailing space, or a marker the
+    // stream closes after remend already closed it), so keep the latest
+    // object and let later probes compare by identity.
+    current.text = text;
   }
   // Positions past the end resolve to the state after scanning the full text,
   // matching the previous per-call scan.

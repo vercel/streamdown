@@ -21,9 +21,6 @@ import {
   isWordChar,
 } from "./utils";
 
-const hasMathDelimiters = (text: string): boolean =>
-  text.includes("$") || text.includes("\\(") || text.includes("\\[");
-
 // Helper function to check if an asterisk should be skipped
 const shouldSkipAsterisk = (
   text: string,
@@ -37,7 +34,7 @@ const shouldSkipAsterisk = (
   }
 
   // Skip if within math block
-  if (hasMathDelimiters(text) && isWithinMathBlock(text, index)) {
+  if (isWithinMathBlock(text, index)) {
     return true;
   }
 
@@ -179,7 +176,7 @@ const shouldSkipUnderscore = (
   }
 
   // Skip if within math block
-  if (hasMathDelimiters(text) && isWithinMathBlock(text, index)) {
+  if (isWithinMathBlock(text, index)) {
     return true;
   }
 
