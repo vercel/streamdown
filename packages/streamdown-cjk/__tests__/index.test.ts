@@ -62,7 +62,7 @@ describe("CJK autolink boundary splitting", () => {
     const processor = unified()
       .use(remarkParse)
       .use(remarkGfm)
-      .use(autolinkBoundaryPlugin)
+      .use([autolinkBoundaryPlugin])
       .use(remarkStringify);
 
     const result = await processor.run(processor.parse(markdown));
@@ -208,14 +208,98 @@ describe("CJK autolink boundary splitting", () => {
   });
 
   it("should re-linkify URLs after ideographic full stop when another URL follows", async () => {
-    const tree = await processMarkdown(
-      "https://example.com。https://test.com"
-    );
+    const tree = await processMarkdown("https://example.com。https://test.com");
     const links = getLinks(tree);
 
     expect(links.length).toBe(2);
     expect(links[0].url).toBe("https://example.com");
     expect(links[1].url).toBe("https://test.com");
+  });
+
+  it("should normalize subsequent www destinations without changing their labels", async () => {
+    const markdown = "https://example.com；www.test.com";
+    const tree = await processMarkdown(markdown);
+    const links = getLinks(tree);
+
+    expect(links.map((link) => link.url)).toEqual([
+      "https://example.com",
+      "http://www.test.com",
+    ]);
+    expect(links[1].children).toEqual([
+      { type: "text", value: "www.test.com" },
+    ]);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe(markdown);
+  });
+
+  it.each([
+    "https://",
+    "http://",
+    "www.",
+    "mailto:",
+  ])("should leave an incomplete subsequent %s prefix as text", async (prefix) => {
+    const markdown = `https://example.com；${prefix}；结束`;
+    const tree = await processMarkdown(markdown);
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "https://example.com",
+    ]);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe(markdown);
+  });
+
+  it("should preserve prose and punctuation while recognizing subsequent URLs", async () => {
+    const markdown =
+      "https://example.com；参考：https://test.com/a；更多：www.other.com。结束";
+    const tree = await processMarkdown(markdown);
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "https://example.com",
+      "https://test.com/a",
+      "http://www.other.com",
+    ]);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe(markdown);
+  });
+
+  it.each([
+    ["https://test.com/a).；结束", ["https://test.com/a"]],
+    ["abchttps://test.com；结束", []],
+    ["www.invalid_；结束", []],
+    ["test@example.com；结束", ["mailto:test@example.com"]],
+    ["**说明**；https://test.com；结束", ["https://test.com"]],
+    ["😀说明；；https://test.com；结束", ["https://test.com"]],
+  ])("should apply GFM text autolinking to %s", async (trailing, urls) => {
+    const markdown = `https://example.com；${trailing}`;
+    const tree = await processMarkdown(markdown);
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "https://example.com",
+      ...urls,
+    ]);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe(markdown);
+    const paragraph = tree.children[0];
+    expect(paragraph.type).toBe("paragraph");
+    if (paragraph.type === "paragraph") {
+      expect(
+        paragraph.children.every(
+          (child) => child.type === "link" || child.type === "text"
+        )
+      ).toBe(true);
+    }
   });
 
   it("should handle mailto links", async () => {
@@ -253,7 +337,7 @@ describe("CJK autolink edge cases", () => {
     const processor = unified()
       .use(remarkParse)
       .use(remarkGfm)
-      .use(autolinkBoundaryPlugin)
+      .use([autolinkBoundaryPlugin])
       .use(remarkStringify);
 
     const result = await processor.run(processor.parse(markdown));
@@ -375,7 +459,7 @@ describe("CJK punctuation boundary characters", () => {
       const processor = unified()
         .use(remarkParse)
         .use(remarkGfm)
-        .use(autolinkBoundaryPlugin)
+        .use([autolinkBoundaryPlugin])
         .use(remarkStringify);
 
       const tree = (await processor.run(processor.parse(markdown))) as Root;

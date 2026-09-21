@@ -1,6 +1,7 @@
 "use client";
 
-import type { Link, Root, Text } from "mdast";
+import type { Link, Paragraph, PhrasingContent, Root, Text } from "mdast";
+import { gfmAutolinkLiteralFromMarkdown } from "mdast-util-gfm-autolink-literal";
 import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
 import type { Pluggable, Plugin } from "unified";
@@ -92,45 +93,45 @@ const buildTrailingText = (value: string): Text => ({
   value,
 });
 
+const autolinkTransforms = gfmAutolinkLiteralFromMarkdown().transforms ?? [];
+
 /**
- * Expand a GFM autolink literal that may contain CJK punctuation into
- * alternating link and text nodes, re-detecting bare URLs after each split.
- *
- * GFM treats `https://a.com；https://b.com` as one link. Splitting only at the
- * first boundary would leave subsequent URLs as plain text; this walks the
- * full string so each URL becomes its own link.
+ * Re-linkify trailing text with GFM's own URL validation and destination
+ * normalization, without interpreting the text as Markdown again.
+ * Separate paragraphs prevent autolinks from spanning CJK boundaries.
+ * Only their inline children are inserted back into the original tree.
  */
-const expandAutolinkAtCjkBoundaries = (
-  url: string,
-  source: Link
-): Array<Link | Text> => {
-  const nodes: Array<Link | Text> = [];
-  let remaining = url;
-
-  while (remaining.length > 0) {
-    if (AUTOLINK_PREFIX_PATTERN.test(remaining)) {
-      const boundaryIndex = findCjkBoundaryIndex(remaining);
-      if (boundaryIndex === null || boundaryIndex === 0) {
-        nodes.push(buildAutolink(remaining, source));
-        break;
+const relinkifyTrailingText = (value: string): PhrasingContent[] => {
+  const nodes: PhrasingContent[] = [];
+  const append = (text: string) => {
+    if (!text) {
+      return;
+    }
+    const paragraph: Paragraph = {
+      type: "paragraph",
+      children: [buildTrailingText(text)],
+    };
+    // Prefix-only segments have no host/address. In particular, GFM's text
+    // transform would otherwise turn a bare `www.` into `http://www`.
+    if (AUTOLINK_PREFIX_PATTERN.exec(text)?.[0] !== text) {
+      const tree: Root = { type: "root", children: [paragraph] };
+      for (const transform of autolinkTransforms) {
+        transform(tree);
       }
-
-      nodes.push(buildAutolink(remaining.slice(0, boundaryIndex), source));
-      remaining = remaining.slice(boundaryIndex);
-      continue;
     }
-
-    const nextUrlMatch = remaining.match(/https?:\/\/|mailto:|www\./i);
-    if (!nextUrlMatch || nextUrlMatch.index === undefined) {
-      nodes.push(buildTrailingText(remaining));
-      break;
+    nodes.push(...paragraph.children);
+  };
+  let start = 0;
+  let index = 0;
+  for (const char of value) {
+    if (CJK_AUTOLINK_BOUNDARY_CHARS.has(char)) {
+      append(value.slice(start, index));
+      append(char);
+      start = index + char.length;
     }
-
-    if (nextUrlMatch.index > 0) {
-      nodes.push(buildTrailingText(remaining.slice(0, nextUrlMatch.index)));
-    }
-    remaining = remaining.slice(nextUrlMatch.index);
+    index += char.length;
   }
+  append(value.slice(start));
 
   return nodes;
 };
@@ -163,7 +164,10 @@ const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
         return;
       }
 
-      const nodes = expandAutolinkAtCjkBoundaries(node.url, node);
+      const nodes = [
+        buildAutolink(node.url.slice(0, boundaryIndex), node),
+        ...relinkifyTrailingText(node.url.slice(boundaryIndex)),
+      ];
       parent.children.splice(index, 1, ...nodes);
       return index + nodes.length;
     }
