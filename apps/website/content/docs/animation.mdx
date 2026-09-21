@@ -103,7 +103,7 @@ export default function Page() {
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `animation` | `string` | `"fadeIn"` | Animation name. Built-in: `fadeIn`, `blurIn`, `slideUp`. Custom strings are prefixed with `sd-`. |
+| `animation` | `string \| AnimationEffect` | `"fadeIn"` | Animation name. Built-in: `fadeIn`, `blurIn`, `slideUp`. Custom strings are prefixed with `sd-`. Also accepts an [effect](#animation-effects). |
 | `duration` | `number` | `150` | Animation duration in milliseconds. |
 | `easing` | `string` | `"ease"` | CSS timing function. |
 | `sep` | `"word" \| "char"` | `"word"` | Split text by word or character. |
@@ -144,6 +144,27 @@ Define your own `@keyframes` and reference them by name:
 ```
 
 The animation name is automatically prefixed with `sd-`, so define your keyframes as `sd-yourName`.
+
+## Animation effects
+
+`animation` also accepts an effect object. An effect bundles a keyframes name with the per-word behavior those keyframes need, such as a scattered reveal order or attributes for your CSS to draw. [`@streamdown/effects`](/docs/plugins/effects) provides ready-made effects.
+
+```tsx
+import type { AnimationEffect } from "streamdown";
+
+const shimmer: AnimationEffect = {
+  name: "shimmer", // uses @keyframes sd-shimmer
+  duration: 300, // default; animated.duration overrides it
+  scatter: 120, // up to 120 ms extra delay per word, in a stable random order
+  decorate: (text, seed) => ({ "data-shimmer": text }), // extra data-* attributes
+};
+
+<Streamdown animated={{ animation: shimmer }} isAnimating={status === "streaming"}>
+  {markdown}
+</Streamdown>;
+```
+
+`decorate` runs for each word while it animates. Return the same attributes for the same `text` and `seed`, because words re-render while they animate. Only `data-*` attributes are applied.
 
 ## Callbacks
 
@@ -253,6 +274,7 @@ You can override these in your own CSS for more control.
 
 ## Related features
 
+- [Smooth streaming](/docs/smooth-streaming) — Pace streams that arrive in large chunks
 - [Carets](/docs/carets) — Blinking cursor indicator during streaming
 - [Plugins](/docs/plugins) — Overview of the plugin system
 - [Configuration](/docs/configuration) — All Streamdown props including `isAnimating`

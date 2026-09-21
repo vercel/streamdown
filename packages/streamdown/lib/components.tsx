@@ -1127,12 +1127,13 @@ export const components: Options["components"] = {
   blockquote: MemoBlockquote,
   code: MemoCode,
   img: MemoImg,
-  pre: ({ children }) => {
-    if (isValidElement(children)) {
-      return cloneElement(children, { "data-block": "true" });
-    }
-    return children;
-  },
+  pre: ({ children, node: _node, ...props }) => (
+    <div {...props}>
+      {isValidElement(children)
+        ? cloneElement(children, { "data-block": "true" })
+        : children}
+    </div>
+  ),
   sup: MemoSup,
   sub: MemoSub,
   p: MemoParagraph,
