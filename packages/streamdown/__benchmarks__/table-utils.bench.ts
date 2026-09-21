@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest";
+import { test } from "vitest";
 import {
   type TableData,
   tableDataToCSV,
@@ -42,61 +42,61 @@ const wideTable: TableData = {
   rows: [Array.from({ length: 20 }, (_, i) => `Val${i}`)],
 };
 
-describe("tableDataToCSV", () => {
-  bench("simple table (3x3)", () => {
+test("tableDataToCSV", async ({ bench }) => {
+  await bench("simple table (3x3)", () => {
     tableDataToCSV(simpleTable);
-  });
+  }).run();
 
-  bench("large table (100 rows x 8 cols)", () => {
+  await bench("large table (100 rows x 8 cols)", () => {
     tableDataToCSV(largeTable);
-  });
+  }).run();
 
-  bench("table with complex data", () => {
+  await bench("table with complex data", () => {
     tableDataToCSV(tableWithComplexData);
-  });
+  }).run();
 
-  bench("wide table (20 columns)", () => {
+  await bench("wide table (20 columns)", () => {
     tableDataToCSV(wideTable);
-  });
+  }).run();
 });
 
-describe("tableDataToTSV", () => {
-  bench("simple table (3x3)", () => {
+test("tableDataToTSV", async ({ bench }) => {
+  await bench("simple table (3x3)", () => {
     tableDataToTSV(simpleTable);
-  });
+  }).run();
 
-  bench("large table (100 rows x 8 cols)", () => {
+  await bench("large table (100 rows x 8 cols)", () => {
     tableDataToTSV(largeTable);
-  });
+  }).run();
 
-  bench("table with complex data", () => {
+  await bench("table with complex data", () => {
     tableDataToTSV(tableWithComplexData);
-  });
+  }).run();
 
-  bench("wide table (20 columns)", () => {
+  await bench("wide table (20 columns)", () => {
     tableDataToTSV(wideTable);
-  });
+  }).run();
 });
 
-describe("tableDataToMarkdown", () => {
-  bench("simple table (3x3)", () => {
+test("tableDataToMarkdown", async ({ bench }) => {
+  await bench("simple table (3x3)", () => {
     tableDataToMarkdown(simpleTable);
-  });
+  }).run();
 
-  bench("large table (100 rows x 8 cols)", () => {
+  await bench("large table (100 rows x 8 cols)", () => {
     tableDataToMarkdown(largeTable);
-  });
+  }).run();
 
-  bench("table with complex data", () => {
+  await bench("table with complex data", () => {
     tableDataToMarkdown(tableWithComplexData);
-  });
+  }).run();
 
-  bench("wide table (20 columns)", () => {
+  await bench("wide table (20 columns)", () => {
     tableDataToMarkdown(wideTable);
-  });
+  }).run();
 });
 
-describe("Format conversion comparison", () => {
+test("Format conversion comparison", async ({ bench }) => {
   const mediumTable: TableData = {
     headers: ["A", "B", "C", "D", "E"],
     rows: Array.from({ length: 50 }, (_, i) => [
@@ -108,20 +108,20 @@ describe("Format conversion comparison", () => {
     ]),
   };
 
-  bench("CSV conversion (50 rows)", () => {
+  await bench("CSV conversion (50 rows)", () => {
     tableDataToCSV(mediumTable);
-  });
+  }).run();
 
-  bench("TSV conversion (50 rows)", () => {
+  await bench("TSV conversion (50 rows)", () => {
     tableDataToTSV(mediumTable);
-  });
+  }).run();
 
-  bench("Markdown conversion (50 rows)", () => {
+  await bench("Markdown conversion (50 rows)", () => {
     tableDataToMarkdown(mediumTable);
-  });
+  }).run();
 });
 
-describe("Table data edge cases", () => {
+test("Table data edge cases", async ({ bench }) => {
   const tableWithEmptyCells: TableData = {
     headers: ["A", "B", "C"],
     rows: [
@@ -140,19 +140,19 @@ describe("Table data edge cases", () => {
     rows: [["Has | pipe", "123"]],
   };
 
-  bench("table with empty cells (CSV)", () => {
+  await bench("table with empty cells (CSV)", () => {
     tableDataToCSV(tableWithEmptyCells);
-  });
+  }).run();
 
-  bench("table with empty cells (TSV)", () => {
+  await bench("table with empty cells (TSV)", () => {
     tableDataToTSV(tableWithEmptyCells);
-  });
+  }).run();
 
-  bench("table with special chars (CSV)", () => {
+  await bench("table with special chars (CSV)", () => {
     tableDataToCSV(tableWithSpecialChars);
-  });
+  }).run();
 
-  bench("table with special chars (Markdown)", () => {
+  await bench("table with special chars (Markdown)", () => {
     tableDataToMarkdown(tableWithSpecialChars);
-  });
+  }).run();
 });
