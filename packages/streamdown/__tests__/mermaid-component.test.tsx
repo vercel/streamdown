@@ -1,4 +1,5 @@
 import { act, render, waitFor } from "@testing-library/react";
+import { StrictMode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { StreamdownContext } from "../index";
 import { Mermaid } from "../lib/mermaid/index";
@@ -312,6 +313,193 @@ describe("Mermaid Component", () => {
     // Wait for async operations to complete
     await waitFor(() => {
       expect(container.querySelector("svg")).toBeTruthy();
+    });
+  });
+
+  describe("while the chart streams", () => {
+    // A render whose promise the test settles by hand
+    const deferredRender = () => {
+      const pending: Array<{
+        chart: string;
+        resolve: (svg: string) => void;
+        reject: (error: Error) => void;
+      }> = [];
+      const mockRender = vi.fn(
+        (_id: string, chart: string) =>
+          new Promise<{ svg: string }>((resolve, reject) => {
+            pending.push({
+              chart,
+              resolve: (svg) => resolve({ svg }),
+              reject,
+            });
+          })
+      );
+      return { mockRender, pending };
+    };
+
+    // Settle a pending render and let the component react to it
+    const settle = (run: () => void) =>
+      act(async () => {
+        run();
+        await Promise.resolve();
+      });
+
+    const streamed = (steps: number) =>
+      Array.from(
+        { length: steps },
+        (_, i) => `graph TD;\n${"    A-->B;\n".repeat(i + 1)}`
+      );
+
+    it("renders only the latest chart once the pending render settles", async () => {
+      const { mockRender, pending } = deferredRender();
+      const plugin = createMockMermaidPlugin(mockRender);
+      const charts = streamed(30);
+
+      const { container, rerender } = renderWithContext(
+        <Mermaid chart={charts[0]} />,
+        {},
+        { mermaid: plugin }
+      );
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(1));
+
+      for (const chart of charts.slice(1)) {
+        rerender(<Mermaid chart={chart} />);
+      }
+      expect(mockRender).toHaveBeenCalledTimes(1);
+
+      await settle(() => pending[0].resolve('<svg data-chart="first"></svg>'));
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(2));
+      expect(pending[1].chart).toBe(charts.at(-1));
+
+      await settle(() => pending[1].resolve('<svg data-chart="latest"></svg>'));
+      await waitFor(() => {
+        expect(container.querySelector('[data-chart="latest"]')).toBeTruthy();
+      });
+      expect(mockRender).toHaveBeenCalledTimes(2);
+    });
+
+    it("waits as long as the last render took before rendering again", async () => {
+      const renderMs = 120;
+      const started: number[] = [];
+      const mockRender = vi.fn(
+        (_id: string, chart: string) =>
+          new Promise<{ svg: string }>((resolve) => {
+            started.push(performance.now());
+            setTimeout(
+              () =>
+                resolve({ svg: `<svg data-chart="${chart.length}"></svg>` }),
+              renderMs
+            );
+          })
+      );
+      const plugin = createMockMermaidPlugin(mockRender);
+      const charts = streamed(6);
+
+      const { rerender } = renderWithContext(
+        <Mermaid chart={charts[0]} />,
+        {},
+        { mermaid: plugin }
+      );
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(1));
+      // Updates arrive while the first render runs and during the pause after it
+      for (const chart of charts.slice(1)) {
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 40));
+        });
+        rerender(<Mermaid chart={chart} />);
+      }
+      await waitFor(
+        () =>
+          expect(mockRender).toHaveBeenLastCalledWith(
+            expect.any(String),
+            charts.at(-1)
+          ),
+        { timeout: 3000 }
+      );
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, renderMs * 2));
+      });
+
+      // The first render runs 0-120 ms and pauses until 240 ms, so the
+      // updates in between collapse into one render of the last chart. The
+      // gap check below is what pins the pause; the count only shows that
+      // fewer renders than updates happened.
+      expect(mockRender.mock.calls.length).toBeLessThan(charts.length);
+      for (let i = 1; i < started.length; i++) {
+        expect(started[i] - started[i - 1]).toBeGreaterThanOrEqual(
+          renderMs * 2 - 5
+        );
+      }
+    });
+
+    it("does not surface a failure of a chart that was already replaced", async () => {
+      const { mockRender, pending } = deferredRender();
+      const plugin = createMockMermaidPlugin(mockRender);
+
+      const { container, rerender } = renderWithContext(
+        <Mermaid chart="graph TD;\n    A--" />,
+        {},
+        { mermaid: plugin }
+      );
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(1));
+      rerender(<Mermaid chart={simpleChart} />);
+
+      await settle(() => pending[0].reject(new Error("Parse error on line 2")));
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(2));
+      expect(container.textContent).not.toContain("Parse error");
+
+      await settle(() => pending[1].resolve('<svg data-chart="final"></svg>'));
+      await waitFor(() => {
+        expect(container.querySelector('[data-chart="final"]')).toBeTruthy();
+      });
+      expect(container.textContent).not.toContain("Parse error");
+    });
+
+    it("stops after unmounting while a render is pending", async () => {
+      const { mockRender, pending } = deferredRender();
+      const plugin = createMockMermaidPlugin(mockRender);
+      const charts = streamed(3);
+
+      const { rerender, unmount } = renderWithContext(
+        <Mermaid chart={charts[0]} />,
+        {},
+        { mermaid: plugin }
+      );
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(1));
+      rerender(<Mermaid chart={charts[2]} />);
+      unmount();
+
+      await settle(() => pending[0].resolve("<svg></svg>"));
+      expect(mockRender).toHaveBeenCalledTimes(1);
+    });
+
+    it("coalesces under StrictMode too", async () => {
+      const { mockRender, pending } = deferredRender();
+      const plugin = createMockMermaidPlugin(mockRender);
+      const charts = streamed(10);
+      const tree = (chart: string) => (
+        <StrictMode>
+          <PluginContext.Provider value={{ mermaid: plugin }}>
+            <StreamdownContext.Provider value={defaultStreamdownContext}>
+              <Mermaid chart={chart} />
+            </StreamdownContext.Provider>
+          </PluginContext.Provider>
+        </StrictMode>
+      );
+
+      const { container, rerender } = render(tree(charts[0]));
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(1));
+      for (const chart of charts.slice(1)) {
+        rerender(tree(chart));
+      }
+      await settle(() => pending[0].resolve('<svg data-chart="first"></svg>'));
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(2));
+      expect(pending[1].chart).toBe(charts.at(-1));
+      await settle(() => pending[1].resolve('<svg data-chart="latest"></svg>'));
+      await waitFor(() => {
+        expect(container.querySelector('[data-chart="latest"]')).toBeTruthy();
+      });
+      expect(mockRender).toHaveBeenCalledTimes(2);
     });
   });
 });
