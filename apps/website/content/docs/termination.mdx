@@ -444,3 +444,16 @@ With `linkMode: 'text-only'`:
 2. `` `const foo = `` → Renders as `const foo =`
 3. `` `const foo = "bar"` `` → Renders as `const foo = "bar"`
 
+
+## Holding pending emphasis markers
+
+To avoid a flash of raw emphasis markers before their text arrives, enable
+`remend={{ pendingInlineMarkers: true }}` and set `isAnimating` to your stream's
+running state. For example, `my name is **` holds the trailing markers until the
+next token arrives. Streamdown reveals any remaining literal markers when
+`isAnimating` becomes `false`, including when a stream is stopped.
+
+This option defaults to `false` because a trailing marker is ambiguous. It only
+holds whitespace-delimited inline emphasis openers; it does not buffer arbitrary
+Markdown, links, code fences, or mathematical expressions. When calling `remend`
+directly, turn the option off for the final render.
