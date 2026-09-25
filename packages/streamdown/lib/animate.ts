@@ -382,24 +382,42 @@ const splitByChar = (text: string): string[] => {
   return parts;
 };
 
+// Values the style parser returns unchanged: nonempty, with no outer
+// whitespace and none of the characters that end or escape a declaration.
+const plainStyleValue = /^[^\s;:'"\\/](?:[^;:'"\\/\r\n]*[^\s;:'"\\/])?$/;
+
 const makeSpan = (
   word: string,
-  animation: string,
-  duration: number,
-  easing: string,
+  config: AnimateConfig,
   skipAnimation?: boolean,
   delay?: number
 ): Element => {
-  let style = `--sd-animation:sd-${animation};--sd-duration:${skipAnimation ? 0 : duration}ms;--sd-easing:${easing}`;
-  if (delay) {
-    style += `;--sd-delay:${Math.round(delay)}ms`;
+  const animation = `sd-${config.animation}`;
+  const duration = `${skipAnimation ? 0 : config.duration}ms`;
+  let style: string | Record<string, string>;
+  if (config.styleObjects) {
+    style = {
+      "--sd-animation": animation,
+      "--sd-duration": duration,
+      "--sd-easing": config.easing,
+    };
+    if (delay) {
+      style["--sd-delay"] = `${Math.round(delay)}ms`;
+    }
+  } else {
+    style = `--sd-animation:${animation};--sd-duration:${duration};--sd-easing:${config.easing}`;
+    if (delay) {
+      style += `;--sd-delay:${Math.round(delay)}ms`;
+    }
   }
   return {
     type: "element",
     tagName: "span",
     properties: {
       "data-sd-animate": true,
-      style,
+      // hast types properties as primitives, but hast-util-to-jsx-runtime
+      // hands an object style to React as is instead of parsing a string.
+      style: style as string,
     },
     children: [{ type: "text", value: word }],
   };
@@ -411,6 +429,8 @@ interface AnimateConfig {
   easing: string;
   sep: "word" | "char";
   stagger: number;
+  /** Give word spans a React style object instead of a CSS string */
+  styleObjects: boolean;
   timeline?: AnimateTimeline;
 }
 
@@ -544,14 +564,7 @@ const processTextNode = (
       stampCheckbox(liAncestor, config, itemDuration, delay);
       markerStamped = true;
     }
-    return makeSpan(
-      part,
-      config.animation,
-      config.duration,
-      config.easing,
-      skipAnimation,
-      delay
-    );
+    return makeSpan(part, config, skipAnimation, delay);
   });
 
   if (didAnimate) {
@@ -571,12 +584,33 @@ let instanceId = 0;
 export function createAnimatePlugin(
   options?: AnimateOptions & { timeline?: AnimateTimeline }
 ): AnimatePlugin {
+  return buildAnimatePlugin(options, false);
+}
+
+/**
+ * The plugin Streamdown renders with. Its output only reaches React, so word
+ * spans carry style objects that skip a CSS parse per word per render.
+ */
+export const createRenderAnimatePlugin = (
+  options?: AnimateOptions & { timeline?: AnimateTimeline }
+): AnimatePlugin => buildAnimatePlugin(options, true);
+
+function buildAnimatePlugin(
+  options: (AnimateOptions & { timeline?: AnimateTimeline }) | undefined,
+  styleObjects: boolean
+): AnimatePlugin {
+  const animation = options?.animation ?? "fadeIn";
+  const easing = options?.easing ?? "ease";
   const config: AnimateConfig = {
-    animation: options?.animation ?? "fadeIn",
+    animation,
     duration: options?.duration ?? 150,
-    easing: options?.easing ?? "ease",
+    easing,
     sep: options?.sep ?? "word",
     stagger: options?.stagger ?? 40,
+    styleObjects:
+      styleObjects &&
+      plainStyleValue.test(animation) &&
+      plainStyleValue.test(easing),
     timeline: options?.timeline,
   };
 
