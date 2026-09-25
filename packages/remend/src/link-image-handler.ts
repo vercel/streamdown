@@ -158,8 +158,12 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
 
   // Then check for incomplete link text: [partial-text without closing ]
   // Search backwards for an opening bracket that doesn't have a matching closing bracket
-  for (let i = text.length - 1; i >= 0; i -= 1) {
-    if (text[i] === "[" && !isInsideCodeBlock(text, i)) {
+  for (
+    let i = text.lastIndexOf("[");
+    i !== -1;
+    i = i === 0 ? -1 : text.lastIndexOf("[", i - 1)
+  ) {
+    if (!isInsideCodeBlock(text, i)) {
       const result = handleIncompleteText(text, i, linkMode);
       if (result !== null) {
         return result;

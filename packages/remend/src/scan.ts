@@ -334,6 +334,24 @@ const paintSpans = (text: string, regions: Uint8Array): OpenSpan | null => {
   let i = 0;
 
   while (i < n) {
+    // Outside a span only a backtick changes anything, so jump to the next one
+    // and apply the escape the loop would have seen on the character before it
+    if (spanStart < 0) {
+      const next = text.indexOf("`", i);
+      if (next === -1) {
+        break;
+      }
+      if (
+        regions[next] !== REGION.PROSE ||
+        (next > i &&
+          text[next - 1] === "\\" &&
+          regions[next - 1] === REGION.PROSE)
+      ) {
+        i = next + 1;
+        continue;
+      }
+      i = next;
+    }
     if (regions[i] !== REGION.PROSE) {
       // A span cannot cross into a fence, so leave it marked open up to here
       if (spanStart >= 0) {
