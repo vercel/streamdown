@@ -1,6 +1,7 @@
 import {
   type HTMLAttributes,
   lazy,
+  type ReactNode,
   Suspense,
   useContext,
   useMemo,
@@ -30,6 +31,11 @@ type CodeBlockProps = HTMLAttributes<HTMLDivElement> & {
   startLine?: number;
   /** Show line numbers in code blocks. @default true */
   lineNumbers?: boolean;
+  /**
+   * Animate spans for an unclosed fence. Shown instead of highlighted tokens
+   * so the code streams in; omitted once the fence closes.
+   */
+  animatedCode?: ReactNode;
 };
 
 const HighlightedCodeBlockBody = lazy(() =>
@@ -46,6 +52,7 @@ export const CodeBlock = ({
   isIncomplete = false,
   startLine,
   lineNumbers,
+  animatedCode,
   ...rest
 }: CodeBlockProps) => {
   const cn = useCn();
@@ -95,30 +102,43 @@ export const CodeBlock = ({
             </div>
           </div>
         ) : null}
-        <Suspense
-          fallback={
-            <CodeBlockBody
+        {animatedCode == null ? (
+          <Suspense
+            fallback={
+              <CodeBlockBody
+                className={className}
+                language={language}
+                lineNumbers={lineNumbers}
+                maxHeight={codeBlockMaxHeight}
+                result={raw}
+                startLine={startLine}
+                {...rest}
+              />
+            }
+          >
+            <HighlightedCodeBlockBody
               className={className}
+              code={trimmedCode}
               language={language}
               lineNumbers={lineNumbers}
               maxHeight={codeBlockMaxHeight}
-              result={raw}
+              raw={raw}
               startLine={startLine}
               {...rest}
             />
-          }
-        >
-          <HighlightedCodeBlockBody
+          </Suspense>
+        ) : (
+          <CodeBlockBody
+            animatedContent={animatedCode}
             className={className}
-            code={trimmedCode}
             language={language}
-            lineNumbers={lineNumbers}
+            lineNumbers={false}
             maxHeight={codeBlockMaxHeight}
-            raw={raw}
+            result={raw}
             startLine={startLine}
             {...rest}
           />
-        </Suspense>
+        )}
       </CodeBlockContainer>
     </CodeBlockContext.Provider>
   );

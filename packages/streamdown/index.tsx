@@ -502,6 +502,11 @@ export const Block = memo(
       animatePluginProp?.commit();
     });
 
+    // Must run during render, before this block's rehype pass. commit() is
+    // after paint and would leave an unclosed fence skipped for this frame.
+    // Inline `code` stays animated either way (#594); this only unskips `pre`.
+    animatePluginProp?.setAnimateCodeBlocks(isIncomplete);
+
     // Note: remend is already applied to the entire markdown before parsing into blocks
     // in the Streamdown component, so we don't need to apply it again here
     const normalizedContent =
