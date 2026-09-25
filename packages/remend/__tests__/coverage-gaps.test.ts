@@ -93,8 +93,12 @@ describe("link handler edge cases", () => {
     expect(remend("](partial")).toBe("](partial");
   });
 
-  it("should skip image brackets in text-only mode", () => {
-    expect(remend("![img [text", { linkMode: "text-only" })).toBe("![img text");
+  it("should heal an incomplete image exposed in text-only mode", () => {
+    // Stripping the inner bracket exposes an incomplete image, which gets
+    // the placeholder in the same call
+    expect(remend("![img [text", { linkMode: "text-only" })).toBe(
+      "![img text](streamdown:incomplete-image)"
+    );
   });
 
   it("should skip complete links in text-only mode", () => {
@@ -196,9 +200,11 @@ describe("double underscore half-complete in code block", () => {
   });
 });
 
-describe("double underscore half-complete with even pairs", () => {
-  it("should not complete when __ pairs are balanced", () => {
-    expect(remend("__a__ __b__content_")).toBe("__a__ __b__content_");
+describe("double underscore half-complete with word-internal run", () => {
+  it("should complete the opener left unmatched by a word-internal run", () => {
+    // b__content is word-internal, so the __ before b is an unmatched
+    // opener and the trailing _ is its half-typed closer
+    expect(remend("__a__ __b__content_")).toBe("__a__ __b__content__");
   });
 });
 

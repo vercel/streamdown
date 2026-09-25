@@ -1,32 +1,11 @@
-// Helper function to check if a backtick is part of a triple backtick
-const isTripleBacktick = (text: string, index: number): boolean =>
-  (index >= 2 && text.substring(index - 2, index + 1) === "```") ||
-  (index >= 1 && text.substring(index - 1, index + 2) === "```") ||
-  (index <= text.length - 3 && text.substring(index, index + 3) === "```");
+import { countDoublePairs, getScan, REGION } from "./scan";
 
-// Helper function to count $$ pairs outside of inline code blocks
-const countDollarPairs = (text: string): number => {
-  let dollarPairs = 0;
-  let inInlineCode = false;
+const countDollarPairs = (text: string): number => countDoublePairs(text, "$");
 
-  for (let i = 0; i < text.length - 1; i += 1) {
-    if (text[i] === "`" && !isTripleBacktick(text, i)) {
-      inInlineCode = !inInlineCode;
-    }
-
-    if (!inInlineCode && text[i] === "$" && text[i + 1] === "$") {
-      dollarPairs += 1;
-      i += 1;
-    }
-  }
-
-  return dollarPairs;
-};
-
-// Helper function to count single $ signs (excluding $$) outside of code blocks
+// Excludes $$ pairs and any $ inside code regions.
 const countSingleDollars = (text: string): number => {
+  const scan = getScan(text);
   let count = 0;
-  let inInlineCode = false;
 
   for (let i = 0; i < text.length; i += 1) {
     if (text[i] === "\\") {
@@ -34,12 +13,11 @@ const countSingleDollars = (text: string): number => {
       continue;
     }
 
-    if (text[i] === "`" && !isTripleBacktick(text, i)) {
-      inInlineCode = !inInlineCode;
+    if (scan.regions[i] !== REGION.PROSE) {
       continue;
     }
 
-    if (!inInlineCode && text[i] === "$") {
+    if (text[i] === "$") {
       if (i + 1 < text.length && text[i + 1] === "$") {
         i += 1;
       } else {
