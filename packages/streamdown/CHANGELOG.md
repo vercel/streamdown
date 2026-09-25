@@ -1,5 +1,83 @@
 # streamdown
 
+## 2.7.0
+
+### Minor Changes
+
+- 6b14de4: Add a `disableAutolinkProtocols` prop to `<Streamdown>` for disabling GFM autolinking of specific URL protocols (e.g. `mailto`).
+
+  ```tsx
+  <Streamdown disableAutolinkProtocols={["mailto"]}>
+    {"Contact us at hello@example.com"}
+  </Streamdown>
+  ```
+
+  Bare emails and bare URLs whose protocol matches the list (case-insensitive, `"mailto"` and `"mailto:"` are equivalent) are unwrapped back to plain text. Explicit markdown links (`[text](url)`) are left as links, including when the label reconstructs the URL (e.g. `[foo@x.com](mailto:foo@x.com)`). When the prop is omitted, autolinking behavior is completely unchanged.
+
+  Closes #607.
+
+- b1965bb: feat: add `fallbackComponent` prop for missing map entries / `allowedTags`
+
+  Adds a new `fallbackComponent` prop to `<Streamdown>`. When provided, it is
+  used as a fallback renderer for any HTML tag or allowed custom tag that does
+  not have an explicit entry in the `components` map:
+
+  ```tsx
+  <Streamdown
+    allowedTags={{ mention: ["user_id"] }}
+    fallbackComponent={({ node, children, ...props }) =>
+      createElement(node!.tagName, props, children)
+    }
+  >
+    {markdown}
+  </Streamdown>
+  ```
+
+  `fallbackComponent` applies to custom tags declared via `allowedTags` (with no
+  explicit component entry) and to standard HTML tags absent from the built-in
+  component set (e.g. `<span>`, `<em>`, `<div>`, `<br>`). Built-in and explicit
+  `components` entries always win — this is not a full unstyled mode.
+
+  Refs #543
+
+### Patch Changes
+
+- c971f42: Wire `onCopy` and `onError` through default code and Mermaid copy controls via `controls.code.copy` and `controls.mermaid.copy`.
+- 16e7e65: Export `defaultComponents` so custom `components` overrides can compose Streamdown's built-in renderers (styles, `data-streamdown`, link safety, code/mermaid/table behavior) instead of reimplementing them.
+- 163c63b: fix(code-block): use absolute positioning for action buttons to fix click events in nested scroll containers
+
+  Switches the code block action button wrapper from `position: sticky` to
+  `position: absolute` (with `position: relative` on the container) so that
+  hit-testing works correctly in layouts with multiple nested `overflow: auto`
+  scroll containers. Previously, the `sticky` + `pointer-events-none/auto`
+  pattern caused browsers to mis-route click events to the code block wrapper
+  rather than the buttons when the component was embedded in 2+ nested scroll
+  containers.
+
+- e0ce123: Incomplete images during streaming now render a loading placeholder instead of being removed entirely. Incomplete images (e.g. `![alt](https://exampl`) are replaced with `![alt](streamdown:incomplete-image)` by remend, and the streamdown `ImageComponent` renders an animated skeleton for this special URL. This mirrors the existing behavior for incomplete links (`streamdown:incomplete-link`). The `streamdown` protocol is allowlisted for `img[src]` in the default sanitize schema so the sentinel survives rehype-sanitize + rehype-harden.
+- 5504e50: Preserve literal HTML tags and character entities when copying or downloading tables as Markdown.
+- 5b26c28: Speed up block parsing by lexing only block tokens and reusing already parsed blocks while a document streams.
+- 18dcb20: Add a top-level `portal` prop for configuring the container used by Mermaid fullscreen, table fullscreen, and the built-in link safety modal.
+- fdf4e33: Fix Mermaid diagrams so text is readable and diagrams auto-fit container.
+  - Normalize SVG to remove responsive shrinking
+  - Extract intrinsic size from viewBox
+  - Add width-and-height auto-fit in PanZoom
+  - Preserve user zoom/pan after initial fit
+  - Add tests for SVG utilities and auto-fit behavior
+- 53812cf: fix: unwrap a single paragraph child inside list items
+
+  Loose list items from the markdown pipeline are often wrapped in a `<p>`. `MemoLi` now detects that sole paragraph child (including the memoized paragraph component) and renders its contents directly, so list items stay visually tight. Also updates the list animation retrigger test to match the unwrapped markup.
+
+  Fixes #475
+
+- a155a9e: Update `marked` from `^17.0.1` to `^18.0.11`.
+
+  marked v18 no longer folds a block token's trailing blank line(s) into its own `raw`; that whitespace now surfaces as a separate `space` token immediately following the block (e.g. after `html`, `heading`, and `table` tokens). This changed the token stream shape that `parseMarkdownIntoBlocks` consumes, causing a dangling `space` token after a closed custom-tag HTML block to be emitted as its own standalone block. `parseMarkdownIntoBlocks` now folds a `space` token into the preceding block instead of pushing it as a new one, restoring v17-identical block boundaries and counts. The lossless `token.raw` concatenation invariant is preserved.
+
+- Updated dependencies [cf0ac1c]
+- Updated dependencies [e0ce123]
+  - remend@1.3.2
+
 ## 2.6.0
 
 ### Minor Changes
