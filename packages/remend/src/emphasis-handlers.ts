@@ -9,6 +9,7 @@ import {
   halfCompleteUnderscorePattern,
   italicPattern,
   listItemPattern,
+  matchTrailing,
   singleAsteriskPattern,
   singleUnderscorePattern,
   whitespaceOrMarkersPattern,
@@ -391,7 +392,7 @@ const shouldSkipBoldCompletion = (
 
 // Completes incomplete bold formatting (**)
 export const handleIncompleteBold = (text: string): string => {
-  const boldMatch = text.match(boldPattern);
+  const boldMatch = matchTrailing(text, boldPattern);
   if (!boldMatch) {
     return text;
   }
@@ -458,12 +459,15 @@ const shouldSkipItalicCompletion = (
 export const handleIncompleteDoubleUnderscoreItalic = (
   text: string
 ): string => {
-  const italicMatch = text.match(italicPattern);
+  const italicMatch = matchTrailing(text, italicPattern);
   if (!italicMatch) {
     // Check for half-complete closing marker: __content_ should become __content__
     // The pattern /(__)([^_]*?)$/ won't match __content_ because it ends with _
     // So we need a separate check for this case
-    const halfCompleteMatch = text.match(halfCompleteUnderscorePattern);
+    const halfCompleteMatch = matchTrailing(
+      text,
+      halfCompleteUnderscorePattern
+    );
     if (halfCompleteMatch) {
       const markerIndex = text.lastIndexOf(halfCompleteMatch[1]);
       if (
@@ -551,7 +555,7 @@ const findFirstSingleAsteriskIndex = (text: string): number => {
 
 // Completes incomplete italic formatting with single asterisks (*)
 export const handleIncompleteSingleAsteriskItalic = (text: string): string => {
-  const singleAsteriskMatch = text.match(singleAsteriskPattern);
+  const singleAsteriskMatch = matchTrailing(text, singleAsteriskPattern);
 
   if (!singleAsteriskMatch) {
     return text;
@@ -676,7 +680,7 @@ const handleTrailingAsterisksForUnderscore = (text: string): string | null => {
 export const handleIncompleteSingleUnderscoreItalic = (
   text: string
 ): string => {
-  const singleUnderscoreMatch = text.match(singleUnderscorePattern);
+  const singleUnderscoreMatch = matchTrailing(text, singleUnderscorePattern);
 
   if (!singleUnderscoreMatch) {
     return text;
@@ -759,7 +763,7 @@ export const handleIncompleteBoldItalic = (text: string): string => {
     return text;
   }
 
-  const boldItalicMatch = text.match(boldItalicPattern);
+  const boldItalicMatch = matchTrailing(text, boldItalicPattern);
 
   if (!boldItalicMatch) {
     return text;

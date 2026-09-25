@@ -4,6 +4,7 @@ import {
 } from "./code-block-utils";
 import {
   halfCompleteTildePattern,
+  matchTrailing,
   strikethroughPattern,
   whitespaceOrMarkersPattern,
 } from "./patterns";
@@ -16,7 +17,7 @@ const countDoubleTildes = (text: string): number => countDoublePairs(text, "~");
 
 // Completes incomplete strikethrough formatting (~~)
 export const handleIncompleteStrikethrough = (text: string): string => {
-  const strikethroughMatch = text.match(strikethroughPattern);
+  const strikethroughMatch = matchTrailing(text, strikethroughPattern);
 
   if (strikethroughMatch) {
     // Don't close if there's no meaningful content after the opening markers
@@ -45,7 +46,7 @@ export const handleIncompleteStrikethrough = (text: string): string => {
   } else {
     // Check for half-complete closing marker: ~~content~ should become ~~content~~
     // The pattern /(~~)([^~]*?)$/ won't match ~~content~ because it ends with ~
-    const halfCompleteMatch = text.match(halfCompleteTildePattern);
+    const halfCompleteMatch = matchTrailing(text, halfCompleteTildePattern);
     if (halfCompleteMatch) {
       // Don't close if the marker is inside an inline code span or fenced code block
       const markerIndex = text.lastIndexOf(halfCompleteMatch[0].slice(0, 2));
