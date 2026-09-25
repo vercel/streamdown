@@ -519,7 +519,7 @@ const isLoneProseAsterisk = (scan: TextScan, i: number): boolean => {
 const findFirstSingleAsteriskIndex = (text: string): number => {
   const scan = getScan(text);
 
-  for (let i = 0; i < text.length; i += 1) {
+  for (let i = text.indexOf("*"); i !== -1; i = text.indexOf("*", i + 1)) {
     if (!isLoneProseAsterisk(scan, i)) {
       continue;
     }
@@ -596,9 +596,8 @@ export const handleIncompleteSingleAsteriskItalic = (text: string): string => {
 const findFirstSingleUnderscoreIndex = (text: string): number => {
   const scan = getScan(text);
 
-  for (let i = 0; i < text.length; i += 1) {
+  for (let i = text.indexOf("_"); i !== -1; i = text.indexOf("_", i + 1)) {
     if (
-      text[i] === "_" &&
       scan.regions[i] === REGION.PROSE &&
       text[i - 1] !== "_" &&
       text[i + 1] !== "_" &&

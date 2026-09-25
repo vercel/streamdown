@@ -443,14 +443,14 @@ export const isCompleteSpanAt = (scan: TextScan, position: number): boolean =>
 /** Counts non-overlapping double-character pairs (**, ~~, $$) in prose */
 export const countDoublePairs = (text: string, char: string): number => {
   const scan = getScan(text);
+  const pair = char + char;
   let count = 0;
 
-  for (let i = 0; i < text.length; i += 1) {
-    if (scan.regions[i] !== REGION.PROSE) {
-      continue;
-    }
-    if (text[i] === char && i + 1 < text.length && text[i + 1] === char) {
+  for (let i = text.indexOf(pair); i !== -1; i = text.indexOf(pair, i)) {
+    if (scan.regions[i] === REGION.PROSE) {
       count += 1;
+      i += 2;
+    } else {
       i += 1;
     }
   }
