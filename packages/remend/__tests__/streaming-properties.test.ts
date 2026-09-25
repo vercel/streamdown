@@ -1,4 +1,5 @@
 import fc from "fast-check";
+import { fromMarkdown } from "mdast-util-from-markdown";
 import { describe, expect, it } from "vitest";
 import remend from "../src";
 
@@ -56,8 +57,98 @@ const preservedPrefixLength = (input: string, output: string): number => {
   return matched;
 };
 
+interface CodeNode {
+  lang?: string | null;
+  meta?: string | null;
+  type: string;
+  value: string;
+}
+
+interface MdastNode {
+  children?: MdastNode[];
+  lang?: string | null;
+  meta?: string | null;
+  type: string;
+  value?: string;
+}
+
+// A CommonMark parser is the oracle for what is code, including fences nested
+// in block quotes and list items that a line-based scan can miss
+const codeNodes = (markdown: string): CodeNode[] => {
+  const found: CodeNode[] = [];
+  const visit = (node: MdastNode): void => {
+    if (node.type === "code" || node.type === "inlineCode") {
+      found.push({
+        type: node.type,
+        value: node.value ?? "",
+        lang: node.lang,
+        meta: node.meta,
+      });
+    }
+    for (const child of node.children ?? []) {
+      visit(child);
+    }
+  };
+  visit(fromMarkdown(markdown));
+  return found;
+};
+
+const sameCode = (a: CodeNode, b: CodeNode): boolean =>
+  a.type === b.type &&
+  a.value === b.value &&
+  a.lang === b.lang &&
+  a.meta === b.meta;
+
+// Healing must never change code. Every code block and span the parser finds
+// in the prefix survives unchanged, with two exceptions at the end of the
+// text. Healing strips trailing whitespace, which may trim the last node. And
+// closing an open span absorbs the spans the prefix read inside it: in
+// ``a `b` the prefix holds the span `b`, which closing `` swallows.
+const assertCodeUnchanged = (prefix: string, healed: string): void => {
+  const before = codeNodes(prefix);
+  const after = codeNodes(healed);
+
+  let common = 0;
+  while (
+    common < before.length &&
+    common < after.length &&
+    sameCode(before[common], after[common])
+  ) {
+    common += 1;
+  }
+  const last = before.at(-1);
+  if (
+    common === before.length - 1 &&
+    common === after.length - 1 &&
+    last &&
+    sameCode({ ...last, value: last.value.trimEnd() }, after[common])
+  ) {
+    return;
+  }
+
+  const lost = before.slice(common);
+  const added = after.slice(common);
+  const closedSpan =
+    added.length === 1 &&
+    added[0].type === "inlineCode" &&
+    lost.every(
+      (node) =>
+        node.type === "inlineCode" && added[0].value.includes(node.value)
+    );
+  if (added.length === 0 && lost.length === 0) {
+    return;
+  }
+  if (!closedSpan) {
+    throw new Error(
+      `healing changed code: ${JSON.stringify(prefix)} -> ${JSON.stringify(healed)}\n` +
+        `lost: ${JSON.stringify(lost)}\nadded: ${JSON.stringify(added)}`
+    );
+  }
+};
+
 const assertStreamingSafe = (prefix: string): void => {
   const healed = remend(prefix);
+  assertCodeUnchanged(prefix, healed);
 
   const loss = prefix.length - preservedPrefixLength(prefix, healed);
   if (loss > MAX_LOSS) {
@@ -87,6 +178,43 @@ const documentArbitrary = fc
   )
   .map((groups) => groups.map((atoms) => atoms.join(" ")).join("\n\n"));
 
+// Container blocks shift where a line's content starts, so every construct
+// must behave the same once its lines carry a quote marker or list indent
+const prefixLines =
+  (first: string, rest: string, blank: string) =>
+  (doc: string): string =>
+    doc
+      .split("\n")
+      .map((line, index) => {
+        if (index === 0) {
+          return first + line;
+        }
+        return line ? rest + line : blank;
+      })
+      .join("\n");
+
+const CONTAINERS = {
+  quote: prefixLines("> ", "> ", ">"),
+  tightQuote: prefixLines(">", ">", ">"),
+  bullet: prefixLines("- ", "  ", ""),
+  ordered: prefixLines("1. ", "   ", ""),
+};
+
+const containerNames = Object.keys(CONTAINERS) as (keyof typeof CONTAINERS)[];
+
+const containedArbitrary = (docArbitrary: fc.Arbitrary<string>) =>
+  fc
+    .tuple(
+      docArbitrary,
+      fc.array(fc.constantFrom(...containerNames), {
+        minLength: 1,
+        maxLength: 2,
+      })
+    )
+    .map(([doc, names]) =>
+      names.reduce((wrapped, name) => CONTAINERS[name](wrapped), doc)
+    );
+
 describe("streaming properties", () => {
   it("preserves authored text and re-heals to itself on every cut", () => {
     fc.assert(
@@ -94,6 +222,20 @@ describe("streaming properties", () => {
         const cut = cutSeed % (doc.length + 1);
         assertStreamingSafe(doc.slice(0, cut));
       }),
+      { numRuns: 2000 }
+    );
+  });
+
+  it("preserves authored text and code on every cut inside containers", () => {
+    fc.assert(
+      fc.property(
+        containedArbitrary(documentArbitrary),
+        fc.nat(),
+        (doc, cutSeed) => {
+          const cut = cutSeed % (doc.length + 1);
+          assertStreamingSafe(doc.slice(0, cut));
+        }
+      ),
       { numRuns: 2000 }
     );
   });
@@ -127,9 +269,7 @@ describe("streaming properties", () => {
 
 describe("exhaustive prefix sweep", () => {
   // Every prefix of a fixed corpus, deterministically. The corpus mixes
-  // constructs that interact: identifiers with double underscores next to
-  // real emphasis, fences of both characters, spans with multi-backtick runs,
-  // and half-typed closers.
+  // constructs that interact.
   const corpus = [
     "Use snake__case for names and __bold text__ throughout.",
     "The `obj__attr` field pairs with **bold** and _italic_ text.",

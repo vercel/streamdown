@@ -114,3 +114,74 @@ describe("spans across paragraphs", () => {
     expect(remend("intro\n\nrun `npm i")).toBe("intro\n\nrun `npm i`");
   });
 });
+
+describe("block-quoted fences", () => {
+  it("should not heal inside an open fence in a block quote", () => {
+    expect(remend("> quote\n>\n> ```js\n> const x = a__b")).toBe(
+      "> quote\n>\n> ```js\n> const x = a__b"
+    );
+  });
+
+  it("should not heal inside an open fence in a nested block quote", () => {
+    expect(remend("> > ```\n> > a~~b")).toBe("> > ```\n> > a~~b");
+  });
+
+  it("should recognize a fence after a marker with no space", () => {
+    expect(remend(">```\n>a__b")).toBe(">```\n>a__b");
+  });
+
+  it("should recognize a fence in a list inside a block quote", () => {
+    expect(remend("> - item\n>\n>   ```\n>   a__b")).toBe(
+      "> - item\n>\n>   ```\n>   a__b"
+    );
+  });
+
+  it("should heal inside the quote after its fence closes", () => {
+    expect(remend("> ```\n> a__b\n> ```\n> __open")).toBe(
+      "> ```\n> a__b\n> ```\n> __open__"
+    );
+  });
+
+  it("should close an open fence when its block quote ends", () => {
+    // A fence cannot continue lazily, so a line without the quote marker ends
+    // the quote and the fence inside it
+    expect(remend("> ```\n> a__b\n\n__open")).toBe("> ```\n> a__b\n\n__open__");
+    expect(remend("> ```\n> a__b\nafter __open")).toBe(
+      "> ```\n> a__b\nafter __open__"
+    );
+  });
+});
+
+describe("fences on a list marker line", () => {
+  it.each<{ name: string; input: string }>([
+    { name: "bullet", input: "- ```js\n  a__b" },
+    { name: "ordered", input: "1. ```js\n   a__b" },
+    { name: "quote in bullet", input: "- > ```js\n  > a__b" },
+    { name: "tilde in bullet", input: "- ~~~\n  a~~b" },
+  ])("should not heal inside an open fence: $name", ({ input }) => {
+    expect(remend(input)).toBe(input);
+  });
+});
+
+describe("fences ended by their list item", () => {
+  it("should close a fence when a line dedents out of its list item", () => {
+    // After the quote marker's optional space, "  ```" sits one column short
+    // of the item's content, so it ends the item and opens a new fence
+    expect(remend(">- ```js\n>  a\n>  ```\n>\n>  **open")).toBe(
+      ">- ```js\n>  a\n>  ```\n>\n>  **open"
+    );
+  });
+
+  it("should keep a fence open across a blank line in its list item", () => {
+    expect(remend("- ```\n  a\n\n  b__c")).toBe("- ```\n  a\n\n  b__c");
+  });
+});
+
+describe("container prefix scanning", () => {
+  it("should scan a line of repeated list markers in linear time", () => {
+    // Nested repetition over markers and spaces backtracks exponentially
+    // here. The test timeout is the assertion.
+    const line = `-${"   -".repeat(60)}   x`;
+    expect(remend(line)).toBe(line);
+  });
+});

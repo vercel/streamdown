@@ -9,11 +9,17 @@
 //
 // Fence and span semantics follow CommonMark:
 //
-// - A fence opens only at the start of a line, with any indentation. CommonMark
-//   caps a top-level fence at 3 spaces, but fences nested in list items carry
-//   deeper absolute indents and a line-based scan has no list context. Reading
-//   an indented line as code is the safe direction: healing then leaves it
-//   alone instead of corrupting it.
+// - A fence opens only at the start of a line, with any indentation, after any
+//   block quote and list markers. CommonMark caps a top-level fence at 3
+//   spaces, but fences nested in list items carry deeper absolute indents and
+//   a line-based scan has no list context. Reading an indented line as code is
+//   the safe direction: healing then leaves it alone instead of corrupting it.
+// - A fence inside a block quote reads its lines after the quote markers, and
+//   ends with the quote: a line with fewer markers closes it, because fenced
+//   code has no lazy continuation. Likewise a fence opened on a list marker's
+//   line ends with the item, at a non-blank line indented short of its
+//   content. A fence opened on a later line of an item keeps the lenient
+//   reading above.
 // - Both ``` and ~~~ fences are recognized, with runs of 3 or more.
 // - The info string of a backtick fence cannot contain a backtick
 //   (a line like ```code``` is inline code, not a fence).
@@ -43,6 +49,13 @@ export interface OpenFence {
   char: "`" | "~";
   /** Length of the opening run; a closer must be at least this long */
   length: number;
+  /**
+   * Content column of the list item the opener line starts, measured after
+   * the quote markers. Zero when the opener line starts no list item.
+   */
+  listIndent: number;
+  /** Block quote markers before the opener; each body line must repeat them */
+  quoteDepth: number;
 }
 
 export interface OpenSpan {
@@ -55,17 +68,102 @@ export interface OpenSpan {
 export interface TextScan {
   htmlTagMask: Uint8Array | null;
   linkUrlMask: Uint8Array | null;
-  /** Lazily computed masks backing the inMathAt/inLinkUrlAt/inHtmlTagAt helpers */
+  /** Lazily computed; stays null until first needed */
   mathMask: Uint8Array | null;
-  /** Fence still open at end of text, if any */
   openFence: OpenFence | null;
-  /** Inline code span still open at end of text, if any */
   openSpan: OpenSpan | null;
   regions: Uint8Array;
   text: string;
 }
 
-const FENCE_OPENER_PATTERN = /^( *)(`{3,}|~{3,})(.*)$/;
+const FENCE_RUN_PATTERN = /^(`{3,}|~{3,})(.*)$/;
+
+const isDigit = (char: string | undefined): boolean =>
+  char !== undefined && char >= "0" && char <= "9";
+
+// Index just past a list marker and its space at `start`, or -1
+const skipListMarker = (text: string, start: number): number => {
+  let i = start;
+  if (text[i] === "-" || text[i] === "*" || text[i] === "+") {
+    i += 1;
+  } else {
+    while (isDigit(text[i]) && i - start < 9) {
+      i += 1;
+    }
+    if (i === start || (text[i] !== "." && text[i] !== ")")) {
+      return -1;
+    }
+    i += 1;
+  }
+  return text[i] === " " ? i + 1 : -1;
+};
+
+interface ContainerPrefix {
+  /** Index of the first character after the markers and indentation */
+  contentStart: number;
+  listIndent: number;
+  quoteDepth: number;
+}
+
+// Walks the block quote and list markers that open a line. A single forward
+// pass: a regex with nested repetition over these markers backtracks
+// exponentially on a line of repeated list markers.
+const skipContainerPrefix = (
+  text: string,
+  lineStart: number,
+  lineEnd: number
+): ContainerPrefix => {
+  let quoteDepth = 0;
+  let afterQuotes = lineStart;
+  let startsItem = false;
+  let i = lineStart;
+  for (;;) {
+    while (i < lineEnd && text[i] === " ") {
+      i += 1;
+    }
+    if (text[i] === ">") {
+      quoteDepth += 1;
+      i += text[i + 1] === " " ? 2 : 1;
+      afterQuotes = i;
+      startsItem = false;
+      continue;
+    }
+    const afterMarker = i < lineEnd ? skipListMarker(text, i) : -1;
+    if (afterMarker === -1) {
+      return {
+        contentStart: i,
+        listIndent: startsItem ? i - afterQuotes : 0,
+        quoteDepth,
+      };
+    }
+    i = afterMarker;
+    startsItem = true;
+  }
+};
+
+// Index just past up to `depth` block quote markers at the start of a line,
+// or -1 if the line carries fewer
+const skipQuoteMarkers = (
+  text: string,
+  lineStart: number,
+  lineEnd: number,
+  depth: number
+): number => {
+  let i = lineStart;
+  for (let found = 0; found < depth; found += 1) {
+    while (i < lineEnd && text[i] === " ") {
+      i += 1;
+    }
+    if (text[i] !== ">") {
+      return -1;
+    }
+    i += 1;
+    if (text[i] === " ") {
+      i += 1;
+    }
+  }
+  return i;
+};
 
 const paintFenceOpener = (
   regions: Uint8Array,
@@ -88,11 +186,11 @@ const paintFenceOpener = (
 // of the fence character at least as long as the opener, then only whitespace
 const isFenceCloser = (
   text: string,
-  lineStart: number,
+  contentStart: number,
   lineEnd: number,
   fence: OpenFence
 ): boolean => {
-  let i = lineStart;
+  let i = contentStart;
   while (i < lineEnd && text[i] === " ") {
     i += 1;
   }
@@ -113,6 +211,68 @@ const isFenceCloser = (
   return true;
 };
 
+const openFenceAt = (
+  text: string,
+  regions: Uint8Array,
+  lineStart: number,
+  lineEnd: number
+): OpenFence | null => {
+  const contentEnd =
+    lineEnd > lineStart && text[lineEnd - 1] === "\r" ? lineEnd - 1 : lineEnd;
+  const prefix = skipContainerPrefix(text, lineStart, contentEnd);
+  const opener = text
+    .slice(prefix.contentStart, contentEnd)
+    .match(FENCE_RUN_PATTERN);
+  if (!opener) {
+    return null;
+  }
+  const [, run, info] = opener;
+  const char = run[0] as "`" | "~";
+  // A backtick fence's info string cannot contain a backtick; such a line is
+  // inline code instead
+  if (char === "`" && info.includes("`")) {
+    return null;
+  }
+  paintFenceOpener(
+    regions,
+    lineStart,
+    lineEnd,
+    prefix.contentStart - lineStart,
+    run.length
+  );
+  return {
+    char,
+    length: run.length,
+    listIndent: prefix.listIndent,
+    quoteDepth: prefix.quoteDepth,
+  };
+};
+
+// Index where a body line's content starts inside its fence's containers, or
+// -1 if the line leaves them and so ends the fence
+const fenceContentStart = (
+  text: string,
+  lineStart: number,
+  lineEnd: number,
+  fence: OpenFence
+): number => {
+  const contentStart = skipQuoteMarkers(
+    text,
+    lineStart,
+    lineEnd,
+    fence.quoteDepth
+  );
+  if (contentStart === -1 || fence.listIndent === 0) {
+    return contentStart;
+  }
+  let i = contentStart;
+  while (i < lineEnd && text[i] === " ") {
+    i += 1;
+  }
+  const blank = i === lineEnd || (text[i] === "\r" && i + 1 === lineEnd);
+  return blank || i - contentStart >= fence.listIndent ? contentStart : -1;
+};
+
 const paintFences = (text: string, regions: Uint8Array): OpenFence | null => {
   const n = text.length;
   let openFence: OpenFence | null = null;
@@ -124,35 +284,21 @@ const paintFences = (text: string, regions: Uint8Array): OpenFence | null => {
       lineEnd = n;
     }
 
-    if (openFence) {
-      if (isFenceCloser(text, lineStart, lineEnd, openFence)) {
-        regions.fill(REGION.FENCE_MARKER, lineStart, lineEnd);
-        openFence = null;
-      } else {
-        regions.fill(REGION.FENCE_BODY, lineStart, Math.min(lineEnd + 1, n));
-      }
+    const contentStart = openFence
+      ? fenceContentStart(text, lineStart, lineEnd, openFence)
+      : -1;
+    if (openFence && contentStart === -1) {
+      // The block quote or list item ended, taking the fence with it
+      openFence = null;
+    }
+
+    if (!openFence) {
+      openFence = openFenceAt(text, regions, lineStart, lineEnd);
+    } else if (isFenceCloser(text, contentStart, lineEnd, openFence)) {
+      regions.fill(REGION.FENCE_MARKER, lineStart, lineEnd);
+      openFence = null;
     } else {
-      const contentEnd =
-        lineEnd > lineStart && text[lineEnd - 1] === "\r"
-          ? lineEnd - 1
-          : lineEnd;
-      const line = text.slice(lineStart, contentEnd);
-      const opener = line.match(FENCE_OPENER_PATTERN);
-      if (opener) {
-        const markerChar = opener[2][0] as "`" | "~";
-        // A backtick fence's info string cannot contain a backtick; such a
-        // line is inline code instead
-        if (markerChar === "~" || !opener[3].includes("`")) {
-          paintFenceOpener(
-            regions,
-            lineStart,
-            lineEnd,
-            opener[1].length,
-            opener[2].length
-          );
-          openFence = { char: markerChar, length: opener[2].length };
-        }
-      }
+      regions.fill(REGION.FENCE_BODY, lineStart, Math.min(lineEnd + 1, n));
     }
 
     lineStart = lineEnd + 1;
@@ -181,7 +327,6 @@ const isParagraphBreakAt = (text: string, newlineIndex: number): boolean => {
   return j < text.length && text[j] === "\n";
 };
 
-// Paint inline code spans in the regions the fence pass left as prose
 const paintSpans = (text: string, regions: Uint8Array): OpenSpan | null => {
   const n = text.length;
   let spanStart = -1;
@@ -361,12 +506,10 @@ const getDollarMathContext = (
 const hasMathDelimiters = (text: string): boolean =>
   text.includes("$") || text.includes("\\(") || text.includes("\\[");
 
-// Recognizes a math delimiter or escaped dollar at position i, returning the
-// context after it and the number of characters it spans
+// Recognizes a math delimiter or escaped dollar at position i
 interface MathDelimiter {
   /** Context in effect after the delimiter */
   context: MathContext;
-  /** Number of characters the delimiter spans */
   length: 1 | 2;
 }
 
