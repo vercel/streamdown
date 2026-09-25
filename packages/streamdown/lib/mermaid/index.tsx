@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useDeferredRender } from "../../hooks/use-deferred-render";
 import { StreamdownContext } from "../../index";
 import { useMermaidPlugin } from "../plugin-context";
@@ -14,6 +14,52 @@ interface MermaidProps {
   fullscreen?: boolean;
   showControls?: boolean;
 }
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+interface RenderRequest {
+  chart: string;
+  config?: MermaidConfig;
+}
+
+type RenderOutcome =
+  | { ok: true; svg: string; size: { height: number; width: number } | null }
+  | { ok: false; error: string };
+
+const renderChart = async (
+  plugin: NonNullable<ReturnType<typeof useMermaidPlugin>>,
+  { chart, config }: RenderRequest,
+  fullscreen: boolean
+): Promise<RenderOutcome> => {
+  try {
+    // Get mermaid instance from plugin
+    const mermaid = plugin.getMermaid(config);
+
+    // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
+    const chartHash = chart.split("").reduce((acc, char) => {
+      // biome-ignore lint/suspicious/noBitwiseOperators: "Required for Mermaid"
+      return ((acc << 5) - acc + char.charCodeAt(0)) | 0;
+    }, 0);
+    const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+    const { svg } = await mermaid.render(uniqueId, chart);
+    const size = getMermaidSvgSize(svg);
+    return {
+      ok: true,
+      svg: fullscreen ? svg : normalizeMermaidInlineSvg(svg),
+      size,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error:
+        err instanceof Error ? err.message : "Failed to render Mermaid chart",
+    };
+  }
+};
 
 export const Mermaid = ({
   chart,
@@ -41,6 +87,22 @@ export const Mermaid = ({
     immediate: fullscreen,
   });
 
+  // Mermaid runs renders one after another. While a chart streams, every
+  // token used to queue another full parse and layout of the growing chart,
+  // so the finished diagram appeared long after the stream ended. Only one
+  // render runs at a time here; when it settles, the latest chart is rendered
+  // if it changed meanwhile, and the ones in between are skipped.
+  const latestRequestRef = useRef<RenderRequest | null>(null);
+  const inFlightRef = useRef(false);
+  const mountedRef = useRef(false);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"
   useEffect(() => {
     // Only render when shouldRender is true
@@ -56,47 +118,63 @@ export const Mermaid = ({
       return;
     }
 
-    const renderChart = async () => {
-      try {
-        setError(null);
-        setIsLoading(true);
+    latestRequestRef.current = { chart, config };
+    if (inFlightRef.current) {
+      // The running loop picks up the latest request when it settles
+      return;
+    }
 
-        // Get mermaid instance from plugin
-        const mermaid = mermaidPlugin.getMermaid(config);
-
-        // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
-        const chartHash = chart.split("").reduce((acc, char) => {
-          // biome-ignore lint/suspicious/noBitwiseOperators: "Required for Mermaid"
-          return ((acc << 5) - acc + char.charCodeAt(0)) | 0;
-        }, 0);
-        const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-
-        const { svg } = await mermaid.render(uniqueId, chart);
-        const size = getMermaidSvgSize(svg);
-        const normalizedSvg = fullscreen ? svg : normalizeMermaidInlineSvg(svg);
-
+    const commit = (request: RenderRequest, rendered: RenderOutcome) => {
+      if (rendered.ok) {
         // Update both current and last valid SVG
-        setSvgContent(normalizedSvg);
-        setSvgSize(size);
-        setLastValidSvg(normalizedSvg);
-      } catch (err) {
-        // Silently fail and keep the last valid SVG
-        // Don't update svgContent here - just keep what we have
-
-        // Only set error if we don't have any valid SVG
-        if (!(lastValidSvg || svgContent)) {
-          const errorMessage =
-            err instanceof Error
-              ? err.message
-              : "Failed to render Mermaid chart";
-          setError(errorMessage);
-        }
-      } finally {
-        setIsLoading(false);
+        setSvgContent(rendered.svg);
+        setSvgSize(rendered.size);
+        setLastValidSvg(rendered.svg);
+      } else if (request === latestRequestRef.current) {
+        // Keep the last valid SVG; the error only shows when there is
+        // nothing to display, and only for the latest chart
+        setError(rendered.error);
       }
     };
 
-    renderChart();
+    const renderLatest = async () => {
+      inFlightRef.current = true;
+      setError(null);
+      setIsLoading(true);
+      try {
+        let request = latestRequestRef.current;
+        while (request) {
+          const startedAt = performance.now();
+          const rendered = await renderChart(
+            mermaidPlugin,
+            request,
+            fullscreen
+          );
+          if (!mountedRef.current) {
+            return;
+          }
+          commit(request, rendered);
+          // Mermaid lays out on the main thread. After a layout, yield for as
+          // long as it took so streamed updates keep flowing at their own
+          // pace and only the latest chart is rendered next. A failed parse
+          // did no layout, so there is nothing to yield for.
+          if (rendered.ok) {
+            await sleep(performance.now() - startedAt);
+          }
+          if (!mountedRef.current || request === latestRequestRef.current) {
+            return;
+          }
+          request = latestRequestRef.current;
+        }
+      } finally {
+        inFlightRef.current = false;
+        if (mountedRef.current) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    renderLatest();
   }, [chart, config, retryCount, shouldRender, mermaidPlugin]);
 
   // Show placeholder when not scheduled to render
