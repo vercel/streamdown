@@ -1,7 +1,7 @@
-import { bench, describe } from "vitest";
+import { test } from "vitest";
 import remend from "../src";
 
-describe("Basic Formatting", () => {
+test("Basic Formatting", async ({ bench }) => {
   const shortText = "This is **bold text";
   const mediumText =
     "# Heading\n\nThis is **bold** and *italic* text with `code` and ~~strikethrough~~";
@@ -21,106 +21,58 @@ $$
 \\int_0^\\infty x^2 dx
 `;
 
-  bench(
-    "short text with incomplete bold",
-    () => {
-      remend(shortText);
-    },
-    { iterations: 1000 }
-  );
+  await bench("short text with incomplete bold", () => {
+    remend(shortText);
+  }).run();
 
-  bench(
-    "medium text with mixed formatting",
-    () => {
-      remend(mediumText);
-    },
-    { iterations: 1000 }
-  );
+  await bench("medium text with mixed formatting", () => {
+    remend(mediumText);
+  }).run();
 
-  bench(
-    "long text with complex formatting",
-    () => {
-      remend(longText);
-    },
-    { iterations: 1000 }
-  );
+  await bench("long text with complex formatting", () => {
+    remend(longText);
+  }).run();
 });
 
-describe("Incomplete Patterns", () => {
-  bench(
-    "incomplete bold (**)",
-    () => {
-      remend("Some text with **incomplete bold");
-    },
-    { iterations: 1000 }
-  );
+test("Incomplete Patterns", async ({ bench }) => {
+  await bench("incomplete bold (**)", () => {
+    remend("Some text with **incomplete bold");
+  }).run();
 
-  bench(
-    "incomplete italic (*)",
-    () => {
-      remend("Some text with *incomplete italic");
-    },
-    { iterations: 1000 }
-  );
+  await bench("incomplete italic (*)", () => {
+    remend("Some text with *incomplete italic");
+  }).run();
 
-  bench(
-    "incomplete italic (__)",
-    () => {
-      remend("Some text with __incomplete italic");
-    },
-    { iterations: 1000 }
-  );
+  await bench("incomplete italic (__)", () => {
+    remend("Some text with __incomplete italic");
+  }).run();
 
-  bench(
-    "incomplete inline code (`)",
-    () => {
-      remend("Some text with `incomplete code");
-    },
-    { iterations: 1000 }
-  );
+  await bench("incomplete inline code (`)", () => {
+    remend("Some text with `incomplete code");
+  }).run();
 
-  bench(
-    "incomplete strikethrough (~~)",
-    () => {
-      remend("Some text with ~~incomplete strikethrough");
-    },
-    { iterations: 1000 }
-  );
+  await bench("incomplete strikethrough (~~)", () => {
+    remend("Some text with ~~incomplete strikethrough");
+  }).run();
 
-  bench(
-    "incomplete bold-italic (***)",
-    () => {
-      remend("Some text with ***incomplete bold-italic");
-    },
-    { iterations: 1000 }
-  );
+  await bench("incomplete bold-italic (***)", () => {
+    remend("Some text with ***incomplete bold-italic");
+  }).run();
 
-  bench(
-    "incomplete link",
-    () => {
-      remend("Some text with [incomplete link](");
-    },
-    { iterations: 1000 }
-  );
+  await bench("incomplete link", () => {
+    remend("Some text with [incomplete link](");
+  }).run();
 
-  bench(
-    "incomplete link text",
-    () => {
-      remend("Some text with [incomplete");
-    },
-    { iterations: 1000 }
-  );
+  await bench("incomplete link text", () => {
+    remend("Some text with [incomplete");
+  }).run();
 
-  bench(
-    "incomplete block math ($$)",
-    () => {
-      remend("$$\nE = mc^2\n");
-    },
-    { iterations: 1000 }
-  );
+  await bench("incomplete block math ($$)", () => {
+    remend("$$\nE = mc^2\n");
+  }).run();
 });
 
-describe("Code Blocks", () => {
+test("Code Blocks", async ({ bench }) => {
   const incompleteCodeBlock = "```javascript\nconst x = 1;\n";
   const completeCodeBlock = "```javascript\nconst x = 1;\n```";
   const multipleCodeBlocks = `
@@ -134,32 +86,20 @@ Some text
 y = 2
 `;
 
-  bench(
-    "incomplete code block",
-    () => {
-      remend(incompleteCodeBlock);
-    },
-    { iterations: 1000 }
-  );
+  await bench("incomplete code block", () => {
+    remend(incompleteCodeBlock);
+  }).run();
 
-  bench(
-    "complete code block",
-    () => {
-      remend(completeCodeBlock);
-    },
-    { iterations: 1000 }
-  );
+  await bench("complete code block", () => {
+    remend(completeCodeBlock);
+  }).run();
 
-  bench(
-    "multiple code blocks (one incomplete)",
-    () => {
-      remend(multipleCodeBlocks);
-    },
-    { iterations: 1000 }
-  );
+  await bench("multiple code blocks (one incomplete)", () => {
+    remend(multipleCodeBlocks);
+  }).run();
 });
 
-describe("Streaming Simulation", () => {
+test("Streaming Simulation", async ({ bench }) => {
   const streamingSteps = [
     "**",
     "**B",
@@ -173,80 +113,48 @@ describe("Streaming Simulation", () => {
     "**Bold text",
   ];
 
-  bench(
-    "streaming bold text (10 steps)",
-    () => {
-      for (const step of streamingSteps) {
-        remend(step);
-      }
-    },
-    { iterations: 1000 }
-  );
+  await bench("streaming bold text (10 steps)", () => {
+    for (const step of streamingSteps) {
+      remend(step);
+    }
+  }).run();
 
   const codeStreamingSteps = ["`", "`c", "`co", "`cod", "`code", "`code`"];
 
-  bench(
-    "streaming inline code (6 steps)",
-    () => {
-      for (const step of codeStreamingSteps) {
-        remend(step);
-      }
-    },
-    { iterations: 1000 }
-  );
+  await bench("streaming inline code (6 steps)", () => {
+    for (const step of codeStreamingSteps) {
+      remend(step);
+    }
+  }).run();
 });
 
-describe("Edge Cases", () => {
-  bench(
-    "empty string",
-    () => {
-      remend("");
-    },
-    { iterations: 1000 }
-  );
+test("Edge Cases", async ({ bench }) => {
+  await bench("empty string", () => {
+    remend("");
+  }).run();
 
-  bench(
-    "plain text (no markdown)",
-    () => {
-      remend("This is plain text without any markdown formatting.");
-    },
-    { iterations: 1000 }
-  );
+  await bench("plain text (no markdown)", () => {
+    remend("This is plain text without any markdown formatting.");
+  }).run();
 
-  bench(
-    "text with many asterisks",
-    () => {
-      remend("****************************");
-    },
-    { iterations: 1000 }
-  );
+  await bench("text with many asterisks", () => {
+    remend("****************************");
+  }).run();
 
-  bench(
-    "text with mixed emphasis markers",
-    () => {
-      remend("**_*~`**_*~`**_*~`");
-    },
-    { iterations: 1000 }
-  );
+  await bench("text with mixed emphasis markers", () => {
+    remend("**_*~`**_*~`**_*~`");
+  }).run();
 
-  bench(
-    "list with emphasis",
-    () => {
-      remend("- **bold\n- *italic\n- `code");
-    },
-    { iterations: 1000 }
-  );
+  await bench("list with emphasis", () => {
+    remend("- **bold\n- *italic\n- `code");
+  }).run();
 
-  bench(
-    "text with underscores in math",
-    () => {
-      remend("$x_1 + x_2 = x_");
-    },
-    { iterations: 1000 }
-  );
+  await bench("text with underscores in math", () => {
+    remend("$x_1 + x_2 = x_");
+  }).run();
 });
 
-describe("Large Documents", () => {
+test("Large Documents", async ({ bench }) => {
   const largeDoc = `
 # Large Document Benchmark
 
@@ -263,24 +171,16 @@ ${"const x = 1;\n".repeat(100)}
 ${"Regular paragraph text with some [links](https://example.com) and more content.\n\n".repeat(50)}
 `;
 
-  bench(
-    "large document (realistic size)",
-    () => {
-      remend(largeDoc);
-    },
-    { iterations: 1000 }
-  );
+  await bench("large document (realistic size)", () => {
+    remend(largeDoc);
+  }).run();
 
-  bench(
-    "very large document (2x realistic)",
-    () => {
-      remend(largeDoc + largeDoc);
-    },
-    { iterations: 1000 }
-  );
+  await bench("very large document (2x realistic)", () => {
+    remend(largeDoc + largeDoc);
+  }).run();
 });
 
-describe("Streamed Code Blocks", () => {
+test("Streamed Code Blocks", async ({ bench }) => {
   // An unclosed fence full of brackets is the pathological case for the
   // code-block scan: every "[" probes isInsideCodeBlock, which previously
   // rescanned the whole prefix per probe (quadratic overall).
@@ -288,11 +188,41 @@ describe("Streamed Code Blocks", () => {
     "const x = arr[i]; if (map[key]) { list[j] = grid[a][b]; }\n";
   const streamingCodeBlock = `\`\`\`ts\n${bracketHeavyLine.repeat(1000)}`;
 
-  bench(
-    "unclosed bracket-heavy code block (58k chars)",
-    () => {
-      remend(streamingCodeBlock);
-    },
-    { iterations: 10 }
+  await bench("unclosed bracket-heavy code block (58k chars)", () => {
+    remend(streamingCodeBlock);
+  }).run();
+});
+
+test("Long Streamed Documents", async ({ bench }) => {
+  // Streamdown runs remend over the whole accumulated response on every
+  // token, so the cost on a long response is paid per token. Emphasis
+  // markers are the pathological case for the math-context check: every
+  // "*" and "_" probed isWithinMathBlock, which previously rescanned the
+  // whole prefix per probe (quadratic overall).
+  const section = (i: number) =>
+    `## Section ${i}
+
+Some **bold** and *italic* text with \`code\` and a [link](https://example.com/${i}).
+Prices like 20~25 and a > b in lists:
+
+- item > 25
+- another _emph_ item
+
+\`\`\`js
+const x = ${i};
+\`\`\`
+
+`;
+  const longResponse = Array.from({ length: 400 }, (_, i) => section(i)).join(
+    ""
   );
+  const longResponseWithMath = `${longResponse}Inline $x_1$ and block:\n\n$$\nE = mc^2\n$$\n`;
+
+  await bench("400-section response (80k chars)", () => {
+    remend(longResponse);
+  }).run();
+
+  await bench("400-section response with math (80k chars)", () => {
+    remend(longResponseWithMath);
+  }).run();
 });
