@@ -251,7 +251,13 @@ const reuseParsedBlocks = (
   // not see defs from the stable prefix, so block lists can diverge (e.g. a
   // duplicate `[label]: url` is dropped on a full parse but kept on a tail
   // parse). Bail out whenever the document uses them.
-  if (!input.startsWith(previous.input) || linkDefinitionPattern.test(input)) {
+  // A slice compared with === uses V8's bulk string comparison, where
+  // startsWith compares character by character, and the whole document is
+  // compared on every tick.
+  if (
+    input.slice(0, previous.input.length) !== previous.input ||
+    linkDefinitionPattern.test(input)
+  ) {
     return null;
   }
 

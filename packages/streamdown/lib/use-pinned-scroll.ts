@@ -43,6 +43,7 @@ export const usePinnedScroll = (
   const scrollRef = useRef<HTMLDivElement>(null);
   const pinnedRef = useRef(true);
   const wasActiveRef = useRef(false);
+  const frameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -71,14 +72,35 @@ export const usePinnedScroll = (
     wasActiveRef.current = isActive;
   }, [isActive]);
 
+  // Reading scrollHeight forces a layout, so content that grows several times
+  // within a frame pins once, in the frame's own layout, rather than once per
+  // update. A pending pin survives the stream ending, so the final content
+  // still lands at the bottom.
+  useEffect(
+    () => () => {
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+      }
+    },
+    []
+  );
+
   // contentKey intentionally triggers re-scroll when streamed content grows
   // biome-ignore lint/correctness/useExhaustiveDependencies: contentKey is a change detector, not a read value
   useEffect(() => {
     const el = scrollRef.current;
-    if (!(el && enabled && isActive && pinnedRef.current)) {
+    if (
+      !(el && enabled && isActive && pinnedRef.current) ||
+      frameRef.current !== null
+    ) {
       return;
     }
-    el.scrollTo({ top: el.scrollHeight, behavior: "instant" });
+    frameRef.current = requestAnimationFrame(() => {
+      frameRef.current = null;
+      if (pinnedRef.current) {
+        el.scrollTo({ top: el.scrollHeight, behavior: "instant" });
+      }
+    });
   }, [isActive, enabled, contentKey]);
 
   return scrollRef;
