@@ -473,6 +473,11 @@
   @apply bg-background-100 rounded-md;
 }
 
+@utility material-menu {
+  box-shadow: var(--ds-shadow-menu);
+  @apply bg-background-100 rounded-[12px];
+}
+
 @utility text-label-13 {
   @apply font-sans font-normal text-[13px] leading-[16px];
 }
