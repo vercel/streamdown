@@ -197,14 +197,14 @@ const animate = createAnimatePlugin({
 
 The animation skips text inside these elements to avoid breaking their layout:
 
-- `<pre>` — preformatted / fenced code blocks (CommonMark always emits `pre > code`, so Shiki-highlighted blocks stay un-split)
+- `<pre>` — preformatted / fenced code blocks (CommonMark always emits `pre > code`, so a closed, Shiki-highlighted block stays un-split). An unclosed fence is the exception: `pre` animates until the closing fence arrives, then it is skipped again.
 - `<svg>` — vector graphics
 - `<math>` — MathML elements
 - `<annotation>` — MathML annotations
 
 Inline `<code>` (backtick spans) **is** animated — wrapping words in style-inheriting spans is layout-neutral, same as surrounding paragraphs.
 
-This means fenced code blocks, syntax-highlighted code, math equations, and diagrams render without animation spans, while inline code fades in with the prose.
+Completed fenced blocks, syntax-highlighted code, math equations, and diagrams render without animation spans. While a fence is still open, its code fades in with the prose. Inline code always does.
 
 ## Fast-streaming models
 

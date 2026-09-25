@@ -19,6 +19,8 @@ const INLINE_CODE_ANIMATE_RE =
   /<code[^>]*>[\s\S]*data-sd-animate[\s\S]*world[\s\S]*<\/code>/;
 const FENCED_PRE_BARE_RE = /<pre><code>block<\/code><\/pre>/;
 const PRE_ANIMATE_RE = /<pre>[\s\S]*data-sd-animate/;
+const PRE_WITH_ATTRS_ANIMATE_RE = /<pre[^>]*>[\s\S]*data-sd-animate/;
+const SVG_BLOCK_RE = /<svg>[\s\S]*?<\/svg>/;
 
 const INPUT_TAG_RE = /<input[^>]*>/;
 const INPUT_TAG_GLOBAL_RE = /<input[^>]*>/g;
@@ -154,6 +156,58 @@ describe("animate plugin", () => {
       // Fenced block stays a bare text child (no animate spans under pre).
       expect(result).toMatch(FENCED_PRE_BARE_RE);
       expect(result).not.toMatch(PRE_ANIMATE_RE);
+    });
+
+    it("animates pre while a code fence is incomplete", async () => {
+      const plugin = createAnimatePlugin();
+      plugin.setAnimateCodeBlocks(true);
+      const result = await processHtml(
+        "<pre><code>const x = 1</code></pre>",
+        plugin
+      );
+      expect(result).toContain("data-sd-animate");
+      expect(result).toContain("const ");
+      expect(result).toContain(">1<");
+      expect(plugin.getLastRenderCharCount()).toBe("const x = 1".length);
+    });
+
+    it("skips pre again once code block animation is turned off", async () => {
+      const plugin = createAnimatePlugin();
+      plugin.setAnimateCodeBlocks(true);
+      plugin.setAnimateCodeBlocks(false);
+      const result = await processHtml(
+        "<pre><code>const x = 1</code></pre>",
+        plugin
+      );
+      expect(result).not.toContain("data-sd-animate");
+      expect(result).toContain("const x = 1");
+      expect(plugin.getLastRenderCharCount()).toBe(0);
+    });
+
+    it("still skips svg when pre animation is enabled", async () => {
+      const plugin = createAnimatePlugin();
+      plugin.setAnimateCodeBlocks(true);
+      const result = await processHtml(
+        "<svg><text>label</text></svg><pre><code>const x</code></pre>",
+        plugin
+      );
+      const svg = result.match(SVG_BLOCK_RE)?.[0] ?? "";
+      expect(svg).toBe("<svg><text>label</text></svg>");
+      expect(svg).not.toContain("data-sd-animate");
+      expect(result).toMatch(PRE_WITH_ATTRS_ANIMATE_RE);
+    });
+
+    it("does not re-animate pre text that was already committed", async () => {
+      const plugin = createAnimatePlugin();
+      plugin.setAnimateCodeBlocks(true);
+      await processHtml("<pre><code>const x</code></pre>", plugin);
+      plugin.commit();
+      const result = await processHtml(
+        "<pre><code>const x = 1</code></pre>",
+        plugin
+      );
+      expect(result).toContain("--sd-duration:0ms");
+      expect(result).toContain("--sd-duration:150ms");
     });
   });
 

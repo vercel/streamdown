@@ -34,6 +34,42 @@ import { Table } from "./table";
 const START_LINE_PATTERN = /startLine=(\d+)/;
 const NO_LINE_NUMBERS_PATTERN = /\bnoLineNumbers\b/;
 
+const reactNodeToText = (node: ReactNode): string => {
+  if (typeof node === "string" || typeof node === "number") {
+    return String(node);
+  }
+  if (Array.isArray(node)) {
+    return node.map(reactNodeToText).join("");
+  }
+  if (isValidElement(node)) {
+    const childProps = node.props as { children?: ReactNode };
+    return reactNodeToText(childProps.children);
+  }
+  return "";
+};
+
+const hasAnimateDescendant = (node: ReactNode): boolean => {
+  if (Array.isArray(node)) {
+    return node.some(hasAnimateDescendant);
+  }
+  if (!isValidElement(node)) {
+    return false;
+  }
+  const childProps = node.props as {
+    children?: ReactNode;
+    "data-sd-animate"?: unknown;
+  };
+  // hast boolean props can arrive as `true` or `""`; both mean the span is animated.
+  if (
+    "data-sd-animate" in childProps &&
+    childProps["data-sd-animate"] != null &&
+    childProps["data-sd-animate"] !== false
+  ) {
+    return true;
+  }
+  return hasAnimateDescendant(childProps.children);
+};
+
 // Lazy load heavy components
 const Mermaid = lazy(() =>
   import("./mermaid").then((mod) => ({ default: mod.Mermaid }))
@@ -885,19 +921,11 @@ const CodeComponent = ({
     : false;
   const showLineNumbers = !metaNoLineNumbers && contextLineNumbers !== false;
 
-  // Extract code content from children safely
-  let code = "";
-  if (
-    isValidElement(children) &&
-    children.props &&
-    typeof children.props === "object" &&
-    "children" in children.props &&
-    typeof children.props.children === "string"
-  ) {
-    code = children.props.children;
-  } else if (typeof children === "string") {
-    code = children;
-  }
+  // Animate splits an unclosed fence into spans. Walk them so copy,
+  // mermaid, and custom renderers still receive the source string.
+  const code = reactNodeToText(children);
+  const animatedCode =
+    isBlockIncomplete && hasAnimateDescendant(children) ? children : undefined;
 
   if (customRenderer) {
     const CustomComponent = customRenderer.component;
@@ -1004,6 +1032,7 @@ const CodeComponent = ({
 
   return (
     <CodeBlock
+      animatedCode={animatedCode}
       className={className}
       code={code}
       isIncomplete={isBlockIncomplete}
