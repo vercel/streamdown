@@ -97,6 +97,30 @@ describe("incomplete HTML tag stripping", () => {
     expect(remend("$$a<b$$ done <span")).toBe("$$a<b$$ done");
   });
 
+  it("should not strip comparison operators tightly bound to identifiers (#616)", () => {
+    expect(remend("for a<b the rest of this sentence keeps streaming")).toBe(
+      "for a<b the rest of this sentence keeps streaming"
+    );
+    expect(remend("the loop runs while i<n\n\nTAIL")).toBe(
+      "the loop runs while i<n\n\nTAIL"
+    );
+    expect(remend("first line a<b more\nsecond line keeps going here")).toBe(
+      "first line a<b more\nsecond line keeps going here"
+    );
+  });
+
+  it("should not strip type-parameter style generics (#616)", () => {
+    expect(remend("returns Array<string wait more text here")).toBe(
+      "returns Array<string wait more text here"
+    );
+    expect(remend("Map<string, number")).toBe("Map<string, number");
+  });
+
+  it("should still strip a real incomplete tag after a comparison (#616)", () => {
+    expect(remend("score a<b then <div")).toBe("score a<b then");
+    expect(remend("Array<string> ready <span")).toBe("Array<string> ready");
+  });
+
   it("should be disabled when htmlTags option is false", () => {
     expect(remend("Hello <div", { htmlTags: false })).toBe("Hello <div");
   });
