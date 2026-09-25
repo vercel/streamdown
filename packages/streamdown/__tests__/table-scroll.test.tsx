@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import type { ReactNode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StreamdownContext, type StreamdownContextType } from "../index";
 import { CodeBlockBody } from "../lib/code-block/body";
 import { Table } from "../lib/table";
@@ -51,6 +51,16 @@ const mockScrollMetrics = (
     writable: true,
   });
 };
+
+beforeEach(() => {
+  vi.useFakeTimers({
+    toFake: ["requestAnimationFrame", "cancelAnimationFrame"],
+  });
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("resolveMaxHeight", () => {
   it("converts numbers to px and passes strings through", () => {
@@ -178,6 +188,7 @@ describe("Table scroll", () => {
         </Table>
       </StreamdownContext.Provider>
     );
+    vi.advanceTimersToNextFrame();
 
     expect(scrollToSpy).toHaveBeenCalledWith({
       top: expect.any(Number),
@@ -349,10 +360,89 @@ describe("CodeBlockBody scroll", () => {
         <CodeBlockBody language="js" maxHeight={200} result={nextResult} />
       </StreamdownContext.Provider>
     );
+    vi.advanceTimersToNextFrame();
 
     expect(scrollToSpy).toHaveBeenCalledWith({
       top: expect.any(Number),
       behavior: "instant",
     });
+  });
+});
+
+describe("pinned scroll frames", () => {
+  const resultWithLines = (count: number) => ({
+    tokens: Array.from({ length: count }, (_, line) => [
+      { content: `line ${line}`, color: "#000" },
+    ]),
+    bg: "#fff",
+    fg: "#000",
+  });
+
+  const renderStreamingBody = () => {
+    const view = renderWithContext(
+      <CodeBlockBody
+        language="js"
+        maxHeight={200}
+        result={resultWithLines(1)}
+      />,
+      { isAnimating: true }
+    );
+    const body = view.container.querySelector(
+      '[data-streamdown="code-block-body"]'
+    ) as HTMLElement;
+    mockScrollMetrics(body, {
+      scrollHeight: 800,
+      clientHeight: 200,
+      scrollTop: 600,
+    });
+    const scrollToSpy = vi.fn();
+    body.scrollTo = scrollToSpy;
+    const update = (lines: number, isAnimating = true) =>
+      view.rerender(
+        <StreamdownContext.Provider value={{ ...defaultContext, isAnimating }}>
+          <CodeBlockBody
+            language="js"
+            maxHeight={200}
+            result={resultWithLines(lines)}
+          />
+        </StreamdownContext.Provider>
+      );
+    return { body, scrollToSpy, update };
+  };
+
+  it("pins once for several updates within a frame", () => {
+    const { scrollToSpy, update } = renderStreamingBody();
+    update(2);
+    update(3);
+    update(4);
+    expect(scrollToSpy).not.toHaveBeenCalled();
+
+    vi.advanceTimersToNextFrame();
+    expect(scrollToSpy).toHaveBeenCalledTimes(1);
+
+    update(5);
+    vi.advanceTimersToNextFrame();
+    expect(scrollToSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("still pins the last update when the stream ends before the frame", () => {
+    const { scrollToSpy, update } = renderStreamingBody();
+    vi.advanceTimersToNextFrame();
+    scrollToSpy.mockClear();
+
+    update(2);
+    update(2, false);
+    vi.advanceTimersToNextFrame();
+    expect(scrollToSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("skips a pending pin after the user scrolls up", () => {
+    const { body, scrollToSpy, update } = renderStreamingBody();
+    update(2);
+    body.scrollTop = 100;
+    body.dispatchEvent(new Event("scroll"));
+
+    vi.advanceTimersToNextFrame();
+    expect(scrollToSpy).not.toHaveBeenCalled();
   });
 });
