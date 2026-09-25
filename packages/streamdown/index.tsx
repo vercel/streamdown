@@ -24,8 +24,8 @@ import {
   type AnimateOptions,
   type AnimatePlugin,
   type AnimateTimeline,
-  createAnimatePlugin,
   createAnimateTimeline,
+  createRenderAnimatePlugin,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as builtinComponents } from "./lib/components";
@@ -1029,7 +1029,7 @@ export const Streamdown = memo(
               ? (animated as AnimateOptions)
               : ({} as AnimateOptions);
           const { maxBacklogMs: _, ...pluginOpts } = rawOpts;
-          blockAnimatePluginsRef.current[index] = createAnimatePlugin({
+          blockAnimatePluginsRef.current[index] = createRenderAnimatePlugin({
             ...pluginOpts,
             timeline: animateTimelineRef.current,
           });
