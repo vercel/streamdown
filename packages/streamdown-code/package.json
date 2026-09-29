@@ -26,6 +26,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "bench": "vitest bench --run > results.txt",
     "build": "tsup",
     "test": "vitest run",
     "test:coverage": "vitest --coverage run"
