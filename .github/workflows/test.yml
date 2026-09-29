@@ -43,5 +43,9 @@ jobs:
         working-directory: .github/workflows/actions/verify-changesets
         run: node --test test.js
 
+      - name: Run verify-signed-commits Action Tests
+        working-directory: .github/workflows/actions/verify-signed-commits
+        run: node --test test.js
+
       - name: Check Linting and Formatting
         run: pnpm check
