@@ -138,6 +138,13 @@ export interface AnimatePlugin {
   name: "animate";
   rehypePlugin: Pluggable;
   /**
+   * When true, text inside `pre` is animated. Block sets this while a code
+   * fence is unclosed. Inline `code` is always animated (#594) and is not
+   * affected. Pass false once the fence closes so highlighted blocks stay
+   * un-split.
+   */
+  setAnimateCodeBlocks: (enabled: boolean) => void;
+  /**
    * Manually set how many HAST characters count as already-rendered.
    * Prefer `commit()` in React; this is for tests / custom hosts.
    */
@@ -176,10 +183,22 @@ const isElement = (node: unknown): node is Element =>
   "type" in node &&
   (node as Element).type === "element";
 
-const hasSkipAncestor = (ancestors: Node[]): boolean =>
-  ancestors.some(
-    (ancestor) => isElement(ancestor) && SKIP_TAGS.has(ancestor.tagName)
-  );
+// `pre` is skipped once a fence is closed (highlighted blocks must stay
+// un-split). While the fence is open, Block opts in and only the other
+// layout-sensitive tags are skipped. Inline `code` is never in this set (#594).
+const hasSkipAncestor = (
+  ancestors: Node[],
+  animateCodeBlocks: boolean
+): boolean =>
+  ancestors.some((ancestor) => {
+    if (!isElement(ancestor)) {
+      return false;
+    }
+    if (animateCodeBlocks && ancestor.tagName === "pre") {
+      return false;
+    }
+    return SKIP_TAGS.has(ancestor.tagName);
+  });
 
 const findLiAncestor = (ancestors: Node[]): Element | undefined => {
   for (let i = ancestors.length - 1; i >= 0; i--) {
@@ -280,7 +299,7 @@ const processVoidElement = (
   charCounter: { count: number; newIndex: number },
   schedule: Schedule
 ): void => {
-  if (hasSkipAncestor(ancestors)) {
+  if (hasSkipAncestor(ancestors, renderState.animateCodeBlocks)) {
     return;
   }
   const prevLen = renderState.prevContentLength;
@@ -415,6 +434,8 @@ interface AnimateConfig {
 }
 
 interface AnimateRenderState {
+  /** Unclosed fence: animate `pre` instead of skipping it. */
+  animateCodeBlocks: boolean;
   committedCharCount: number;
   lastRenderCharCount: number;
   /**
@@ -444,7 +465,8 @@ const isVoidAnimateElement = (node: Node): node is Element =>
 const countNewWords = (
   tree: Root,
   config: AnimateConfig,
-  prevLen: number
+  prevLen: number,
+  animateCodeBlocks: boolean
 ): number => {
   let newWords = 0;
   let charPos = 0;
@@ -452,7 +474,7 @@ const countNewWords = (
     tree,
     (node: Node) => node.type === "text" || isVoidAnimateElement(node),
     (node: Node, ancestors) => {
-      if (hasSkipAncestor(ancestors)) {
+      if (hasSkipAncestor(ancestors, animateCodeBlocks)) {
         return SKIP;
       }
       if (isVoidAnimateElement(node)) {
@@ -498,7 +520,7 @@ const processTextNode = (
     return;
   }
 
-  if (hasSkipAncestor(ancestors)) {
+  if (hasSkipAncestor(ancestors, renderState.animateCodeBlocks)) {
     return SKIP;
   }
 
@@ -581,6 +603,7 @@ export function createAnimatePlugin(
   };
 
   const renderState: AnimateRenderState = {
+    animateCodeBlocks: false,
     committedCharCount: 0,
     prevContentLength: 0,
     lastRenderCharCount: 0,
@@ -609,7 +632,12 @@ export function createAnimatePlugin(
 
     const schedule: Schedule = timeline
       ? timeline.take(
-          countNewWords(tree, config, renderState.prevContentLength),
+          countNewWords(
+            tree,
+            config,
+            renderState.prevContentLength,
+            renderState.animateCodeBlocks
+          ),
           config.stagger,
           now
         )
@@ -651,6 +679,9 @@ export function createAnimatePlugin(
     name: "animate",
     type: "animate",
     rehypePlugin: rehypeAnimate,
+    setAnimateCodeBlocks(enabled: boolean) {
+      renderState.animateCodeBlocks = enabled;
+    },
     setPrevContentLength(length: number) {
       renderState.committedCharCount = length;
       renderState.prevContentLength = length;

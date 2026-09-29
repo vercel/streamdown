@@ -233,6 +233,47 @@ describe("incomplete code block detection", () => {
     expect(codeBlock?.getAttribute("data-incomplete")).toBe("true");
   });
 
+  it("animates an unclosed fence and highlights it once the fence closes", async () => {
+    const markdown = "```javascript\nconst x = 1;";
+    const { container, rerender } = render(
+      <Streamdown animated isAnimating>
+        {markdown}
+      </Streamdown>
+    );
+
+    await waitFor(() => {
+      const codeBlock = container.querySelector(
+        '[data-streamdown="code-block"]'
+      );
+      expect(codeBlock).not.toBeNull();
+      expect(codeBlock?.querySelector("[data-sd-animate]")).not.toBeNull();
+    });
+
+    const streamingBlock = container.querySelector(
+      '[data-streamdown="code-block"]'
+    );
+    expect(streamingBlock?.getAttribute("data-incomplete")).toBe("true");
+    expect(streamingBlock?.textContent).toContain("const x = 1;");
+
+    rerender(
+      <Streamdown animated isAnimating>
+        {"```javascript\nconst x = 1;\n```"}
+      </Streamdown>
+    );
+
+    await waitFor(() => {
+      const codeBlock = container.querySelector(
+        '[data-streamdown="code-block"]'
+      );
+      expect(codeBlock?.getAttribute("data-incomplete")).toBeNull();
+      expect(codeBlock?.querySelector("[data-sd-animate]")).toBeNull();
+    });
+
+    expect(
+      container.querySelector('[data-streamdown="code-block"]')?.textContent
+    ).toContain("const x = 1;");
+  });
+
   it("should not mark code block as incomplete when fence is closed", async () => {
     const { container } = render(
       <Streamdown isAnimating={true}>
