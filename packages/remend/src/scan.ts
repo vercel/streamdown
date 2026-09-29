@@ -428,6 +428,13 @@ export const getScan = (text: string): TextScan => {
   return scan;
 };
 
+// Drops the memoized scan so a long streamed message and its region array
+// are not retained between remend() calls
+export const clearScanCache = (): void => {
+  cachedText = null;
+  cachedScan = null;
+};
+
 /** A code construct here means a fence or inline span. */
 export const isCodeAt = (scan: TextScan, position: number): boolean => {
   if (position >= scan.regions.length) {
