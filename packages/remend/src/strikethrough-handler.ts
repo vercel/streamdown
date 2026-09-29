@@ -3,15 +3,21 @@ import {
   isWithinCompleteInlineCode,
 } from "./code-block-utils";
 import {
-  doubleTildeGlobalPattern,
   halfCompleteTildePattern,
+  matchTrailing,
   strikethroughPattern,
   whitespaceOrMarkersPattern,
 } from "./patterns";
+import { countDoublePairs } from "./scan";
+
+// Tilde runs that open or close a fence are painted as fence regions by the
+// scanner, so a line-start ~~~ fence never counts as strikethrough while a
+// mid-line tilde run still does.
+const countDoubleTildes = (text: string): number => countDoublePairs(text, "~");
 
 // Completes incomplete strikethrough formatting (~~)
 export const handleIncompleteStrikethrough = (text: string): string => {
-  const strikethroughMatch = text.match(strikethroughPattern);
+  const strikethroughMatch = matchTrailing(text, strikethroughPattern);
 
   if (strikethroughMatch) {
     // Don't close if there's no meaningful content after the opening markers
@@ -34,15 +40,13 @@ export const handleIncompleteStrikethrough = (text: string): string => {
       return text;
     }
 
-    // doubleTildeGlobalPattern always matches when strikethroughPattern matched
-    const tildePairs = text.match(doubleTildeGlobalPattern)?.length;
-    if (tildePairs % 2 === 1) {
+    if (countDoubleTildes(text) % 2 === 1) {
       return `${text}~~`;
     }
   } else {
     // Check for half-complete closing marker: ~~content~ should become ~~content~~
     // The pattern /(~~)([^~]*?)$/ won't match ~~content~ because it ends with ~
-    const halfCompleteMatch = text.match(halfCompleteTildePattern);
+    const halfCompleteMatch = matchTrailing(text, halfCompleteTildePattern);
     if (halfCompleteMatch) {
       // Don't close if the marker is inside an inline code span or fenced code block
       const markerIndex = text.lastIndexOf(halfCompleteMatch[0].slice(0, 2));
@@ -52,9 +56,7 @@ export const handleIncompleteStrikethrough = (text: string): string => {
       ) {
         return text;
       }
-      // doubleTildeGlobalPattern always matches when halfCompleteTildePattern matched
-      const tildePairs = text.match(doubleTildeGlobalPattern)?.length;
-      if (tildePairs % 2 === 1) {
+      if (countDoubleTildes(text) % 2 === 1) {
         return `${text}~`;
       }
     }
