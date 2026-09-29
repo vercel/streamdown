@@ -123,8 +123,9 @@ describe("multiple incomplete links", () => {
   });
 
   it("should handle two incomplete links in text-only mode", () => {
+    // Fixed-point healing resolves both unmatched brackets in one call
     const result = remend("[link1 and [link2", { linkMode: "text-only" });
-    expect(result).toBe("link1 and [link2");
+    expect(result).toBe("link1 and link2");
   });
 });
 
