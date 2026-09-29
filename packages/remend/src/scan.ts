@@ -327,6 +327,29 @@ const isParagraphBreakAt = (text: string, newlineIndex: number): boolean => {
   return j < text.length && text[j] === "\n";
 };
 
+// Outside a span only a backtick changes anything, so jump to the next prose
+// backtick that could open one, applying the escape the scan would have seen
+// on the character before it. Returns -1 when none remains.
+const nextSpanOpener = (
+  text: string,
+  regions: Uint8Array,
+  from: number
+): number => {
+  let i = from;
+  for (;;) {
+    const next = text.indexOf("`", i);
+    if (next === -1) {
+      return -1;
+    }
+    const escaped =
+      next > i && text[next - 1] === "\\" && regions[next - 1] === REGION.PROSE;
+    if (regions[next] === REGION.PROSE && !escaped) {
+      return next;
+    }
+    i = next + 1;
+  }
+};
+
 const paintSpans = (text: string, regions: Uint8Array): OpenSpan | null => {
   const n = text.length;
   let spanStart = -1;
@@ -334,41 +357,30 @@ const paintSpans = (text: string, regions: Uint8Array): OpenSpan | null => {
   let i = 0;
 
   while (i < n) {
-    // Outside a span only a backtick changes anything, so jump to the next one
-    // and apply the escape the loop would have seen on the character before it
     if (spanStart < 0) {
-      const next = text.indexOf("`", i);
-      if (next === -1) {
+      i = nextSpanOpener(text, regions, i);
+      if (i === -1) {
         break;
       }
-      if (
-        regions[next] !== REGION.PROSE ||
-        (next > i &&
-          text[next - 1] === "\\" &&
-          regions[next - 1] === REGION.PROSE)
-      ) {
-        i = next + 1;
-        continue;
-      }
-      i = next;
-    }
-    if (regions[i] !== REGION.PROSE) {
-      // A span cannot cross into a fence, so leave it marked open up to here
-      if (spanStart >= 0) {
-        regions.fill(REGION.CODE_SPAN_OPEN, spanStart, i);
-        spanStart = -1;
-      }
-      i += 1;
+      const openerEnd = measureBacktickRun(text, i);
+      spanStart = i;
+      spanRunLength = openerEnd - i;
+      i = openerEnd;
       continue;
     }
-    if (text[i] === "\n" && spanStart >= 0 && isParagraphBreakAt(text, i)) {
-      // The unmatched opener stays literal prose in its finished paragraph
+
+    // Inside a span from here on. Backslashes are literal in code.
+    if (regions[i] !== REGION.PROSE) {
+      // A span cannot cross into a fence, so leave it marked open up to here
+      regions.fill(REGION.CODE_SPAN_OPEN, spanStart, i);
       spanStart = -1;
       i += 1;
       continue;
     }
-    if (text[i] === "\\" && text[i + 1] === "`" && spanStart < 0) {
-      i += 2;
+    if (text[i] === "\n" && isParagraphBreakAt(text, i)) {
+      // The unmatched opener stays literal prose in its finished paragraph
+      spanStart = -1;
+      i += 1;
       continue;
     }
     if (text[i] !== "`") {
@@ -377,15 +389,11 @@ const paintSpans = (text: string, regions: Uint8Array): OpenSpan | null => {
     }
 
     const runEnd = measureBacktickRun(text, i);
-    const runLength = runEnd - i;
-    if (spanStart < 0) {
-      spanStart = i;
-      spanRunLength = runLength;
-    } else if (runLength === spanRunLength) {
+    // A run of a different length is literal inside the open span
+    if (runEnd - i === spanRunLength) {
       regions.fill(REGION.CODE_SPAN, spanStart, runEnd);
       spanStart = -1;
     }
-    // A run of a different length is literal inside the open span
     i = runEnd;
   }
 
