@@ -25,11 +25,11 @@ export interface StreamdownTranslations {
   downloadTable: string;
   downloadTableAsCsv: string;
   downloadTableAsMarkdown: string;
+  errorMermaid: string;
   exitFullscreen: string;
   externalLinkWarning: string;
   imageNotAvailable: string;
   mermaidAriaLabel: string;
-  errorMermaid: string;
   mermaidFormatMmd: string;
   mermaidFormatPng: string;
   mermaidFormatSvg: string;
