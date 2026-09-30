@@ -1,5 +1,34 @@
 # remend
 
+## 1.4.0
+
+### Minor Changes
+
+- fdd1351: Rework code-region detection and double-underscore counting.
+
+  A shared single-pass scanner now classifies fences and inline code spans, replacing the per-character rescans that made healing quadratic on delimiter-heavy input. Fence and span detection follows CommonMark, so `~~~` fences, fences inside block quotes and list items, CRLF line endings, and multi-backtick spans are all recognized, and content inside code is never healed as prose.
+
+  Double underscores are counted per maximal run with flanking rules, so identifiers containing `__` (like `snake__case`) no longer invent or swallow emphasis closers.
+
+  Healing is now idempotent. Healed output re-heals to itself, and text-only link mode resolves every unmatched bracket in one call.
+
+### Patch Changes
+
+- cf0ac1c: Stop the incomplete-HTML-tag handler from truncating math expressions.
+
+  `handleIncompleteHtmlTag` guarded against code blocks but not math, so an ordinary
+  comparison inside math — `$$ I = \sum_{j<k} p_j $$` — matched the incomplete-tag
+  pattern and deleted everything from the `<` to the end of the string. The trailing
+  `$$` was then auto-closed by the katex handler, so KaTeX rendered a parse error and
+  the rest of the message never reached the DOM.
+
+  The handler now skips candidates inside math blocks (`$`, `$$`, `\(`, `\[`), matching
+  the guard the emphasis handlers already had. Because the pattern is leftmost-matching,
+  it also walks forward to later candidates instead of bailing out, so a genuine
+  incomplete tag after a math expression is still stripped.
+
+- e0ce123: Incomplete images during streaming now render a loading placeholder instead of being removed entirely. Incomplete images (e.g. `![alt](https://exampl`) are replaced with `![alt](streamdown:incomplete-image)` by remend, and the streamdown `ImageComponent` renders an animated skeleton for this special URL. This mirrors the existing behavior for incomplete links (`streamdown:incomplete-link`). The `streamdown` protocol is allowlisted for `img[src]` in the default sanitize schema so the sentinel survives rehype-sanitize + rehype-harden.
+
 ## 1.3.1
 
 ### Patch Changes
