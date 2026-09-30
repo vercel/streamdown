@@ -1,6 +1,6 @@
 {
   "name": "@streamdown/code",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "description": "Shiki syntax highlighting plugin for Streamdown",
   "repository": {
     "type": "git",
