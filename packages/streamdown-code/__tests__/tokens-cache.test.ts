@@ -133,20 +133,79 @@ describe("tokens cache", () => {
     expect(isCached(finished).hit).toBe(true);
   });
 
-  it("evicts the least recently used block past the limit", async () => {
-    // Fill the 200 entry cache with blocks only this test uses
-    const language = "plaintext-lru";
-    const codes = Array.from({ length: 200 }, (_, i) => `lru ${i}`);
+  it("keeps every block of a chat with more than 200 blocks", async () => {
+    // Switching back to a chat requests its blocks again, top to bottom
+    const codes = Array.from({ length: 300 }, (_, i) => block(`chat-${i}`, 3));
+    for (const code of codes) {
+      await highlight(code);
+    }
+
+    const before = tokenizeCalls;
+    const hits = codes.filter((code) => isCached(code).hit).length;
+    expect(hits).toBe(codes.length);
+    expect(tokenizeCalls).toBe(before);
+  });
+
+  it("evicts the least recently used blocks past the budget", async () => {
+    // Plain text has one token per line, so each line costs two, plus one per
+    // 64 characters of the block; ten blocks of 12,500 lines fit in the
+    // budget, eleven do not
+    const language = "text";
+    const lines = (name: string, count: number) =>
+      Array.from({ length: count }, (_, i) => `${name} ${i}`).join("\n");
+    const codes = Array.from({ length: 10 }, (_, i) =>
+      lines(`budget ${i}`, 12_500)
+    );
     for (const code of codes) {
       await highlight(code, false, language);
     }
     // Using the oldest one makes the second one the least recently used
     expect(isCached(codes[0], false, language).hit).toBe(true);
-    await highlight("lru new", false, language);
+    const added = lines("budget new", 12_500);
+    await highlight(added, false, language);
 
+    expect(isCached(added, false, language).hit).toBe(true);
     expect(isCached(codes[0], false, language).hit).toBe(true);
+    for (const code of codes.slice(2)) {
+      expect(isCached(code, false, language).hit).toBe(true);
+    }
+    // Checked last: a miss starts highlighting it again in the background
     expect(isCached(codes[1], false, language).hit).toBe(false);
-    expect(isCached("lru new", false, language).hit).toBe(true);
+  });
+
+  it("evicts the least recently used block past 5,000 results", async () => {
+    const language = "text";
+    const codes = Array.from({ length: 5000 }, (_, i) => `result ${i}`);
+    for (const code of codes) {
+      await highlight(code, false, language);
+    }
+    expect(isCached(codes[0], false, language).hit).toBe(true);
+    await highlight("result new", false, language);
+
+    expect(isCached("result new", false, language).hit).toBe(true);
+    expect(isCached(codes[0], false, language).hit).toBe(true);
+    expect(isCached(codes[2], false, language).hit).toBe(true);
+    // Checked last: a miss starts highlighting it again in the background
+    expect(isCached(codes[1], false, language).hit).toBe(false);
+  });
+
+  it.each([
+    [
+      "many tokens",
+      "text",
+      Array.from({ length: 160_000 }, (_, i) => `token ${i}`).join("\n"),
+    ],
+    ["blank lines", "typescript", `// blank\n${"\n".repeat(310_000)}`],
+    ["one long line", "text", "long ".padEnd(19_300_000, "x")],
+  ])("keeps a block over the budget until the next result (%s)", async (_, language, oversized) => {
+    await highlight(oversized, false, language);
+    expect(isCached(oversized, false, language).hit).toBe(true);
+
+    const next = `after ${oversized.length}`;
+    await highlight(next, false, language);
+    expect(isCached(next, false, language).hit).toBe(true);
+    // Checked last: a miss starts highlighting it again in the background
+    expect(isCached(oversized, false, language).hit).toBe(false);
   });
 
   it("caches unknown languages as plain text", async () => {

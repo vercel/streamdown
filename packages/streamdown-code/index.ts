@@ -111,23 +111,60 @@ const highlighterCache = new Map<
 // Results of finished code blocks, least recently used first. Results of
 // streaming blocks are not cached: each is superseded by the next update, and
 // the incremental tokenizer below keeps re-highlighting them cheap.
-const MAX_CACHED_RESULTS = 200;
-const tokensCache = new Map<string, TokensResult>();
+// The budget follows what a result keeps in memory: its tokens, its lines
+// (blank lines have no tokens) and its code, which long single-token lines
+// are mostly made of. Each token, each line and every 64 characters costs
+// one. The result limit bounds the entries of tiny blocks. The most recent
+// result is always kept, even when it alone is over the budget.
+const MAX_CACHED_COST = 300_000;
+const MAX_CACHED_RESULTS = 5000;
+const CHARACTERS_PER_COST = 64;
+
+interface CachedTokens {
+  cost: number;
+  result: TokensResult;
+}
+
+const tokensCache = new Map<string, CachedTokens>();
+let cachedCost = 0;
+
+// The key holds the code, so its length stands for the code's
+const getCost = (key: string, result: TokensResult): number => {
+  let cost = result.tokens.length + Math.ceil(key.length / CHARACTERS_PER_COST);
+  for (const row of result.tokens) {
+    cost += row.length;
+  }
+  return cost;
+};
 
 const getCachedTokens = (key: string): TokensResult | undefined => {
-  const result = tokensCache.get(key);
-  if (result) {
+  const entry = tokensCache.get(key);
+  if (entry) {
     // Move to the end so it is evicted last
     tokensCache.delete(key);
-    tokensCache.set(key, result);
+    tokensCache.set(key, entry);
   }
-  return result;
+  return entry?.result;
+};
+
+const removeCachedTokens = (key: string): void => {
+  const entry = tokensCache.get(key);
+  if (entry) {
+    tokensCache.delete(key);
+    cachedCost -= entry.cost;
+  }
 };
 
 const setCachedTokens = (key: string, result: TokensResult): void => {
-  tokensCache.set(key, result);
-  if (tokensCache.size > MAX_CACHED_RESULTS) {
-    tokensCache.delete(tokensCache.keys().next().value as string);
+  removeCachedTokens(key);
+  const cost = getCost(key, result);
+  tokensCache.set(key, { cost, result });
+  cachedCost += cost;
+  while (
+    (cachedCost > MAX_CACHED_COST || tokensCache.size > MAX_CACHED_RESULTS) &&
+    tokensCache.size > 1
+  ) {
+    removeCachedTokens(tokensCache.keys().next().value as string);
   }
 };
 
