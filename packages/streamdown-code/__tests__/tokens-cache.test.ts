@@ -1,7 +1,9 @@
 import type { BundledLanguage } from "shiki";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createCodePlugin, type HighlightResult } from "../index";
 
+// Count tokenizations so the tests can tell a cache hit from a miss
+let tokenizeCalls = 0;
 // Lets a test make the next tokenization fail
 let failNextTokenize = false;
 
@@ -19,6 +21,7 @@ vi.mock("shiki", async (importOriginal) => {
           failNextTokenize = false;
           throw new Error("tokenize failed");
         }
+        tokenizeCalls++;
         return codeToTokens(code, options);
       };
       return highlighter;
@@ -28,242 +31,189 @@ vi.mock("shiki", async (importOriginal) => {
 
 const THEMES: ["github-light", "github-dark"] = ["github-light", "github-dark"];
 
-// The cache is module level, so each test uses code no other test uses.
+// The cache is module level, so each test uses code no other test uses
 const plugin = createCodePlugin({ themes: THEMES });
 
-const request = (code: string, language = "typescript") => ({
+const request = (
+  code: string,
+  isIncomplete = false,
+  language = "typescript"
+) => ({
   code,
+  isIncomplete,
   language: language as BundledLanguage,
   themes: THEMES,
 });
 
-const highlight = (code: string, language?: string) =>
+const highlight = (code: string, isIncomplete = false, language?: string) =>
   new Promise<HighlightResult>((resolve) => {
-    const cached = plugin.highlight(request(code, language), resolve);
+    const cached = plugin.highlight(
+      request(code, isIncomplete, language),
+      resolve
+    );
     if (cached) {
       resolve(cached);
     }
   });
 
-// Note: a miss also starts highlighting that code in the background
-const cachedResult = (code: string, language?: string) =>
-  plugin.highlight(request(code, language));
+/** Whether `code` is cached, without starting a background highlight */
+const isCached = (code: string, isIncomplete = false, language?: string) => {
+  const before = tokenizeCalls;
+  const hit = plugin.highlight(request(code, isIncomplete, language)) !== null;
+  return { hit, tokenized: () => tokenizeCalls > before };
+};
 
 const text = (result: HighlightResult) =>
   result.tokens
     .map((row) => row.map((token) => token.content).join(""))
     .join("\n");
 
-// A block of `lines` distinct lines, well over 200 characters
 const block = (name: string, lines = 12) =>
   Array.from(
     { length: lines },
     (_, i) => `const ${name}_${i} = compute("${name}", ${i}); // line ${i}`
   ).join("\n");
 
-// The same code with one character in the middle changed
-const variant = (code: string) => {
-  const middle = Math.floor(code.length / 2);
-  return `${code.slice(0, middle)}X${code.slice(middle + 1)}`;
-};
-
-// Streams `full` in steps of `size` characters, waiting for each result
-const stream = async (full: string, size: number, language?: string) => {
-  const steps: string[] = [];
-  for (let end = size; end < full.length; end += size) {
-    steps.push(full.slice(0, end));
-  }
-  steps.push(full);
-  for (const step of steps) {
-    await highlight(step, language);
-  }
-  return steps;
-};
-
-// Requests enough unrelated blocks that earlier blocks are no longer
-// tracked as streaming, so their replaced results are gone
-const flushReplaced = async (name: string) => {
-  for (let i = 0; i < 5; i++) {
-    await highlight(block(`${name}-${i}`, 2));
-  }
-};
-// Let highlighting started by a miss finish before the next test
-afterEach(async () => {
-  await new Promise((resolve) => setTimeout(resolve, 0));
-});
-
 describe("tokens cache", () => {
-  it("returns the result of the code it was asked for", async () => {
-    const first = block("exact");
-    const second = variant(first);
+  it("never returns the tokens of code that differs only in the middle", async () => {
+    const first = block("middle");
+    const middle = Math.floor(first.length / 2);
+    const second = `${first.slice(0, middle)}X${first.slice(middle + 1)}`;
 
     expect(text(await highlight(first))).toBe(first);
     expect(text(await highlight(second))).toBe(second);
-    const cached = cachedResult(first);
-    expect(cached === null || text(cached) === first).toBe(true);
-    expect(text(cachedResult(second) as HighlightResult)).toBe(second);
   });
 
-  it("gives each pending request the result of its own code", async () => {
-    const first = block("pending");
-    const second = variant(first);
-
-    const [a, b] = await Promise.all([highlight(first), highlight(second)]);
-    expect(text(a)).toBe(first);
-    expect(text(b)).toBe(second);
+  it("calls every callback, including for the same pending code", async () => {
+    const code = block("pending");
+    const [a, b] = await Promise.all([highlight(code), highlight(code)]);
+    expect(text(a)).toBe(code);
+    expect(b).toBe(a);
   });
 
-  it("keeps the final result of a streamed block but not every step", async () => {
+  it("does not tokenize twice for requests that were pending together", async () => {
+    const code = block("pending-once");
+    const before = tokenizeCalls;
+    await Promise.all([highlight(code), highlight(code), highlight(code)]);
+    const once = tokenizeCalls - before;
+
+    const other = block("pending-once-other");
+    const beforeOther = tokenizeCalls;
+    await highlight(other);
+    expect(once).toBe(tokenizeCalls - beforeOther);
+  });
+
+  it("does not cache results of a streaming block", async () => {
     const full = block("streamed", 30);
-    const steps = await stream(full, 7);
-
-    expect(text(cachedResult(full) as HighlightResult)).toBe(full);
-    // Only the last few replaced steps are kept, in case the stream steps back
-    for (const step of steps.slice(0, -6)) {
-      expect(cachedResult(step)).toBeNull();
+    for (let end = 20; end < full.length; end += 20) {
+      const step = full.slice(0, end);
+      expect(text(await highlight(step, true))).toBe(step);
+      expect(isCached(step, true).hit).toBe(false);
     }
   });
 
-  it("keeps only the final results of blocks that stream at the same time", async () => {
-    const first = block("together-a", 10);
-    const second = block("together-b", 10);
-    const steps: [string, string][] = [];
-    for (let end = 9; end < first.length + 9; end += 9) {
-      steps.push([first.slice(0, end), second.slice(0, end)]);
-    }
-    // Both blocks request each update in the same render, as effects do
-    for (const [a, b] of steps) {
-      await Promise.all([highlight(a), highlight(b)]);
-    }
+  it("caches a block once it completes", async () => {
+    const full = block("completed");
+    await highlight(full.slice(0, 50), true);
+    await highlight(full);
 
-    expect(text(cachedResult(first) as HighlightResult)).toBe(first);
-    expect(text(cachedResult(second) as HighlightResult)).toBe(second);
-    // Each block keeps its last few replaced results
-    for (const [a, b] of steps.slice(0, -5)) {
-      expect(cachedResult(a)).toBeNull();
-      expect(cachedResult(b)).toBeNull();
-    }
+    const { hit, tokenized } = isCached(full);
+    expect(hit).toBe(true);
+    expect(tokenized()).toBe(false);
   });
 
-  it("keeps the result when the closing fence arrives in pieces", async () => {
-    const full = block("fenced", 8);
-    await stream(full, 9);
-    // The fence text is part of the code until the fence is complete
-    await highlight(`${full}\n\``);
-    await highlight(`${full}\n\`\``);
+  it("keeps finished blocks after other blocks stream", async () => {
+    const finished = block("finished");
+    await highlight(finished);
+    const streaming = block("busy", 40);
+    for (let end = 10; end < streaming.length; end += 10) {
+      await highlight(streaming.slice(0, end), true);
+    }
 
-    expect(text(cachedResult(full) as HighlightResult)).toBe(full);
-    // The fence text it stepped back from is not kept
-    await flushReplaced("flush-fenced");
-    expect(cachedResult(`${full}\n\`\``)).toBeNull();
+    expect(isCached(finished).hit).toBe(true);
+  });
+
+  it("evicts the least recently used block past the limit", async () => {
+    // Fill the 200 entry cache with blocks only this test uses
+    const language = "plaintext-lru";
+    const codes = Array.from({ length: 200 }, (_, i) => `lru ${i}`);
+    for (const code of codes) {
+      await highlight(code, false, language);
+    }
+    // Using the oldest one makes the second one the least recently used
+    expect(isCached(codes[0], false, language).hit).toBe(true);
+    await highlight("lru new", false, language);
+
+    expect(isCached(codes[0], false, language).hit).toBe(true);
+    expect(isCached(codes[1], false, language).hit).toBe(false);
+    expect(isCached("lru new", false, language).hit).toBe(true);
+  });
+
+  it("caches unknown languages as plain text", async () => {
+    const code = block("unknown");
+    await highlight(code, false, "not-a-language-1");
+
+    expect(isCached(code, false, "not-a-language-2").hit).toBe(true);
+  });
+
+  it("keeps a finished block when a later block repeats and extends it", async () => {
+    const first = block("repeated");
+    await highlight(first);
+    const extended = `${first}\nconst added = true;`;
+    for (let end = first.length; end < extended.length; end += 5) {
+      await highlight(extended.slice(0, end), true);
+    }
+    await highlight(extended);
+
+    expect(isCached(first).hit).toBe(true);
+    expect(isCached(extended).hit).toBe(true);
   });
 
   it("keeps the results of blocks whose fences close together", async () => {
     const fulls = ["a", "b", "c", "d"].map((name) =>
       block(`closing-${name}`, 6)
     );
-    const run = (codes: string[]) =>
-      Promise.all(codes.map((c) => highlight(c)));
+    const run = (codes: string[], isIncomplete: boolean) =>
+      Promise.all(codes.map((c) => highlight(c, isIncomplete)));
     for (let end = 9; end < fulls[0].length; end += 9) {
-      await run(fulls.map((full) => full.slice(0, end)));
+      await run(
+        fulls.map((full) => full.slice(0, end)),
+        true
+      );
     }
-    await run(fulls);
-    await run(fulls.map((full) => `${full}\n\``));
-    await run(fulls.map((full) => `${full}\n\`\``));
+    await run(
+      fulls.map((full) => `${full}\n\``),
+      true
+    );
+    await run(fulls, false);
 
     for (const full of fulls) {
-      expect(text(cachedResult(full) as HighlightResult)).toBe(full);
+      expect(isCached(full).hit).toBe(true);
     }
   });
 
-  it("keeps a finished block when a later block repeats and extends it", async () => {
-    const first = block("repeated");
-    await highlight(first);
-    await stream(`${first}\nconst added = true;`, 9);
-    await flushReplaced("flush-repeated");
-
-    expect(text(cachedResult(first) as HighlightResult)).toBe(first);
-  });
-
-  it("keeps a streamed block when a later streamed block repeats and extends it", async () => {
-    // The later block passes through the same steps as the first one
-    const first = block("replayed");
-    await stream(first, 9);
-    await stream(`${first}\nconst added = true;`, 9);
-    await flushReplaced("flush-replayed");
-
-    expect(text(cachedResult(first) as HighlightResult)).toBe(first);
-  });
-
-  it("keeps a block that a later block repeats and extends in one request", async () => {
-    // As when a chat history loads: each block is requested once
-    const first = block("history");
-    await highlight(first);
-    await highlight(`${first}\nconst added = true;`);
-    await flushReplaced("flush-history");
-
-    expect(text(cachedResult(first) as HighlightResult)).toBe(first);
-  });
-
-  it("shows the last requested code when requests finish together", async () => {
+  it("calls each callback with its own code when requests finish together", async () => {
     // The highlighter for this language is not loaded yet, so all requests
     // of the closing fence are pending at once, as in a first render
     const code = "gem install streamdown";
-    let shown: HighlightResult | undefined;
-    const show = (result: HighlightResult) => {
-      shown = result;
-    };
-    for (const step of [code, `${code}\n\``, `${code}\n\`\``, code]) {
-      plugin.highlight(request(step, "ruby"), show);
-    }
-    await vi.waitFor(() => expect(shown).toBeDefined());
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(text(shown as HighlightResult)).toBe(code);
-  });
-
-  it("keeps a result that the next request does not extend", async () => {
-    const first = block("kept");
-    const other = block("other");
-    await highlight(first);
-    await highlight(other);
-    await flushReplaced("flush-kept");
-
-    expect(text(cachedResult(first) as HighlightResult)).toBe(first);
-    expect(text(cachedResult(other) as HighlightResult)).toBe(other);
-  });
-
-  it("keeps a result when the last line changes instead of growing", async () => {
-    const first = "const a = 1;\nconst foo";
-    await highlight(first);
-    await highlight("const a = 1;\nconst bar = 2");
-    await flushReplaced("flush-edited");
-
-    expect(text(cachedResult(first) as HighlightResult)).toBe(first);
-  });
-
-  it("drops the oldest results past the cache size limit", async () => {
-    // Plain text keeps the tokenization cheap; 11 codes of 200,000 characters
-    // go past the 2,000,000 character limit by one
-    const language = "plaintext-limit";
-    const codes = Array.from({ length: 11 }, (_, i) =>
-      `${i}`.padEnd(200_000, `line ${i}\n`)
+    const shown: string[] = [];
+    const steps = [code, `${code}\n\``, `${code}\n\`\``, code];
+    await Promise.all(
+      steps.map(
+        (step, i) =>
+          new Promise<void>((resolve) => {
+            plugin.highlight(
+              request(step, i < steps.length - 1, "ruby"),
+              (result) => {
+                shown.push(text(result));
+                resolve();
+              }
+            );
+          })
+      )
     );
-    for (const code of codes) {
-      await highlight(code, language);
-    }
 
-    for (const code of codes.slice(1)) {
-      expect(cachedResult(code, language)).not.toBeNull();
-    }
-    expect(cachedResult(codes[0], language)).toBeNull();
-  });
-
-  it("caches unknown languages as plain text", async () => {
-    const code = block("unknown");
-    await highlight(code, "not-a-language-1");
-
-    expect(cachedResult(code, "not-a-language-2")).not.toBeNull();
+    expect(shown).toEqual(steps);
   });
 
   it("does not cache or notify a failed highlight", async () => {
@@ -280,7 +230,8 @@ describe("tokens cache", () => {
     await vi.waitFor(() => expect(errors).toHaveBeenCalled());
     errors.mockRestore();
 
-    // A later request for the same code calls only its own callback
+    // A later request for the same code tokenizes again and calls only its
+    // own callback
     expect(text(await highlight(code))).toBe(code);
     expect(callback).not.toHaveBeenCalled();
   });

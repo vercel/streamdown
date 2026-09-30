@@ -1,5 +1,6 @@
 ---
 "@streamdown/code": patch
+"streamdown": patch
 ---
 
-Bound the highlight result cache. While a code block streams, each result now replaces the previous one instead of staying in memory for the life of the page, and past 2,000,000 characters of cached code the oldest results are dropped. A block also always ends on the tokens of its latest code when several of its requests finish together.
+Bound the code highlight cache. Results of streaming code blocks are no longer cached (each is superseded by the next update), and finished code blocks are kept in a least-recently-used cache of up to 200 results. Lookups compare the full code, so blocks that differ only in the middle no longer share tokens. A code block also ignores highlight results for code it has already moved past.
