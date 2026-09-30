@@ -7,6 +7,7 @@ import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
 import { PanZoom } from "./pan-zoom";
 import { getMermaidSvgSize, normalizeMermaidInlineSvg } from "./utils";
+import { useTranslations } from "../translations-context";
 
 interface MermaidProps {
   chart: string;
@@ -82,6 +83,7 @@ export const Mermaid = ({
     height: number;
     width: number;
   } | null>(null);
+  const t = useTranslations();
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const { mermaid: mermaidContext } = useContext(StreamdownContext);
