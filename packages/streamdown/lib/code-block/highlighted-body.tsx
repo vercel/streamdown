@@ -6,6 +6,7 @@ import { CodeBlockBody } from "./body";
 
 type HighlightedCodeBlockBodyProps = HTMLAttributes<HTMLDivElement> & {
   code: string;
+  isIncomplete?: boolean;
   language: string;
   maxHeight?: number | string;
   raw: HighlightResult;
@@ -15,6 +16,7 @@ type HighlightedCodeBlockBodyProps = HTMLAttributes<HTMLDivElement> & {
 
 export const HighlightedCodeBlockBody = ({
   code,
+  isIncomplete = false,
   language,
   maxHeight,
   raw,
@@ -33,21 +35,29 @@ export const HighlightedCodeBlockBody = ({
       return;
     }
 
+    // Ignore results for code this block has already moved past
+    let current = true;
     const cachedResult = codePlugin.highlight(
       {
         code,
+        isIncomplete,
         language: language as BundledLanguage,
         themes: shikiTheme,
       },
       (highlightedResult) => {
-        setResult(highlightedResult);
+        if (current) {
+          setResult(highlightedResult);
+        }
       }
     );
 
     if (cachedResult) {
       setResult(cachedResult);
     }
-  }, [code, language, shikiTheme, codePlugin, raw]);
+    return () => {
+      current = false;
+    };
+  }, [code, isIncomplete, language, shikiTheme, codePlugin, raw]);
 
   return (
     <CodeBlockBody
