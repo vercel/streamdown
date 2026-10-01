@@ -1,21 +1,27 @@
+import { getPublicPath } from "@vercel/geistdocs/config";
+import { isPageVisibleForSurface } from "@vercel/geistdocs/page-visibility";
 import type { MetadataRoute } from "next";
-
+import { cacheLife } from "next/cache";
+import { config } from "@/lib/geistdocs/config";
+import { absoluteUrl } from "@/lib/geistdocs/site-url";
 import { source } from "@/lib/geistdocs/source";
 
-const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
-const baseUrl = `${protocol}://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`;
+// biome-ignore lint/suspicious/useAwait: Next.js requires cached functions to be async.
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  "use cache";
+  cacheLife("max");
 
-export const revalidate = false;
-
-export default function sitemap(): MetadataRoute.Sitemap {
-  const url = (path: string): string => new URL(path, baseUrl).toString();
+  const url = (path: string) =>
+    absoluteUrl(getPublicPath(path, config.basePath));
 
   const pages: MetadataRoute.Sitemap = [];
 
   for (const page of source.getPages()) {
-    const data = page.data as {
-      lastModified?: Date;
-    };
+    if (!isPageVisibleForSurface(page, "sitemap")) {
+      continue;
+    }
+
+    const data = page.data as { lastModified?: Date };
 
     pages.push({
       changeFrequency: "weekly" as const,
