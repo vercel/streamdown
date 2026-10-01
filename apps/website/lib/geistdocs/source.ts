@@ -1,14 +1,14 @@
 import { createSource } from "@vercel/geistdocs/source";
+import remarkMath from "remark-math";
 import { docs } from "@/.source/server";
 import { config } from "./config";
-import { unmaskMath, withMaskedMath } from "./math-markdown";
 
-// TEMPORARY math workaround until https://github.com/vercel/geistdocs/pull/402 is released, see `./math-markdown`.
 export const geistdocsSource = createSource({
-  docs: withMaskedMath(docs),
+  docs,
   config,
   markdown: {
-    transform: unmaskMath,
+    // Parse math in Markdown exports like `source.config.ts` does for the rendered page.
+    remarkPlugins: [remarkMath],
   },
 });
 
