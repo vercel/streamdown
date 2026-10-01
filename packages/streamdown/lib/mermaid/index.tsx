@@ -5,6 +5,7 @@ import { useIsCodeFenceIncomplete } from "../block-incomplete-context";
 import { useMermaidPlugin } from "../plugin-context";
 import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 import { PanZoom } from "./pan-zoom";
 import { getMermaidSvgSize, normalizeMermaidInlineSvg } from "./utils";
 
@@ -38,7 +39,8 @@ type RenderOutcome =
 const renderChart = async (
   plugin: NonNullable<ReturnType<typeof useMermaidPlugin>>,
   { chart, config }: RenderRequest,
-  fullscreen: boolean
+  fullscreen: boolean,
+  fallbackError: string
 ): Promise<RenderOutcome> => {
   try {
     // Get mermaid instance from plugin
@@ -61,8 +63,7 @@ const renderChart = async (
   } catch (err) {
     return {
       ok: false,
-      error:
-        err instanceof Error ? err.message : "Failed to render Mermaid chart",
+      error: err instanceof Error ? err.message : fallbackError,
     };
   }
 };
@@ -82,6 +83,7 @@ export const Mermaid = ({
     height: number;
     width: number;
   } | null>(null);
+  const t = useTranslations();
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const { mermaid: mermaidContext } = useContext(StreamdownContext);
@@ -177,7 +179,8 @@ export const Mermaid = ({
           const rendered = await renderChart(
             mermaidPlugin,
             request,
-            fullscreen
+            fullscreen,
+            t.errorMermaid
           );
           if (!mountedRef.current) {
             return;
@@ -301,7 +304,7 @@ export const Mermaid = ({
         zoomStep={0.1}
       >
         <div
-          aria-label="Mermaid chart"
+          aria-label={t.mermaidAriaLabel}
           className={cn(
             "flex justify-center",
             fullscreen ? "size-full items-center" : null
