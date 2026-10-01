@@ -74,6 +74,29 @@ describe("incomplete HTML tag stripping", () => {
     );
   });
 
+  it("should not strip < inside block math", () => {
+    const text = "Intro\n\n$$\nI = \\sum_{j<k} p_j\n$$\n\nTAIL";
+    expect(remend(text)).toBe(text);
+  });
+
+  it("should not strip < inside inline dollar math", () => {
+    const text = "inline $A_{j<k}$ more";
+    expect(remend(text)).toBe(text);
+  });
+
+  it("should not strip < inside LaTeX delimiters", () => {
+    const inline = "value \\(a<b\\) end";
+    expect(remend(inline)).toBe(inline);
+
+    const block = "value \\[a<b\\] end";
+    expect(remend(block)).toBe(block);
+  });
+
+  it("should still strip incomplete tags outside math blocks", () => {
+    expect(remend("$x<y$ then <div")).toBe("$x<y$ then");
+    expect(remend("$$a<b$$ done <span")).toBe("$$a<b$$ done");
+  });
+
   it("should be disabled when htmlTags option is false", () => {
     expect(remend("Hello <div", { htmlTags: false })).toBe("Hello <div");
   });

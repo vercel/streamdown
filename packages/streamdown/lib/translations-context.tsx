@@ -25,9 +25,11 @@ export interface StreamdownTranslations {
   downloadTable: string;
   downloadTableAsCsv: string;
   downloadTableAsMarkdown: string;
+  errorMermaid: string;
   exitFullscreen: string;
   externalLinkWarning: string;
   imageNotAvailable: string;
+  mermaidAriaLabel: string;
   mermaidFormatMmd: string;
   mermaidFormatPng: string;
   mermaidFormatSvg: string;
@@ -59,6 +61,8 @@ export const defaultTranslations: StreamdownTranslations = {
   zoomIn: "Zoom in",
   zoomOut: "Zoom out",
   resetView: "Reset zoom and pan",
+  mermaidAriaLabel: "Mermaid chart",
+  errorMermaid: "Failed to render Mermaid chart",
   // Table
   copyTable: "Copy table",
   copyTableAsMarkdown: "Copy table as Markdown",

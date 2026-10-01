@@ -6,7 +6,7 @@
 
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { bench, describe } from "vitest";
+import { test } from "vitest";
 import { Streamdown } from "../index";
 
 const PROSE = `# Quarterly review
@@ -60,12 +60,12 @@ function streamInto(document: string, steps: number) {
   host.remove();
 }
 
-describe("Streaming re-render", () => {
-  bench("prose document, 20 streaming appends", () => {
+test("Streaming re-render", async ({ bench }) => {
+  await bench("prose document, 20 streaming appends", () => {
     streamInto(PROSE, 20);
-  });
+  }).run();
 
-  bench("document with a code block, 20 streaming appends", () => {
+  await bench("document with a code block, 20 streaming appends", () => {
     streamInto(WITH_CODE, 20);
-  });
+  }).run();
 });

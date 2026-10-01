@@ -119,6 +119,30 @@ test("invalid .changeset file - no frontmatter", async () => {
   ]);
 });
 
+test("invalid .changeset file - invalid frontmatter", async () => {
+  const event = {
+    pull_request: {
+      labels: [],
+    },
+  };
+  const env = {
+    CHANGED_FILES: ".changeset/invalid-frontmatter.md",
+  };
+
+  // "ai patch" has no colon, so it has no version bump to read.
+  const content = "---\nai patch\n---\n## Test changeset";
+  const readFile = mock.fn(async (_path) => content);
+
+  await assert.rejects(
+    () => verifyChangesets(event, env, readFile),
+    Object.assign(new Error("Invalid .changeset file - invalid frontmatter"), {
+      path: ".changeset/invalid-frontmatter.md",
+      content,
+    })
+  );
+  assert.strictEqual(readFile.mock.callCount(), 1);
+});
+
 test("minor update", async () => {
   const event = {
     pull_request: {

@@ -1,7 +1,7 @@
-import { bench, describe } from "vitest";
+import { test } from "vitest";
 import { parseMarkdownIntoBlocks } from "../lib/parse-blocks";
 
-describe("parseMarkdownIntoBlocks - Basic Parsing", () => {
+test("parseMarkdownIntoBlocks - Basic Parsing", async ({ bench }) => {
   const singleBlock = "# Heading\n\nThis is a paragraph.";
   const multipleBlocks = `
 # Heading 1
@@ -23,32 +23,20 @@ This is paragraph 2.
     (_, i) => `## Section ${i}\n\nParagraph ${i}`
   ).join("\n\n");
 
-  bench(
-    "single block",
-    () => {
-      parseMarkdownIntoBlocks(singleBlock);
-    },
-    { iterations: 1000 }
-  );
+  await bench("single block", () => {
+    parseMarkdownIntoBlocks(singleBlock);
+  }).run();
 
-  bench(
-    "multiple blocks (10)",
-    () => {
-      parseMarkdownIntoBlocks(multipleBlocks);
-    },
-    { iterations: 1000 }
-  );
+  await bench("multiple blocks (10)", () => {
+    parseMarkdownIntoBlocks(multipleBlocks);
+  }).run();
 
-  bench(
-    "many blocks (100)",
-    () => {
-      parseMarkdownIntoBlocks(manyBlocks);
-    },
-    { iterations: 1000 }
-  );
+  await bench("many blocks (100)", () => {
+    parseMarkdownIntoBlocks(manyBlocks);
+  }).run();
 });
 
-describe("parseMarkdownIntoBlocks - Code Blocks", () => {
+test("parseMarkdownIntoBlocks - Code Blocks", async ({ bench }) => {
   const singleCodeBlock = `
 Some text
 
@@ -76,32 +64,20 @@ let z = 3;
 
   const largeCodeBlock = `\`\`\`javascript\n${"const x = 1;\n".repeat(1000)}\`\`\``;
 
-  bench(
-    "single code block",
-    () => {
-      parseMarkdownIntoBlocks(singleCodeBlock);
-    },
-    { iterations: 1000 }
-  );
+  await bench("single code block", () => {
+    parseMarkdownIntoBlocks(singleCodeBlock);
+  }).run();
 
-  bench(
-    "multiple code blocks",
-    () => {
-      parseMarkdownIntoBlocks(multipleCodeBlocks);
-    },
-    { iterations: 1000 }
-  );
+  await bench("multiple code blocks", () => {
+    parseMarkdownIntoBlocks(multipleCodeBlocks);
+  }).run();
 
-  bench(
-    "large code block (1000 lines)",
-    () => {
-      parseMarkdownIntoBlocks(largeCodeBlock);
-    },
-    { iterations: 1000 }
-  );
+  await bench("large code block (1000 lines)", () => {
+    parseMarkdownIntoBlocks(largeCodeBlock);
+  }).run();
 });
 
-describe("parseMarkdownIntoBlocks - Math Blocks", () => {
+test("parseMarkdownIntoBlocks - Math Blocks", async ({ bench }) => {
   const simpleMath = `
 Some text
 
@@ -139,32 +115,20 @@ $$
 More text
 `;
 
-  bench(
-    "simple math block",
-    () => {
-      parseMarkdownIntoBlocks(simpleMath);
-    },
-    { iterations: 1000 }
-  );
+  await bench("simple math block", () => {
+    parseMarkdownIntoBlocks(simpleMath);
+  }).run();
 
-  bench(
-    "complex math blocks",
-    () => {
-      parseMarkdownIntoBlocks(complexMath);
-    },
-    { iterations: 1000 }
-  );
+  await bench("complex math blocks", () => {
+    parseMarkdownIntoBlocks(complexMath);
+  }).run();
 
-  bench(
-    "math with split delimiters",
-    () => {
-      parseMarkdownIntoBlocks(mathWithSplitDelimiters);
-    },
-    { iterations: 1000 }
-  );
+  await bench("math with split delimiters", () => {
+    parseMarkdownIntoBlocks(mathWithSplitDelimiters);
+  }).run();
 });
 
-describe("parseMarkdownIntoBlocks - HTML Blocks", () => {
+test("parseMarkdownIntoBlocks - HTML Blocks", async ({ bench }) => {
   const simpleHTML = `
 <div>
   <p>HTML content</p>
@@ -193,32 +157,20 @@ Some markdown
 More markdown
 `;
 
-  bench(
-    "simple HTML block",
-    () => {
-      parseMarkdownIntoBlocks(simpleHTML);
-    },
-    { iterations: 1000 }
-  );
+  await bench("simple HTML block", () => {
+    parseMarkdownIntoBlocks(simpleHTML);
+  }).run();
 
-  bench(
-    "nested HTML block",
-    () => {
-      parseMarkdownIntoBlocks(nestedHTML);
-    },
-    { iterations: 1000 }
-  );
+  await bench("nested HTML block", () => {
+    parseMarkdownIntoBlocks(nestedHTML);
+  }).run();
 
-  bench(
-    "multiple HTML blocks",
-    () => {
-      parseMarkdownIntoBlocks(multipleHTMLBlocks);
-    },
-    { iterations: 1000 }
-  );
+  await bench("multiple HTML blocks", () => {
+    parseMarkdownIntoBlocks(multipleHTMLBlocks);
+  }).run();
 });
 
-describe("parseMarkdownIntoBlocks - Footnotes", () => {
+test("parseMarkdownIntoBlocks - Footnotes", async ({ bench }) => {
   const withFootnotes = `
 This is text with a footnote[^1].
 
@@ -234,24 +186,16 @@ Text[^1] with[^2] many[^3] footnotes[^4].
 ${Array.from({ length: 10 }, (_, i) => `[^${i + 1}]: Footnote ${i + 1}`).join("\n")}
 `;
 
-  bench(
-    "document with footnotes",
-    () => {
-      parseMarkdownIntoBlocks(withFootnotes);
-    },
-    { iterations: 1000 }
-  );
+  await bench("document with footnotes", () => {
+    parseMarkdownIntoBlocks(withFootnotes);
+  }).run();
 
-  bench(
-    "document with many footnotes",
-    () => {
-      parseMarkdownIntoBlocks(manyFootnotes);
-    },
-    { iterations: 1000 }
-  );
+  await bench("document with many footnotes", () => {
+    parseMarkdownIntoBlocks(manyFootnotes);
+  }).run();
 });
 
-describe("parseMarkdownIntoBlocks - Tables", () => {
+test("parseMarkdownIntoBlocks - Tables", async ({ bench }) => {
   const simpleTable = `
 | Header 1 | Header 2 |
 |----------|----------|
@@ -265,39 +209,27 @@ describe("parseMarkdownIntoBlocks - Tables", () => {
 ${Array.from({ length: 100 }, (_, i) => `| C${i}1 | C${i}2 | C${i}3 | C${i}4 | C${i}5 |`).join("\n")}
 `;
 
-  bench(
-    "simple table",
-    () => {
-      parseMarkdownIntoBlocks(simpleTable);
-    },
-    { iterations: 1000 }
-  );
+  await bench("simple table", () => {
+    parseMarkdownIntoBlocks(simpleTable);
+  }).run();
 
-  bench(
-    "large table (100 rows)",
-    () => {
-      parseMarkdownIntoBlocks(largeTable);
-    },
-    { iterations: 1000 }
-  );
+  await bench("large table (100 rows)", () => {
+    parseMarkdownIntoBlocks(largeTable);
+  }).run();
 });
 
-describe("parseMarkdownIntoBlocks - Streaming Simulation", () => {
+test("parseMarkdownIntoBlocks - Streaming Simulation", async ({ bench }) => {
   const baseText = "# Heading\n\n";
   const streamingSteps = Array.from(
     { length: 50 },
     (_, i) => baseText + "This is streaming text. ".repeat(i)
   );
 
-  bench(
-    "streaming text (50 incremental steps)",
-    () => {
-      for (const step of streamingSteps) {
-        parseMarkdownIntoBlocks(step);
-      }
-    },
-    { iterations: 1000 }
-  );
+  await bench("streaming text (50 incremental steps)", () => {
+    for (const step of streamingSteps) {
+      parseMarkdownIntoBlocks(step);
+    }
+  }).run();
 
   // A long document that keeps growing at the end, which is what a streamed
   // response looks like once it is a few hundred lines in.
@@ -310,15 +242,14 @@ describe("parseMarkdownIntoBlocks - Streaming Simulation", () => {
     (_, i) => `${longDocument}\n\n${"More streamed text. ".repeat(i + 1)}`
   );
 
-  bench(
+  await bench(
     "streaming text after a long document (30 incremental steps)",
     () => {
       for (const step of longStreamingSteps) {
         parseMarkdownIntoBlocks(step);
       }
-    },
-    { iterations: 100 }
-  );
+    }
+  ).run();
 
   const codeStreamingSteps = [
     "```javascript",
@@ -332,18 +263,14 @@ describe("parseMarkdownIntoBlocks - Streaming Simulation", () => {
     "```javascript\nconst x = 1;\n```",
   ];
 
-  bench(
-    "streaming code block (9 steps)",
-    () => {
-      for (const step of codeStreamingSteps) {
-        parseMarkdownIntoBlocks(step);
-      }
-    },
-    { iterations: 1000 }
-  );
+  await bench("streaming code block (9 steps)", () => {
+    for (const step of codeStreamingSteps) {
+      parseMarkdownIntoBlocks(step);
+    }
+  }).run();
 });
 
-describe("parseMarkdownIntoBlocks - Mixed Content", () => {
+test("parseMarkdownIntoBlocks - Mixed Content", async ({ bench }) => {
   const realistic = `
 # AI Response Example
 
@@ -390,21 +317,13 @@ $$
 For more info, see [documentation](https://example.com).
 `;
 
-  bench(
-    "realistic AI response",
-    () => {
-      parseMarkdownIntoBlocks(realistic);
-    },
-    { iterations: 1000 }
-  );
+  await bench("realistic AI response", () => {
+    parseMarkdownIntoBlocks(realistic);
+  }).run();
 
-  bench(
-    "realistic AI response (10x)",
-    () => {
-      for (let i = 0; i < 10; i++) {
-        parseMarkdownIntoBlocks(realistic);
-      }
-    },
-    { iterations: 1000 }
-  );
+  await bench("realistic AI response (10x)", () => {
+    for (let i = 0; i < 10; i++) {
+      parseMarkdownIntoBlocks(realistic);
+    }
+  }).run();
 });

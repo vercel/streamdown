@@ -41,6 +41,11 @@ export interface HighlightResult {
  */
 export interface HighlightOptions {
   code: string;
+  /**
+   * Whether the code block is still streaming. Its result is superseded by
+   * the next update, so plugins can avoid caching it long-term.
+   */
+  isIncomplete?: boolean;
   language: BundledLanguage;
   themes: [ThemeInput, ThemeInput];
 }

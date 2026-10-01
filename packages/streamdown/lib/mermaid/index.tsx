@@ -1,9 +1,11 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useDeferredRender } from "../../hooks/use-deferred-render";
 import { StreamdownContext } from "../../index";
+import { useIsCodeFenceIncomplete } from "../block-incomplete-context";
 import { useMermaidPlugin } from "../plugin-context";
 import type { MermaidConfig } from "../plugin-types";
 import { useCn } from "../prefix-context";
+import { useTranslations } from "../translations-context";
 import { PanZoom } from "./pan-zoom";
 import { getMermaidSvgSize, normalizeMermaidInlineSvg } from "./utils";
 
@@ -14,6 +16,57 @@ interface MermaidProps {
   fullscreen?: boolean;
   showControls?: boolean;
 }
+
+// Resolves after `ms`, or as soon as the function handed to `onWake` is called
+const pause = (ms: number, onWake: (wake: () => void) => void) =>
+  new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    onWake(() => {
+      clearTimeout(timer);
+      resolve();
+    });
+  });
+
+interface RenderRequest {
+  chart: string;
+  config?: MermaidConfig;
+}
+
+type RenderOutcome =
+  | { ok: true; svg: string; size: { height: number; width: number } | null }
+  | { ok: false; error: string };
+
+const renderChart = async (
+  plugin: NonNullable<ReturnType<typeof useMermaidPlugin>>,
+  { chart, config }: RenderRequest,
+  fullscreen: boolean,
+  fallbackError: string
+): Promise<RenderOutcome> => {
+  try {
+    // Get mermaid instance from plugin
+    const mermaid = plugin.getMermaid(config);
+
+    // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
+    const chartHash = chart.split("").reduce((acc, char) => {
+      // biome-ignore lint/suspicious/noBitwiseOperators: "Required for Mermaid"
+      return ((acc << 5) - acc + char.charCodeAt(0)) | 0;
+    }, 0);
+    const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+    const { svg } = await mermaid.render(uniqueId, chart);
+    const size = getMermaidSvgSize(svg);
+    return {
+      ok: true,
+      svg: fullscreen ? svg : normalizeMermaidInlineSvg(svg),
+      size,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: err instanceof Error ? err.message : fallbackError,
+    };
+  }
+};
 
 export const Mermaid = ({
   chart,
@@ -30,6 +83,7 @@ export const Mermaid = ({
     height: number;
     width: number;
   } | null>(null);
+  const t = useTranslations();
   const [lastValidSvg, setLastValidSvg] = useState<string>("");
   const [retryCount, setRetryCount] = useState(0);
   const { mermaid: mermaidContext } = useContext(StreamdownContext);
@@ -40,6 +94,45 @@ export const Mermaid = ({
   const { shouldRender, containerRef } = useDeferredRender({
     immediate: fullscreen,
   });
+
+  // Mermaid runs renders one after another. While a chart streams, every
+  // token used to queue another full parse and layout of the growing chart,
+  // so the finished diagram appeared long after the stream ended. Only one
+  // render runs at a time here; when it settles, the latest chart is rendered
+  // if it changed meanwhile, and the ones in between are skipped.
+  const latestRequestRef = useRef<RenderRequest | null>(null);
+  const inFlightRef = useRef(false);
+  const mountedRef = useRef(false);
+  const isStreaming = useIsCodeFenceIncomplete();
+  const isStreamingRef = useRef(isStreaming);
+  const wakeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      wakeRef.current?.();
+    };
+  }, []);
+
+  // Once the fence is closed (or the stream stopped) the chart is final, so
+  // a pause that is still running must not delay the last render
+  useEffect(() => {
+    isStreamingRef.current = isStreaming;
+    if (!isStreaming) {
+      wakeRef.current?.();
+    }
+  }, [isStreaming]);
+
+  const pauseWhileStreaming = async (ms: number) => {
+    if (!isStreamingRef.current) {
+      return;
+    }
+    await pause(ms, (wake) => {
+      wakeRef.current = wake;
+    });
+    wakeRef.current = null;
+  };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: "Required for Mermaid"
   useEffect(() => {
@@ -56,47 +149,65 @@ export const Mermaid = ({
       return;
     }
 
-    const renderChart = async () => {
-      try {
-        setError(null);
-        setIsLoading(true);
+    latestRequestRef.current = { chart, config };
+    if (inFlightRef.current) {
+      // The running loop picks up the latest request when it settles
+      return;
+    }
 
-        // Get mermaid instance from plugin
-        const mermaid = mermaidPlugin.getMermaid(config);
-
-        // Use a stable ID based on chart content hash and timestamp to ensure uniqueness
-        const chartHash = chart.split("").reduce((acc, char) => {
-          // biome-ignore lint/suspicious/noBitwiseOperators: "Required for Mermaid"
-          return ((acc << 5) - acc + char.charCodeAt(0)) | 0;
-        }, 0);
-        const uniqueId = `mermaid-${Math.abs(chartHash)}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-
-        const { svg } = await mermaid.render(uniqueId, chart);
-        const size = getMermaidSvgSize(svg);
-        const normalizedSvg = fullscreen ? svg : normalizeMermaidInlineSvg(svg);
-
+    const commit = (request: RenderRequest, rendered: RenderOutcome) => {
+      if (rendered.ok) {
         // Update both current and last valid SVG
-        setSvgContent(normalizedSvg);
-        setSvgSize(size);
-        setLastValidSvg(normalizedSvg);
-      } catch (err) {
-        // Silently fail and keep the last valid SVG
-        // Don't update svgContent here - just keep what we have
-
-        // Only set error if we don't have any valid SVG
-        if (!(lastValidSvg || svgContent)) {
-          const errorMessage =
-            err instanceof Error
-              ? err.message
-              : "Failed to render Mermaid chart";
-          setError(errorMessage);
-        }
-      } finally {
-        setIsLoading(false);
+        setSvgContent(rendered.svg);
+        setSvgSize(rendered.size);
+        setLastValidSvg(rendered.svg);
+      } else if (request === latestRequestRef.current) {
+        // Keep the last valid SVG; the error only shows when there is
+        // nothing to display, and only for the latest chart
+        setError(rendered.error);
       }
     };
 
-    renderChart();
+    const renderLatest = async () => {
+      inFlightRef.current = true;
+      setError(null);
+      setIsLoading(true);
+      try {
+        let request = latestRequestRef.current;
+        while (request) {
+          const startedAt = performance.now();
+          const rendered = await renderChart(
+            mermaidPlugin,
+            request,
+            fullscreen,
+            t.errorMermaid
+          );
+          if (!mountedRef.current) {
+            return;
+          }
+          commit(request, rendered);
+          // Mermaid lays out on the main thread. While the fence streams,
+          // yield after a layout for as long as it took so streamed updates
+          // keep flowing at their own pace and only the latest chart is
+          // rendered next. A failed parse did no layout, so there is nothing
+          // to yield for.
+          if (rendered.ok) {
+            await pauseWhileStreaming(performance.now() - startedAt);
+          }
+          if (!mountedRef.current || request === latestRequestRef.current) {
+            return;
+          }
+          request = latestRequestRef.current;
+        }
+      } finally {
+        inFlightRef.current = false;
+        if (mountedRef.current) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    renderLatest();
   }, [chart, config, retryCount, shouldRender, mermaidPlugin]);
 
   // Show placeholder when not scheduled to render
@@ -193,7 +304,7 @@ export const Mermaid = ({
         zoomStep={0.1}
       >
         <div
-          aria-label="Mermaid chart"
+          aria-label={t.mermaidAriaLabel}
           className={cn(
             "flex justify-center",
             fullscreen ? "size-full items-center" : null

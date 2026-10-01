@@ -8,6 +8,7 @@ import {
   createElement,
   type JSX,
   memo,
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -24,8 +25,8 @@ import {
   type AnimateOptions,
   type AnimatePlugin,
   type AnimateTimeline,
-  createAnimatePlugin,
   createAnimateTimeline,
+  createRenderAnimatePlugin,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as builtinComponents } from "./lib/components";
@@ -59,6 +60,7 @@ import {
   TranslationsContext,
 } from "./lib/translations-context";
 import { useAnimationDrain } from "./lib/use-animation-drain";
+import { useCaretHost } from "./lib/use-caret-host";
 import { useSmoothStream } from "./lib/use-smooth-stream";
 import { createCn } from "./lib/utils";
 
@@ -1053,6 +1055,16 @@ export const Streamdown = memo(
       mode,
     ]);
 
+    const style = useMemo(
+      () =>
+        caret && isAnimating
+          ? ({
+              "--streamdown-caret": `"${carets[caret]}"`,
+            } as CSSProperties)
+          : undefined,
+      [caret, isAnimating]
+    );
+
     const shouldHideCaret = useMemo(() => {
       if (!isAnimating || blocksToRender.length === 0) {
         return false;
@@ -1061,14 +1073,14 @@ export const Streamdown = memo(
       return hasIncompleteCodeFence(lastBlock) || hasTable(lastBlock);
     }, [isAnimating, blocksToRender]);
 
-    const style = useMemo(
-      () =>
-        caret && isAnimating && !shouldHideCaret
-          ? ({
-              "--streamdown-caret": `"${carets[caret]}"`,
-            } as CSSProperties)
-          : undefined,
-      [caret, isAnimating, shouldHideCaret]
+    const { containerRef, showCaret } = useCaretHost(shouldHideCaret);
+    // The animation drain and the caret host both watch the container.
+    const setContainer = useCallback(
+      (element: HTMLDivElement | null) => {
+        animationContainerRef.current = element;
+        containerRef.current = element;
+      },
+      [animationContainerRef, containerRef]
     );
 
     const getBlockPlugins = (
@@ -1081,7 +1093,7 @@ export const Streamdown = memo(
       if (animateTimelineRef.current && animateText) {
         if (!blockAnimatePluginsRef.current[index]) {
           // maxBacklogMs is consumed by the timeline factory, not the plugin.
-          blockAnimatePluginsRef.current[index] = createAnimatePlugin({
+          blockAnimatePluginsRef.current[index] = createRenderAnimatePlugin({
             ...getBlockAnimateOptions(animated, smooth),
             timeline: animateTimelineRef.current,
           });
@@ -1153,12 +1165,12 @@ export const Streamdown = memo(
                   className={prefixedCn(
                     // Use [&>*] arbitrary variant syntax for Tailwind v3 + v4 compat (v3 lacks the *: variant)
                     "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-                    caret && !shouldHideCaret
-                      ? "[&>*:last-child]:after:inline [&>*:last-child]:after:align-baseline [&>*:last-child]:after:content-[var(--streamdown-caret)]"
+                    caret && showCaret
+                      ? "[&>*:last-child:not([data-sd-caret-hidden])]:after:inline [&>*:last-child:not([data-sd-caret-hidden])]:after:align-baseline [&>*:last-child:not([data-sd-caret-hidden])]:after:content-[var(--streamdown-caret)]"
                       : null,
                     className
                   )}
-                  ref={animationContainerRef}
+                  ref={setContainer}
                   style={style}
                 >
                   {blocksToRender.length === 0 && caret && isAnimating && (
