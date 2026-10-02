@@ -30,8 +30,9 @@ export const CopyButton = ({ code }: { code: string }) => {
     <Button
       className="shrink-0"
       onClick={copyToClipboard}
-      size="icon"
-      variant="ghost"
+      size="small"
+      svgOnly
+      variant="tertiary"
     >
       <Icon size={14} />
     </Button>
