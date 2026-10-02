@@ -8,12 +8,14 @@
  */
 import { act, render } from "@testing-library/react";
 import { StrictMode, useEffect } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 import { MAX_ANIMATION_BACKLOG_MS } from "../lib/animate";
 
 const NEW_WORD_RE = /^(Next|section|arrives)$/;
 const SPAN_GAP_RE = /<\/span> <span/;
+
+afterEach(() => vi.restoreAllMocks());
 
 const parseDelay = (el: Element): number => {
   const raw = (el as HTMLElement).style.getPropertyValue("--sd-delay").trim();
@@ -257,7 +259,8 @@ describe("issue #570 — spans come off when isAnimating goes false", () => {
     expect(mounts).toBe(1);
   });
 
-  it("suppresses already-seen words under StrictMode double-invoke", async () => {
+  it("suppresses settled words under StrictMode double-invoke", async () => {
+    const clock = vi.spyOn(performance, "now").mockReturnValue(1000);
     const config = {
       animation: "fadeIn" as const,
       duration: 200,
@@ -276,6 +279,7 @@ describe("issue #570 — spans come off when isAnimating goes false", () => {
     await act(() => Promise.resolve());
     await act(() => Promise.resolve());
 
+    clock.mockReturnValue(1250);
     await act(() => {
       rerender(
         <StrictMode>
@@ -292,7 +296,7 @@ describe("issue #570 — spans come off when isAnimating goes false", () => {
       container.querySelectorAll("[data-sd-animate]")
     ) as HTMLElement[];
 
-    // "one"/"two"/"three" should have duration 0 (already seen); "four"/"five"
+    // "one"/"two"/"three" should have duration 0 (finished); "four"/"five"
     // keep the configured duration. Under the old get-and-reset path, StrictMode
     // would wipe prevContentLength and every span would be 200ms.
     const durations = spans.map((el) =>

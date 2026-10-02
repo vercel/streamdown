@@ -5,7 +5,7 @@
     "bench": "turbo run bench",
     "bench:ui": "turbo run bench:ui",
     "build": "turbo run build",
-    "build:packages": "pnpm build --filter streamdown --filter @streamdown/math --filter @streamdown/code --filter @streamdown/cjk --filter @streamdown/mermaid",
+    "build:packages": "pnpm build --filter streamdown --filter @streamdown/math --filter @streamdown/code --filter @streamdown/cjk --filter @streamdown/mermaid --filter @streamdown/effects",
     "bump-deps": "npx npm-check-updates -u --deep -x \"recharts\" && pnpm i",
     "changeset": "changeset",
     "changeset:publish": "pnpm build && changeset publish",
