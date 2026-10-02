@@ -59,6 +59,7 @@ import {
   TranslationsContext,
 } from "./lib/translations-context";
 import { useCaretHost } from "./lib/use-caret-host";
+import { useSmoothStream } from "./lib/use-smooth-stream";
 import { createCn } from "./lib/utils";
 
 export type { AnimateOptions } from "./lib/animate";
@@ -290,6 +291,16 @@ export type StreamdownProps = Options & {
    */
   tableMaxHeight?: number | string;
   animated?: boolean | AnimateOptions;
+  /**
+   * Pace bursty streams. Text that arrives in large chunks is revealed a word
+   * at a time at the rate it has been arriving, instead of all at once.
+   * Adds roughly one chunk interval of display latency. Uses `isAnimating`
+   * to know when the stream ends. Until the held-back text is shown,
+   * Streamdown stays in streaming mode (caret, animation, incomplete-Markdown
+   * handling) even if `mode` is `"static"`, and `onAnimationEnd` waits for
+   * it. @default false
+   */
+  smooth?: boolean;
   caret?: keyof typeof carets;
   plugins?: PluginConfig;
   remend?: RemendOptions;
@@ -465,6 +476,30 @@ export const StreamdownContext = createContext<StreamdownContextType>(
   defaultStreamdownContext
 );
 
+const getAnimatedKey = (
+  animated: StreamdownProps["animated"],
+  smooth: boolean
+): string => {
+  if (!animated) {
+    return "";
+  }
+  const options = animated === true ? "true" : JSON.stringify(animated);
+  // Block plugins bake in a stagger default that depends on smooth.
+  return smooth ? `${options}:smooth` : options;
+};
+
+/** Options for one block's animate plugin; maxBacklogMs goes to the timeline. */
+const getBlockAnimateOptions = (
+  animated: StreamdownProps["animated"],
+  smooth: boolean
+): AnimateOptions => {
+  const { maxBacklogMs: _, ...options }: AnimateOptions =
+    typeof animated === "object" ? animated : {};
+  // Smooth already spaces words out; a stagger would queue them a second
+  // time behind the reveal.
+  return { ...options, stagger: options.stagger ?? (smooth ? 0 : undefined) };
+};
+
 export type BlockProps = Options & {
   content: string;
   shouldParseIncompleteMarkdown: boolean;
@@ -590,7 +625,7 @@ Block.displayName = "Block";
 export const Streamdown = memo(
   ({
     children,
-    mode = "streaming",
+    mode: modeProp = "streaming",
     dir,
     parseIncompleteMarkdown: shouldParseIncompleteMarkdown = true,
     normalizeHtmlIndentation: shouldNormalizeHtmlIndentation = false,
@@ -602,9 +637,10 @@ export const Streamdown = memo(
     mermaid,
     codeBlockMaxHeight = 400,
     controls = true,
-    isAnimating = false,
+    isAnimating: isAnimatingProp = false,
     tableMaxHeight = 300,
     animated,
+    smooth = false,
     BlockComponent = Block,
     parseMarkdownIntoBlocksFn = parseMarkdownIntoBlocks,
     caret,
@@ -626,6 +662,17 @@ export const Streamdown = memo(
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
     const generatedId = useId();
+
+    const {
+      text: smoothed,
+      isAnimating,
+      mode,
+    } = useSmoothStream({
+      children,
+      isAnimating: isAnimatingProp,
+      mode: modeProp,
+      smooth,
+    });
 
     const prefixedCn = useMemo(() => createCn(prefix), [prefix]);
 
@@ -676,8 +723,8 @@ export const Streamdown = memo(
       }
       let result =
         mode === "streaming" && shouldParseIncompleteMarkdown
-          ? remend(children, remendOptions)
-          : children;
+          ? remend(smoothed, remendOptions)
+          : smoothed;
 
       // Escape markdown metacharacters inside literal-tag-content tags so that
       // children are rendered as plain text rather than parsed as markdown.
@@ -697,6 +744,7 @@ export const Streamdown = memo(
       return result;
     }, [
       children,
+      smoothed,
       mode,
       shouldParseIncompleteMarkdown,
       remendOptions,
@@ -735,15 +783,10 @@ export const Streamdown = memo(
     // plugin from being recreated when the user passes an inline object
     // literal (e.g. animated={{ animation: 'fadeIn' }}) whose reference
     // changes on every parent render.
-    const animatedKey = useMemo(() => {
-      if (animated === true) {
-        return "true";
-      }
-      if (animated) {
-        return JSON.stringify(animated);
-      }
-      return "";
-    }, [animated]);
+    const animatedKey = useMemo(
+      () => getAnimatedKey(animated, smooth),
+      [animated, smooth]
+    );
 
     // Shared wall-clock timeline: serializes stagger delays across sibling
     // blocks AND across streaming ticks (memoized earlier blocks don't
@@ -761,9 +804,7 @@ export const Streamdown = memo(
       if (prevAnimatedKeyRef.current !== animatedKey) {
         prevAnimatedKeyRef.current = animatedKey;
         const backlog =
-          animatedKey !== "true"
-            ? (animated as AnimateOptions).maxBacklogMs
-            : undefined;
+          typeof animated === "object" ? animated.maxBacklogMs : undefined;
         animateTimelineRef.current = createAnimateTimeline({
           maxBacklogMs: backlog,
         });
@@ -1024,13 +1065,8 @@ export const Streamdown = memo(
       if (animateTimelineRef.current && isAnimating) {
         if (!blockAnimatePluginsRef.current[index]) {
           // maxBacklogMs is consumed by the timeline factory, not the plugin.
-          const rawOpts =
-            animatedKey && animatedKey !== "true"
-              ? (animated as AnimateOptions)
-              : ({} as AnimateOptions);
-          const { maxBacklogMs: _, ...pluginOpts } = rawOpts;
           blockAnimatePluginsRef.current[index] = createRenderAnimatePlugin({
-            ...pluginOpts,
+            ...getBlockAnimateOptions(animated, smooth),
             timeline: animateTimelineRef.current,
           });
         }
@@ -1157,6 +1193,7 @@ export const Streamdown = memo(
     prevProps.shikiTheme === nextProps.shikiTheme &&
     prevProps.isAnimating === nextProps.isAnimating &&
     prevProps.animated === nextProps.animated &&
+    prevProps.smooth === nextProps.smooth &&
     prevProps.mode === nextProps.mode &&
     prevProps.plugins === nextProps.plugins &&
     prevProps.className === nextProps.className &&
