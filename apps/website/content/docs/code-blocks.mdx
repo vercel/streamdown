@@ -206,6 +206,18 @@ const profile = await getProfile(user);
 
 Line numbers begin at the value you specify instead of 1. The value must be a positive integer (>= 1).
 
+## Raw Languages
+
+Some fenced blocks are not source code: ASCII art and Unicode box-drawing diagrams, for example, need to be shown verbatim in a font that keeps every character on the same grid. Pass those languages to `codeBlockRawLanguages` to render them as plain monospace text, bypassing syntax highlighting, line numbers and the code controls.
+
+```tsx
+<Streamdown codeBlockRawLanguages={["ascii", "diagram"]}>
+  {markdown}
+</Streamdown>
+```
+
+The block uses a box-drawing-safe font stack with ligatures disabled, and exposes `data-streamdown="raw-code-block"` for styling. Custom renderers registered through `plugins.renderers` take precedence over raw languages.
+
 ## Interactive Features
 
 ### Copy Button
