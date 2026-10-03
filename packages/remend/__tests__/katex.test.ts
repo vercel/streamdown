@@ -35,6 +35,26 @@ describe("KaTeX block formatting ($$)", () => {
   it("should handle multiline block KaTeX", () => {
     expect(remend("$$\nx = 1\ny = 2")).toBe("$$\nx = 1\ny = 2\n$$");
   });
+
+  it("should close a single-line block on the same line after earlier multiline math", () => {
+    expect(remend("$$\nx = 1\n$$\n\nThen $$y = 2")).toBe(
+      "$$\nx = 1\n$$\n\nThen $$y = 2$$"
+    );
+  });
+
+  it("should close each table cell's block on its own row", () => {
+    expect(
+      remend(
+        "| Quantity | Formula |\n| --- | --- |\n| Energy | $$E = mc^2$$ |\n| Force | $$F = ma"
+      )
+    ).toBe(
+      "| Quantity | Formula |\n| --- | --- |\n| Energy | $$E = mc^2$$ |\n| Force | $$F = ma$$"
+    );
+  });
+
+  it("should still close a multiline block on a new line after earlier inline math", () => {
+    expect(remend("$$a$$ then\n$$\nx = 1")).toBe("$$a$$ then\n$$\nx = 1\n$$");
+  });
 });
 
 describe("KaTeX inline formatting ($)", () => {
