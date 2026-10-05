@@ -12,7 +12,7 @@ export const CodeBlockHeader = ({ language }: CodeBlockHeaderProps) => {
       data-language={language}
       data-streamdown="code-block-header"
     >
-      <span className={cn("ml-1 font-mono lowercase")}>{language}</span>
+      <span className={cn("ms-1 font-mono lowercase")}>{language}</span>
     </div>
   );
 };

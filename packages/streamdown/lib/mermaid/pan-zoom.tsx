@@ -409,7 +409,7 @@ export const PanZoom = ({
         <div
           className={cn(
             "absolute z-10 flex flex-col gap-1 rounded-md border border-border bg-background/80 p-1 supports-[backdrop-filter]:bg-background/70 supports-[backdrop-filter]:backdrop-blur-sm",
-            fullscreen ? "bottom-4 left-4" : "bottom-2 left-2"
+            fullscreen ? "start-4 bottom-4" : "start-2 bottom-2"
           )}
         >
           <button
