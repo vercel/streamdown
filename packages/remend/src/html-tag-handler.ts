@@ -12,6 +12,14 @@ const identifierCharPattern = /[A-Za-z0-9_]/;
 
 const htmlTagNamePattern = /^[a-zA-Z][a-zA-Z0-9]*/;
 
+const emptyTagSuffixPattern = /^\s*\/?\s*$/;
+
+const leadingWhitespacePattern = /^\s+/;
+
+const trailingSelfClosePattern = /\/\s*$/;
+
+const attributeNamePattern = /^[a-zA-Z_:][\w:.-]*$/;
+
 // Common HTML tag names. Used only when `<` is glued to an identifier
 // (`a<b`) so we can tell a mid-stream tag from a comparison or generic.
 const plausibleHtmlTags = new Set([
@@ -153,7 +161,7 @@ const startsTag = (text: string, index: number): boolean => {
 // After a tag name, empty / self-closing / attribute-like suffixes look like
 // HTML. Free prose words without `=` look like a comparison continuation.
 const looksLikeHtmlAttributeSuffix = (suffix: string): boolean => {
-  if (/^\s*\/?\s*$/.test(suffix)) {
+  if (emptyTagSuffixPattern.test(suffix)) {
     return true;
   }
 
@@ -174,13 +182,16 @@ const looksLikeHtmlAttributeSuffix = (suffix: string): boolean => {
     return true;
   }
 
-  const body = suffix.replace(/^\s+/, "").replace(/\/\s*$/, "").trimEnd();
+  const body = suffix
+    .replace(leadingWhitespacePattern, "")
+    .replace(trailingSelfClosePattern, "")
+    .trimEnd();
   if (body === "") {
     return true;
   }
 
   // Single incomplete attribute name (` class`, ` data-id`) → HTML.
-  if (/^[a-zA-Z_:][\w:.-]*$/.test(body)) {
+  if (attributeNamePattern.test(body)) {
     return true;
   }
 
