@@ -137,6 +137,60 @@ Mixed paragraph: Hello مرحبا World عالم.
     );
   });
 
+  describe("direction-aware styling", () => {
+    // The suite above proves `dir` is set correctly. These prove the styling
+    // follows it: every one of these elements is marked `dir="rtl"` by
+    // rehypeBlockDirection, so each must use a logical utility that mirrors
+    // rather than a physical one that does not.
+    it("blockquote uses an inline-start border and padding", () => {
+      const { container } = render(
+        <Streamdown mode="static">
+          {"> \u0647\u0630\u0627 \u0627\u0642\u062a\u0628\u0627\u0633"}
+        </Streamdown>
+      );
+      const quote = container.querySelector("blockquote");
+      expect(quote?.className).toContain("border-s-4");
+      expect(quote?.className).toContain("ps-4");
+      expect(quote?.className).not.toContain("border-l-4");
+      expect(quote?.className).not.toContain("pl-4");
+    });
+
+    it("table headers align to the inline start, matching their own cells", () => {
+      const { container } = render(
+        <Streamdown mode="static">
+          {
+            "| \u0627\u0644\u0627\u0633\u0645 |\n| --- |\n| \u0633\u0641\u064a\u0646 |"
+          }
+        </Streamdown>
+      );
+      const th = container.querySelector("th");
+      expect(th?.className).toContain("text-start");
+      expect(th?.className).not.toContain("text-left");
+    });
+
+    it("nested lists indent from the inline start", () => {
+      const { container } = render(
+        <Streamdown mode="static">
+          {"1. \u0623\u0648\u0644\n   1. \u062b\u0627\u0646\u064a"}
+        </Streamdown>
+      );
+      const lists = container.querySelectorAll("ol");
+      expect(lists.length).toBeGreaterThan(0);
+      for (const list of lists) {
+        expect(list.className).toContain("[li_&]:ps-6");
+        expect(list.className).not.toContain("[li_&]:pl-6");
+      }
+    });
+
+    it("the code block keeps physical offsets \u2014 it is pinned dir=ltr", () => {
+      const { container } = render(
+        <Streamdown mode="static">{"```js\nconst a = 1;\n```"}</Streamdown>
+      );
+      const code = container.querySelector("[dir='ltr']");
+      expect(code).toBeTruthy();
+    });
+  });
+
   describe("dir prop", () => {
     it('applies dir="rtl" to wrapper in static mode', () => {
       const { container } = render(
