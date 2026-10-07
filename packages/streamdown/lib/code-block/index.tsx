@@ -82,7 +82,7 @@ export const CodeBlock = ({
         {children ? (
           <div
             className={cn(
-              "pointer-events-none absolute top-2 right-2 z-10 flex items-center"
+              "pointer-events-none absolute end-2 top-2 z-10 flex items-center"
             )}
           >
             <div
