@@ -1,6 +1,11 @@
 import { letterNumberUnderscorePattern } from "./patterns";
 import { getScan, inHtmlTagAt, inLinkUrlAt, inMathAt, isFenceAt } from "./scan";
 
+const whitespaceCharPattern = /\s/;
+
+export const isWhitespaceChar = (char: string): boolean =>
+  whitespaceCharPattern.test(char);
+
 // OPTIMIZATION: Precompute which characters are word characters
 // Using ASCII fast path before falling back to Unicode regex
 export const isWordChar = (char: string): boolean => {

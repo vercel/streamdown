@@ -342,7 +342,7 @@ const nextSpanOpener = (
       return -1;
     }
     const escaped =
-      next > i && text[next - 1] === "\\" && regions[next - 1] === REGION.PROSE;
+      next > i && regions[next - 1] === REGION.PROSE && isEscaped(text, next);
     if (regions[next] === REGION.PROSE && !escaped) {
       return next;
     }
@@ -473,6 +473,15 @@ export const isFenceAt = (scan: TextScan, position: number): boolean => {
 export const isCompleteSpanAt = (scan: TextScan, position: number): boolean =>
   scan.regions[position] === REGION.CODE_SPAN;
 
+/** Whether the character at position follows an odd run of backslashes */
+export const isEscaped = (text: string, position: number): boolean => {
+  let backslashes = 0;
+  for (let i = position - 1; i >= 0 && text[i] === "\\"; i -= 1) {
+    backslashes += 1;
+  }
+  return backslashes % 2 === 1;
+};
+
 /** Counts non-overlapping double-character pairs (**, ~~, $$) in prose */
 export const countDoublePairs = (text: string, char: string): number => {
   const scan = getScan(text);
@@ -480,7 +489,7 @@ export const countDoublePairs = (text: string, char: string): number => {
   let count = 0;
 
   for (let i = text.indexOf(pair); i !== -1; i = text.indexOf(pair, i)) {
-    if (scan.regions[i] === REGION.PROSE) {
+    if (scan.regions[i] === REGION.PROSE && !isEscaped(text, i)) {
       count += 1;
       i += 2;
     } else {

@@ -69,8 +69,10 @@ describe("list handling", () => {
     expect(remend("* __\n* **")).toBe("* __\n* **");
     expect(remend("+ __\n+ **")).toBe("+ __\n+ **");
 
+    // A __ followed by whitespace cannot open emphasis
+    expect(remend("- __ text after")).toBe("- __ text after");
+
     // List items with emphasis markers and text should still complete
-    expect(remend("- __ text after")).toBe("- __ text after__");
     expect(remend("- ** text after")).toBe("- ** text after**");
 
     // Mixed list items
