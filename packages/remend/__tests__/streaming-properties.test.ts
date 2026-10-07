@@ -342,6 +342,16 @@ describe("appended closers", () => {
       { numRuns: Number(process.env.NUM_RUNS ?? 2000) }
     );
   });
+
+  it("re-heals underscore runs to themselves", () => {
+    fc.assert(
+      fc.property(underscoreRunArbitrary, (prefix) => {
+        const healed = remend(prefix);
+        expect(remend(healed)).toBe(healed);
+      }),
+      { numRuns: Number(process.env.NUM_RUNS ?? 2000) }
+    );
+  });
 });
 
 describe("exhaustive prefix sweep", () => {
