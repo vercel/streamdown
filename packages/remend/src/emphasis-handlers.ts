@@ -2,6 +2,7 @@ import {
   isInsideCodeBlock,
   isWithinCompleteInlineCode,
 } from "./code-block-utils";
+import { handleIncompleteInlineCode } from "./inline-code-handler";
 import {
   boldItalicPattern,
   boldPattern,
@@ -290,9 +291,7 @@ const shouldSkipItalicCompletion = (
 };
 
 // Completes incomplete italic formatting with double underscores (__)
-export const handleIncompleteDoubleUnderscoreItalic = (
-  text: string
-): string => {
+const healDoubleUnderscore = (text: string): string => {
   const italicMatch = matchTrailing(text, italicPattern);
   if (!italicMatch) {
     // Check for half-complete closing marker: __content_ should become __content__
@@ -512,9 +511,7 @@ const handleTrailingAsterisksForUnderscore = (text: string): string | null => {
 };
 
 // Completes incomplete italic formatting with single underscores (_)
-export const handleIncompleteSingleUnderscoreItalic = (
-  text: string
-): string => {
+const healSingleUnderscore = (text: string): string => {
   const singleUnderscoreMatch = matchTrailing(text, singleUnderscorePattern);
 
   if (!singleUnderscoreMatch) {
@@ -621,3 +618,36 @@ export const handleIncompleteBoldItalic = (text: string): string => {
 
   return text;
 };
+
+// The inline code handler runs after these, so a closer appended while a code
+// span is open would land inside the span. Heal against the closed span and
+// keep that closing only when the heal adds a closer.
+const healAfterOpenCodeSpan = (
+  text: string,
+  heal: (text: string) => string
+): string => {
+  const closed = handleIncompleteInlineCode(text);
+  if (closed === text) {
+    return heal(text);
+  }
+  const healed = heal(closed);
+  return healed === closed ? text : healed;
+};
+
+export const handleIncompleteDoubleUnderscoreItalic = (text: string): string =>
+  healAfterOpenCodeSpan(text, healDoubleUnderscore);
+
+// Each heal closes only the innermost open run, so healing repeats until no
+// opener is left. Every accepted heal closes a literal, so the loop ends.
+const healUnderscoreStack = (text: string): string => {
+  let healed = text;
+  let next = healSingleUnderscore(healDoubleUnderscore(healed));
+  while (next !== healed) {
+    healed = next;
+    next = healSingleUnderscore(healDoubleUnderscore(healed));
+  }
+  return healed;
+};
+
+export const handleIncompleteSingleUnderscoreItalic = (text: string): string =>
+  healAfterOpenCodeSpan(text, healUnderscoreStack);
