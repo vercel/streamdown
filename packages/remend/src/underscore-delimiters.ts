@@ -20,7 +20,10 @@ export interface OpenUnderscoreRun {
 interface DelimiterRun extends OpenUnderscoreRun {
   canClose: boolean;
   canOpen: boolean;
+  marker: Marker;
 }
+
+type Marker = "*" | "_";
 
 // The start and end of the text count as whitespace for flanking
 const isWhitespaceOrEdge = (char: string): boolean =>
@@ -38,6 +41,7 @@ const toDelimiterRun = (
   end: number,
   prevChar: string
 ): DelimiterRun => {
+  const marker = text[index] as Marker;
   const nextChar = end < text.length ? text[end] : "";
   const leftFlanking = !(
     isWhitespaceOrEdge(nextChar) ||
@@ -52,47 +56,59 @@ const toDelimiterRun = (
       !isPunctuationChar(nextChar))
   );
   const length = end - index;
+  if (marker === "*") {
+    return {
+      canClose: rightFlanking,
+      canOpen: leftFlanking,
+      count: length,
+      length,
+      marker,
+    };
+  }
   return {
     canClose: rightFlanking && (!leftFlanking || isPunctuationChar(nextChar)),
     canOpen: leftFlanking && (!rightFlanking || isPunctuationChar(prevChar)),
     count: length,
     length,
+    marker,
   };
 };
 
-const isSkippedUnderscore = (scan: TextScan, i: number): boolean =>
-  scan.text[i] !== "_" ||
+const isSkippedMarker = (scan: TextScan, i: number, marker: Marker): boolean =>
+  scan.text[i] !== marker ||
   scan.regions[i] !== REGION.PROSE ||
   inMathAt(scan, i) ||
   inLinkUrlAt(scan, i) ||
   inHtmlTagAt(scan, i);
 
-const collectDelimiterRuns = (scan: TextScan): DelimiterRun[] => {
+const collectDelimiterRuns = (
+  scan: TextScan,
+  markers: readonly Marker[]
+): DelimiterRun[] => {
   const { text } = scan;
   const runs: DelimiterRun[] = [];
-  let i = text.indexOf("_");
 
-  while (i !== -1) {
-    if (isSkippedUnderscore(scan, i)) {
-      i = text.indexOf("_", i + 1);
+  for (let i = 0; i < text.length; i += 1) {
+    const marker = text[i] as Marker;
+    if (!markers.includes(marker) || isSkippedMarker(scan, i, marker)) {
       continue;
     }
 
     let end = i + 1;
-    while (end < text.length && !isSkippedUnderscore(scan, end)) {
+    while (end < text.length && !isSkippedMarker(scan, end, marker)) {
       end += 1;
     }
 
-    // A backslash escapes the run's first underscore, which stays literal
+    // A backslash escapes the run's first marker, which stays literal
     // punctuation before the rest of the run
     if (isEscaped(text, i)) {
       if (end - i > 1) {
-        runs.push(toDelimiterRun(text, i + 1, end, "_"));
+        runs.push(toDelimiterRun(text, i + 1, end, marker));
       }
     } else {
       runs.push(toDelimiterRun(text, i, end, i > 0 ? text[i - 1] : ""));
     }
-    i = text.indexOf("_", end);
+    i = end - 1;
   }
 
   return runs;
@@ -109,14 +125,15 @@ const violatesRuleOfThree = (
   (opener.count + closer.count) % 3 === 0 &&
   !(opener.count % 3 === 0 && closer.count % 3 === 0);
 
-// Matches a closing run against the stack until it runs out of underscores
-// or openers, popping every opener it passes
+// Matches a closing run against the stack until it runs out of markers or
+// openers, popping every opener it passes
 const matchCloser = (stack: DelimiterRun[], closer: DelimiterRun): void => {
   while (closer.count > 0) {
     let openerIndex = stack.length - 1;
     while (
       openerIndex >= 0 &&
-      violatesRuleOfThree(stack[openerIndex], closer)
+      (stack[openerIndex].marker !== closer.marker ||
+        violatesRuleOfThree(stack[openerIndex], closer))
     ) {
       openerIndex -= 1;
     }
@@ -132,12 +149,13 @@ const matchCloser = (stack: DelimiterRun[], closer: DelimiterRun): void => {
   }
 };
 
-// Runs the CommonMark emphasis algorithm over the text's underscore runs,
+// Runs the CommonMark emphasis algorithm over the text's delimiter runs,
 // leaving each run's unmatched count and the openers still open
-const matchUnderscoreRuns = (
-  text: string
+const matchDelimiterRuns = (
+  text: string,
+  markers: readonly Marker[]
 ): { runs: DelimiterRun[]; stack: DelimiterRun[] } => {
-  const runs = collectDelimiterRuns(getScan(text));
+  const runs = collectDelimiterRuns(getScan(text), markers);
   const stack: DelimiterRun[] = [];
 
   for (const run of runs) {
@@ -154,12 +172,15 @@ const matchUnderscoreRuns = (
 
 /** The underscore openers the text leaves unmatched, outermost first */
 export const findOpenUnderscoreRuns = (text: string): OpenUnderscoreRun[] =>
-  matchUnderscoreRuns(text).stack;
+  matchDelimiterRuns(text, ["_"]).stack;
 
 // Underscores that render as literal text: openers still open, openers a
-// closer passed over, and closers left over
+// closer passed over, and closers left over. Asterisk runs take part because
+// a matched asterisk pair discards the underscore openers between them.
 const countLiteralUnderscores = (text: string): number =>
-  matchUnderscoreRuns(text).runs.reduce((sum, run) => sum + run.count, 0);
+  matchDelimiterRuns(text, ["*", "_"])
+    .runs.filter((run) => run.marker === "_")
+    .reduce((sum, run) => sum + run.count, 0);
 
 /**
  * Whether every underscore that healing added to the text matched one the

@@ -489,7 +489,9 @@ export const countDoublePairs = (text: string, char: string): number => {
   let count = 0;
 
   for (let i = text.indexOf(pair); i !== -1; i = text.indexOf(pair, i)) {
-    if (scan.regions[i] === REGION.PROSE && !isEscaped(text, i)) {
+    // Inside math a backslash is TeX, so only markdown markers can be escaped
+    const escaped = char !== "$" && isEscaped(text, i);
+    if (scan.regions[i] === REGION.PROSE && !escaped) {
       count += 1;
       i += 2;
     } else {

@@ -77,4 +77,27 @@ describe("underscore delimiter matching", () => {
   it("should still close an opener after a spaced run", () => {
     expect(remend("a __ b __bold")).toBe("a __ b __bold__");
   });
+
+  it.each<{ name: string; input: string; expected: string }>([
+    {
+      name: "an outer run after an escape",
+      input: "\\__._a",
+      expected: "\\__._a__",
+    },
+    { name: "a run across an asterisk", input: "_a *_a", expected: "_a *_a*_" },
+    {
+      name: "a run after an open code span",
+      input: "__`x",
+      expected: "__`x`__",
+    },
+    {
+      name: "a run after an open code span ending in a backslash",
+      input: "__`x\\",
+      expected: "__`x\\`__",
+    },
+  ])("should close $name in one pass", ({ input, expected }) => {
+    const healed = remend(input);
+    expect(healed).toBe(expected);
+    expect(remend(healed)).toBe(healed);
+  });
 });

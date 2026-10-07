@@ -43,6 +43,17 @@ describe("escaped markers", () => {
   });
 });
 
+describe("math", () => {
+  // Inside math a backslash is TeX, so it does not escape the closing $$
+  it.each<{ name: string; input: string }>([
+    { name: "a backslash before $$", input: "$$a\\$$" },
+    { name: "a lone backslash", input: "$$\\$$" },
+    { name: "inline block math", input: "text $$\\frac\\$$ more" },
+  ])("leaves complete math with $name unchanged", ({ input }) => {
+    expect(remend(input)).toBe(input);
+  });
+});
+
 describe("trailing backslash", () => {
   // A closer appended after a trailing backslash would be escaped by it, so
   // the backslash is escaped first
