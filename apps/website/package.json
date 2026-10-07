@@ -28,7 +28,7 @@
     "katex": "^0.16.47",
     "lucide-react": "^1.48.0",
     "motion": "^13.4.5",
-    "next": "16.3.7",
+    "next": "16.3.6",
     "radix-ui": "latest",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
