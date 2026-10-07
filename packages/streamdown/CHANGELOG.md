@@ -1,5 +1,13 @@
 # streamdown
 
+## 2.7.1
+
+### Patch Changes
+
+- 976cf12: fix(translations): add Mermaid chart accessibility translations
+  - Add Mermaid chart ARIA label translation
+  - Add Mermaid rendering error translation
+
 ## 2.7.0
 
 ### Minor Changes
