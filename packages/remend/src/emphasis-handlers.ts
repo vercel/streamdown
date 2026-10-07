@@ -17,13 +17,18 @@ import {
 import {
   countDoublePairs,
   getScan,
-  inHtmlTagAt,
   inLinkUrlAt,
   inMathAt,
+  isEscaped,
   REGION,
   type TextScan,
 } from "./scan";
-import { isHorizontalRule, isWordChar } from "./utils";
+import {
+  closesAddedUnderscores,
+  findOpenUnderscoreRuns,
+  type OpenUnderscoreRun,
+} from "./underscore-delimiters";
+import { isHorizontalRule, isWhitespaceChar, isWordChar } from "./utils";
 
 // Helper function to check if an asterisk should be skipped
 const shouldSkipAsterisk = (
@@ -33,7 +38,7 @@ const shouldSkipAsterisk = (
   nextChar: string
 ): boolean => {
   // Skip if escaped with backslash
-  if (prevChar === "\\") {
+  if (isEscaped(scan.text, index)) {
     return true;
   }
 
@@ -74,9 +79,6 @@ const shouldSkipAsterisk = (
 
   return false;
 };
-
-const isWhitespaceChar = (char: string): boolean =>
-  char === " " || char === "\t" || char === "\n";
 
 const isWordInternalAsterisk = (prevChar: string, nextChar: string): boolean =>
   Boolean(prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar));
@@ -149,67 +151,6 @@ export const countSingleAsterisks = (text: string): number => {
   return count;
 };
 
-// Helper function to check if an underscore should be skipped
-const shouldSkipUnderscore = (
-  scan: TextScan,
-  index: number,
-  prevChar: string,
-  nextChar: string
-): boolean => {
-  // Skip if escaped with backslash
-  if (prevChar === "\\") {
-    return true;
-  }
-
-  // Skip if within math block
-  if (inMathAt(scan, index)) {
-    return true;
-  }
-
-  // Skip if within a link or image URL
-  if (inLinkUrlAt(scan, index)) {
-    return true;
-  }
-
-  // Skip if within an HTML tag (e.g. <a target="_blank">)
-  if (inHtmlTagAt(scan, index)) {
-    return true;
-  }
-
-  // Skip if part of __
-  if (prevChar === "_" || nextChar === "_") {
-    return true;
-  }
-
-  // Skip if underscore is word-internal (between word characters)
-  if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
-    return true;
-  }
-
-  return false;
-};
-
-export const countSingleUnderscores = (text: string): number => {
-  const scan = getScan(text);
-  let count = 0;
-  const len = text.length;
-
-  for (let index = 0; index < len; index += 1) {
-    if (text[index] !== "_" || scan.regions[index] !== REGION.PROSE) {
-      continue;
-    }
-
-    const prevChar = index > 0 ? text[index - 1] : "";
-    const nextChar = index < len - 1 ? text[index + 1] : "";
-
-    if (!shouldSkipUnderscore(scan, index, prevChar, nextChar)) {
-      count += 1;
-    }
-  }
-
-  return count;
-};
-
 // Counts triple asterisks that are not part of quadruple or more asterisks
 // and not inside code regions
 export const countTripleAsterisks = (text: string): number => {
@@ -240,125 +181,18 @@ export const countTripleAsterisks = (text: string): number => {
 const countDoubleAsterisks = (text: string): number =>
   countDoublePairs(text, "*");
 
-// Whether the text has an unmatched __ delimiter, counted per maximal
-// underscore run.
-//
-// Counting raw occurrences misreads identifiers: a name like snake__case
-// contains __ but cannot open or close emphasis, and counting it either
-// invents a closer (odd count) or pairs it against a real delimiter and
-// swallows a closer that was needed (even count). Per run:
-//
-// - A run contributes floor(length / 2) pairs, and flips delimiter parity
-//   only when that is odd. __ and ___ flip; ____ does not.
-// - A word-internal run (word characters on both sides) is part of an
-//   identifier, never a delimiter.
-// - Runs inside code regions, math, link URLs, and HTML tags are skipped,
-//   matching the single-underscore handler's flanking rules.
-// - A run alone on its line is a thematic break, not emphasis.
-const isLineBoundaryChar = (char: string): boolean =>
-  char === "" || char === " " || char === "\t" || char === "\n";
+const isHalfClosedDoubleUnderscore = (
+  run: OpenUnderscoreRun | undefined
+): boolean => run !== undefined && run.count === 1 && run.length >= 2;
 
-// isHorizontalRule scans the run's whole line, so its verdict is memoized
-// per line to keep run counting linear when many runs share a line
-interface ThematicBreakMemo {
-  lineEnd: number;
-  result: boolean;
-}
+// Healing that adds an underscore closer which cannot match would render it
+// as literal text, so such a heal is dropped
+const healUnderscores = (text: string, healed: string): string =>
+  closesAddedUnderscores(text, healed) ? healed : text;
 
-const isThematicBreakRun = (
-  text: string,
-  runStart: number,
-  prevChar: string,
-  nextChar: string,
-  memo: ThematicBreakMemo
-): boolean => {
-  // A thematic break line holds only markers and whitespace, so only runs
-  // flanked by whitespace or line boundaries can be part of one
-  if (!(isLineBoundaryChar(prevChar) && isLineBoundaryChar(nextChar))) {
-    return false;
-  }
-  if (runStart > memo.lineEnd) {
-    const lineEnd = text.indexOf("\n", runStart);
-    memo.lineEnd = lineEnd === -1 ? text.length : lineEnd;
-    memo.result = isHorizontalRule(text, runStart, "_");
-  }
-  return memo.result;
-};
-
-// Whether an underscore run at [runStart, runEnd) flips delimiter parity
-const doubleUnderscoreRunFlips = (
-  scan: TextScan,
-  initialRunStart: number,
-  runEnd: number,
-  memo: ThematicBreakMemo
-): boolean => {
-  const text = scan.text;
-
-  // A backslash escapes the first underscore of the run. The escaped
-  // underscore is literal punctuation, so the rest of the run still flanks
-  // as a delimiter.
-  let runStart = initialRunStart;
-  let escaped = false;
-  if (runStart > 0 && text[runStart - 1] === "\\") {
-    runStart += 1;
-    escaped = true;
-  }
-  const runLength = runEnd - runStart;
-  if (runLength < 2) {
-    return false;
-  }
-
-  const beforeRun = runStart > 0 ? text[runStart - 1] : "";
-  const prevChar = escaped ? "\\" : beforeRun;
-  const nextChar = runEnd < text.length ? text[runEnd] : "";
-  if (isWordChar(prevChar) && isWordChar(nextChar)) {
-    return false;
-  }
-  if (isThematicBreakRun(text, runStart, prevChar, nextChar, memo)) {
-    return false;
-  }
-  if (
-    inMathAt(scan, runStart) ||
-    inLinkUrlAt(scan, runStart) ||
-    inHtmlTagAt(scan, runStart)
-  ) {
-    return false;
-  }
-
-  return Math.floor(runLength / 2) % 2 === 1;
-};
-
-const hasUnmatchedDoubleUnderscore = (text: string): boolean => {
-  const scan = getScan(text);
-  const n = text.length;
-  const memo: ThematicBreakMemo = { lineEnd: -1, result: false };
-  let unmatched = false;
-  let i = 0;
-
-  while (i < n) {
-    if (text[i] !== "_" || scan.regions[i] !== REGION.PROSE) {
-      i += 1;
-      continue;
-    }
-
-    const runStart = i;
-    let runEnd = i + 1;
-    while (
-      runEnd < n &&
-      text[runEnd] === "_" &&
-      scan.regions[runEnd] === REGION.PROSE
-    ) {
-      runEnd += 1;
-    }
-    i = runEnd;
-
-    if (doubleUnderscoreRunFlips(scan, runStart, runEnd, memo)) {
-      unmatched = !unmatched;
-    }
-  }
-
-  return unmatched;
-};
+const innermostOpenUnderscoreRun = (
+  text: string
+): OpenUnderscoreRun | undefined => findOpenUnderscoreRuns(text).at(-1);
 
 // Helper to check if bold marker should not be completed
 const shouldSkipBoldCompletion = (
@@ -475,9 +309,9 @@ export const handleIncompleteDoubleUnderscoreItalic = (
           isInsideCodeBlock(text, markerIndex) ||
           isWithinCompleteInlineCode(text, markerIndex)
         ) &&
-        hasUnmatchedDoubleUnderscore(text)
+        isHalfClosedDoubleUnderscore(innermostOpenUnderscoreRun(text))
       ) {
-        return `${text}_`;
+        return healUnderscores(text, `${text}_`);
       }
     }
     return text;
@@ -498,8 +332,9 @@ export const handleIncompleteDoubleUnderscoreItalic = (
     return text;
   }
 
-  if (hasUnmatchedDoubleUnderscore(text)) {
-    return `${text}__`;
+  const openRun = innermostOpenUnderscoreRun(text);
+  if (openRun && openRun.count >= 2) {
+    return healUnderscores(text, `${text}__`);
   }
 
   return text;
@@ -515,7 +350,7 @@ const isLoneProseAsterisk = (scan: TextScan, i: number): boolean => {
     scan.regions[i] === REGION.PROSE &&
     text[i - 1] !== "*" &&
     text[i + 1] !== "*" &&
-    text[i - 1] !== "\\" &&
+    !isEscaped(text, i) &&
     !inMathAt(scan, i)
   );
 };
@@ -605,7 +440,7 @@ const findFirstSingleUnderscoreIndex = (text: string): number => {
       scan.regions[i] === REGION.PROSE &&
       text[i - 1] !== "_" &&
       text[i + 1] !== "_" &&
-      text[i - 1] !== "\\" &&
+      !isEscaped(text, i) &&
       !inMathAt(scan, i) &&
       !inLinkUrlAt(scan, i)
     ) {
@@ -713,14 +548,12 @@ export const handleIncompleteSingleUnderscoreItalic = (
     return text;
   }
 
-  const singleUnderscores = countSingleUnderscores(text);
-  if (singleUnderscores % 2 === 1) {
+  if (innermostOpenUnderscoreRun(text)?.count === 1) {
     // Check if we need to insert _ before trailing ** for proper nesting
-    const trailingResult = handleTrailingAsterisksForUnderscore(text);
-    if (trailingResult !== null) {
-      return trailingResult;
-    }
-    return insertClosingUnderscore(text);
+    const healed =
+      handleTrailingAsterisksForUnderscore(text) ??
+      insertClosingUnderscore(text);
+    return healUnderscores(text, healed);
   }
 
   return text;
