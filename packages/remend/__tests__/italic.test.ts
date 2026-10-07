@@ -120,8 +120,7 @@ describe("italic formatting with single underscores (_)", () => {
     expect(remend("naïve_approach")).toBe("naïve_approach");
   });
 
-  it("should not count word-internal single underscores in countSingleUnderscores", () => {
-    // This tests the path where underscore is between word characters (lines 106-108)
+  it("should not count word-internal single underscores", () => {
     expect(remend("some_variable_name")).toBe("some_variable_name");
     expect(remend("test_123_value")).toBe("test_123_value");
     expect(remend("_start with underscore")).toBe("_start with underscore_");

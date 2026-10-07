@@ -54,4 +54,27 @@ describe("escaped underscores", () => {
   it("should treat the run after an escaped underscore as a delimiter", () => {
     expect(remend("\\___bold")).toBe("\\___bold__");
   });
+
+  it("should not treat a run after an escaped backslash as escaped", () => {
+    expect(remend("\\\\__bold")).toBe("\\\\__bold__");
+  });
+});
+
+describe("underscore delimiter matching", () => {
+  it.each<[string, string]>([
+    ["a run followed by whitespace", "__ foo"],
+    ["a spaced run before an escaped run", "a __ b \\__c"],
+    ["a spaced run before an escaped run at the start", "__ \\__alph"],
+    ["a run after a letter and before punctuation", "a__."],
+    ["a closer-only run with nothing open", "__ a__ a"],
+    ["a longer run that closes the opener", "__a____.a"],
+    ["an opener the rule of 3 keeps a __ closer from matching", "\\_____\\a"],
+    ["a leftover single underscore after an escape", "__\\__ a"],
+  ])("should not append a closer for %s", (_name, input) => {
+    expect(remend(input)).toBe(input);
+  });
+
+  it("should still close an opener after a spaced run", () => {
+    expect(remend("a __ b __bold")).toBe("a __ b __bold__");
+  });
 });

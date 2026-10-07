@@ -17,7 +17,7 @@ import {
   INCOMPLETE_IMAGE_PLACEHOLDER,
   type LinkMode,
 } from "./link-image-handler";
-import { clearScanCache } from "./scan";
+import { clearScanCache, getScan, inMathAt, isEscaped, REGION } from "./scan";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleSingleTildeEscape } from "./single-tilde-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
@@ -277,6 +277,16 @@ const getEnabledBuiltInHandlers = (
     });
 };
 
+// Whether the text ends with an unescaped backslash in prose
+const isTrailingEscape = (text: string): boolean => {
+  const last = text.length - 1;
+  if (text[last] !== "\\" || isEscaped(text, last)) {
+    return false;
+  }
+  const scan = getScan(text);
+  return scan.regions[last] === REGION.PROSE && !inMathAt(scan, last);
+};
+
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
 const remend = (text: string, options?: RemendOptions): string => {
   if (!text || typeof text !== "string") {
@@ -284,7 +294,7 @@ const remend = (text: string, options?: RemendOptions): string => {
   }
 
   // Remove trailing whitespace if it's not a double space
-  let result =
+  const result =
     text.endsWith(" ") && !text.endsWith("  ") ? text.slice(0, -1) : text;
 
   // Get enabled built-in handlers
@@ -302,25 +312,39 @@ const remend = (text: string, options?: RemendOptions): string => {
     (a, b) => (a.handler.priority ?? 0) - (b.handler.priority ?? 0)
   );
 
-  try {
+  const runHandlers = (input: string): string => {
+    let output = input;
     // Execute handlers in priority order
     for (const { handler, earlyReturn } of allHandlers) {
-      result = handler.handle(result);
+      output = handler.handle(output);
 
       // Check for early return condition (e.g., incomplete link marker)
-      if (earlyReturn?.(result)) {
-        return result;
+      if (earlyReturn?.(output)) {
+        return output;
       }
     }
 
     // A handler that removes a trailing fragment can expose a trailing space
     // (e.g. dropping an incomplete image). Strip it the same way the input
     // was stripped, so healed output re-heals to itself.
-    if (result.endsWith(" ") && !result.endsWith("  ")) {
-      return result.slice(0, -1);
+    if (output.endsWith(" ") && !output.endsWith("  ")) {
+      return output.slice(0, -1);
     }
 
-    return result;
+    return output;
+  };
+
+  try {
+    if (!isTrailingEscape(result)) {
+      return runHandlers(result);
+    }
+
+    // A trailing backslash escapes whatever follows it, so a closer appended
+    // after it would render as text. Heal with the backslash escaped, which
+    // keeps it literal without changing how the markers before it flank.
+    const escaped = `${result}\\`;
+    const healed = runHandlers(escaped);
+    return healed === escaped ? result : healed;
   } finally {
     clearScanCache();
   }

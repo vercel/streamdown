@@ -77,17 +77,14 @@ describe("backslash escapes with incomplete formatting", () => {
     expect(result).toBe("\\*not italic");
   });
 
-  it("should not close double-escaped backslash before asterisk", () => {
-    // remend sees the char before * as \ (the second backslash) and treats it as escaped
+  it("should close an asterisk after an escaped backslash", () => {
     const result = remend("\\\\*actually italic");
-    expect(result).toBe("\\\\*actually italic");
+    expect(result).toBe("\\\\*actually italic*");
   });
 
-  it("should close escaped double asterisks (remend does not track escape depth)", () => {
-    // remend doesn't understand that \** has the first * escaped;
-    // it sees ** and closes bold
+  it("should not close escaped double asterisks", () => {
     const result = remend("\\**not bold");
-    expect(result).toBe("\\**not bold**");
+    expect(result).toBe("\\**not bold");
   });
 
   it("should handle mixed escaped and real formatting", () => {
