@@ -22,14 +22,9 @@ describe("list handling", () => {
     expect(remend(text)).toBe(text);
   });
 
-  it("should complete incomplete italic even in list items", () => {
-    // List markers are not counted, but incomplete italic formatting is still completed
+  it("should not close an opener from an earlier list item", () => {
     const text = "* Item with *incomplete italic\n* Another item";
-    // The function adds an asterisk to complete the italic, though at the end of text
-    // This is not ideal but matches current behavior
-    expect(remend(text)).toBe(
-      "* Item with *incomplete italic\n* Another item*"
-    );
+    expect(remend(text)).toBe(text);
   });
 
   it("should handle mixed list markers and italic formatting", () => {
@@ -72,8 +67,8 @@ describe("list handling", () => {
     // A __ followed by whitespace cannot open emphasis
     expect(remend("- __ text after")).toBe("- __ text after");
 
-    // List items with emphasis markers and text should still complete
-    expect(remend("- ** text after")).toBe("- ** text after**");
+    // A ** followed by whitespace cannot open emphasis
+    expect(remend("- ** text after")).toBe("- ** text after");
 
     // Mixed list items
     expect(remend("- __\n- Normal item\n- **")).toBe(
@@ -88,9 +83,9 @@ describe("list handling", () => {
     expect(remend("- `")).toBe("- `");
   });
 
-  it("should not complete list items with emphasis markers spanning multiple lines", () => {
-    // When a list item starts with ** followed by content with newline, don't complete
-    expect(remend("- **text\nmore text")).toBe("- **text\nmore text");
+  it("should close emphasis within its own list item only", () => {
+    // A lazy continuation line stays in the item, but the next item starts a new block
+    expect(remend("- **text\nmore text")).toBe("- **text\nmore text**");
     expect(remend("* **content\n* Another item")).toBe(
       "* **content\n* Another item"
     );
