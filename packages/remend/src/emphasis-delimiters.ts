@@ -39,8 +39,8 @@ interface DelimiterRun extends MarkerRun {
 }
 
 interface DelimiterPair {
-  closer: MarkerRun;
-  opener: MarkerRun;
+  closer: DelimiterRun;
+  opener: DelimiterRun;
   used: number;
 }
 
@@ -350,15 +350,14 @@ const matchPass = (
 const isTilde = (run: DelimiterRun): boolean => run.marker === "~";
 const isAttention = (run: DelimiterRun): boolean => run.marker !== "~";
 
-const matchScope = (
-  runs: DelimiterRun[],
-  pairs: DelimiterPair[]
-): DelimiterRun[] => {
-  // An inert tilde run never reaches the strikethrough resolver
+// micromark resolves attention and strikethrough in the order each first
+// appears in the block, link text included, and an inert tilde run never
+// reaches the strikethrough resolver
+const passOrder = (runs: readonly DelimiterRun[]) => {
   const first = runs.find((run) => !isTilde(run) || run.length <= 2);
-  const passes =
-    first && isTilde(first) ? [isTilde, isAttention] : [isAttention, isTilde];
-  return passes.flatMap((inPass) => matchPass(runs, inPass, pairs));
+  return first && isTilde(first)
+    ? [isTilde, isAttention]
+    : [isAttention, isTilde];
 };
 
 const matchRuns = (runs: DelimiterRun[]): DelimiterMatch => {
@@ -372,9 +371,10 @@ const matchRuns = (runs: DelimiterRun[]): DelimiterMatch => {
     }
   }
   const pairs: DelimiterPair[] = [];
+  const passes = passOrder(runs);
   let open: DelimiterRun[] = [];
   for (const [scope, scoped] of scopes) {
-    const left = matchScope(scoped, pairs);
+    const left = passes.flatMap((inPass) => matchPass(scoped, inPass, pairs));
     if (scope === -1) {
       open = left;
     }
@@ -515,6 +515,13 @@ const parentOf = (
   return parent;
 };
 
+// An authored pair whose opener follows punctuation, as in **注意：**这是, is
+// usually a closer that failed flanking, so emphasis around it is intended
+const opensAfterPunctuation = (pair: DelimiterPair): boolean =>
+  isPunctuationChar(pair.opener.prevChar) &&
+  !isWhitespaceOrEdge(pair.opener.nextChar) &&
+  !isPunctuationChar(pair.opener.nextChar);
+
 // Authors don't nest emphasis directly inside the same emphasis, so a heal
 // that needs that is closing runs written as literal text
 const nestsSameKind = (match: DelimiterMatch, insertAt: number): boolean => {
@@ -525,7 +532,7 @@ const nestsSameKind = (match: DelimiterMatch, insertAt: number): boolean => {
     return (
       parent !== undefined &&
       kindOf(parent) === kindOf(pair) &&
-      (healed(pair) || healed(parent))
+      (healed(pair) || (healed(parent) && !opensAfterPunctuation(pair)))
     );
   });
 };
