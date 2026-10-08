@@ -92,6 +92,8 @@ const isGated = (
   !hasContentBefore(text, run, insertAt) ||
   // Prose uses a single tilde for "approximately"
   (run.marker === "~" && run.count === 1) ||
+  // Models write fill-in blanks as long underscore runs, like Name: ______
+  (run.marker === "_" && run.length >= 4) ||
   opensColdInWord(text, run, previous) ||
   followsEscapedMarker(text, run);
 

@@ -134,6 +134,16 @@ describe("emphasis nesting", () => {
       expected: "hello**world",
     },
     {
+      name: "fill-in blank before punctuation",
+      input: "Can we discuss ______? It is",
+      expected: "Can we discuss ______? It is",
+    },
+    {
+      name: "fill-in blank between fullwidth punctuation",
+      input: "电话：__________（可向",
+      expected: "电话：__________（可向",
+    },
+    {
       name: "asterisk between an ASCII letter and CJK",
       input: "使用A*算法",
       expected: "使用A*算法",
