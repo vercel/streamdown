@@ -140,10 +140,10 @@ const createRun = (
   return run;
 };
 
-const findOpenInlineMath = (scan: TextScan): number => {
+const findOpenInlineMath = (scan: TextScan, inlineMath: boolean): number => {
   const { text } = scan;
   let start = text.length;
-  while (start > 0 && inMathAt(scan, start - 1)) {
+  while (start > 0 && inMathAt(scan, start - 1, inlineMath)) {
     start -= 1;
   }
   const isInlineDollar =
@@ -153,10 +153,15 @@ const findOpenInlineMath = (scan: TextScan): number => {
 
 // An unclosed code span or inline math span renders as literal text, so its
 // markers still count
-const isProseAt = (scan: TextScan, i: number, openMath: number): boolean =>
+const isProseAt = (
+  scan: TextScan,
+  i: number,
+  openMath: number,
+  inlineMath: boolean
+): boolean =>
   (scan.regions[i] === REGION.PROSE ||
     scan.regions[i] === REGION.CODE_SPAN_OPEN) &&
-  !(i < openMath && inMathAt(scan, i)) &&
+  !(i < openMath && inMathAt(scan, i, inlineMath)) &&
   !inLinkUrlAt(scan, i) &&
   !inHtmlTagAt(scan, i);
 
@@ -170,7 +175,8 @@ interface LinkLabel {
 const findLinkLabels = (
   scan: TextScan,
   from: number,
-  openMath: number
+  openMath: number,
+  inlineMath: boolean
 ): LinkLabel[] => {
   const { text } = scan;
   const labels: LinkLabel[] = [];
@@ -180,7 +186,7 @@ const findLinkLabels = (
     if (
       (char !== "[" && char !== "]") ||
       isEscaped(text, i) ||
-      !isProseAt(scan, i, openMath)
+      !isProseAt(scan, i, openMath, inlineMath)
     ) {
       continue;
     }
@@ -212,13 +218,17 @@ const scopeOf = (labels: readonly LinkLabel[], index: number): number => {
   return scope;
 };
 
-const collectDelimiterRuns = (scan: TextScan, from: number): DelimiterRun[] => {
+const collectDelimiterRuns = (
+  scan: TextScan,
+  from: number,
+  inlineMath: boolean
+): DelimiterRun[] => {
   const { text } = scan;
   const runs: DelimiterRun[] = [];
-  const openMath = findOpenInlineMath(scan);
-  const labels = findLinkLabels(scan, from, openMath);
+  const openMath = findOpenInlineMath(scan, inlineMath);
+  const labels = findLinkLabels(scan, from, openMath, inlineMath);
   const isRunMarker = (i: number, marker: string): boolean =>
-    text[i] === marker && isProseAt(scan, i, openMath);
+    text[i] === marker && isProseAt(scan, i, openMath, inlineMath);
 
   for (let i = from; i < text.length; i += 1) {
     const marker = text[i];
@@ -382,13 +392,20 @@ const matchRuns = (runs: DelimiterRun[]): DelimiterMatch => {
  * Matches the delimiter runs of the text's last inline block as micromark
  * does, per CommonMark and GFM strikethrough
  */
-export const matchDelimiterRuns = (text: string): DelimiterMatch => {
+/** Matches the runs of the text's last block, where `inlineMath` decides if a lone `$` opens math */
+export const matchDelimiterRuns = (
+  text: string,
+  inlineMath: boolean
+): DelimiterMatch => {
   const scan = getScan(text);
-  return matchRuns(collectDelimiterRuns(scan, findInlineBlockStart(scan)));
+  return matchRuns(
+    collectDelimiterRuns(scan, findInlineBlockStart(scan), inlineMath)
+  );
 };
 
 /** The authored text's runs, reused to match each candidate heal */
 export interface HealBase {
+  inlineMath: boolean;
   insertAt: number;
   runs: readonly DelimiterRun[];
   /** Whether closers would land where runs aren't collected */
@@ -396,19 +413,24 @@ export interface HealBase {
   text: string;
 }
 
-export const prepareHeal = (text: string, insertAt: number): HealBase => {
+export const prepareHeal = (
+  text: string,
+  insertAt: number,
+  inlineMath: boolean
+): HealBase => {
   const scan = getScan(text);
   const from = findInlineBlockStart(scan);
   return {
+    inlineMath,
     insertAt,
-    runs: collectDelimiterRuns(scan, from),
+    runs: collectDelimiterRuns(scan, from, inlineMath),
     // Past a trailing blank line the closers would start a block of their
     // own, and inside a tag, math or a fence their markers aren't collected
     slow:
       from > insertAt ||
       (insertAt > 0 &&
         (inHtmlTagAt(scan, insertAt - 1) ||
-          inMathAt(scan, insertAt - 1) ||
+          inMathAt(scan, insertAt - 1, inlineMath) ||
           isFenceAt(scan, insertAt - 1))),
     text,
   };
@@ -423,7 +445,7 @@ export const matchHealed = (
   closers: string
 ): DelimiterMatch => {
   if (base.slow) {
-    return matchDelimiterRuns(insertClosers(base, closers));
+    return matchDelimiterRuns(insertClosers(base, closers), base.inlineMath);
   }
   const { insertAt, text } = base;
   const runs = base.runs.map((run) => ({
