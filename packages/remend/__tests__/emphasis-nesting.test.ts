@@ -55,6 +55,21 @@ describe("emphasis nesting", () => {
       input: "- **text\nmore text",
       expected: "- **text\nmore text**",
     },
+    {
+      name: "bold after a closer that failed flanking",
+      input: "**Note:**This is **imp",
+      expected: "**Note:**This is **imp**",
+    },
+    {
+      name: "bold around a pair opened after fullwidth punctuation",
+      input: "**机器学习（ML）**是一个分支，能够**从数",
+      expected: "**机器学习（ML）**是一个分支，能够**从数**",
+    },
+    {
+      name: "asterisk in link text resolves before strikethrough",
+      input: "[*](u)~~*~~*a",
+      expected: "[*](u)~~*~~*a~~",
+    },
   ])("pairs within one block: $name", ({ input, expected }) => {
     expect(remend(input)).toBe(expected);
     expect(remend(expected)).toBe(expected);

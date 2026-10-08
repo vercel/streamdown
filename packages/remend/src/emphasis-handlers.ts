@@ -139,6 +139,37 @@ const closerCandidates = (group: MarkerRun[], reusable: number): string[] => {
   );
 };
 
+// Two open runs of one kind are literal text, like globs or _id, _rev.
+// When only double * or _ runs are open they pair off instead, since a closer
+// that failed flanking in **Note:**text leaves an opener behind it that the
+// author may still close. Tildes stay strict because GFM matches them in a
+// separate pass.
+const withoutDuplicates = (
+  runs: readonly MarkerRun[]
+): MarkerRun[] | undefined => {
+  const byKind = new Map<string, MarkerRun[]>();
+  for (const run of runs) {
+    const kind = run.marker + run.count;
+    byKind.set(kind, [...(byKind.get(kind) ?? []), run]);
+  }
+  // Closing another kind can bury one run of a pair and expose the other
+  if (byKind.size > 1 && byKind.size < runs.length) {
+    return;
+  }
+  const healable = new Set<MarkerRun>();
+  for (const group of byKind.values()) {
+    if (group.length > 1 && (group[0].count === 1 || group[0].marker === "~")) {
+      return;
+    }
+    if (group.length % 2 === 1) {
+      healable.add(
+        group.reduce((last, run) => (run.index > last.index ? run : last))
+      );
+    }
+  }
+  return runs.filter((run) => healable.has(run));
+};
+
 // A closer's flanking can depend on the closers after it, so each step tries
 // every remaining closer at once before trying it alone
 const extendHeal = (
@@ -162,10 +193,8 @@ const extendHeal = (
       return start;
     }
   }
-  // Two open runs of one marker and length are literal text, like globs or a
-  // closer that failed flanking in **Note:**text
-  const kinds = new Set(runs.map((run) => run.marker + run.count));
-  if (kinds.size < runs.length) {
+  const healable = withoutDuplicates(runs);
+  if (healable === undefined) {
     return start;
   }
 
@@ -213,7 +242,7 @@ const extendHeal = (
 
   // Largest subsets first, so a tie keeps the heal that closes more runs
   const subsets: MarkerRun[][] = [[]];
-  for (const run of runs) {
+  for (const run of healable) {
     subsets.push(...subsets.map((set) => [...set, run]));
   }
   subsets.reverse();
