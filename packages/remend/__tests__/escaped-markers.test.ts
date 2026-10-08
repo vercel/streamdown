@@ -65,8 +65,8 @@ describe("trailing backslash", () => {
     { name: "~~", input: "~~foo\\", expected: "~~foo\\\\~~" },
     {
       name: "a partial __ match",
-      input: "____.\\",
-      expected: "____.\\\\____",
+      input: "___.\\",
+      expected: "___.\\\\___",
     },
     {
       name: "a backslash after whitespace",
