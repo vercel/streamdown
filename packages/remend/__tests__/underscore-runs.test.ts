@@ -51,8 +51,8 @@ describe("underscore run lengths", () => {
 });
 
 describe("escaped underscores", () => {
-  it("should treat the run after an escaped underscore as a delimiter", () => {
-    expect(remend("\\___bold")).toBe("\\___bold__");
+  it("should leave the run after an escaped underscore for the author to close", () => {
+    expect(remend("\\___bold")).toBe("\\___bold");
   });
 
   it("should not treat a run after an escaped backslash as escaped", () => {
@@ -63,13 +63,13 @@ describe("escaped underscores", () => {
 describe("underscore delimiter matching", () => {
   it.each<[string, string]>([
     ["a run followed by whitespace", "__ foo"],
-    ["a spaced run before an escaped run", "a __ b \\__c"],
-    ["a spaced run before an escaped run at the start", "__ \\__alph"],
+    ["two open runs of one marker and length", "_a *_a"],
+    ["the run left after an escaped underscore", "a __ b \\__c"],
+    ["the run left after an escaped underscore at the start", "__ \\__alph"],
+    ["the run left after an escaped underscore and a backslash", "\\_____\\a"],
     ["a run after a letter and before punctuation", "a__."],
     ["a closer-only run with nothing open", "__ a__ a"],
     ["a longer run that closes the opener", "__a____.a"],
-    ["an opener the rule of 3 keeps a __ closer from matching", "\\_____\\a"],
-    ["a leftover single underscore after an escape", "__\\__ a"],
   ])("should not append a closer for %s", (_name, input) => {
     expect(remend(input)).toBe(input);
   });
@@ -80,11 +80,15 @@ describe("underscore delimiter matching", () => {
 
   it.each<{ name: string; input: string; expected: string }>([
     {
-      name: "an outer run after an escape",
+      name: "an inner run after an escaped one",
       input: "\\__._a",
-      expected: "\\__._a__",
+      expected: "\\__._a_",
     },
-    { name: "a run across an asterisk", input: "_a *_a", expected: "_a *_a*_" },
+    {
+      name: "the underscore an escaped run leaves open",
+      input: "__\\__ a",
+      expected: "__\\__ a_",
+    },
     {
       name: "a run after an open code span",
       input: "__`x",
