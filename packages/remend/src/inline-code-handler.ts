@@ -1,5 +1,6 @@
 import { whitespaceOrMarkersPattern } from "./patterns";
 import { getScan } from "./scan";
+import { isWhitespaceChar } from "./utils";
 
 // Completes an unclosed inline code span (`)
 //
@@ -21,15 +22,22 @@ export const handleIncompleteInlineCode = (text: string): string => {
     return text;
   }
 
+  // The closing run goes before trailing whitespace, since one after a
+  // trailing newline would start a new line and could open a fence
+  let end = text.length;
+  while (end > 0 && isWhitespaceChar(text[end - 1])) {
+    end -= 1;
+  }
+
   // Don't close if there's no meaningful content after the opening run
-  const content = text.slice(span.start + span.runLength);
+  const content = text.slice(span.start + span.runLength, end);
   if (!content || whitespaceOrMarkersPattern.test(content)) {
     return text;
   }
 
   // A trailing backtick run is the closing run being streamed
   let trailingRun = 0;
-  let i = text.length - 1;
+  let i = end - 1;
   while (i >= 0 && text[i] === "`") {
     trailingRun += 1;
     i -= 1;
@@ -41,5 +49,9 @@ export const handleIncompleteInlineCode = (text: string): string => {
     return text;
   }
 
-  return text + "`".repeat(span.runLength - trailingRun);
+  return (
+    text.slice(0, end) +
+    "`".repeat(span.runLength - trailingRun) +
+    text.slice(end)
+  );
 };

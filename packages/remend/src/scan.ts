@@ -98,7 +98,7 @@ const skipListMarker = (text: string, start: number): number => {
   return text[i] === " " ? i + 1 : -1;
 };
 
-interface ContainerPrefix {
+export interface ContainerPrefix {
   /** Index of the first character after the markers and indentation */
   contentStart: number;
   listIndent: number;
@@ -108,7 +108,7 @@ interface ContainerPrefix {
 // Walks the block quote and list markers that open a line. A single forward
 // pass: a regex with nested repetition over these markers backtracks
 // exponentially on a line of repeated list markers.
-const skipContainerPrefix = (
+export const skipContainerPrefix = (
   text: string,
   lineStart: number,
   lineEnd: number

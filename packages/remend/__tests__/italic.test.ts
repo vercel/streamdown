@@ -136,7 +136,8 @@ describe("italic formatting with single underscores (_)", () => {
 
   it("should handle incomplete single underscore with trailing newlines", () => {
     expect(remend("Text with _italic\n")).toBe("Text with _italic_\n");
-    expect(remend("_incomplete\n\n")).toBe("_incomplete_\n\n");
+    // A blank line ends the paragraph, so the opener can no longer close
+    expect(remend("_incomplete\n\n")).toBe("_incomplete\n\n");
     expect(remend("Start _text\n")).toBe("Start _text_\n");
   });
 });

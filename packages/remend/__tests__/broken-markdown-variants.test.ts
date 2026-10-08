@@ -3,30 +3,24 @@ import remend from "../src";
 
 // 1. Rapid successive formatting switches
 describe("rapid successive formatting switches", () => {
-  it("should close italic and strikethrough but not bold when asterisk in content", () => {
-    // Bold pattern can't match when there's a * in content between ** and end
-    // Only italic (*) and strikethrough (~~) close
+  it("should close strikethrough, italic and bold innermost first", () => {
     const result = remend("**bold then *italic then ~~strike");
-    expect(result).toBe("**bold then *italic then ~~strike*~~");
+    expect(result).toBe("**bold then *italic then ~~strike~~***");
   });
 
-  it("should close italic and strikethrough when bold pattern blocked", () => {
-    // Bold pattern blocked by * in content; italic and strikethrough close
+  it("should close italic and bold inside strikethrough", () => {
     const result = remend("~~strike **bold *italic");
-    expect(result).toBe("~~strike **bold *italic*~~");
+    expect(result).toBe("~~strike **bold *italic***~~");
   });
 
-  it("should close handlers in priority order (bold before strikethrough before code)", () => {
-    // Bold can't match (asterisk in content), italic appends *, boldItalic appends ***,
-    // then inline code appends `, then strikethrough appends ~~
+  it("should close the code span before the emphasis around it", () => {
     const result = remend("*italic **bold ~~strike `code");
-    expect(result).toBe("*italic **bold ~~strike `code***`~~");
+    expect(result).toBe("*italic **bold ~~strike `code`~~***");
   });
 
-  it("should close bold before strikethrough (priority order)", () => {
-    // Bold handler (priority 35) runs before strikethrough (priority 60)
+  it("should close strikethrough before the bold around it", () => {
     const result = remend("**bold ~~strike");
-    expect(result).toBe("**bold ~~strike**~~");
+    expect(result).toBe("**bold ~~strike~~**");
   });
 
   it("should close italic then bold via bold-italic handler", () => {
@@ -82,7 +76,7 @@ describe("backslash escapes with incomplete formatting", () => {
     expect(result).toBe("\\\\*actually italic*");
   });
 
-  it("should not close escaped double asterisks", () => {
+  it("should leave the asterisk after an escaped one for the author to close", () => {
     const result = remend("\\**not bold");
     expect(result).toBe("\\**not bold");
   });
@@ -317,25 +311,19 @@ describe("formatting at paragraph boundaries", () => {
 
 // 13. Deeply nested formatting (4+ levels)
 describe("deeply nested formatting", () => {
-  it("should close handlers in priority order with deeply nested formatting", () => {
-    // Bold can't match (asterisk in content), italic appends *,
-    // inline code appends `, strikethrough appends ~~
+  it("should close deeply nested formatting innermost first", () => {
     const result = remend("**bold *italic ~~strike `code");
-    expect(result).toBe("**bold *italic ~~strike `code*`~~");
+    expect(result).toBe("**bold *italic ~~strike `code`~~***");
   });
 
-  it("should close bold-italic then code then strikethrough", () => {
-    // BoldItalic (priority 30) appends ***, then inline code (50) appends `,
-    // then strikethrough (60) appends ~~
+  it("should close code then strikethrough then bold-italic", () => {
     const result = remend("***bold-italic ~~strike `code");
-    expect(result).toBe("***bold-italic ~~strike `code***`~~");
+    expect(result).toBe("***bold-italic ~~strike `code`~~***");
   });
 
-  it("should close italic but not bold when asterisk blocks bold pattern", () => {
-    // Bold handler can't match when * appears in content after **
-    // Italic handler closes the *, leaving ** unclosed
+  it("should close italic then the bold around it", () => {
     const result = remend("**bold and *italic");
-    expect(result).toBe("**bold and *italic*");
+    expect(result).toBe("**bold and *italic***");
   });
 });
 
@@ -439,15 +427,14 @@ describe("back-to-back code blocks", () => {
 
 // 19. Confusing asterisk sequences
 describe("confusing asterisk sequences", () => {
-  it("should handle four asterisks (bold-italic handler appends ***)", () => {
-    // BoldItalic sees odd triple-asterisk count and markers not balanced, appends ***
+  it("should close four asterisks with four", () => {
     const result = remend("****text");
-    expect(result).toBe("****text***");
+    expect(result).toBe("****text****");
   });
 
-  it("should handle five asterisks (bold-italic handler appends ***)", () => {
+  it("should close five asterisks with five", () => {
     const result = remend("*****text");
-    expect(result).toBe("*****text***");
+    expect(result).toBe("*****text*****");
   });
 
   it("should handle mixed asterisk counts", () => {
