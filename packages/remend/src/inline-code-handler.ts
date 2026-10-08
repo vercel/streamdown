@@ -1,3 +1,4 @@
+import { findInlineBlockStart } from "./inline-block";
 import { whitespaceOrMarkersPattern } from "./patterns";
 import { getScan } from "./scan";
 import { isWhitespaceChar } from "./utils";
@@ -17,8 +18,10 @@ export const handleIncompleteInlineCode = (text: string): string => {
     return text;
   }
 
+  // A code span can't cross into another block, so an opener before the
+  // last one stays a literal backtick
   const span = scan.openSpan;
-  if (!span) {
+  if (!span || span.start < findInlineBlockStart(scan)) {
     return text;
   }
 
@@ -49,9 +52,17 @@ export const handleIncompleteInlineCode = (text: string): string => {
     return text;
   }
 
-  return (
-    text.slice(0, end) +
-    "`".repeat(span.runLength - trailingRun) +
-    text.slice(end)
-  );
+  // Completing a run that starts its line with three or more backticks would
+  // open a fence, so a full closer goes after a space instead
+  const runStart = end - trailingRun;
+  const lineStart = text.lastIndexOf("\n", runStart - 1) + 1;
+  const opensFence =
+    trailingRun > 0 &&
+    span.runLength >= 3 &&
+    text.slice(lineStart, runStart).trim() === "";
+  const closer = opensFence
+    ? ` ${"`".repeat(span.runLength)}`
+    : "`".repeat(span.runLength - trailingRun);
+
+  return text.slice(0, end) + closer + text.slice(end);
 };
