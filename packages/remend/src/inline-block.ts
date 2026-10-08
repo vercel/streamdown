@@ -4,6 +4,9 @@ const headingPattern = /^#{1,6}(?:[ \t]|$)/;
 const thematicBreakPattern =
   /^(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/;
 const setextUnderlinePattern = /^(?:=+|-+)[ \t]*$/;
+// The setext handler's zero-width space after a streaming dash stands in for
+// the list item or thematic break that dash usually starts
+const dashPlaceholderPattern = /^-{1,2}\u200B$/;
 
 /**
  * Index where the text's last inline block starts, since emphasis never
@@ -42,6 +45,7 @@ export const findInlineBlockStart = (scan: TextScan): number => {
       endsBlock ||
       prefix.listIndent > 0 ||
       prefix.quoteDepth > quoteDepth ||
+      dashPlaceholderPattern.test(content) ||
       headingPattern.test(content) ||
       content.startsWith("|")
     ) {

@@ -70,6 +70,11 @@ describe("emphasis nesting", () => {
       input: "[*](u)~~*~~*a",
       expected: "[*](u)~~*~~*a~~",
     },
+    {
+      name: "dash that starts the next list item",
+      input: "_*\n- ",
+      expected: "_*\n-\u200B",
+    },
   ])("pairs within one block: $name", ({ input, expected }) => {
     expect(remend(input)).toBe(expected);
     expect(remend(expected)).toBe(expected);

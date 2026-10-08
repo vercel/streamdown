@@ -92,6 +92,11 @@ describe("link handling", () => {
       input: "[outer [inner](u) and [more",
       expected: "[outer [inner](u) and [more](streamdown:incomplete-link)",
     },
+    {
+      name: "bracket after an unclosed backtick",
+      input: "[`[",
+      expected: "[`[](streamdown:incomplete-link)",
+    },
   ])("heals once around nested links: $name", ({ input, expected }) => {
     expect(remend(input)).toBe(expected);
     expect(remend(expected)).toBe(expected);

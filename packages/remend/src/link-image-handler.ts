@@ -1,4 +1,5 @@
 import { isInsideCodeBlock } from "./code-block-utils";
+import { getScan, isCompleteSpanAt, isFenceAt } from "./scan";
 import {
   findMatchingClosingBracket,
   findMatchingOpeningBracket,
@@ -167,15 +168,18 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
 
   // Then check for incomplete link text: [partial-text without closing ]
   // Search backwards for an opening bracket that doesn't have a matching closing bracket
+  const scan = getScan(text);
   let enclosesLink = false;
   for (
     let i = text.lastIndexOf("[");
     i !== -1;
     i = i === 0 ? -1 : text.lastIndexOf("[", i - 1)
   ) {
+    // An unclosed backtick renders as text, so a link after one still counts
     const isLink = !(
       (i > 0 && text[i - 1] === "!") ||
-      isInsideCodeBlock(text, i)
+      isFenceAt(scan, i) ||
+      isCompleteSpanAt(scan, i)
     );
     const closesHere = isLink && opensCompleteLink(text, i);
     // Links can't contain links, so a link bracket before one is literal text
