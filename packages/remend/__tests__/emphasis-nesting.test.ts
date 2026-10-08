@@ -62,6 +62,33 @@ describe("emphasis nesting", () => {
 
   it.each<Row>([
     {
+      name: "after an odd number of prices",
+      input: "Pay $50 now, then **$1,15",
+      expected: "Pay $50 now, then **$1,15**",
+    },
+    {
+      name: "after prices in an earlier paragraph",
+      input: "From $5 to $9 and $12.\n\n**Total: $276.",
+      expected: "From $5 to $9 and $12.\n\n**Total: $276.**",
+    },
+    {
+      name: "beside display math",
+      input: "$$x**2$$ is **big",
+      expected: "$$x**2$$ is **big**",
+    },
+  ])("treats a lone dollar sign as text: $name", ({ input, expected }) => {
+    expect(remend(input)).toBe(expected);
+    expect(remend(expected)).toBe(expected);
+  });
+
+  it("hides markers inside inline math when it is opted in", () => {
+    expect(remend("Pay $a **b$ and **c", { inlineKatex: true })).toBe(
+      "Pay $a **b$ and **c**"
+    );
+  });
+
+  it.each<Row>([
+    {
       name: "closer before a word",
       input: "**Note:**This is important.",
       expected: "**Note:**This is important.",
@@ -85,6 +112,11 @@ describe("emphasis nesting", () => {
       name: "word-internal ASCII asterisks",
       input: "hello**world",
       expected: "hello**world",
+    },
+    {
+      name: "asterisk between an ASCII letter and CJK",
+      input: "使用A*算法",
+      expected: "使用A*算法",
     },
     {
       name: "opener inside a link label",

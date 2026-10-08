@@ -202,6 +202,7 @@ const getEnabledBuiltInHandlers = (
     bold: isEnabled(options?.bold),
     boldItalic: isEnabled(options?.boldItalic),
     inlineCode: isEnabled(options?.inlineCode),
+    inlineMath: isOptedIn(options?.inlineKatex),
     italic: isEnabled(options?.italic),
     strikethrough: isEnabled(options?.strikethrough),
   };
