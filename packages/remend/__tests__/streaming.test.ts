@@ -27,10 +27,9 @@ describe("chunked streaming scenarios", () => {
   });
 
   it("should handle complex nested structures from chunks", () => {
-    // Backticks spanning multiple lines need special handling
-    expect(remend("1. First item\n   - Nested with `code\n2. Second")).toBe(
-      "1. First item\n   - Nested with `code\n2. Second`"
-    );
+    // A code span can't cross list items, so the backtick stays literal
+    const text = "1. First item\n   - Nested with `code\n2. Second";
+    expect(remend(text)).toBe(text);
   });
 
   it("should handle multiple incomplete formats in one chunk", () => {

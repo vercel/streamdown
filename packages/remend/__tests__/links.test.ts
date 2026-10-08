@@ -69,6 +69,33 @@ describe("link handling", () => {
       "[link [nested] text](streamdown:incomplete-link)"
     );
   });
+
+  // Links can't contain links, so a bracket before a complete link is literal
+  it.each<{ name: string; input: string; expected: string }>([
+    {
+      name: "outer bracket around a healed link",
+      input: "[a[a",
+      expected: "[a[a](streamdown:incomplete-link)",
+    },
+    {
+      name: "outer bracket around a complete link",
+      input: "[a [b](u) c",
+      expected: "[a [b](u) c",
+    },
+    {
+      name: "image around a complete link",
+      input: "![a [b](u) c",
+      expected: "![a [b](u) c](streamdown:incomplete-image)",
+    },
+    {
+      name: "open bracket after a link inside a literal bracket",
+      input: "[outer [inner](u) and [more",
+      expected: "[outer [inner](u) and [more](streamdown:incomplete-link)",
+    },
+  ])("heals once around nested links: $name", ({ input, expected }) => {
+    expect(remend(input)).toBe(expected);
+    expect(remend(expected)).toBe(expected);
+  });
 });
 
 describe("link handling with linkMode: text-only", () => {

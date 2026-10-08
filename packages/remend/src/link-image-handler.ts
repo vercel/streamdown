@@ -142,6 +142,15 @@ const handleIncompleteText = (
   return null;
 };
 
+const opensCompleteLink = (text: string, open: number): boolean => {
+  const close = findMatchingClosingBracket(text, open);
+  return (
+    close !== -1 &&
+    text[close + 1] === "(" &&
+    text.indexOf(")", close + 2) !== -1
+  );
+};
+
 // One healing step over the trailing incomplete link or image, if any
 const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
   // Look for patterns like [text]( or ![text]( at the end of text
@@ -158,12 +167,21 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
 
   // Then check for incomplete link text: [partial-text without closing ]
   // Search backwards for an opening bracket that doesn't have a matching closing bracket
+  let enclosesLink = false;
   for (
     let i = text.lastIndexOf("[");
     i !== -1;
     i = i === 0 ? -1 : text.lastIndexOf("[", i - 1)
   ) {
-    if (!isInsideCodeBlock(text, i)) {
+    const isLink = !(
+      (i > 0 && text[i - 1] === "!") ||
+      isInsideCodeBlock(text, i)
+    );
+    const closesHere = isLink && opensCompleteLink(text, i);
+    // Links can't contain links, so a link bracket before one is literal text
+    const literal = isLink && enclosesLink;
+    enclosesLink ||= closesHere;
+    if (!(closesHere || literal || isInsideCodeBlock(text, i))) {
       const result = handleIncompleteText(text, i, linkMode);
       if (result !== null) {
         return result;
