@@ -70,6 +70,8 @@ export interface TextScan {
   linkUrlMask: Uint8Array | null;
   /** Lazily computed; stays null until first needed */
   mathMask: Uint8Array | null;
+  /** The math mask when a lone `$` is text, also lazily computed */
+  mathMaskWithoutDollar: Uint8Array | null;
   openFence: OpenFence | null;
   openSpan: OpenSpan | null;
   regions: Uint8Array;
@@ -414,6 +416,7 @@ const scanText = (text: string): TextScan => {
     openFence,
     openSpan,
     mathMask: null,
+    mathMaskWithoutDollar: null,
     linkUrlMask: null,
     htmlTagMask: null,
   };
@@ -560,7 +563,8 @@ interface MathDelimiter {
 const mathDelimiterAt = (
   text: string,
   i: number,
-  context: MathContext
+  context: MathContext,
+  singleDollar: boolean
 ): MathDelimiter | null => {
   const next = text[i + 1];
   if (text[i] === "\\") {
@@ -572,6 +576,9 @@ const mathDelimiterAt = (
   }
   if (text[i] === "$" && !isLatexMathContext(context)) {
     const isBlockDelimiter = next === "$";
+    if (!(isBlockDelimiter || singleDollar)) {
+      return null;
+    }
     return {
       context: getDollarMathContext(context, isBlockDelimiter),
       length: isBlockDelimiter ? 2 : 1,
@@ -584,7 +591,7 @@ const mathDelimiterAt = (
 // \(...\) or \[...\]. Delimiters inside code regions are literal and do
 // not change math state. A two-character delimiter marks its second
 // character with the context it establishes.
-const buildMathMask = (scan: TextScan): Uint8Array => {
+const buildMathMask = (scan: TextScan, singleDollar: boolean): Uint8Array => {
   const { text, regions } = scan;
   const n = text.length;
   const mask = new Uint8Array(n);
@@ -594,7 +601,9 @@ const buildMathMask = (scan: TextScan): Uint8Array => {
   while (i < n) {
     mask[i] = context === "none" ? 0 : 1;
     const delimiter: MathDelimiter | null =
-      regions[i] === REGION.PROSE ? mathDelimiterAt(text, i, context) : null;
+      regions[i] === REGION.PROSE
+        ? mathDelimiterAt(text, i, context, singleDollar)
+        : null;
     if (delimiter === null) {
       i += 1;
       continue;
@@ -609,16 +618,24 @@ const buildMathMask = (scan: TextScan): Uint8Array => {
   return mask;
 };
 
-export const inMathAt = (scan: TextScan, position: number): boolean => {
+/** Whether position is in math, where `singleDollar` decides if a lone `$` opens it */
+export const inMathAt = (
+  scan: TextScan,
+  position: number,
+  singleDollar = true
+): boolean => {
   if (position < 0 || position >= scan.text.length) {
     return false;
   }
-  if (scan.mathMask === null) {
-    scan.mathMask = hasMathDelimiters(scan.text)
-      ? buildMathMask(scan)
+  const key = singleDollar ? "mathMask" : "mathMaskWithoutDollar";
+  let mask = scan[key];
+  if (mask === null) {
+    mask = hasMathDelimiters(scan.text)
+      ? buildMathMask(scan, singleDollar)
       : EMPTY_MASK;
+    scan[key] = mask;
   }
-  return scan.mathMask[position] === 1;
+  return mask[position] === 1;
 };
 
 // Marks the URL positions of one line: those between a "](" opener and the

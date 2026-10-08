@@ -16,6 +16,8 @@ export interface EmphasisFlags {
   bold: boolean;
   boldItalic: boolean;
   inlineCode: boolean;
+  /** Whether a lone `$` opens math, which hides the markers inside it */
+  inlineMath: boolean;
   italic: boolean;
   strikethrough: boolean;
 }
@@ -53,13 +55,14 @@ const hasContentBefore = (
 };
 
 const asciiLetterOrDigitPattern = /^[A-Za-z0-9]$/;
+const letterOrDigitPattern = /^[\p{L}\p{N}]/u;
 
 const isLetterOrDigit = (char: string): boolean =>
   asciiLetterOrDigitPattern.test(char);
 
-// An asterisk inside an ASCII word opens only to continue a chain of emphasis
-// in that word, so hello*world and 2**3 stay literal while languages written
-// without spaces still heal
+// An asterisk after an ASCII letter or digit opens only to continue a chain of
+// emphasis in that word, so hello*world, 2**3 and A*算法 stay literal while
+// languages written without spaces still heal
 const opensColdInWord = (
   text: string,
   run: MarkerRun,
@@ -67,7 +70,7 @@ const opensColdInWord = (
 ): boolean =>
   run.marker === "*" &&
   isLetterOrDigit(text[run.index - 1] ?? "") &&
-  isLetterOrDigit(text[run.index + run.length] ?? "") &&
+  letterOrDigitPattern.test(text.slice(run.index + run.length)) &&
   !(
     previous?.marker === "*" &&
     [...text.slice(previous.index + previous.length, run.index)].every(
@@ -253,12 +256,12 @@ const healFrom = (
 
 const healEmphasis = (text: string, flags: EmphasisFlags): string => {
   const insertAt = findInsertionPoint(text);
-  const match = matchDelimiterRuns(text);
+  const match = matchDelimiterRuns(text, flags.inlineMath);
   const last = match.runs.at(-1);
   const trailing =
     last && last.index + last.length === insertAt ? last : undefined;
   const context = {
-    base: prepareHeal(text, insertAt),
+    base: prepareHeal(text, insertAt, flags.inlineMath),
     flags,
     insertAt,
     literal: match.literal,
@@ -271,7 +274,10 @@ const healEmphasis = (text: string, flags: EmphasisFlags): string => {
   // A trailing run that closes something may instead be literal text, with
   // the runs open before it still needing closers
   if (trailing && trailing.count < trailing.length) {
-    const prefix = matchDelimiterRuns(text.slice(0, trailing.index));
+    const prefix = matchDelimiterRuns(
+      text.slice(0, trailing.index),
+      flags.inlineMath
+    );
     const asText = { ...trailing, count: trailing.length };
     const streaming = trailing.count > 0 || trailing.closesPartially;
     const alternative = healFrom(

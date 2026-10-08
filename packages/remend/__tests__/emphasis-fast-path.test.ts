@@ -51,7 +51,8 @@ it("fast path matches a full rescan", () => {
         maxLength: 4,
       }),
       fc.constantFrom("", " ", "\n", "  \n", "\\"),
-      (tokens, closerParts, tail) => {
+      fc.boolean(),
+      (tokens, closerParts, tail, inlineMath) => {
         const text = tokens.join("") + tail;
         let insertAt = text.length;
         while (insertAt > 0 && WHITESPACE.test(text[insertAt - 1])) {
@@ -64,9 +65,9 @@ it("fast path matches a full rescan", () => {
         fc.pre(LINE_CONTENT.test(text.slice(lineStart, insertAt)));
         const closers = closerParts.join("");
         const healed = text.slice(0, insertAt) + closers + text.slice(insertAt);
-        const base = prepareHeal(text, insertAt);
+        const base = prepareHeal(text, insertAt, inlineMath);
         expect(summary(matchHealed(base, closers))).toEqual(
-          summary(matchDelimiterRuns(healed))
+          summary(matchDelimiterRuns(healed, inlineMath))
         );
       }
     ),
