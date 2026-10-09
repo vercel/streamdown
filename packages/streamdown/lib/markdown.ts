@@ -3,13 +3,13 @@ import { toJsxRuntime } from "hast-util-to-jsx-runtime";
 import { urlAttributes } from "html-url-attributes";
 import type { ComponentType, JSX, ReactElement } from "react";
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
-import rehypeRaw from "rehype-raw";
 import remarkParse from "remark-parse";
 import type { Options as RemarkRehypeOptions } from "remark-rehype";
 import remarkRehype from "remark-rehype";
 import type { PluggableList } from "unified";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
+import { isRehypeRaw } from "./raw-registry";
 import { remarkEscapeHtml } from "./remark/escape-html";
 
 export interface ExtraProps {
@@ -206,7 +206,7 @@ const getCachedProcessor = (options: Readonly<Options>) => {
 
 const hasRehypeRaw = (plugins: PluggableList): boolean =>
   plugins.some((plugin) =>
-    Array.isArray(plugin) ? plugin[0] === rehypeRaw : plugin === rehypeRaw
+    isRehypeRaw(Array.isArray(plugin) ? plugin[0] : plugin)
   );
 
 const createProcessor = (options: Readonly<Options>) => {

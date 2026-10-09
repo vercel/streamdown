@@ -15,7 +15,6 @@ import {
   useRef,
 } from "react";
 import { harden } from "rehype-harden";
-import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
@@ -29,6 +28,7 @@ import {
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as builtinComponents } from "./lib/components";
+import { defaultRaw } from "./lib/default-raw";
 import { detectTextDirection } from "./lib/detect-direction";
 import { type IconMap, IconProvider } from "./lib/icon-context";
 import { hasIncompleteCodeFence, hasTable } from "./lib/incomplete-code-utils";
@@ -394,7 +394,9 @@ const defaultSanitizeSchema = {
 };
 
 export const defaultRehypePlugins: Record<string, Pluggable> = {
-  raw: rehypeRaw,
+  // Omitted in the `streamdown/core` build so rehype-raw (and parse5) can be
+  // tree-shaken.
+  ...(defaultRaw ? { raw: defaultRaw } : {}),
   sanitize: [rehypeSanitize, defaultSanitizeSchema],
   harden: [
     harden,
@@ -963,7 +965,7 @@ export const Streamdown = memo(
         };
 
         result = [
-          defaultRehypePlugins.raw,
+          ...(defaultRaw ? [defaultRaw] : []),
           [rehypeSanitize, extendedSchema],
           defaultRehypePlugins.harden,
         ];

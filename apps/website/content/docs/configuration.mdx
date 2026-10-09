@@ -148,6 +148,12 @@ With `dir="auto"`:
 - `rehype-sanitize` - XSS protection and safe HTML rendering
 - `rehype-harden` - Security hardening (allows all image and link prefixes, data images enabled)
 
+**Smaller bundle without raw HTML:** `rehype-raw` pulls in `parse5` (~190 KB minified). If you don't need raw HTML, import from `streamdown/core` instead. It has the same API, but `defaultRehypePlugins` omits `rehype-raw`, so it is not bundled and HTML in Markdown is shown as text. Pass your own `rehype-raw` in `rehypePlugins` to opt back in.
+
+```tsx
+import { Streamdown } from "streamdown/core";
+```
+
 **Default Remark Plugins:**
 
 - `remark-gfm` - GitHub Flavored Markdown
