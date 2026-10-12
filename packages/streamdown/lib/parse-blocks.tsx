@@ -106,8 +106,20 @@ const lineEndingPattern = /\r\n|\r/g;
 // `raw` text by its own remark pipeline later. `Lexer.lex` would also run the
 // inline tokenizer over every block, which is wasted work, so call the block
 // tokenizer directly.
-const lexBlocks = (markdown: string): Token[] =>
-  new Lexer({ gfm: true }).blockTokens(markdown);
+//
+// The lexer also collects link reference definitions (`[label]: url`) from
+// every nesting level, but not from code, so `hasLinkDefinitions` tells
+// whether the blocks must be kept together.
+const lexBlocks = (
+  markdown: string
+): { tokens: Token[]; hasLinkDefinitions: boolean } => {
+  const lexer = new Lexer({ gfm: true });
+  const tokens = lexer.blockTokens(markdown);
+  return {
+    tokens,
+    hasLinkDefinitions: Object.keys(lexer.tokens.links).length > 0,
+  };
+};
 
 // Streaming appends text to the end of the document. Text before the tail can
 // still change meaning: a lone "#" is a heading that ends the paragraph above
@@ -291,9 +303,14 @@ const reuseParsedBlocks = (
     return null;
   }
 
-  const tailBlocks = copyBlocks(
-    mergeTokensIntoBlocks(lexBlocks(input.slice(verifiedLength)))
-  );
+  const tail = lexBlocks(input.slice(verifiedLength));
+  // A definition the pattern above misses (inside a blockquote, or indented
+  // inside a list item) still needs the whole document as one block.
+  if (tail.hasLinkDefinitions) {
+    return null;
+  }
+
+  const tailBlocks = copyBlocks(mergeTokensIntoBlocks(tail.tokens));
 
   return {
     input,
@@ -332,14 +349,21 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   }
 
   const reused = lastParse ? reuseParsedBlocks(lastParse, input) : null;
-  const entry =
-    reused ??
-    ({
+  let entry = reused;
+  if (!entry) {
+    const { tokens, hasLinkDefinitions } = lexBlocks(input);
+    // Each block is parsed into its own mdast tree, so a reference link like
+    // `[text][1]` only resolves when its `[1]: url` definition is in the same
+    // block. Like footnotes, keep documents with definitions in one block.
+    entry = {
       input,
-      blocks: copyBlocks(mergeTokensIntoBlocks(lexBlocks(input))),
+      blocks: hasLinkDefinitions
+        ? [copyString(input)]
+        : copyBlocks(mergeTokensIntoBlocks(tokens)),
       verifiedCount: 0,
       verifiedLength: 0,
-    } satisfies ParseCache);
+    } satisfies ParseCache;
+  }
 
   lastParse = entry;
 

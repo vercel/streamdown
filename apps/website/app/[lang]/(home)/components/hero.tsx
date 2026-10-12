@@ -12,7 +12,7 @@ export const Hero = ({ badge, title, description, children }: HeroProps) => (
   <section className="mt-(--fd-nav-height) space-y-6 px-4 pt-16 pb-16 text-center sm:pt-24">
     <div className="mx-auto w-full max-w-4xl space-y-5">
       {badge ? (
-        <Badge className="rounded-full" variant="secondary">
+        <Badge className="rounded-full" contrast="low" variant="gray">
           <div className="size-2 rounded-full bg-muted-foreground" />
           <p>{badge}</p>
         </Badge>
