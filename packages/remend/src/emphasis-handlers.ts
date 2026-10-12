@@ -62,39 +62,71 @@ const isLetterOrDigit = (char: string): boolean =>
 
 // An asterisk after an ASCII letter or digit opens only to continue a chain of
 // emphasis in that word, so hello*world, 2**3 and A*算法 stay literal while
-// languages written without spaces still heal
+// languages written without spaces still heal. A chain whose first pair also
+// opened inside a word, as in M*A*S*H, is literal too.
 const opensColdInWord = (
   text: string,
   run: MarkerRun,
-  previous: MarkerRun | undefined
-): boolean =>
-  run.marker === "*" &&
-  isLetterOrDigit(text[run.index - 1] ?? "") &&
-  letterOrDigitPattern.test(text.slice(run.index + run.length)) &&
-  !(
-    previous?.marker === "*" &&
-    [...text.slice(previous.index + previous.length, run.index)].every(
-      isLetterOrDigit
+  match: DelimiterMatch
+): boolean => {
+  if (
+    !(
+      run.marker === "*" &&
+      isLetterOrDigit(text[run.index - 1] ?? "") &&
+      letterOrDigitPattern.test(text.slice(run.index + run.length))
     )
+  ) {
+    return false;
+  }
+  const previous = match.runs.findLast((other) => other.index < run.index);
+  if (
+    !(
+      previous?.marker === "*" &&
+      [...text.slice(previous.index + previous.length, run.index)].every(
+        isLetterOrDigit
+      )
+    )
+  ) {
+    return true;
+  }
+  const closed = match.pairs.find(
+    (pair) => pair.closer.index === previous.index
   );
+  return (
+    closed !== undefined && isLetterOrDigit(text[closed.opener.index - 1] ?? "")
+  );
+};
 
 // Writing \** usually means a literal ** with a sloppy escape, so the rest of
 // the run only closes if the author closes it
 const followsEscapedMarker = (text: string, run: MarkerRun): boolean =>
   text[run.index - 1] === run.marker && isEscaped(text, run.index - 1);
 
+// Authors close emphasis on the line that opens it, so an opener whose line
+// ended open is usually code written outside a fence, like char *name
+const contentPattern = /\S/g;
+
+const lineEnded = (text: string, run: MarkerRun): boolean => {
+  const newline = text.indexOf("\n", run.index + run.length);
+  if (newline === -1) {
+    return false;
+  }
+  contentPattern.lastIndex = newline;
+  return contentPattern.test(text);
+};
+
 const isGated = (
   text: string,
   run: MarkerRun,
   insertAt: number,
-  previous: MarkerRun | undefined
+  match: DelimiterMatch
 ): boolean =>
   !hasContentBefore(text, run, insertAt) ||
   // Prose uses a single tilde for "approximately"
   (run.marker === "~" && run.count === 1) ||
   // Models write fill-in blanks as long underscore runs, like Name: ______
   (run.marker === "_" && run.length >= 4) ||
-  opensColdInWord(text, run, previous) ||
+  opensColdInWord(text, run, match) ||
   followsEscapedMarker(text, run);
 
 interface HealContext {
@@ -182,10 +214,7 @@ const extendHeal = (
   const { flags, insertAt, text, trailing } = context;
   const runs: MarkerRun[] = [];
   for (const run of open) {
-    const previous = context.match.runs.findLast(
-      (other) => other.index < run.index
-    );
-    if (isGated(text, run, insertAt, previous)) {
+    if (isGated(text, run, insertAt, context.match)) {
       continue;
     }
     if (flags[flagFor(run)]) {
@@ -195,7 +224,11 @@ const extendHeal = (
       return start;
     }
   }
-  const healable = withoutDuplicates(runs);
+  // Openers on ended lines still count as duplicates, which mark the markers
+  // on later lines as literal too
+  const healable = withoutDuplicates(runs)?.filter(
+    (run) => !lineEnded(text, run)
+  );
   if (healable === undefined) {
     return start;
   }

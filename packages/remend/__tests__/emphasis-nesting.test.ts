@@ -51,9 +51,9 @@ describe("emphasis nesting", () => {
       expected: "> **a\n\n> **b**",
     },
     {
-      name: "lazy continuation line",
+      name: "bold left open when its line ended",
       input: "- **text\nmore text",
-      expected: "- **text\nmore text**",
+      expected: "- **text\nmore text",
     },
     {
       name: "bold after a closer that failed flanking",
@@ -74,6 +74,16 @@ describe("emphasis nesting", () => {
       name: "dash that starts the next list item",
       input: "_*\n- ",
       expected: "_*\n-\u200B",
+    },
+    {
+      name: "bold before a dash rule",
+      input: "**-----",
+      expected: "**-----**",
+    },
+    {
+      name: "paragraph after an empty list item",
+      input: "*\n~~**a ~~`",
+      expected: "*\n~~**a ~~`**",
     },
   ])("pairs within one block: $name", ({ input, expected }) => {
     expect(remend(input)).toBe(expected);
@@ -142,6 +152,16 @@ describe("emphasis nesting", () => {
       name: "fill-in blank between fullwidth punctuation",
       input: "电话：__________（可向",
       expected: "电话：__________（可向",
+    },
+    {
+      name: "asterisk chain that opened inside a word",
+      input: 'Watch "M*A*S*H" for the',
+      expected: 'Watch "M*A*S*H" for the',
+    },
+    {
+      name: "pointer in code outside a fence",
+      input: "int f(car *cars, int n) {\n  return",
+      expected: "int f(car *cars, int n) {\n  return",
     },
     {
       name: "asterisk between an ASCII letter and CJK",

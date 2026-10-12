@@ -84,8 +84,8 @@ describe("list handling", () => {
   });
 
   it("should close emphasis within its own list item only", () => {
-    // A lazy continuation line stays in the item, but the next item starts a new block
-    expect(remend("- **text\nmore text")).toBe("- **text\nmore text**");
+    // Bold doesn't span lines in model output, and the next item starts a new block
+    expect(remend("- **text\nmore text")).toBe("- **text\nmore text");
     expect(remend("* **content\n* Another item")).toBe(
       "* **content\n* Another item"
     );
