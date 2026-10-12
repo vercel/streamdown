@@ -46,6 +46,7 @@ const LEADING_TICKS = /^`+/;
 const LETTER = /\p{L}/gu;
 const DIGIT = /\d/g;
 const LETTERS = /a+/g;
+const ZERO_WIDTH_SPACE = "\u200B";
 
 const parse = (markdown: string): Node =>
   fromMarkdown(markdown, {
@@ -91,7 +92,8 @@ const renderStyles = (markdown: string, root: Node, shift = 0): string[] => {
 const blockStarts = (root: Node): number[] =>
   (root.children ?? []).map((child) => child.position?.start.offset ?? 0);
 
-// Characters of the prefix whose rendering differs from the final render
+// Characters of the prefix whose rendering differs from the final render,
+// plus characters the heal added that render as visible text
 const mismatches = (
   prefix: string,
   healed: string,
@@ -109,6 +111,11 @@ const mismatches = (
     from
   );
   let count = 0;
+  for (let at = cut; at < cut + added; at++) {
+    if ((frame[at] ?? "") !== "" && healed[at] !== ZERO_WIDTH_SPACE) {
+      count++;
+    }
+  }
   for (let i = from; i < prefix.length; i++) {
     const at = i < cut ? i : i + added;
     if ((frame[at] ?? "") !== final[i]) {
