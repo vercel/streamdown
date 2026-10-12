@@ -1,4 +1,5 @@
 import { isInsideCodeBlock } from "./code-block-utils";
+import { handleIncompleteInlineCode } from "./inline-code-handler";
 import { getScan, isCompleteSpanAt, isFenceAt } from "./scan";
 import {
   findMatchingClosingBracket,
@@ -201,11 +202,7 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
 // without a bound. Realistic nesting depth is single digits.
 const MAX_HEAL_PASSES = 32;
 
-// Preserves incomplete links and images with a special marker.
-export const handleIncompleteLinksAndImages = (
-  text: string,
-  linkMode: LinkMode = "protocol"
-): string => {
+const healLinksAndImages = (text: string, linkMode: LinkMode): string => {
   let current = text;
 
   // Removing a trailing incomplete image can expose another incomplete
@@ -222,4 +219,37 @@ export const handleIncompleteLinksAndImages = (
     current = next;
   }
   return current;
+};
+
+const endsWithPlaceholder = (text: string): boolean =>
+  text.endsWith("](streamdown:incomplete-link)") ||
+  text.endsWith(`](${INCOMPLETE_IMAGE_PLACEHOLDER})`);
+
+// Preserves incomplete links and images with a special marker.
+export const handleIncompleteLinksAndImages = (
+  text: string,
+  linkMode: LinkMode = "protocol",
+  closeInlineCode = false
+): string => {
+  const healed = healLinksAndImages(text, linkMode);
+  if (healed !== text || !closeInlineCode || endsWithPlaceholder(text)) {
+    return healed;
+  }
+  const span = getScan(text).openSpan;
+  if (!span || text.lastIndexOf("[", span.start) === -1) {
+    return text;
+  }
+
+  // Code spans bind tighter than links, so closing an open span can swallow
+  // brackets and leave a link opener unclosed. Heal against the span the
+  // inline code handler will close, and keep that only when a link needed it.
+  // Trailing whitespace stays outside the closers, as the inline code
+  // handler leaves it
+  const body = text.trimEnd();
+  const closed = handleIncompleteInlineCode(body);
+  if (closed === body) {
+    return text;
+  }
+  const relinked = healLinksAndImages(closed, linkMode);
+  return relinked === closed ? text : relinked + text.slice(body.length);
 };

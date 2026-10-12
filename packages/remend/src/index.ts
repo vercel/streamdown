@@ -235,7 +235,11 @@ const getEnabledBuiltInHandlers = (
           handler: {
             ...handler,
             handle: (text: string) =>
-              handleIncompleteLinksAndImages(text, linkMode),
+              handleIncompleteLinksAndImages(
+                text,
+                linkMode,
+                emphasisFlags.inlineCode
+              ),
           },
           // Only use early return for protocol mode (text-only won't end with the marker)
           earlyReturn: linkMode === "protocol" ? earlyReturn : undefined,
