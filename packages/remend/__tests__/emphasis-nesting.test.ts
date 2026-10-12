@@ -159,6 +159,11 @@ describe("emphasis nesting", () => {
       expected: 'Watch "M*A*S*H" for the',
     },
     {
+      name: "asterisk listed between commas",
+      input: "Use operators (+, -, *, /), equals, and",
+      expected: "Use operators (+, -, *, /), equals, and",
+    },
+    {
       name: "pointer in code outside a fence",
       input: "int f(car *cars, int n) {\n  return",
       expected: "int f(car *cars, int n) {\n  return",

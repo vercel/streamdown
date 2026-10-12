@@ -97,6 +97,14 @@ const opensColdInWord = (
   );
 };
 
+// Emphasis doesn't start with closing punctuation, so the * in (+, -, *, /)
+// is a symbol
+const closingPunctuationPattern = /^[,;]/;
+
+const opensBeforeClosingPunctuation = (text: string, run: MarkerRun): boolean =>
+  isWhitespaceChar(text[run.index - 1] ?? " ") &&
+  closingPunctuationPattern.test(text.slice(run.index + run.length));
+
 // Writing \** usually means a literal ** with a sloppy escape, so the rest of
 // the run only closes if the author closes it
 const followsEscapedMarker = (text: string, run: MarkerRun): boolean =>
@@ -127,6 +135,7 @@ const isGated = (
   // Models write fill-in blanks as long underscore runs, like Name: ______
   (run.marker === "_" && run.length >= 4) ||
   opensColdInWord(text, run, match) ||
+  opensBeforeClosingPunctuation(text, run) ||
   followsEscapedMarker(text, run);
 
 interface HealContext {
