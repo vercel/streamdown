@@ -6,6 +6,8 @@ const thematicBreakPattern =
 const setextUnderlinePattern = /^(?:=+|-+)[ \t]*$/;
 // The setext handler's zero-width space after a streaming dash stands in for
 // the list item or thematic break that dash usually starts
+// A list marker alone on a finished line is an empty item, which ends there
+const emptyItemPattern = /^(?:[*+-]|\d{1,9}[.)])$/;
 const dashPlaceholderPattern = /^-{1,2}\u200B$/;
 
 /**
@@ -37,7 +39,8 @@ export const findInlineBlockStart = (scan: TextScan): number => {
       // A list marker walk would read the first star of * * * as an item
       thematicBreakPattern.test(text.slice(lineStart, lineEnd).trim()) ||
       thematicBreakPattern.test(content) ||
-      (setextUnderlinePattern.test(content) && !endsBlock)
+      (setextUnderlinePattern.test(content) && !endsBlock) ||
+      (lineEnd < text.length && emptyItemPattern.test(content))
     ) {
       start = next;
       endsBlock = false;

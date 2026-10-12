@@ -450,8 +450,9 @@ describe("whitespace edge cases", () => {
     expect(remend("**bold\twith\ttabs")).toBe("**bold\twith\ttabs**");
   });
 
-  it("should close bold with CRLF", () => {
-    expect(remend("**bold\r\nwith CRLF")).toBe("**bold\r\nwith CRLF**");
+  it("should close bold before a CRLF but not after the next line starts", () => {
+    expect(remend("**bold\r\n")).toBe("**bold**\r\n");
+    expect(remend("**bold\r\nwith CRLF")).toBe("**bold\r\nwith CRLF");
   });
 
   it("should close bold after many leading newlines", () => {

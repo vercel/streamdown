@@ -7,6 +7,7 @@ import {
   isEscaped,
   isFenceAt,
   REGION,
+  skipContainerPrefix,
   type TextScan,
 } from "./scan";
 import { isWhitespaceChar } from "./utils";
@@ -537,13 +538,18 @@ const nestsSameKind = (match: DelimiterMatch, insertAt: number): boolean => {
   });
 };
 
-const lineContentPattern = /[^\s*_~>+-]/;
+const lineContentPattern = /[^\s*_~]/;
 
 // Closers on a line with nothing else would turn it into a thematic break or
 // a fence
 const leavesLineBare = (base: HealBase): boolean => {
   const lineStart = base.text.lastIndexOf("\n", base.insertAt - 1) + 1;
-  return !lineContentPattern.test(base.text.slice(lineStart, base.insertAt));
+  const { contentStart } = skipContainerPrefix(
+    base.text,
+    lineStart,
+    base.insertAt
+  );
+  return !lineContentPattern.test(base.text.slice(contentStart, base.insertAt));
 };
 
 /**
