@@ -91,6 +91,8 @@ export type {
   CustomRendererProps,
   DiagramPlugin,
   HighlightOptions,
+  HighlightResult,
+  HighlightToken,
   MathPlugin,
   PluginConfig,
   ThemeInput,
