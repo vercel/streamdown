@@ -11,7 +11,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@vercel/geistdocs/components/popover";
-import { Textarea } from "@vercel/geistdocs/components/textarea";
 import { SettingsIcon } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { CustomRenderer } from "streamdown";
@@ -27,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { VegaLiteRenderer } from "./vega-lite-renderer";
 
 const defaultMarkdown = `# Streamdown Feature Showcase
@@ -364,7 +364,12 @@ const PlaygroundEditor = () => {
           </Select>
           <Popover>
             <PopoverTrigger asChild>
-              <Button aria-label="Settings" size="sm" variant="outline">
+              <Button
+                aria-label="Settings"
+                size="small"
+                svgOnly
+                variant="secondary"
+              >
                 <SettingsIcon className="size-4" />
               </Button>
             </PopoverTrigger>
@@ -418,7 +423,6 @@ const PlaygroundEditor = () => {
                           Duration (ms)
                         </span>
                         <Input
-                          className="w-24"
                           max={2000}
                           min={1}
                           onChange={(e) =>
@@ -426,8 +430,10 @@ const PlaygroundEditor = () => {
                               Math.max(1, Number(e.target.value))
                             )
                           }
-                          type="number"
+                          size="small"
+                          typeName="number"
                           value={animationDuration}
+                          wrapperClassName="w-24"
                         />
                       </div>
                       <div className="flex items-center justify-between">
@@ -499,14 +505,15 @@ const PlaygroundEditor = () => {
                       Speed (ms)
                     </span>
                     <Input
-                      className="w-24"
                       max={500}
                       min={1}
                       onChange={(e) =>
                         setStreamSpeed(Math.max(1, Number(e.target.value)))
                       }
-                      type="number"
+                      size="small"
+                      typeName="number"
                       value={streamSpeed}
+                      wrapperClassName="w-24"
                     />
                   </div>
                 </div>
@@ -514,9 +521,11 @@ const PlaygroundEditor = () => {
             </PopoverContent>
           </Popover>
           <Button
+            className={
+              isStreaming ? "bg-red-800 text-white hover:bg-red-900" : undefined
+            }
             onClick={isStreaming ? stopStreaming : simulateStreaming}
-            size="sm"
-            variant={isStreaming ? "destructive" : "default"}
+            size="small"
           >
             {isStreaming ? "Stop" : "Simulate Stream"}
           </Button>
@@ -525,8 +534,8 @@ const PlaygroundEditor = () => {
               stopStreaming();
               setMarkdown("");
             }}
-            size="sm"
-            variant="outline"
+            size="small"
+            variant="secondary"
           >
             Clear
           </Button>

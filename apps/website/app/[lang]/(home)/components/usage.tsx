@@ -36,11 +36,20 @@ export default function Chat() {
   );
 }`;
 
-export const Usage = async () => {
+// Shiki reads the clock while highlighting, so Cache Components needs it cached.
+const getTokens = async () => {
+  "use cache";
+
   const { tokens } = await codeToTokens(exampleCode, {
     lang: "tsx",
     theme: geistShikiTheme,
   });
+
+  return tokens;
+};
+
+export const Usage = async () => {
+  const tokens = await getTokens();
 
   return (
     <div className="not-prose overflow-hidden rounded-sm border">
