@@ -97,6 +97,26 @@ describe("link handling", () => {
       input: "[`[",
       expected: "[`[](streamdown:incomplete-link)",
     },
+    {
+      name: "code span that swallows a complete link",
+      input: "[`[](u)",
+      expected: "[`[](u)`](streamdown:incomplete-link)",
+    },
+    {
+      name: "brackets inside a complete code span",
+      input: "a[~~`[[`a",
+      expected: "a[~~`[[`a](streamdown:incomplete-link)",
+    },
+    {
+      name: "label closed after a code span holding a bracket",
+      input: "[`[`]",
+      expected: "[`[`]",
+    },
+    {
+      name: "code span holding an open bracket before a link",
+      input: "Split on `[` and see [the",
+      expected: "Split on `[` and see [the](streamdown:incomplete-link)",
+    },
   ])("heals once around nested links: $name", ({ input, expected }) => {
     expect(remend(input)).toBe(expected);
     expect(remend(expected)).toBe(expected);

@@ -1,5 +1,12 @@
 import { letterNumberUnderscorePattern } from "./patterns";
-import { getScan, inHtmlTagAt, inLinkUrlAt, inMathAt, isFenceAt } from "./scan";
+import {
+  getScan,
+  inHtmlTagAt,
+  inLinkUrlAt,
+  inMathAt,
+  isCompleteSpanAt,
+  isFenceAt,
+} from "./scan";
 
 const whitespaceCharPattern = /\s/;
 
@@ -30,13 +37,18 @@ export const isWithinCodeBlock = (text: string, position: number): boolean =>
   isFenceAt(getScan(text), position);
 
 // Helper function to find the matching opening bracket for a closing bracket
-// Handles nested brackets correctly by searching backwards
+// Handles nested brackets correctly by searching backwards. Code spans bind
+// tighter than links, so brackets inside a complete span don't count.
 export const findMatchingOpeningBracket = (
   text: string,
   closeIndex: number
 ): number => {
+  const scan = getScan(text);
   let depth = 1;
   for (let i = closeIndex - 1; i >= 0; i -= 1) {
+    if (isCompleteSpanAt(scan, i)) {
+      continue;
+    }
     if (text[i] === "]") {
       depth += 1;
     } else if (text[i] === "[") {
@@ -50,13 +62,17 @@ export const findMatchingOpeningBracket = (
 };
 
 // Helper function to find the matching closing bracket for an opening bracket
-// Handles nested brackets correctly
+// Handles nested brackets correctly, skipping brackets inside complete code spans
 export const findMatchingClosingBracket = (
   text: string,
   openIndex: number
 ): number => {
+  const scan = getScan(text);
   let depth = 1;
   for (let i = openIndex + 1; i < text.length; i += 1) {
+    if (isCompleteSpanAt(scan, i)) {
+      continue;
+    }
     if (text[i] === "[") {
       depth += 1;
     } else if (text[i] === "]") {
