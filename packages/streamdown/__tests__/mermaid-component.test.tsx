@@ -555,6 +555,47 @@ describe("Mermaid Component", () => {
       expect(container.textContent).not.toContain("Parse error");
     });
 
+    it("does not show an error for a partial chart while the fence streams", async () => {
+      const { mockRender, pending } = deferredRender();
+      const plugin = createMockMermaidPlugin(mockRender);
+
+      const { container } = renderWithContext(
+        streaming("graph TD;\n    A--", true),
+        {},
+        { mermaid: plugin }
+      );
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(1));
+      await settle(() => pending[0].reject(new Error("Parse error on line 2")));
+      await wait(20);
+
+      expect(container.textContent).not.toContain("Parse error");
+      expect(container.textContent).not.toContain("Mermaid Error");
+      expect(container.textContent).toContain("Loading diagram");
+    });
+
+    it("shows the error once the fence closes with the same chart", async () => {
+      const { mockRender, pending } = deferredRender();
+      const plugin = createMockMermaidPlugin(mockRender);
+      const chart = "graph TD;\n    A--";
+
+      const { container, rerender } = renderWithContext(
+        streaming(chart, true),
+        {},
+        { mermaid: plugin }
+      );
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(1));
+      await settle(() => pending[0].reject(new Error("Parse error on line 2")));
+      await wait(20);
+
+      rerender(streaming(chart, false));
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(2));
+      await settle(() => pending[1].reject(new Error("Parse error on line 2")));
+
+      await waitFor(() => {
+        expect(container.textContent).toContain("Parse error on line 2");
+      });
+    });
+
     it("stops after unmounting while a render is pending", async () => {
       const { mockRender, pending } = deferredRender();
       const plugin = createMockMermaidPlugin(mockRender);

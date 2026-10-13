@@ -161,9 +161,15 @@ export const Mermaid = ({
         setSvgContent(rendered.svg);
         setSvgSize(rendered.size);
         setLastValidSvg(rendered.svg);
-      } else if (request === latestRequestRef.current) {
-        // Keep the last valid SVG; the error only shows when there is
-        // nothing to display, and only for the latest chart
+      } else if (
+        request === latestRequestRef.current &&
+        !isStreamingRef.current
+      ) {
+        // A partial chart fails to parse while its fence streams, and the
+        // rest of the chart is still on its way. Keep showing the loader
+        // instead; the error shows once the fence closes and the final
+        // chart fails. Keep the last valid SVG; the error only shows when
+        // there is nothing to display, and only for the latest chart
         setError(rendered.error);
       }
     };
@@ -208,7 +214,9 @@ export const Mermaid = ({
     };
 
     renderLatest();
-  }, [chart, config, retryCount, shouldRender, mermaidPlugin]);
+    // Closing the fence re-renders the final chart, even when its text is
+    // the same as the last partial one that failed
+  }, [chart, config, retryCount, shouldRender, mermaidPlugin, isStreaming]);
 
   // Show placeholder when not scheduled to render
   if (!(shouldRender || svgContent || lastValidSvg)) {
@@ -217,7 +225,7 @@ export const Mermaid = ({
     );
   }
 
-  if (isLoading && !svgContent && !lastValidSvg) {
+  if ((isLoading || isStreaming) && !svgContent && !lastValidSvg) {
     return (
       <div
         className={cn("my-4 flex justify-center p-4", className)}
