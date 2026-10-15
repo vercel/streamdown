@@ -113,6 +113,21 @@ describe("emphasis markers inside inline code spans should not leak", () => {
       input: "text `a\nb",
       expected: "text `a\nb`",
     },
+    {
+      name: "lone star inside a paragraph",
+      input: "text `a\n*\nb",
+      expected: "text `a\n*\nb`",
+    },
+    {
+      name: "lone star inside a quoted paragraph",
+      input: "> text `a\n> *\n> b",
+      expected: "> text `a\n> *\n> b`",
+    },
+    {
+      name: "opener before an empty item after a quote",
+      input: "> text `a\n*\nb",
+      expected: "> text `a\n*\nb",
+    },
   ])("closes only within the opener's block: $name", ({ input, expected }) => {
     expect(remend(input)).toBe(expected);
     expect(remend(expected)).toBe(expected);
