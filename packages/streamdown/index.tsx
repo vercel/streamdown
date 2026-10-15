@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type AriaAttributes,
   type ComponentProps,
   type ComponentType,
   type CSSProperties,
@@ -372,7 +373,15 @@ export type StreamdownProps = Options & {
   onAnimationStart?: () => void;
   /** Called when isAnimating transitions from true to false. Suppressed in mode="static". */
   onAnimationEnd?: () => void;
-};
+  /** `data-*` attributes, like `aria-*` attributes, are set on the root element. */
+  [dataAttribute: `data-${string}`]:
+    | string
+    | number
+    | bigint
+    | boolean
+    | null
+    | undefined;
+} & AriaAttributes;
 
 const defaultSanitizeSchema = {
   ...defaultSchema,
@@ -589,6 +598,35 @@ export const Block = memo(
 
 Block.displayName = "Block";
 
+// TypeScript accepts any `data-*` or `aria-*` prop on a component, so these
+// have to be picked out of the rest props to reach the DOM.
+const getRootAttributes = (props: object): Record<string, unknown> => {
+  const attributes: Record<string, unknown> = {};
+  for (const [name, value] of Object.entries(props)) {
+    if (name.startsWith("data-") || name.startsWith("aria-")) {
+      attributes[name] = value;
+    }
+  }
+  return attributes;
+};
+
+const sameRootAttributes = (
+  prevProps: StreamdownProps,
+  nextProps: StreamdownProps
+): boolean => {
+  const prevAttributes = getRootAttributes(prevProps);
+  const nextAttributes = getRootAttributes(nextProps);
+  const names = Object.keys(prevAttributes);
+  return (
+    names.length === Object.keys(nextAttributes).length &&
+    names.every(
+      (name) =>
+        Object.hasOwn(nextAttributes, name) &&
+        prevAttributes[name] === nextAttributes[name]
+    )
+  );
+};
+
 export const Streamdown = memo(
   ({
     children,
@@ -628,6 +666,7 @@ export const Streamdown = memo(
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
     const generatedId = useId();
+    const rootAttributes = getRootAttributes(props);
 
     const prefixedCn = useMemo(() => createCn(prefix), [prefix]);
 
@@ -1068,6 +1107,7 @@ export const Streamdown = memo(
               <IconProvider icons={iconOverrides}>
                 <PrefixContext.Provider value={prefixedCn}>
                   <div
+                    {...rootAttributes}
                     className={prefixedCn(
                       // Use [&>*] arbitrary variant syntax for Tailwind v3 + v4 compat (v3 lacks the *: variant)
                       "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
@@ -1100,6 +1140,7 @@ export const Streamdown = memo(
             <IconProvider icons={iconOverrides}>
               <PrefixContext.Provider value={prefixedCn}>
                 <div
+                  {...rootAttributes}
                   className={prefixedCn(
                     // Use [&>*] arbitrary variant syntax for Tailwind v3 + v4 compat (v3 lacks the *: variant)
                     "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
@@ -1173,6 +1214,7 @@ export const Streamdown = memo(
       JSON.stringify(nextProps.translations) &&
     prevProps.prefix === nextProps.prefix &&
     prevProps.dir === nextProps.dir &&
-    prevProps.fallbackComponent === nextProps.fallbackComponent
+    prevProps.fallbackComponent === nextProps.fallbackComponent &&
+    sameRootAttributes(prevProps, nextProps)
 );
 Streamdown.displayName = "Streamdown";
