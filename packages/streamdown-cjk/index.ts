@@ -1,6 +1,13 @@
 "use client";
 
-import type { Link, Paragraph, PhrasingContent, Root, Text } from "mdast";
+import type {
+  Link,
+  Paragraph,
+  PhrasingContent,
+  Root,
+  Strong,
+  Text,
+} from "mdast";
 import { gfmAutolinkLiteralFromMarkdown } from "mdast-util-gfm-autolink-literal";
 import remarkCjkFriendly from "remark-cjk-friendly";
 import remarkCjkFriendlyGfmStrikethrough from "remark-cjk-friendly-gfm-strikethrough";
@@ -93,6 +100,70 @@ const buildTrailingText = (value: string): Text => ({
   value,
 });
 
+const buildStrong = (child: PhrasingContent): Strong => ({
+  type: "strong",
+  children: [child],
+});
+
+const hasUnescapedDelimiter = (
+  source: string,
+  offset: number,
+  delimiter: string
+): boolean => {
+  if (
+    offset < 0 ||
+    source.slice(offset, offset + delimiter.length) !== delimiter
+  ) {
+    return false;
+  }
+
+  let escapeCount = 0;
+  for (let index = offset - 1; index >= 0 && source[index] === "\\"; index--) {
+    escapeCount++;
+  }
+
+  return escapeCount % 2 === 0;
+};
+
+const findStrongDelimiter = (
+  source: string,
+  previousNode: PhrasingContent | undefined,
+  node: Link,
+  boundaryIndex: number
+): "**" | "__" | null => {
+  if (previousNode?.type !== "text") {
+    return null;
+  }
+
+  const linkStart = node.position?.start.offset;
+  const previousEnd = previousNode.position?.end.offset;
+  if (typeof linkStart !== "number" || typeof previousEnd !== "number") {
+    return null;
+  }
+
+  const urlBeforeBoundary = node.url.slice(0, boundaryIndex);
+  for (const delimiter of ["**", "__"] as const) {
+    if (!previousNode.value.endsWith(delimiter)) {
+      continue;
+    }
+
+    if (!urlBeforeBoundary.endsWith(delimiter)) {
+      continue;
+    }
+
+    const openingOffset = previousEnd - delimiter.length;
+    const closingOffset = linkStart + boundaryIndex - delimiter.length;
+    if (
+      hasUnescapedDelimiter(source, openingOffset, delimiter) &&
+      hasUnescapedDelimiter(source, closingOffset, delimiter)
+    ) {
+      return delimiter;
+    }
+  }
+
+  return null;
+};
+
 const autolinkTransforms = gfmAutolinkLiteralFromMarkdown().transforms ?? [];
 
 /**
@@ -136,13 +207,55 @@ const relinkifyTrailingText = (value: string): PhrasingContent[] => {
   return nodes;
 };
 
+const replaceAutolinkAtBoundary = (
+  node: Link,
+  parent: Parent,
+  index: number,
+  boundaryIndex: number,
+  source: string
+): number => {
+  let replaceIndex = index;
+  const previousNode = parent.children[index - 1] as
+    | PhrasingContent
+    | undefined;
+  const strongDelimiter = findStrongDelimiter(
+    source,
+    previousNode,
+    node,
+    boundaryIndex
+  );
+  if (strongDelimiter && previousNode?.type === "text") {
+    previousNode.value = previousNode.value.slice(0, -strongDelimiter.length);
+    if (!previousNode.value) {
+      parent.children.splice(index - 1, 1);
+      replaceIndex--;
+    }
+  }
+
+  const urlBeforeBoundary = node.url.slice(0, boundaryIndex);
+  const link = buildAutolink(
+    strongDelimiter
+      ? urlBeforeBoundary.slice(0, -strongDelimiter.length)
+      : urlBeforeBoundary,
+    node
+  );
+  const nodes = [
+    strongDelimiter ? buildStrong(link) : link,
+    ...relinkifyTrailingText(node.url.slice(boundaryIndex)),
+  ];
+  parent.children.splice(replaceIndex, 1, ...nodes);
+  return replaceIndex + nodes.length;
+};
+
 /**
  * Remark plugin to split literal autolinks at CJK punctuation boundaries
  * so trailing text is not swallowed by the URL. When trailing text contains
  * further bare URLs (e.g. separated by fullwidth semicolons), those are
  * re-linkified as well.
  */
-const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
+const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree, file) => {
+  const source = file?.toString() ?? "";
+
   visit(
     tree,
     "link",
@@ -164,12 +277,13 @@ const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
         return;
       }
 
-      const nodes = [
-        buildAutolink(node.url.slice(0, boundaryIndex), node),
-        ...relinkifyTrailingText(node.url.slice(boundaryIndex)),
-      ];
-      parent.children.splice(index, 1, ...nodes);
-      return index + nodes.length;
+      return replaceAutolinkAtBoundary(
+        node,
+        parent,
+        index,
+        boundaryIndex,
+        source
+      );
     }
   );
 };

@@ -1,4 +1,4 @@
-import type { Link, Root, Text } from "mdast";
+import type { Link, Root, Strong, Text } from "mdast";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
@@ -65,7 +65,9 @@ describe("CJK autolink boundary splitting", () => {
       .use([autolinkBoundaryPlugin])
       .use(remarkStringify);
 
-    const result = await processor.run(processor.parse(markdown));
+    const result = await processor.run(processor.parse(markdown), {
+      value: markdown,
+    });
     return result as Root;
   };
 
@@ -95,6 +97,46 @@ describe("CJK autolink boundary splitting", () => {
 
     const allText = texts.map((t) => t.value).join("");
     expect(allText).toContain("。谢谢");
+  });
+
+  it.each([
+    "**",
+    "__",
+  ])("should restore strong formatting around autolinks marked with %s", async (delimiter) => {
+    const markdown = `${delimiter}https://example.com/${delimiter}、英語版は別ページです。`;
+    const tree = await processMarkdown(markdown);
+    const strongNodes: Strong[] = [];
+    visit(tree, "strong", (node: Strong) => strongNodes.push(node));
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "https://example.com/",
+    ]);
+    expect(strongNodes).toHaveLength(1);
+    expect(strongNodes[0].children).toEqual([
+      expect.objectContaining({ type: "link", url: "https://example.com/" }),
+    ]);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe("https://example.com/、英語版は別ページです。");
+  });
+
+  it("should not treat escaped strong delimiters as autolink formatting", async () => {
+    const markdown = String.raw`\*\*https://example.com/**，英語版は別ページです。`;
+    const tree = await processMarkdown(markdown);
+    const strongNodes: Strong[] = [];
+    visit(tree, "strong", (node: Strong) => strongNodes.push(node));
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "https://example.com/**",
+    ]);
+    expect(strongNodes).toHaveLength(0);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe("**https://example.com/**，英語版は別ページです。");
   });
 
   it("should split autolink at ideographic comma", async () => {
