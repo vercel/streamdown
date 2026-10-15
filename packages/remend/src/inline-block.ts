@@ -1,14 +1,37 @@
-import { isFenceAt, skipContainerPrefix, type TextScan } from "./scan";
+import {
+  type ContainerPrefix,
+  isFenceAt,
+  skipContainerPrefix,
+  type TextScan,
+} from "./scan";
 
 const headingPattern = /^#{1,6}(?:[ \t]|$)/;
 const thematicBreakPattern =
   /^(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/;
 const setextUnderlinePattern = /^(?:=+|-+)[ \t]*$/;
+const emptyItemPattern = /^(?:[*+-]|\d{1,9}[.)])$/;
 // The setext handler's zero-width space after a streaming dash stands in for
 // the list item or thematic break that dash usually starts
-// A list marker alone on a finished line is an empty item, which ends there
-const emptyItemPattern = /^(?:[*+-]|\d{1,9}[.)])$/;
 const dashPlaceholderPattern = /^-{1,2}\u200B$/;
+
+type Paragraph = "none" | "top" | "contained";
+
+const paragraphIn = (prefix: ContainerPrefix): Paragraph =>
+  prefix.listIndent > 0 || prefix.quoteDepth > 0 ? "contained" : "top";
+
+// An empty item can't interrupt a paragraph, but a paragraph inside a quote or
+// list item ends at an unindented line, which isn't lazy continuation text
+const startsEmptyItem = (
+  content: string,
+  paragraph: Paragraph,
+  prefix: ContainerPrefix,
+  lineStart: number
+): boolean =>
+  emptyItemPattern.test(content) &&
+  (paragraph === "none" ||
+    (paragraph === "contained" &&
+      prefix.quoteDepth === 0 &&
+      prefix.contentStart === lineStart));
 
 /**
  * Index where the text's last inline block starts, since emphasis never
@@ -19,6 +42,7 @@ export const findInlineBlockStart = (scan: TextScan): number => {
   let start = 0;
   let quoteDepth = 0;
   let endsBlock = false;
+  let paragraph: Paragraph = "none";
 
   for (let lineStart = 0; lineStart <= text.length; ) {
     let lineEnd = text.indexOf("\n", lineStart);
@@ -40,10 +64,12 @@ export const findInlineBlockStart = (scan: TextScan): number => {
       thematicBreakPattern.test(text.slice(lineStart, lineEnd).trim()) ||
       thematicBreakPattern.test(content) ||
       (setextUnderlinePattern.test(content) && !endsBlock) ||
-      (lineEnd < text.length && emptyItemPattern.test(content))
+      (lineEnd < text.length &&
+        startsEmptyItem(content, paragraph, prefix, lineStart))
     ) {
       start = next;
       endsBlock = false;
+      paragraph = "none";
     } else if (
       endsBlock ||
       prefix.listIndent > 0 ||
@@ -54,6 +80,9 @@ export const findInlineBlockStart = (scan: TextScan): number => {
     ) {
       start = prefix.contentStart;
       endsBlock = headingPattern.test(content) || content.startsWith("|");
+      paragraph = endsBlock ? "none" : paragraphIn(prefix);
+    } else if (paragraph === "none") {
+      paragraph = paragraphIn(prefix);
     }
     quoteDepth = prefix.quoteDepth;
     lineStart = next;
