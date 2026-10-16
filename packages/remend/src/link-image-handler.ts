@@ -1,4 +1,6 @@
 import { isInsideCodeBlock } from "./code-block-utils";
+import { handleIncompleteInlineCode } from "./inline-code-handler";
+import { getScan, isCompleteSpanAt, isFenceAt } from "./scan";
 import {
   findMatchingClosingBracket,
   findMatchingOpeningBracket,
@@ -142,6 +144,15 @@ const handleIncompleteText = (
   return null;
 };
 
+const opensCompleteLink = (text: string, open: number): boolean => {
+  const close = findMatchingClosingBracket(text, open);
+  return (
+    close !== -1 &&
+    text[close + 1] === "(" &&
+    text.indexOf(")", close + 2) !== -1
+  );
+};
+
 // One healing step over the trailing incomplete link or image, if any
 const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
   // Look for patterns like [text]( or ![text]( at the end of text
@@ -158,12 +169,24 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
 
   // Then check for incomplete link text: [partial-text without closing ]
   // Search backwards for an opening bracket that doesn't have a matching closing bracket
+  const scan = getScan(text);
+  let enclosesLink = false;
   for (
     let i = text.lastIndexOf("[");
     i !== -1;
     i = i === 0 ? -1 : text.lastIndexOf("[", i - 1)
   ) {
-    if (!isInsideCodeBlock(text, i)) {
+    // An unclosed backtick renders as text, so a link after one still counts
+    const isLink = !(
+      (i > 0 && text[i - 1] === "!") ||
+      isFenceAt(scan, i) ||
+      isCompleteSpanAt(scan, i)
+    );
+    const closesHere = isLink && opensCompleteLink(text, i);
+    // Links can't contain links, so a link bracket before one is literal text
+    const literal = isLink && enclosesLink;
+    enclosesLink ||= closesHere;
+    if (!(closesHere || literal || isInsideCodeBlock(text, i))) {
       const result = handleIncompleteText(text, i, linkMode);
       if (result !== null) {
         return result;
@@ -179,11 +202,7 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
 // without a bound. Realistic nesting depth is single digits.
 const MAX_HEAL_PASSES = 32;
 
-// Preserves incomplete links and images with a special marker.
-export const handleIncompleteLinksAndImages = (
-  text: string,
-  linkMode: LinkMode = "protocol"
-): string => {
+const healLinksAndImages = (text: string, linkMode: LinkMode): string => {
   let current = text;
 
   // Removing a trailing incomplete image can expose another incomplete
@@ -200,4 +219,37 @@ export const handleIncompleteLinksAndImages = (
     current = next;
   }
   return current;
+};
+
+const endsWithPlaceholder = (text: string): boolean =>
+  text.endsWith("](streamdown:incomplete-link)") ||
+  text.endsWith(`](${INCOMPLETE_IMAGE_PLACEHOLDER})`);
+
+// Preserves incomplete links and images with a special marker.
+export const handleIncompleteLinksAndImages = (
+  text: string,
+  linkMode: LinkMode = "protocol",
+  closeInlineCode = false
+): string => {
+  const healed = healLinksAndImages(text, linkMode);
+  if (healed !== text || !closeInlineCode || endsWithPlaceholder(text)) {
+    return healed;
+  }
+  const span = getScan(text).openSpan;
+  if (!span || text.lastIndexOf("[", span.start) === -1) {
+    return text;
+  }
+
+  // Code spans bind tighter than links, so closing an open span can swallow
+  // brackets and leave a link opener unclosed. Heal against the span the
+  // inline code handler will close, and keep that only when a link needed it.
+  // Trailing whitespace stays outside the closers, as the inline code
+  // handler leaves it
+  const body = text.trimEnd();
+  const closed = handleIncompleteInlineCode(body);
+  if (closed === body) {
+    return text;
+  }
+  const relinked = healLinksAndImages(closed, linkMode);
+  return relinked === closed ? text : relinked + text.slice(body.length);
 };

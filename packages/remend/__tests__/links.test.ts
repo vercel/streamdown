@@ -69,6 +69,58 @@ describe("link handling", () => {
       "[link [nested] text](streamdown:incomplete-link)"
     );
   });
+
+  // Links can't contain links, so a bracket before a complete link is literal
+  it.each<{ name: string; input: string; expected: string }>([
+    {
+      name: "outer bracket around a healed link",
+      input: "[a[a",
+      expected: "[a[a](streamdown:incomplete-link)",
+    },
+    {
+      name: "outer bracket around a complete link",
+      input: "[a [b](u) c",
+      expected: "[a [b](u) c",
+    },
+    {
+      name: "image around a complete link",
+      input: "![a [b](u) c",
+      expected: "![a [b](u) c](streamdown:incomplete-image)",
+    },
+    {
+      name: "open bracket after a link inside a literal bracket",
+      input: "[outer [inner](u) and [more",
+      expected: "[outer [inner](u) and [more](streamdown:incomplete-link)",
+    },
+    {
+      name: "bracket after an unclosed backtick",
+      input: "[`[",
+      expected: "[`[](streamdown:incomplete-link)",
+    },
+    {
+      name: "code span that swallows a complete link",
+      input: "[`[](u)",
+      expected: "[`[](u)`](streamdown:incomplete-link)",
+    },
+    {
+      name: "brackets inside a complete code span",
+      input: "a[~~`[[`a",
+      expected: "a[~~`[[`a](streamdown:incomplete-link)",
+    },
+    {
+      name: "label closed after a code span holding a bracket",
+      input: "[`[`]",
+      expected: "[`[`]",
+    },
+    {
+      name: "code span holding an open bracket before a link",
+      input: "Split on `[` and see [the",
+      expected: "Split on `[` and see [the](streamdown:incomplete-link)",
+    },
+  ])("heals once around nested links: $name", ({ input, expected }) => {
+    expect(remend(input)).toBe(expected);
+    expect(remend(expected)).toBe(expected);
+  });
 });
 
 describe("link handling with linkMode: text-only", () => {
