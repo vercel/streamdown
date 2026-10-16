@@ -10,6 +10,7 @@
 
 import { act, render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { animate } from "../animate";
 import { Streamdown } from "../index";
 
 const animated = {
@@ -20,7 +21,7 @@ const animated = {
 
 const renderAnimated = async (markdown: string) => {
   const result = render(
-    <Streamdown animated={animated} isAnimating={true}>
+    <Streamdown animated={animated} isAnimating={true} plugins={{ animate }}>
       {markdown}
     </Streamdown>
   );

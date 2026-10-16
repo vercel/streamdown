@@ -21,13 +21,12 @@ import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
 import type { Pluggable } from "unified";
-import {
-  type AnimateOptions,
-  type AnimatePlugin,
-  type AnimateTimeline,
-  createAnimateTimeline,
-  createRenderAnimatePlugin,
+import type {
+  AnimateOptions,
+  AnimatePlugin,
+  AnimateTimeline,
 } from "./lib/animate";
+import { useAnimationEngine } from "./lib/animation-engine";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as builtinComponents } from "./lib/components";
 import { detectTextDirection } from "./lib/detect-direction";
@@ -42,6 +41,7 @@ import {
 import { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 import { PluginContext } from "./lib/plugin-context";
 import type {
+  AnimationEngine,
   MermaidConfig,
   PluginConfig,
   ThemeInput,
@@ -84,6 +84,7 @@ export type {
 export { defaultUrlTransform } from "./lib/markdown";
 export { parseMarkdownIntoBlocks } from "./lib/parse-blocks";
 export type {
+  AnimationEngine,
   BundledLanguage,
   BundledTheme,
   CjkPlugin,
@@ -627,6 +628,59 @@ const sameRootAttributes = (
   );
 };
 
+// Counts changes of engine. Its functions are its identity, so an engine
+// object re-created on every render around the same functions keeps the
+// plugins it made, and only an engine with other functions replaces them.
+const useAnimationEngineVersion = (
+  engine: AnimationEngine | undefined
+): number => {
+  const state = useRef<{
+    engine: AnimationEngine | undefined;
+    version: number;
+  }>({ engine: undefined, version: 0 }).current;
+  if (
+    engine &&
+    state.engine &&
+    (engine.createBlockPlugin !== state.engine.createBlockPlugin ||
+      engine.createTimeline !== state.engine.createTimeline)
+  ) {
+    state.version += 1;
+  }
+  if (engine) {
+    state.engine = engine;
+  }
+  return state.version;
+};
+
+// When only the engine changed, the new block plugins take over from the old
+// ones, so the text they showed stays settled. A change of `animated` options
+// starts the blocks over, as it always has.
+const pluginsTakenOver = (
+  previousEngineVersion: number,
+  engineVersion: number,
+  plugins: AnimatePlugin[]
+): AnimatePlugin[] => (previousEngineVersion === engineVersion ? [] : plugins);
+
+// Blocks shown without the fade while it was wanted but not loaded yet. Their
+// text is already on screen, so the plugin created for each once the fade
+// arrives settles it, and only what streams in after animates.
+const useBlocksShownUnanimated = (
+  animatedKey: string,
+  isAnimating: boolean,
+  engine: AnimationEngine | undefined,
+  blockCount: number
+): Set<number> => {
+  const shown = useRef(new Set<number>()).current;
+  if (!animatedKey) {
+    shown.clear();
+  } else if (isAnimating && !engine) {
+    for (let index = 0; index < blockCount; index += 1) {
+      shown.add(index);
+    }
+  }
+  return shown;
+};
+
 export const Streamdown = memo(
   ({
     children,
@@ -786,6 +840,15 @@ export const Streamdown = memo(
       return "";
     }, [animated]);
 
+    // Defined only while `animated` is set.
+    const animationEngine = useAnimationEngine(
+      animatedKey !== "",
+      plugins?.animate
+    );
+    const engineVersion = useAnimationEngineVersion(animationEngine);
+    // The block plugins and timeline are rebuilt when either changes.
+    const animationKey = `${animatedKey}#${engineVersion}`;
+
     // Shared wall-clock timeline: serializes stagger delays across sibling
     // blocks AND across streaming ticks (memoized earlier blocks don't
     // re-render, so a pure render-order counter would miss them). Fixes #482.
@@ -797,21 +860,31 @@ export const Streamdown = memo(
     const blockRehypePluginsRef = useRef<Pluggable[][]>([]);
     const prevMergedRehypePluginsRef = useRef<Pluggable[] | null>(null);
     const prevAnimatedKeyRef = useRef<string>("");
+    // A replaced engine's block plugins: the plugin that takes over a block
+    // starts from what the old one had already shown.
+    const replacedBlockPluginsRef = useRef<AnimatePlugin[]>([]);
+    const prevEngineVersionRef = useRef(engineVersion);
 
-    if (animatedKey) {
-      if (prevAnimatedKeyRef.current !== animatedKey) {
-        prevAnimatedKeyRef.current = animatedKey;
+    if (animationEngine) {
+      if (prevAnimatedKeyRef.current !== animationKey) {
+        replacedBlockPluginsRef.current = pluginsTakenOver(
+          prevEngineVersionRef.current,
+          engineVersion,
+          blockAnimatePluginsRef.current
+        );
+        prevEngineVersionRef.current = engineVersion;
+        prevAnimatedKeyRef.current = animationKey;
         const backlog =
           animatedKey !== "true"
             ? (animated as AnimateOptions).maxBacklogMs
             : undefined;
-        animateTimelineRef.current = createAnimateTimeline({
+        animateTimelineRef.current = animationEngine.createTimeline({
           maxBacklogMs: backlog,
         });
         blockAnimatePluginsRef.current = [];
         blockRehypePluginsRef.current = [];
       } else if (!animateTimelineRef.current) {
-        animateTimelineRef.current = createAnimateTimeline();
+        animateTimelineRef.current = animationEngine.createTimeline();
       }
       // Reset the per-pass cursor from the last *committed* horizon so a
       // StrictMode double-render recomputes the same delays instead of
@@ -825,6 +898,12 @@ export const Streamdown = memo(
       blockRehypePluginsRef.current = [];
       prevAnimatedKeyRef.current = "";
     }
+    const blocksShownUnanimated = useBlocksShownUnanimated(
+      animatedKey,
+      isAnimating,
+      animationEngine,
+      blocksToRender.length
+    );
 
     // Commit the in-flight pass horizon after paint. Discarded concurrent
     // renders that called beginPass never reach this effect, so they can't
@@ -1055,6 +1134,27 @@ export const Streamdown = memo(
 
     const { containerRef, showCaret } = useCaretHost(shouldHideCaret);
 
+    const createBlockAnimatePlugin = (
+      engine: AnimationEngine,
+      timeline: AnimateTimeline,
+      index: number
+    ): AnimatePlugin => {
+      // maxBacklogMs is consumed by the timeline factory, not the plugin.
+      const rawOpts =
+        animatedKey && animatedKey !== "true"
+          ? (animated as AnimateOptions)
+          : ({} as AnimateOptions);
+      const { maxBacklogMs: _, ...pluginOpts } = rawOpts;
+      const blockPlugin = engine.createBlockPlugin({ ...pluginOpts, timeline });
+      const replaced = replacedBlockPluginsRef.current[index];
+      if (replaced) {
+        blockPlugin.setPrevContentLength(replaced.getLastRenderCharCount());
+      } else if (blocksShownUnanimated.delete(index)) {
+        blockPlugin.settle();
+      }
+      return blockPlugin;
+    };
+
     const getBlockPlugins = (
       index: number
     ): {
@@ -1062,18 +1162,14 @@ export const Streamdown = memo(
       blockRehypePlugins: Pluggable[];
     } => {
       let blockAnimatePlugin: AnimatePlugin | null = null;
-      if (animateTimelineRef.current && isAnimating) {
+      const timeline = animateTimelineRef.current;
+      if (animationEngine && timeline && isAnimating) {
         if (!blockAnimatePluginsRef.current[index]) {
-          // maxBacklogMs is consumed by the timeline factory, not the plugin.
-          const rawOpts =
-            animatedKey && animatedKey !== "true"
-              ? (animated as AnimateOptions)
-              : ({} as AnimateOptions);
-          const { maxBacklogMs: _, ...pluginOpts } = rawOpts;
-          blockAnimatePluginsRef.current[index] = createRenderAnimatePlugin({
-            ...pluginOpts,
-            timeline: animateTimelineRef.current,
-          });
+          blockAnimatePluginsRef.current[index] = createBlockAnimatePlugin(
+            animationEngine,
+            timeline,
+            index
+          );
         }
         blockAnimatePlugin = blockAnimatePluginsRef.current[index];
       }

@@ -58,9 +58,24 @@ export interface Options {
 const EMPTY_PLUGINS: PluggableList = [];
 const DEFAULT_REMARK_REHYPE_OPTIONS = { allowDangerousHtml: true };
 
-// Plugin name cache for faster serialization
+// A plugin function's part of the processor cache key: its name for
+// readability, plus an id unique to the function object. Names alone collide:
+// two copies of the animate plugin built into different entries are both
+// `rehypeAnimate$0`, and every anonymous function's name is "".
 // biome-ignore lint/complexity/noBannedTypes: "Need Function type for plugin caching"
-const pluginNameCache = new WeakMap<Function, string>();
+const pluginKeyCache = new WeakMap<Function, string>();
+let nextPluginId = 0;
+
+// biome-ignore lint/complexity/noBannedTypes: "Need Function type for plugin caching"
+const pluginKey = (plugin: Function): string => {
+  let key = pluginKeyCache.get(plugin);
+  if (key === undefined) {
+    nextPluginId += 1;
+    key = `${plugin.name}#${nextPluginId}`;
+    pluginKeyCache.set(plugin, key);
+  }
+  return key;
+};
 
 // LRU Cache for unified processors
 class ProcessorCache {
@@ -88,7 +103,6 @@ class ProcessorCache {
     }
 
     // Optimize serialization for plugins
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Plugin serialization requires checking multiple plugin formats"
     const serializePlugins = (plugins: PluggableList | undefined): string => {
       if (!plugins || plugins.length === 0) {
         return "";
@@ -105,12 +119,7 @@ class ProcessorCache {
           // Plugin with options: [plugin, options]
           const [pluginFn, pluginOptions] = plugin;
           if (typeof pluginFn === "function") {
-            let name = pluginNameCache.get(pluginFn);
-            if (!name) {
-              name = pluginFn.name;
-              pluginNameCache.set(pluginFn, name);
-            }
-            result += name;
+            result += pluginKey(pluginFn);
           } else {
             result += String(pluginFn);
           }
@@ -118,12 +127,7 @@ class ProcessorCache {
           result += JSON.stringify(pluginOptions);
         } else if (typeof plugin === "function") {
           // Plugin without options
-          let name = pluginNameCache.get(plugin);
-          if (!name) {
-            name = plugin.name;
-            pluginNameCache.set(plugin, name);
-          }
-          result += name;
+          result += pluginKey(plugin);
         } else {
           result += String(plugin);
         }
