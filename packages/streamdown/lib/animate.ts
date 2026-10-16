@@ -20,6 +20,9 @@ export const MAX_ANIMATION_BACKLOG_MS = 320;
  */
 export const MIN_STAGGER_STEP_MS = 4;
 
+/** Default fade duration (ms) when `duration` isn't set. */
+export const DEFAULT_ANIMATION_DURATION_MS = 150;
+
 export interface ScheduleSlot {
   /** CSS delay (ms) for the first new word in this batch. */
   baseDelay: number;
@@ -43,6 +46,12 @@ export interface ScheduleSlot {
 export interface AnimateTimeline {
   beginPass: (now: number) => void;
   commitPass: () => void;
+  /**
+   * Absolute time the last scheduled word starts, from committed passes only
+   * (`-Infinity` before anything was scheduled). Add the animation duration to
+   * get the moment the whole timeline has finished playing (#669).
+   */
+  lastStartAt: () => number;
   /** Snapshot of the working cursor (passNextStartAt). */
   mark: () => number;
   now: () => number;
@@ -69,9 +78,16 @@ export function createAnimateTimeline(
   let committedNextStartAt = 0;
   /** Working absolute time for the in-flight pass. */
   let passNextStartAt = 0;
+  /** Committed absolute start time of the last scheduled word. */
+  let committedLastStartAt = Number.NEGATIVE_INFINITY;
+  /** Working last start time for the in-flight pass. */
+  let passLastStartAt = Number.NEGATIVE_INFINITY;
 
   return {
     now: nowFn,
+    lastStartAt() {
+      return committedLastStartAt;
+    },
     beginPass(now: number) {
       // Resume from the last commit, but never more than maxBacklog ahead of
       // wall-clock — drops debt from a previous pass that overshot via the
@@ -80,6 +96,7 @@ export function createAnimateTimeline(
         Math.max(committedNextStartAt, now),
         now + maxBacklog
       );
+      passLastStartAt = committedLastStartAt;
     },
     mark() {
       return passNextStartAt;
@@ -118,10 +135,15 @@ export function createAnimateTimeline(
 
       const baseDelay = Math.max(0, Math.round(startAt - now));
       passNextStartAt = startAt + wordCount * step;
+      passLastStartAt = Math.max(
+        passLastStartAt,
+        startAt + (wordCount - 1) * step
+      );
       return { baseDelay, step };
     },
     commitPass() {
       committedNextStartAt = passNextStartAt;
+      committedLastStartAt = passLastStartAt;
     },
   };
 }
@@ -618,7 +640,7 @@ function buildAnimatePlugin(
   const easing = options?.easing ?? "ease";
   const config: AnimateConfig = {
     animation,
-    duration: options?.duration ?? 150,
+    duration: options?.duration ?? DEFAULT_ANIMATION_DURATION_MS,
     easing,
     sep: options?.sep ?? "word",
     stagger: options?.stagger ?? 40,
