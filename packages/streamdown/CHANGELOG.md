@@ -1,5 +1,22 @@
 # streamdown
 
+## 2.7.1
+
+### Patch Changes
+
+- 4c55fad: fix(animate): split CJK text per character in `sep: "word"` mode so every character of a CJK paragraph animates as it streams in, instead of only the first batch
+- 32050fc: fix: export `HighlightResult` and `HighlightToken` types from the package entry
+- 976cf12: fix(translations): add Mermaid chart accessibility translations
+  - Add Mermaid chart ARIA label translation
+  - Add Mermaid rendering error translation
+- 70f6d07: docs(security): call out that remote images are allowed by default and document restricting image origins for AI chat apps
+- 2206c22: fix: resolve reference links whose definition is in another block
+
+  Documents with link reference definitions (`[label]: url`) are now kept in a single block, the same way documents with footnotes are, so `[text][label]` resolves instead of rendering as raw text.
+
+- fea4ef5: fix: set `data-*` and `aria-*` props on the root element. They were only forwarded to the Markdown renderer and the blocks, so with the default renderer attributes such as `data-testid` or `aria-busy` reached no element.
+- f25e0ae: Avoid rendering and parsing `mode="static"` documents twice on mount
+
 ## 2.7.0
 
 ### Minor Changes
