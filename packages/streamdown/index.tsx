@@ -369,6 +369,14 @@ export type StreamdownProps = Options & {
   prefix?: string;
   /** Show line numbers in code blocks. @default true */
   lineNumbers?: boolean;
+  /**
+   * Code fence languages rendered verbatim as plain monospace text, without
+   * syntax highlighting, line numbers or controls. Useful for ASCII / Unicode
+   * box-drawing diagrams where column alignment matters.
+   * Custom renderers and the Mermaid plugin take precedence for matching languages.
+   * @default []
+   */
+  codeBlockRawLanguages?: string[];
   /** Called when isAnimating transitions from false to true. Suppressed in mode="static". */
   onAnimationStart?: () => void;
   /** Called when isAnimating transitions from true to false. Suppressed in mode="static". */
@@ -437,6 +445,8 @@ const carets = {
 export interface StreamdownContextType {
   /** Max height for fenced code blocks. @default 400 */
   codeBlockMaxHeight: number | string;
+  /** Code fence languages rendered verbatim without highlighting. */
+  codeBlockRawLanguages?: string[];
   controls: ControlsConfig;
   isAnimating: boolean;
   /** Show line numbers in code blocks. @default true */
@@ -449,6 +459,12 @@ export interface StreamdownContextType {
   /** Max height for tables. @default 300 */
   tableMaxHeight: number | string;
 }
+
+const serializeLanguages = (languages?: string[]): string =>
+  languages?.length ? JSON.stringify(languages) : "";
+
+const parseLanguages = (key: string): string[] | undefined =>
+  key ? JSON.parse(key) : undefined;
 
 const defaultShikiTheme: [ThemeInput, ThemeInput] = [
   "github-light",
@@ -653,6 +669,7 @@ export const Streamdown = memo(
     linkSafety = defaultLinkSafetyConfig,
     portal,
     lineNumbers = true,
+    codeBlockRawLanguages,
     allowedTags,
     fallbackComponent,
     literalTagContent,
@@ -835,10 +852,14 @@ export const Streamdown = memo(
       }
     });
 
+    // Stable key so inline arrays don't defeat memoization.
+    const rawLanguagesKey = serializeLanguages(codeBlockRawLanguages);
+
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
       () => ({
         codeBlockMaxHeight,
+        codeBlockRawLanguages: parseLanguages(rawLanguagesKey),
         shikiTheme:
           shikiTheme ?? plugins?.code?.getThemes() ?? defaultShikiTheme,
         controls,
@@ -852,6 +873,7 @@ export const Streamdown = memo(
       }),
       [
         codeBlockMaxHeight,
+        rawLanguagesKey,
         shikiTheme,
         controls,
         isAnimating,
@@ -1205,6 +1227,8 @@ export const Streamdown = memo(
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
     prevProps.lineNumbers === nextProps.lineNumbers &&
+    JSON.stringify(prevProps.codeBlockRawLanguages) ===
+      JSON.stringify(nextProps.codeBlockRawLanguages) &&
     prevProps.codeBlockMaxHeight === nextProps.codeBlockMaxHeight &&
     prevProps.tableMaxHeight === nextProps.tableMaxHeight &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
