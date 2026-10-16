@@ -9,6 +9,7 @@
 import { act, render } from "@testing-library/react";
 import { StrictMode, useEffect } from "react";
 import { describe, expect, it } from "vitest";
+import { animate } from "../animate";
 import { Streamdown } from "../index";
 import { MAX_ANIMATION_BACKLOG_MS } from "../lib/animate";
 
@@ -32,7 +33,12 @@ describe("issue #482 — cross-block stagger serialization", () => {
     };
 
     const { rerender, container } = render(
-      <Streamdown animated={config} isAnimating={true} mode="streaming">
+      <Streamdown
+        animated={config}
+        isAnimating={true}
+        mode="streaming"
+        plugins={{ animate }}
+      >
         {"Hello world foo bar baz\n\n"}
       </Streamdown>
     );
@@ -46,7 +52,12 @@ describe("issue #482 — cross-block stagger serialization", () => {
 
     await act(() => {
       rerender(
-        <Streamdown animated={config} isAnimating={true} mode="streaming">
+        <Streamdown
+          animated={config}
+          isAnimating={true}
+          mode="streaming"
+          plugins={{ animate }}
+        >
           {"Hello world foo bar baz\n\nNext section arrives\n"}
         </Streamdown>
       );
@@ -80,7 +91,12 @@ describe("issue #482 — cross-block stagger serialization", () => {
     ].join("\n");
 
     const { container, rerender } = render(
-      <Streamdown animated={config} isAnimating={true} mode="streaming">
+      <Streamdown
+        animated={config}
+        isAnimating={true}
+        mode="streaming"
+        plugins={{ animate }}
+      >
         {list}
       </Streamdown>
     );
@@ -96,7 +112,12 @@ describe("issue #482 — cross-block stagger serialization", () => {
 
     await act(() => {
       rerender(
-        <Streamdown animated={config} isAnimating={true} mode="streaming">
+        <Streamdown
+          animated={config}
+          isAnimating={true}
+          mode="streaming"
+          plugins={{ animate }}
+        >
           {`${list}\n## Recommendation\n`}
         </Streamdown>
       );
@@ -127,6 +148,7 @@ describe("issue #535 — underline doesn't paint ahead of link words", () => {
         animated={{ animation: "fadeIn", duration: 200, stagger: 50 }}
         isAnimating={true}
         mode="streaming"
+        plugins={{ animate }}
       >
         {md}
       </Streamdown>
@@ -184,7 +206,12 @@ describe("issue #570 — spans come off when isAnimating goes false", () => {
       "First paragraph with several words here.\n\nSecond paragraph also has words.\n\nThird paragraph ends it.";
 
     const { container, rerender } = render(
-      <Streamdown animated={FADE} isAnimating={true} mode="streaming">
+      <Streamdown
+        animated={FADE}
+        isAnimating={true}
+        mode="streaming"
+        plugins={{ animate }}
+      >
         {MD}
       </Streamdown>
     );
@@ -195,7 +222,12 @@ describe("issue #570 — spans come off when isAnimating goes false", () => {
 
     await act(() => {
       rerender(
-        <Streamdown animated={FADE} isAnimating={false} mode="streaming">
+        <Streamdown
+          animated={FADE}
+          isAnimating={false}
+          mode="streaming"
+          plugins={{ animate }}
+        >
           {MD}
         </Streamdown>
       );
@@ -228,6 +260,7 @@ describe("issue #570 — spans come off when isAnimating goes false", () => {
         components={components}
         isAnimating={true}
         mode="streaming"
+        plugins={{ animate }}
       >
         {MD}
       </Streamdown>
@@ -245,6 +278,7 @@ describe("issue #570 — spans come off when isAnimating goes false", () => {
           components={components}
           isAnimating={false}
           mode="streaming"
+          plugins={{ animate }}
         >
           {MD}
         </Streamdown>
@@ -267,7 +301,12 @@ describe("issue #570 — spans come off when isAnimating goes false", () => {
 
     const { rerender, container } = render(
       <StrictMode>
-        <Streamdown animated={config} isAnimating={true} mode="streaming">
+        <Streamdown
+          animated={config}
+          isAnimating={true}
+          mode="streaming"
+          plugins={{ animate }}
+        >
           {"one two three"}
         </Streamdown>
       </StrictMode>
@@ -279,7 +318,12 @@ describe("issue #570 — spans come off when isAnimating goes false", () => {
     await act(() => {
       rerender(
         <StrictMode>
-          <Streamdown animated={config} isAnimating={true} mode="streaming">
+          <Streamdown
+            animated={config}
+            isAnimating={true}
+            mode="streaming"
+            plugins={{ animate }}
+          >
             {"one two three four five"}
           </Streamdown>
         </StrictMode>

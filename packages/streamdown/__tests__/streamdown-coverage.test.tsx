@@ -1,5 +1,6 @@
 import { render, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import { animate } from "../animate";
 import { Block, normalizeHtmlIndentation, Streamdown } from "../index";
 
 const INDENTED_DIV_REGEX = /^ {4,}<div>/m;
@@ -22,7 +23,7 @@ vi.mock("../lib/markdown", () => ({
 describe("Streamdown animated paths", () => {
   it("should handle animated=true with isAnimating=true", () => {
     const { container } = render(
-      <Streamdown animated={true} isAnimating={true}>
+      <Streamdown animated={true} isAnimating={true} plugins={{ animate }}>
         Hello World
       </Streamdown>
     );
@@ -39,6 +40,7 @@ describe("Streamdown animated paths", () => {
       <Streamdown
         animated={{ animation: "blurIn", duration: 300, sep: "char" }}
         isAnimating={true}
+        plugins={{ animate }}
       >
         Hello World
       </Streamdown>
@@ -49,7 +51,7 @@ describe("Streamdown animated paths", () => {
 
   it("should not include animate plugin when isAnimating is false", () => {
     const { container } = render(
-      <Streamdown animated={true} isAnimating={false}>
+      <Streamdown animated={true} isAnimating={false} plugins={{ animate }}>
         Hello World
       </Streamdown>
     );
@@ -425,10 +427,16 @@ describe("Streamdown memoization", () => {
 
   it("should re-render when animated changes", () => {
     const { rerender, container } = render(
-      <Streamdown animated={false}>Test</Streamdown>
+      <Streamdown animated={false} plugins={{ animate }}>
+        Test
+      </Streamdown>
     );
 
-    rerender(<Streamdown animated={true}>Test</Streamdown>);
+    rerender(
+      <Streamdown animated={true} plugins={{ animate }}>
+        Test
+      </Streamdown>
+    );
 
     expect(container.firstElementChild).toBeTruthy();
   });

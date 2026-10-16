@@ -1,6 +1,12 @@
 import type React from "react";
 import type { Pluggable } from "unified";
 import type {
+  AnimateOptions,
+  AnimatePlugin,
+  AnimateTimeline,
+  CreateAnimateTimelineOptions,
+} from "./animate";
+import type {
   BundledLanguage,
   BundledTheme,
   ThemeRegistrationAny,
@@ -198,9 +204,23 @@ export interface CustomRenderer {
 }
 
 /**
+ * The word fade behind the `animated` prop: `animate` from
+ * `streamdown/animate`. Passed as `plugins.animate`, it ships with your bundle
+ * and animates from the first render; without it, Streamdown loads it the
+ * first time `animated` is set.
+ */
+export interface AnimationEngine {
+  createBlockPlugin: (
+    options: AnimateOptions & { timeline: AnimateTimeline }
+  ) => AnimatePlugin;
+  createTimeline: (options?: CreateAnimateTimelineOptions) => AnimateTimeline;
+}
+
+/**
  * Plugin configuration passed to Streamdown
  */
 export interface PluginConfig {
+  animate?: AnimationEngine;
   cjk?: CjkPlugin;
   code?: CodeHighlighterPlugin;
   math?: MathPlugin;

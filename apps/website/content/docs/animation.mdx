@@ -29,6 +29,30 @@ export default function Page() {
 
 The `isAnimating` prop controls when the animation is active. When `false`, the animate plugin is excluded from the rehype pipeline entirely, so completed messages render as plain text with no extra `<span>` wrappers.
 
+## Loading the animation
+
+The word fade is its own module, `streamdown/animate`. Streamdown starts loading it after a component with `animated` set first commits on the client, even while `isAnimating` is `false`, and components that never set `animated` never request it. Until it arrives, text renders without the fade; the words on screen when it arrives stay as they are, and only text that streams in after them fades in.
+
+To animate from the very first render, pass the module as a plugin as well as setting `animated`. It then ships with your bundle:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from "streamdown";
+import { animate } from "streamdown/animate";
+import "streamdown/styles.css";
+
+export default function Page() {
+  return (
+    <Streamdown
+      animated
+      isAnimating={status === "streaming"}
+      plugins={{ animate }}
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
 ## How it works
 
 The animation is a rehype transformer that:
@@ -183,7 +207,7 @@ Memoize callbacks with `useCallback` to avoid unnecessary effect re-runs.
 For direct access to the rehype plugin (e.g. in custom pipelines), use `createAnimatePlugin`:
 
 ```tsx
-import { createAnimatePlugin } from "streamdown";
+import { createAnimatePlugin } from "streamdown/animate";
 
 const animate = createAnimatePlugin({
   animation: "blurIn",

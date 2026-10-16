@@ -142,6 +142,12 @@ export interface AnimatePlugin {
    * Prefer `commit()` in React; this is for tests / custom hosts.
    */
   setPrevContentLength: (length: number) => void;
+  /**
+   * Count everything the next rehype run sees as already visible, so only text
+   * added after it animates. For text that was on screen before this plugin
+   * existed. `commit()` ends it.
+   */
+  settle: () => void;
   type: "animate";
 }
 
@@ -459,6 +465,8 @@ interface AnimateRenderState {
    */
   pendingMark: number | null;
   prevContentLength: number;
+  /** Set by settle(): the runs until the next commit animate nothing. */
+  settling: boolean;
 }
 
 interface Schedule {
@@ -634,6 +642,7 @@ function buildAnimatePlugin(
     prevContentLength: 0,
     lastRenderCharCount: 0,
     pendingMark: null,
+    settling: false,
   };
 
   const id = instanceId++;
@@ -641,7 +650,9 @@ function buildAnimatePlugin(
     const charCounter = { count: 0, newIndex: 0 };
 
     // Seed skip-window from the last committed paint (#570 secondary).
-    renderState.prevContentLength = renderState.committedCharCount;
+    renderState.prevContentLength = renderState.settling
+      ? Number.POSITIVE_INFINITY
+      : renderState.committedCharCount;
 
     const timeline = config.timeline;
     const now = timeline?.now() ?? defaultNow();
@@ -710,8 +721,12 @@ function buildAnimatePlugin(
     commit() {
       renderState.committedCharCount = renderState.lastRenderCharCount;
       renderState.pendingMark = null;
+      renderState.settling = false;
+    },
+    settle() {
+      renderState.settling = true;
     },
   };
 }
 
-export const animate = createAnimatePlugin();
+export const animate = /* @__PURE__ */ createAnimatePlugin();
