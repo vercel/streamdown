@@ -25,8 +25,6 @@ import { getCopyCallbacks } from "./controls";
 import { ImageComponent } from "./image";
 import { LinkSafetyModal } from "./link-modal";
 import type { ExtraProps, Options } from "./markdown";
-import { MermaidDownloadDropdown } from "./mermaid/download-button";
-import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
 import { useCustomRenderer, useMermaidPlugin } from "./plugin-context";
 import { useCn } from "./prefix-context";
 import { Table } from "./table";
@@ -34,9 +32,12 @@ import { Table } from "./table";
 const START_LINE_PATTERN = /startLine=(\d+)/;
 const NO_LINE_NUMBERS_PATTERN = /\bnoLineNumbers\b/;
 
-// Lazy load heavy components
-const Mermaid = lazy(() =>
-  import("./mermaid").then((mod) => ({ default: mod.Mermaid }))
+// Lazy load heavy components. The whole Mermaid block is one chunk: its
+// fullscreen control renders the chart too, so importing any of the block's
+// controls eagerly would pull the chart, pan-zoom and SVG utilities into the
+// main bundle.
+const MermaidBlock = lazy(() =>
+  import("./mermaid/block").then((mod) => ({ default: mod.MermaidBlock }))
 );
 
 const LANGUAGE_REGEX = /language-([^\s]+)/;
@@ -835,7 +836,6 @@ const CodeComponent = ({
   children,
   ...props
 }: DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> &
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Code component handles multiple rendering paths for inline code, code blocks, and mermaid diagrams"
   ExtraProps & { "data-block"?: string }) => {
   const cn = useCn();
   // A code element is block-level when it was inside a <pre> element.
@@ -931,65 +931,17 @@ const CodeComponent = ({
 
     return (
       <Suspense fallback={<CodeBlockSkeleton />}>
-        <div
-          className={cn(
-            "group relative my-4 flex w-full flex-col gap-2 rounded-xl border border-border bg-sidebar p-2",
-            className
-          )}
-          data-streamdown="mermaid-block"
-        >
-          <div
-            className={cn(
-              "flex h-8 items-center text-muted-foreground text-xs"
-            )}
-          >
-            <span className={cn("ml-1 font-mono lowercase")}>mermaid</span>
-          </div>
-          {shouldShowMermaidControls ? (
-            <div
-              className={cn(
-                "pointer-events-none absolute top-2 right-2 z-10 flex items-center"
-              )}
-            >
-              <div
-                className={cn(
-                  "pointer-events-auto flex shrink-0 items-center gap-2 rounded-md border border-sidebar bg-sidebar/80 px-1.5 py-1 supports-[backdrop-filter]:bg-sidebar/70 supports-[backdrop-filter]:backdrop-blur"
-                )}
-                data-streamdown="mermaid-block-actions"
-              >
-                {showDownload ? (
-                  <MermaidDownloadDropdown
-                    chart={code}
-                    config={mermaidContext?.config}
-                  />
-                ) : null}
-                {showCopy ? (
-                  <CodeBlockCopyButton
-                    code={code}
-                    {...getCopyCallbacks(controlsConfig, "mermaid")}
-                  />
-                ) : null}
-                {showFullscreen ? (
-                  <MermaidFullscreenButton
-                    chart={code}
-                    config={mermaidContext?.config}
-                  />
-                ) : null}
-              </div>
-            </div>
-          ) : null}
-          <div
-            className={cn(
-              "overflow-hidden rounded-md border border-border bg-background"
-            )}
-          >
-            <Mermaid
-              chart={code}
-              config={mermaidContext?.config}
-              showControls={showPanZoomControls}
-            />
-          </div>
-        </div>
+        <MermaidBlock
+          chart={code}
+          className={className}
+          config={mermaidContext?.config}
+          copyCallbacks={getCopyCallbacks(controlsConfig, "mermaid")}
+          showControls={shouldShowMermaidControls}
+          showCopy={showCopy}
+          showDownload={showDownload}
+          showFullscreen={showFullscreen}
+          showPanZoomControls={showPanZoomControls}
+        />
       </Suspense>
     );
   }
