@@ -78,8 +78,8 @@ describe("memoized components re-render when their output changes", () => {
   });
 
   it("drops animation spans once the stream settles (issue #570)", async () => {
-    // The animate plugin is excluded from the pipeline when isAnimating goes
-    // false, so the block re-parses without the per-word spans. The source text
+    // The animate plugin is excluded from the pipeline once isAnimating is
+    // false and the last words have finished fading (#669), so the block re-parses without the per-word spans. The source text
     // is identical, so every element keeps its position — which is why a
     // position-based comparator discards the span-free re-parse and the spans
     // stay in the DOM for the life of the page.
@@ -110,9 +110,13 @@ describe("memoized components re-render when their output changes", () => {
       </Streamdown>
     );
 
-    await waitFor(() => {
-      expect(container.querySelectorAll("[data-sd-animate]")).toHaveLength(0);
-    });
+    // The spans stay for the animation duration (200ms), then come off.
+    await waitFor(
+      () => {
+        expect(container.querySelectorAll("[data-sd-animate]")).toHaveLength(0);
+      },
+      { timeout: 3000 }
+    );
   });
 
   it("keeps every element describing the version on screen after an insertion above it", async () => {
