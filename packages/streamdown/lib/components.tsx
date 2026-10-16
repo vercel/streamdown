@@ -211,7 +211,7 @@ const MemoOl = memo<OlProps>(
     return (
       <ol
         className={cn(
-          "list-inside list-decimal whitespace-normal [li_&]:pl-6",
+          "list-inside list-decimal whitespace-normal [li_&]:ps-6",
           className
         )}
         data-streamdown="ordered-list"
@@ -265,7 +265,7 @@ const MemoUl = memo<UlProps>(
     return (
       <ul
         className={cn(
-          "list-inside list-disc whitespace-normal [li_&]:pl-6",
+          "list-inside list-disc whitespace-normal [li_&]:ps-6",
           className
         )}
         data-streamdown="unordered-list"
@@ -371,7 +371,7 @@ const LinkComponent = ({
       <>
         <button
           className={cn(
-            "wrap-anywhere appearance-none text-left font-medium text-primary underline",
+            "wrap-anywhere appearance-none text-start font-medium text-primary underline",
             className
           )}
           data-incomplete={isIncomplete}
@@ -606,7 +606,7 @@ const MemoTh = memo<ThProps>(
     return (
       <th
         className={cn(
-          "whitespace-nowrap px-4 py-2 text-left font-semibold text-sm",
+          "whitespace-nowrap px-4 py-2 text-start font-semibold text-sm",
           className
         )}
         data-streamdown="table-header-cell"
@@ -645,7 +645,7 @@ const MemoBlockquote = memo<BlockquoteProps>(
     return (
       <blockquote
         className={cn(
-          "my-4 border-muted-foreground/30 border-l-4 pl-4 text-muted-foreground italic",
+          "my-4 border-muted-foreground/30 border-s-4 ps-4 text-muted-foreground italic",
           className
         )}
         data-streamdown="blockquote"
@@ -943,12 +943,12 @@ const CodeComponent = ({
               "flex h-8 items-center text-muted-foreground text-xs"
             )}
           >
-            <span className={cn("ml-1 font-mono lowercase")}>mermaid</span>
+            <span className={cn("ms-1 font-mono lowercase")}>mermaid</span>
           </div>
           {shouldShowMermaidControls ? (
             <div
               className={cn(
-                "pointer-events-none absolute top-2 right-2 z-10 flex items-center"
+                "pointer-events-none absolute end-2 top-2 z-10 flex items-center"
               )}
             >
               <div
