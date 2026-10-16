@@ -17,6 +17,7 @@ import {
   INCOMPLETE_IMAGE_PLACEHOLDER,
   type LinkMode,
 } from "./link-image-handler";
+import { holdPendingInlineMarkers } from "./pending-inline-markers";
 import { clearScanCache } from "./scan";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleSingleTildeEscape } from "./single-tilde-handler";
@@ -83,6 +84,12 @@ export interface RemendOptions {
   linkMode?: "protocol" | "text-only";
   /** Complete links and images (e.g., `[text](url` → `[text](streamdown:incomplete-link)`) */
   links?: boolean;
+  /**
+   * Hold trailing, whitespace-delimited emphasis markers until content arrives.
+   * Opt-in because a trailing marker can also be literal text. Disable after
+   * streaming ends to reveal any remaining literal markers. Defaults to false.
+   */
+  pendingInlineMarkers?: boolean;
   /** Handle incomplete setext headings to prevent misinterpretation */
   setextHeadings?: boolean;
   /** Escape single ~ between word characters to prevent false strikethrough (e.g., `20~25` → `20\~25`) */
@@ -90,6 +97,17 @@ export interface RemendOptions {
   /** Complete strikethrough formatting (e.g., `~~text` → `~~text~~`) */
   strikethrough?: boolean;
 }
+
+const emptyListMarker = /^[ \t]*(?:[-+*]|\d+[.)])[ \t]+$/;
+
+const trimTrailingSpace = (text: string): string => {
+  const lastLine = text.slice(text.lastIndexOf("\n") + 1);
+  return text.endsWith(" ") &&
+    !text.endsWith("  ") &&
+    !emptyListMarker.test(lastLine)
+    ? text.slice(0, -1)
+    : text;
+};
 
 // Helper to check if an option is enabled (defaults to true)
 const isEnabled = (option: boolean | undefined): boolean => option !== false;
@@ -284,8 +302,10 @@ const remend = (text: string, options?: RemendOptions): string => {
   }
 
   // Remove trailing whitespace if it's not a double space
-  let result =
-    text.endsWith(" ") && !text.endsWith("  ") ? text.slice(0, -1) : text;
+  const input = options?.pendingInlineMarkers
+    ? holdPendingInlineMarkers(text)
+    : text;
+  let result = trimTrailingSpace(input);
 
   // Get enabled built-in handlers
   const enabledBuiltIns = getEnabledBuiltInHandlers(options);
@@ -316,11 +336,7 @@ const remend = (text: string, options?: RemendOptions): string => {
     // A handler that removes a trailing fragment can expose a trailing space
     // (e.g. dropping an incomplete image). Strip it the same way the input
     // was stripped, so healed output re-heals to itself.
-    if (result.endsWith(" ") && !result.endsWith("  ")) {
-      return result.slice(0, -1);
-    }
-
-    return result;
+    return trimTrailingSpace(result);
   } finally {
     clearScanCache();
   }
