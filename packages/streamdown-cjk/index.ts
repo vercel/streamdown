@@ -63,6 +63,8 @@ const CJK_AUTOLINK_BOUNDARY_CHARS = new Set<string>([
 ]);
 
 const AUTOLINK_PREFIX_PATTERN = /^(https?:\/\/|mailto:|www\.)/i;
+const PUNCTUATION_PATTERN = /[\p{P}\p{S}]/u;
+const WHITESPACE_PATTERN = /\s/u;
 
 const isAutolinkLiteral = (node: Link): node is Link & { children: [Text] } => {
   if (node.children.length !== 1) {
@@ -125,6 +127,47 @@ const hasUnescapedDelimiter = (
   return escapeCount % 2 === 0;
 };
 
+const canOpenUnderscoreDelimiter = (
+  source: string,
+  offset: number
+): boolean => {
+  const previousCodeUnit = offset - 1;
+  const previousCharacter =
+    previousCodeUnit < 0
+      ? undefined
+      : source.slice(
+          previousCodeUnit -
+            (source.charCodeAt(previousCodeUnit) >= 0xdc_00 &&
+            source.charCodeAt(previousCodeUnit) <= 0xdf_ff
+              ? 1
+              : 0),
+          offset
+        );
+  const nextCodePoint = source.codePointAt(offset + 2);
+  const nextCharacter =
+    nextCodePoint === undefined
+      ? undefined
+      : String.fromCodePoint(nextCodePoint);
+  const previousIsWhitespace =
+    previousCharacter === undefined ||
+    WHITESPACE_PATTERN.test(previousCharacter);
+  const nextIsWhitespace =
+    nextCharacter === undefined || WHITESPACE_PATTERN.test(nextCharacter);
+  const previousIsPunctuation =
+    previousCharacter !== undefined &&
+    PUNCTUATION_PATTERN.test(previousCharacter);
+  const nextIsPunctuation =
+    nextCharacter !== undefined && PUNCTUATION_PATTERN.test(nextCharacter);
+  const leftFlanking =
+    !nextIsWhitespace &&
+    (!nextIsPunctuation || previousIsWhitespace || previousIsPunctuation);
+  const rightFlanking =
+    !previousIsWhitespace &&
+    (!previousIsPunctuation || nextIsWhitespace || nextIsPunctuation);
+
+  return leftFlanking && (!rightFlanking || previousIsPunctuation);
+};
+
 const findStrongDelimiter = (
   source: string,
   previousNode: PhrasingContent | undefined,
@@ -155,6 +198,8 @@ const findStrongDelimiter = (
     const closingOffset = linkStart + boundaryIndex - delimiter.length;
     if (
       hasUnescapedDelimiter(source, openingOffset, delimiter) &&
+      (delimiter !== "__" ||
+        canOpenUnderscoreDelimiter(source, openingOffset)) &&
       hasUnescapedDelimiter(source, closingOffset, delimiter)
     ) {
       return delimiter;

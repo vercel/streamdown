@@ -311,6 +311,113 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
       );
     });
 
+    it("preserves intraword underscores around autolinks", () => {
+      const markdown = "foo__https://example.com/__、英語版";
+      const { container } = render(
+        <Streamdown linkSafety={{ enabled: false }} plugins={{ cjk }}>
+          {markdown}
+        </Streamdown>
+      );
+
+      const links = container.querySelectorAll('[data-streamdown="link"]');
+      expect(links).toHaveLength(1);
+      expect(links[0].getAttribute("href")).toBe("https://example.com/__");
+      expect(links[0].textContent).toBe("https://example.com/__");
+      expect(container.querySelector('[data-streamdown="strong"]')).toBeNull();
+      expect(container.textContent).toBe(markdown);
+    });
+
+    it("completes emphasis after a rejected protocol autolink", () => {
+      const { container } = render(
+        <Streamdown linkSafety={{ enabled: false }} plugins={{ cjk }}>
+          https://__bold
+        </Streamdown>
+      );
+
+      expect(
+        container.querySelectorAll('[data-streamdown="link"]')
+      ).toHaveLength(0);
+      expect(
+        container.querySelector('[data-streamdown="strong"]')?.textContent
+      ).toBe("bold");
+      expect(container.textContent).toBe("https://bold");
+    });
+
+    it("preserves autolink underscores after streaming is complete", () => {
+      const markdown = "foo__https://example.com/__、英語版";
+      const { container } = render(
+        <Streamdown
+          linkSafety={{ enabled: false }}
+          mode="static"
+          plugins={{ cjk }}
+        >
+          {markdown}
+        </Streamdown>
+      );
+
+      const links = container.querySelectorAll('[data-streamdown="link"]');
+      expect(links).toHaveLength(1);
+      expect(links[0].getAttribute("href")).toBe("https://example.com/__");
+      expect(links[0].textContent).toBe("https://example.com/__");
+      expect(container.querySelector('[data-streamdown="strong"]')).toBeNull();
+      expect(container.textContent).toBe(markdown);
+    });
+
+    it("does not leak a completed emphasis marker after an autolink", () => {
+      const markdown = "__bold https://example.com/path__,";
+
+      for (const mode of ["static", "streaming"] as const) {
+        const { container } = render(
+          <Streamdown
+            linkSafety={{ enabled: false }}
+            mode={mode}
+            plugins={{ cjk }}
+          >
+            {markdown}
+          </Streamdown>
+        );
+
+        const link = container.querySelector('[data-streamdown="link"]');
+        expect(link?.getAttribute("href")).toBe("https://example.com/path");
+        expect(link?.textContent).toBe("https://example.com/path");
+        expect(
+          container.querySelector('[data-streamdown="strong"]')?.textContent
+        ).toBe("bold https://example.com/path");
+        expect(container.textContent).toBe("bold https://example.com/path,");
+      }
+    });
+
+    it("keeps CJK autolink suffixes while only remending in streaming mode", () => {
+      const markdown = "__bold https://example.com/path__、";
+
+      for (const mode of ["static", "streaming"] as const) {
+        const { container } = render(
+          <Streamdown
+            linkSafety={{ enabled: false }}
+            mode={mode}
+            plugins={{ cjk }}
+          >
+            {markdown}
+          </Streamdown>
+        );
+
+        const link = container.querySelector('[data-streamdown="link"]');
+        expect(link?.getAttribute("href")).toBe("https://example.com/path__");
+        expect(link?.textContent).toBe("https://example.com/path__");
+
+        const strong = container.querySelector('[data-streamdown="strong"]');
+        if (mode === "static") {
+          expect(strong).toBeNull();
+          expect(container.textContent).toBe(markdown);
+        } else {
+          expect(strong?.textContent).toBe("bold https://example.com/path__、");
+          expect(container.textContent).toBe(
+            "bold https://example.com/path__、"
+          );
+        }
+      }
+    });
+
     it("keeps default autolink behavior without the CJK boundary plugin", () => {
       const autolinkContent = "请访问 https://example.com。谢谢";
       const { container } = render(
