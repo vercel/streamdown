@@ -66,6 +66,7 @@ export interface OpenSpan {
 }
 
 export interface TextScan {
+  autolinkUrlMask: Uint8Array | null;
   htmlTagMask: Uint8Array | null;
   linkUrlMask: Uint8Array | null;
   /** Lazily computed; stays null until first needed */
@@ -77,6 +78,69 @@ export interface TextScan {
 }
 
 const FENCE_RUN_PATTERN = /^(`{3,}|~{3,})(.*)$/;
+const WHITESPACE_PATTERN = /\s/u;
+const PUNCTUATION_OR_SYMBOL_PATTERN = /[\p{P}\p{S}]/u;
+const MARKDOWN_LINE_ENDING_OR_SPACE_PATTERN = /^[\t\n\r ]$/u;
+const BLANK_MARKDOWN_LINE_PATTERN = /^[\t ]*$/u;
+const ATX_HEADING_PATTERN = /^#{1,6}(?:[\t ]|$)/u;
+const THEMATIC_BREAK_OR_SETEXT_HEADING_PATTERN =
+  /^(?:=+[\t ]*|-+[\t ]*|(?:\*[\t ]*){3,}|(?:-[\t ]*){3,}|(?:_[\t ]*){3,})$/u;
+const GFM_AUTOLINK_TRAILING_PUNCTUATION = new Set([
+  "!",
+  '"',
+  "'",
+  ")",
+  "*",
+  ",",
+  ".",
+  ":",
+  ";",
+  "?",
+  "_",
+  "~",
+]);
+const CJK_AUTOLINK_BOUNDARY_CHARS = new Set([
+  "。",
+  "．",
+  "，",
+  "、",
+  "？",
+  "！",
+  "：",
+  "；",
+  "（",
+  "）",
+  "【",
+  "】",
+  "「",
+  "」",
+  "『",
+  "』",
+  "〈",
+  "〉",
+  "《",
+  "》",
+]);
+
+const getGfmAutolinkMaskEnd = (
+  text: string,
+  start: number,
+  end: number
+): number => {
+  if (!isGfmAutolinkTerminator(text, end)) {
+    return end;
+  }
+
+  let maskEnd = end;
+  while (
+    maskEnd > start &&
+    GFM_AUTOLINK_TRAILING_PUNCTUATION.has(text[maskEnd - 1])
+  ) {
+    maskEnd -= 1;
+  }
+
+  return maskEnd;
+};
 
 const isDigit = (char: string | undefined): boolean =>
   char !== undefined && char >= "0" && char <= "9";
@@ -413,6 +477,7 @@ const scanText = (text: string): TextScan => {
     regions,
     openFence,
     openSpan,
+    autolinkUrlMask: null,
     mathMask: null,
     linkUrlMask: null,
     htmlTagMask: null,
@@ -677,6 +742,429 @@ export const inLinkUrlAt = (scan: TextScan, position: number): boolean => {
       : EMPTY_MASK;
   }
   return scan.linkUrlMask[position] === 1;
+};
+
+interface LabelBracketScanState {
+  activeQuoteDepth: number;
+  backslashRun: number;
+  bracketStarts: number[];
+  processedLineStart: number;
+}
+
+const scanLabelBlockStart = (
+  text: string,
+  regions: Uint8Array,
+  state: LabelBracketScanState,
+  lineStart: number
+): void => {
+  if (lineStart === state.processedLineStart) {
+    return;
+  }
+  state.processedLineStart = lineStart;
+
+  let lineEnd = text.indexOf("\n", lineStart);
+  if (lineEnd === -1) {
+    lineEnd = text.length;
+  }
+  if (lineEnd > lineStart && text[lineEnd - 1] === "\r") {
+    lineEnd -= 1;
+  }
+
+  const prefix = skipContainerPrefix(text, lineStart, lineEnd);
+  const content = text.slice(prefix.contentStart, lineEnd);
+  const blankLine = BLANK_MARKDOWN_LINE_PATTERN.test(content);
+  const atxHeading = ATX_HEADING_PATTERN.test(content);
+  const thematicBreakOrSetextHeading =
+    THEMATIC_BREAK_OR_SETEXT_HEADING_PATTERN.test(content);
+  const newQuote = prefix.quoteDepth > state.activeQuoteDepth;
+  const newListItem = prefix.listIndent > 0;
+  const fence = regions[prefix.contentStart] === REGION.FENCE_MARKER;
+
+  if (
+    blankLine ||
+    atxHeading ||
+    thematicBreakOrSetextHeading ||
+    newQuote ||
+    newListItem ||
+    fence
+  ) {
+    state.bracketStarts.length = 0;
+    state.backslashRun = 0;
+  }
+
+  state.activeQuoteDepth = prefix.quoteDepth;
+};
+
+const processLabelBracketCharacter = (
+  text: string,
+  position: number,
+  mask: Uint8Array,
+  state: LabelBracketScanState
+): void => {
+  const character = text[position];
+  if (character === "\\") {
+    state.backslashRun += 1;
+    return;
+  }
+
+  if (state.backslashRun % 2 === 0 && character === "[") {
+    state.bracketStarts.push(position);
+  } else if (state.backslashRun % 2 === 0 && character === "]") {
+    const labelStart = state.bracketStarts.pop();
+    if (
+      labelStart !== undefined &&
+      text[position + 1] === "(" &&
+      hasValidInlineLinkDestination(text, position + 1)
+    ) {
+      mask.fill(1, labelStart + 1, position);
+    }
+  }
+  state.backslashRun = 0;
+};
+
+const isInlineLinkWhitespace = (character: string | undefined): boolean =>
+  character !== undefined &&
+  MARKDOWN_LINE_ENDING_OR_SPACE_PATTERN.test(character);
+
+const parseInlineLinkTitle = (text: string, start: number): number | null => {
+  const delimiter = text[start];
+  if (delimiter !== '"' && delimiter !== "'" && delimiter !== "(") {
+    return null;
+  }
+
+  const closingDelimiter = delimiter === "(" ? ")" : delimiter;
+  let depth = 1;
+  for (let position = start + 1; position < text.length; position += 1) {
+    if (text[position] === "\\") {
+      position += 1;
+      continue;
+    }
+    if (delimiter === "(" && text[position] === "(") {
+      depth += 1;
+    } else if (text[position] === closingDelimiter) {
+      depth -= 1;
+      if (depth === 0) {
+        return position + 1;
+      }
+    }
+  }
+
+  return null;
+};
+
+const parseAngleInlineLinkDestination = (
+  text: string,
+  start: number
+): number | null => {
+  for (let position = start + 1; position < text.length; position += 1) {
+    const character = text[position];
+    if (character === "\\") {
+      if (isInlineLinkWhitespace(text[position + 1])) {
+        return null;
+      }
+      position += 1;
+    } else if (character === "<" || character === "\n" || character === "\r") {
+      return null;
+    } else if (character === ">") {
+      return position + 1;
+    }
+  }
+
+  return null;
+};
+
+interface BareInlineLinkDestinationStep {
+  nextPosition: number;
+  parenthesisDepth: number;
+  stopped: boolean;
+}
+
+const readBareInlineLinkDestinationStep = (
+  text: string,
+  position: number,
+  parenthesisDepth: number
+): BareInlineLinkDestinationStep | null => {
+  const character = text[position];
+  if (character === "\\") {
+    return position + 1 < text.length
+      ? { nextPosition: position + 2, parenthesisDepth, stopped: false }
+      : null;
+  }
+  if (isInlineLinkWhitespace(character)) {
+    return parenthesisDepth === 0
+      ? { nextPosition: position, parenthesisDepth, stopped: true }
+      : null;
+  }
+  if (character === "<") {
+    return null;
+  }
+  if (character === "(") {
+    const nextDepth = parenthesisDepth + 1;
+    return nextDepth <= 32
+      ? {
+          nextPosition: position + 1,
+          parenthesisDepth: nextDepth,
+          stopped: false,
+        }
+      : null;
+  }
+  if (character === ")") {
+    return parenthesisDepth === 0
+      ? { nextPosition: position, parenthesisDepth, stopped: true }
+      : {
+          nextPosition: position + 1,
+          parenthesisDepth: parenthesisDepth - 1,
+          stopped: false,
+        };
+  }
+
+  return { nextPosition: position + 1, parenthesisDepth, stopped: false };
+};
+
+const parseBareInlineLinkDestination = (
+  text: string,
+  start: number
+): number | null => {
+  let position = start;
+  let parenthesisDepth = 0;
+  while (position < text.length) {
+    const step = readBareInlineLinkDestinationStep(
+      text,
+      position,
+      parenthesisDepth
+    );
+    if (step === null) {
+      return null;
+    }
+    if (step.stopped) {
+      return step.nextPosition;
+    }
+    position = step.nextPosition;
+    parenthesisDepth = step.parenthesisDepth;
+  }
+
+  return parenthesisDepth === 0 ? text.length : null;
+};
+
+const hasValidInlineLinkSuffix = (text: string, start: number): boolean => {
+  const destinationEnd = start;
+  let position = start;
+  while (isInlineLinkWhitespace(text[position])) {
+    position += 1;
+  }
+  if (text[position] === ")") {
+    return true;
+  }
+  if (position === destinationEnd) {
+    return false;
+  }
+
+  const titleEnd = parseInlineLinkTitle(text, position);
+  if (titleEnd === null) {
+    return false;
+  }
+  position = titleEnd;
+  while (isInlineLinkWhitespace(text[position])) {
+    position += 1;
+  }
+  return text[position] === ")";
+};
+
+const hasValidInlineLinkDestination = (
+  text: string,
+  openingParen: number
+): boolean => {
+  let position = openingParen + 1;
+  while (isInlineLinkWhitespace(text[position])) {
+    position += 1;
+  }
+  if (text[position] === ")") {
+    return true;
+  }
+
+  if (
+    text[position] === '"' ||
+    text[position] === "'" ||
+    text[position] === "("
+  ) {
+    const titleEnd = parseInlineLinkTitle(text, position);
+    if (titleEnd === null) {
+      return false;
+    }
+    position = titleEnd;
+    while (isInlineLinkWhitespace(text[position])) {
+      position += 1;
+    }
+    return text[position] === ")";
+  }
+
+  const destinationEnd =
+    text[position] === "<"
+      ? parseAngleInlineLinkDestination(text, position)
+      : parseBareInlineLinkDestination(text, position);
+  return (
+    destinationEnd !== null && hasValidInlineLinkSuffix(text, destinationEnd)
+  );
+};
+
+const buildInlineLinkLabelMask = (scan: TextScan): Uint8Array => {
+  const { text, regions } = scan;
+  const mask = new Uint8Array(text.length);
+  const state: LabelBracketScanState = {
+    activeQuoteDepth: 0,
+    backslashRun: 0,
+    bracketStarts: [],
+    processedLineStart: -1,
+  };
+
+  for (let position = 0; position < text.length; position += 1) {
+    if (position === 0 || text[position - 1] === "\n") {
+      scanLabelBlockStart(text, regions, state, position);
+    }
+
+    if (regions[position] !== REGION.PROSE) {
+      state.backslashRun = 0;
+      continue;
+    }
+    processLabelBracketCharacter(text, position, mask, state);
+  }
+
+  return mask;
+};
+
+// Literal URL text is not Markdown emphasis syntax. Stop at the CJK
+// punctuation Streamdown later splits out of autolinks.
+const buildAutolinkUrlMask = (scan: TextScan): Uint8Array => {
+  const { text, regions } = scan;
+  const mask = new Uint8Array(text.length);
+  const linkLabelMask = buildInlineLinkLabelMask(scan);
+  let scannedThrough = 0;
+
+  for (const match of text.matchAll(/https?:\/\/|www\./giu)) {
+    const start = match.index;
+    const isWwwPrefix = match[0].toLowerCase() === "www.";
+    const hostStart = start === undefined ? undefined : start + match[0].length;
+    if (
+      start === undefined ||
+      start < scannedThrough ||
+      regions[start] !== REGION.PROSE ||
+      linkLabelMask[start] === 1 ||
+      !hasAutolinkBoundaryBefore(text, start, isWwwPrefix) ||
+      hostStart === undefined ||
+      !hasGfmAutolinkHost(text, hostStart)
+    ) {
+      continue;
+    }
+
+    let end = start + match[0].length;
+    while (end < text.length && regions[end] === REGION.PROSE) {
+      const codePoint = text.codePointAt(end);
+      if (codePoint === undefined) {
+        break;
+      }
+      const character = String.fromCodePoint(codePoint);
+      if (
+        WHITESPACE_PATTERN.test(character) ||
+        character === "<" ||
+        (character === "]" &&
+          (text[end + 1] === "(" || text[end + 1] === "[")) ||
+        CJK_AUTOLINK_BOUNDARY_CHARS.has(character)
+      ) {
+        break;
+      }
+      end += character.length;
+    }
+    scannedThrough = end;
+    const maskEnd = getGfmAutolinkMaskEnd(text, start, end);
+    mask.fill(1, start, maskEnd);
+  }
+
+  return mask;
+};
+
+const isGfmAutolinkTerminator = (text: string, position: number): boolean => {
+  if (
+    position >= text.length ||
+    text[position] === "<" ||
+    (text[position] === "]" &&
+      (text[position + 1] === "(" || text[position + 1] === "["))
+  ) {
+    return true;
+  }
+
+  const codePoint = text.codePointAt(position);
+  return (
+    codePoint !== undefined &&
+    WHITESPACE_PATTERN.test(String.fromCodePoint(codePoint))
+  );
+};
+
+const hasGfmAutolinkHost = (text: string, position: number): boolean => {
+  let end = position;
+  while (end < text.length) {
+    // micromark checks UTF-16 code units, so supplementary symbols pass as
+    // surrogate halves instead of matching the Unicode symbol category.
+    const character = text[end];
+    if (
+      WHITESPACE_PATTERN.test(character) ||
+      (PUNCTUATION_OR_SYMBOL_PATTERN.test(character) &&
+        character !== "-" &&
+        character !== "." &&
+        character !== "_")
+    ) {
+      break;
+    }
+    end += 1;
+  }
+
+  const domain = text.slice(position, end);
+  const lastLabels = domain.split(".").slice(-2);
+  const domainContent = domain.replace(/[._]/gu, "");
+  return (
+    domainContent.length > 0 && !lastLabels.some((label) => label.includes("_"))
+  );
+};
+
+const hasAutolinkBoundaryBefore = (
+  text: string,
+  position: number,
+  isWwwPrefix: boolean
+): boolean => {
+  if (position === 0) {
+    return true;
+  }
+
+  const previousCodeUnit = text.charCodeAt(position - 1);
+  const previousStart =
+    previousCodeUnit >= 0xdc_00 && previousCodeUnit <= 0xdf_ff
+      ? position - 2
+      : position - 1;
+  const previousCharacter = text.slice(previousStart, position);
+
+  if (isWwwPrefix) {
+    return (
+      MARKDOWN_LINE_ENDING_OR_SPACE_PATTERN.test(previousCharacter) ||
+      ["(", "*", "_", "[", "]", "~"].includes(previousCharacter)
+    );
+  }
+
+  const previousCodePoint = text.codePointAt(previousStart);
+  return (
+    previousCodePoint === undefined ||
+    previousCodePoint < 0x41 ||
+    (previousCodePoint > 0x5a && previousCodePoint < 0x61) ||
+    previousCodePoint > 0x7a
+  );
+};
+
+export const inAutolinkUrlAt = (scan: TextScan, position: number): boolean => {
+  if (position < 0 || position >= scan.text.length) {
+    return false;
+  }
+  if (scan.autolinkUrlMask === null) {
+    scan.autolinkUrlMask = buildAutolinkUrlMask(scan);
+  }
+  return scan.autolinkUrlMask[position] === 1;
 };
 
 // HTML tag mask: positions after a "<" that begins a plausible tag (letter
