@@ -1,6 +1,7 @@
 import type { Element, Node, Parent, Root, Text } from "hast";
 import type { Pluggable } from "unified";
 import { SKIP, visitParents } from "unist-util-visit-parents";
+import { SKIP_TAGS, VOID_ANIMATE_TAGS } from "./shown-text";
 
 /**
  * Soft budget for how long a cascade may run ahead of wall-clock.
@@ -166,14 +167,6 @@ const WHITESPACE_RE = /\s/;
 const CJK_RE =
   /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\u3000-\u303F\uFF00-\uFFEF]/u;
 const WHITESPACE_ONLY_RE = /^\s+$/;
-// Skip layout-sensitive subtrees. Fenced/highlighted blocks are protected via
-// `pre` (CommonMark always emits `pre > code`); raw inline `code` is safe to
-// animate — word spans inherit styles the same way surrounding prose does (#594).
-const SKIP_TAGS = new Set(["pre", "svg", "math", "annotation"]);
-// Elements with no text node of their own that should still animate in. They
-// honor opacity/filter/transform, so they reuse the standard [data-sd-animate]
-// rule and work with every animation type.
-const VOID_ANIMATE_TAGS = new Set(["img", "hr"]);
 
 const isElement = (node: unknown): node is Element =>
   typeof node === "object" &&
@@ -714,4 +707,4 @@ function buildAnimatePlugin(
   };
 }
 
-export const animate = createAnimatePlugin();
+export const animate = /* @__PURE__ */ createAnimatePlugin();

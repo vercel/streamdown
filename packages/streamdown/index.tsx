@@ -21,12 +21,10 @@ import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
 import remend, { type RemendOptions } from "remend";
 import type { Pluggable } from "unified";
-import {
-  type AnimateOptions,
-  type AnimatePlugin,
-  type AnimateTimeline,
-  createAnimateTimeline,
-  createRenderAnimatePlugin,
+import type {
+  AnimateOptions,
+  AnimatePlugin,
+  AnimateTimeline,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as builtinComponents } from "./lib/components";
@@ -53,12 +51,14 @@ import { rehypeBlockDirection } from "./lib/rehype/block-direction";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
 import { remarkDisableAutolinkProtocols } from "./lib/remark/disable-autolink-protocols";
+import { createShownTextPlugin, type ShownTextPlugin } from "./lib/shown-text";
 import type { CSVSeparator } from "./lib/table/utils";
 import {
   defaultTranslations,
   type StreamdownTranslations,
   TranslationsContext,
 } from "./lib/translations-context";
+import { useAnimate } from "./lib/use-animate";
 import { useCaretHost } from "./lib/use-caret-host";
 import { createCn } from "./lib/utils";
 
@@ -627,6 +627,47 @@ const sameRootAttributes = (
   );
 };
 
+// While the fade loads, each animating block counts the text it shows, and
+// the fade it gets on arrival starts after what its last commit showed.
+const useShownTextPlugins = (
+  animated: boolean,
+  loaded: boolean,
+  isAnimating: boolean
+) => {
+  const plugins = useRef(new Map<number, ShownTextPlugin>()).current;
+  if (!animated) {
+    plugins.clear();
+  }
+  return {
+    standIn: (index: number): AnimatePlugin | null => {
+      if (!(animated && isAnimating) || loaded) {
+        return null;
+      }
+      const standIn = plugins.get(index) ?? createShownTextPlugin();
+      plugins.set(index, standIn);
+      return standIn;
+    },
+    // Retired when the seeded fade first commits, so a later fade, after an
+    // option change, starts fresh, and a discarded handoff keeps the seed.
+    seed: (index: number, plugin: AnimatePlugin): AnimatePlugin => {
+      const standIn = plugins.get(index);
+      if (!standIn) {
+        return plugin;
+      }
+      plugin.setPrevContentLength(standIn.committedCharCount());
+      return {
+        ...plugin,
+        commit: () => {
+          plugin.commit();
+          if (plugins.get(index) === standIn) {
+            plugins.delete(index);
+          }
+        },
+      };
+    },
+  };
+};
+
 export const Streamdown = memo(
   ({
     children,
@@ -785,6 +826,12 @@ export const Streamdown = memo(
       }
       return "";
     }, [animated]);
+    const animateModule = useAnimate(animatedKey !== "");
+    const shownText = useShownTextPlugins(
+      animatedKey !== "",
+      animateModule !== undefined,
+      isAnimating
+    );
 
     // Shared wall-clock timeline: serializes stagger delays across sibling
     // blocks AND across streaming ticks (memoized earlier blocks don't
@@ -798,20 +845,20 @@ export const Streamdown = memo(
     const prevMergedRehypePluginsRef = useRef<Pluggable[] | null>(null);
     const prevAnimatedKeyRef = useRef<string>("");
 
-    if (animatedKey) {
+    if (animateModule) {
       if (prevAnimatedKeyRef.current !== animatedKey) {
         prevAnimatedKeyRef.current = animatedKey;
         const backlog =
           animatedKey !== "true"
             ? (animated as AnimateOptions).maxBacklogMs
             : undefined;
-        animateTimelineRef.current = createAnimateTimeline({
+        animateTimelineRef.current = animateModule.createAnimateTimeline({
           maxBacklogMs: backlog,
         });
         blockAnimatePluginsRef.current = [];
         blockRehypePluginsRef.current = [];
       } else if (!animateTimelineRef.current) {
-        animateTimelineRef.current = createAnimateTimeline();
+        animateTimelineRef.current = animateModule.createAnimateTimeline();
       }
       // Reset the per-pass cursor from the last *committed* horizon so a
       // StrictMode double-render recomputes the same delays instead of
@@ -819,7 +866,7 @@ export const Streamdown = memo(
       if (isAnimating && animateTimelineRef.current) {
         animateTimelineRef.current.beginPass(animateTimelineRef.current.now());
       }
-    } else {
+    } else if (!animatedKey) {
       animateTimelineRef.current = null;
       blockAnimatePluginsRef.current = [];
       blockRehypePluginsRef.current = [];
@@ -1061,8 +1108,8 @@ export const Streamdown = memo(
       blockAnimatePlugin: AnimatePlugin | null;
       blockRehypePlugins: Pluggable[];
     } => {
-      let blockAnimatePlugin: AnimatePlugin | null = null;
-      if (animateTimelineRef.current && isAnimating) {
+      let blockAnimatePlugin = shownText.standIn(index);
+      if (animateModule && animateTimelineRef.current && isAnimating) {
         if (!blockAnimatePluginsRef.current[index]) {
           // maxBacklogMs is consumed by the timeline factory, not the plugin.
           const rawOpts =
@@ -1070,10 +1117,13 @@ export const Streamdown = memo(
               ? (animated as AnimateOptions)
               : ({} as AnimateOptions);
           const { maxBacklogMs: _, ...pluginOpts } = rawOpts;
-          blockAnimatePluginsRef.current[index] = createRenderAnimatePlugin({
-            ...pluginOpts,
-            timeline: animateTimelineRef.current,
-          });
+          blockAnimatePluginsRef.current[index] = shownText.seed(
+            index,
+            animateModule.createRenderAnimatePlugin({
+              ...pluginOpts,
+              timeline: animateTimelineRef.current,
+            })
+          );
         }
         blockAnimatePlugin = blockAnimatePluginsRef.current[index];
       }

@@ -11,6 +11,7 @@ import { StrictMode, useEffect } from "react";
 import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 import { MAX_ANIMATION_BACKLOG_MS } from "../lib/animate";
+import { loadAnimate } from "../lib/use-animate";
 
 const NEW_WORD_RE = /^(Next|section|arrives)$/;
 const SPAN_GAP_RE = /<\/span> <span/;
@@ -30,6 +31,8 @@ describe("issue #482 — cross-block stagger serialization", () => {
       duration: 150,
       stagger: 50,
     };
+    // The cascade starts at the first render only once the fade has loaded.
+    await loadAnimate();
 
     const { rerender, container } = render(
       <Streamdown animated={config} isAnimating={true} mode="streaming">
