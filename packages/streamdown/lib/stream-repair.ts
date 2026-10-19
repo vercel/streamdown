@@ -15,6 +15,17 @@ export interface StreamRepairState {
 // the same window for its own cache.
 const MUTABLE_BLOCKS = 2;
 
+// Remend tracks math ($, $$, \( and \[) across the whole message, so text
+// after a math delimiter can repair differently without the text before it.
+// Delimiters inside fenced code are literal, except "$$": remend finds the
+// first "$$" in the message to choose how to close an open one.
+const mathDelimiterPattern = /\$|\\[([]/;
+const fencedBlockPattern = /^ {0,3}(([`~])\2{2,})[\s\S]*\n {0,3}\1\2*\s*$/;
+
+const hasMathDelimiter = (block: string): boolean =>
+  block.includes("$$") ||
+  (mathDelimiterPattern.test(block) && !fencedBlockPattern.test(block));
+
 export const repairStream = (
   previous: StreamRepairState | null,
   input: string,
@@ -38,21 +49,31 @@ export const repairStream = (
 };
 
 // Called with the blocks parsed from state.repaired. Moves the stable boundary
-// past every block but the last two. Only an unchanged repair is used: then
-// the blocks are those of the stream itself, while a closer appended at the
-// end (such as "$$") could make an open block look finished.
+// past every block but the last two, and stops before the first block with
+// math. Only an unchanged repair is used: then the blocks are those of the
+// stream itself, while a closer appended at the end (such as "$$") could make
+// an open block look finished. Custom handlers may read the whole message, so
+// with them the whole message is always repaired.
 export const advanceStableLength = (
   state: StreamRepairState,
   blocks: string[]
 ): void => {
-  if (state.repaired !== state.input || state.input.includes("\r")) {
+  if (
+    state.repaired !== state.input ||
+    state.input.includes("\r") ||
+    state.options?.handlers?.length
+  ) {
     return;
   }
-  let next = 0;
+  let end = 0;
   for (let i = 0; i < blocks.length - MUTABLE_BLOCKS; i += 1) {
-    next += blocks[i].length;
-  }
-  if (next > state.stableLength) {
-    state.stableLength = next;
+    end += blocks[i].length;
+    if (end <= state.stableLength) {
+      continue;
+    }
+    if (hasMathDelimiter(blocks[i])) {
+      return;
+    }
+    state.stableLength = end;
   }
 };

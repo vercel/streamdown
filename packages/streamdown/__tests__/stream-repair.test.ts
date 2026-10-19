@@ -1,4 +1,4 @@
-import remend from "remend";
+import remend, { type RemendOptions } from "remend";
 import { describe, expect, it } from "vitest";
 import {
   hasFootnoteDefinition,
@@ -31,6 +31,12 @@ const documents = [
   // A closer appended at the end must not make an earlier open block final.
   "Before\n\n$$\nx = 1\n\ny **2\n\nstill math\n$$\n\nafter *em*\n",
   "Text [a\n\nb](https://exa\n\nc **d\n\ne",
+  // Remend counts math delimiters across the whole message.
+  "$$\nx\n$$\n\nA\n\nB\n\nThen $$y$$ inline.\n",
+  "a `$$` b\n\nc $$ d\n\nE\n\nF\n\ng $$ h $$ i\n",
+  "A costs $5.\n\nB\n\nC costs $6.\n\nD goes on.\n",
+  "Inline \\(a\n\nB\n\nC\n\nD **e\n",
+  "```sh\n$ npm i\n```\n\nA\n\nB\n\nC $x$ and $$y\n",
 ];
 
 const chunked = (text: string, seed: number): string[] => {
@@ -45,13 +51,21 @@ const chunked = (text: string, seed: number): string[] => {
   return chunks;
 };
 
+const prefixes = (document: string, seed: number): string[] => {
+  let text = "";
+  return chunked(document, seed).map((chunk) => {
+    text += chunk;
+    return text;
+  });
+};
+
 // Returns each input whose tail repair differs from a full repair.
-const stream = (inputs: string[]) => {
+const stream = (inputs: string[], options?: RemendOptions) => {
   let state: StreamRepairState | null = null;
   const mismatches: string[] = [];
   for (const input of inputs) {
-    state = repairStream(state, input, undefined);
-    if (state.repaired !== remend(input)) {
+    state = repairStream(state, input, options);
+    if (state.repaired !== remend(input, options)) {
       mismatches.push(input);
     }
     advanceStableLength(state, parseMarkdownIntoBlocks(state.repaired));
@@ -61,16 +75,81 @@ const stream = (inputs: string[]) => {
 
 describe("tail-bounded stream repair", () => {
   it("matches a full repair at every prefix", () => {
-    for (const document of documents) {
-      for (const seed of [1, 2, 3]) {
-        let text = "";
-        const inputs = chunked(document, seed).map((chunk) => {
-          text += chunk;
-          return text;
-        });
-        expect(stream(inputs).mismatches).toEqual([]);
+    for (const options of [undefined, { inlineKatex: true }]) {
+      for (const document of documents) {
+        for (const seed of [1, 2, 3]) {
+          expect(stream(prefixes(document, seed), options).mismatches).toEqual(
+            []
+          );
+        }
       }
     }
+  });
+
+  it("matches a full repair on random math, code and emphasis", () => {
+    const pieces = [
+      "$",
+      "$$",
+      "\\(",
+      "\\)",
+      "\\[",
+      "`",
+      "```\n",
+      "~~~\n",
+      "**",
+      "_",
+      "[",
+      "](",
+      "word ",
+      "word ",
+      "word ",
+      "word.\n\n",
+      "word.\n\n",
+      "\n",
+    ];
+    let state = 4242;
+    for (const options of [undefined, { inlineKatex: true }]) {
+      for (let run = 0; run < 300; run += 1) {
+        let text = "";
+        const inputs: string[] = [];
+        for (let step = 0; step < 80; step += 1) {
+          state = (state * 1_103_515_245 + 12_345) % 2_147_483_648;
+          text += pieces[state % pieces.length];
+          inputs.push(text);
+        }
+        expect(stream(inputs, options).mismatches).toEqual([]);
+      }
+    }
+  });
+
+  it("stops the settled prefix before math outside fenced code", () => {
+    const math = stream([
+      "One $x$.\n\nTwo.\n\nThree.\n\nFour",
+      "One $x$.\n\nTwo.\n\nThree.\n\nFour and",
+    ]);
+    expect(math.state?.stableLength).toBe(0);
+
+    const fenced = stream([
+      "```sh\n$ ls\n```\n\nTwo.\n\nThree.\n\nFour",
+      "```sh\n$ ls\n```\n\nTwo.\n\nThree.\n\nFour and",
+    ]);
+    expect(fenced.state?.stableLength).toBeGreaterThan(0);
+  });
+
+  it("repairs the whole message with custom handlers", () => {
+    // Appends "!" when the message has an even number of blocks.
+    const options: RemendOptions = {
+      handlers: [
+        {
+          name: "parity",
+          handle: (text) => (text.split("\n\n").length % 2 ? text : `${text}!`),
+        },
+      ],
+    };
+    const inputs = prefixes("One.\n\nTwo.\n\nThree.\n\nFour.\n\nFive.\n", 1);
+    const { state, mismatches } = stream(inputs, options);
+    expect(mismatches).toEqual([]);
+    expect(state?.stableLength).toBe(0);
   });
 
   it("skips the settled prefix once later blocks exist", () => {
