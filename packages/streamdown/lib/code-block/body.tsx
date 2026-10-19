@@ -30,9 +30,9 @@ const LINE_NUMBER_CLASSES_BASE = baseCn(
   "before:inline-block",
   "before:[counter-increment:line]",
   "before:w-6",
-  "before:me-4",
+  "before:mr-4",
   "before:text-[13px]",
-  "before:text-end",
+  "before:text-right",
   "before:text-muted-foreground/50",
   "before:font-mono",
   "before:select-none"
