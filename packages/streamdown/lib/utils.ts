@@ -1,5 +1,48 @@
 import { type ClassValue, clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { extendTailwindMerge } from 'tailwind-merge';
+
+/**
+ * Logical utilities (`ps`, `pe`, `ms`, `me`, `border-s`, `border-e`, `start`,
+ * `end`) and their physical counterparts (`pl`, `pr`, `ml`, `mr`, `border-l`,
+ * `border-r`, `left`, `right`) control the same box edge, but tailwind-merge
+ * does not know that: by default `twMerge("ps-4", "pl-2")` returns both.
+ *
+ * Emitting both means the winner is decided by the order Tailwind happens to
+ * generate its stylesheet, not by the order the caller wrote them — so a
+ * consumer overriding a component's padding via `className` would silently get
+ * an unpredictable result.
+ *
+ * Treating them as one axis is deliberately conservative. Direction is a
+ * runtime property, so a static merge cannot know whether `ps` resolves to
+ * `pl` or `pr`; assuming they conflict means the last class written wins,
+ * which is what the caller meant in every realistic case.
+ */
+const logicalPhysicalConflicts = {
+  ps: ['pl', 'pr'],
+  pe: ['pl', 'pr'],
+  pl: ['ps', 'pe'],
+  pr: ['ps', 'pe'],
+  px: ['ps', 'pe'],
+  ms: ['ml', 'mr'],
+  me: ['ml', 'mr'],
+  ml: ['ms', 'me'],
+  mr: ['ms', 'me'],
+  mx: ['ms', 'me'],
+  'border-w-s': ['border-w-l', 'border-w-r'],
+  'border-w-e': ['border-w-l', 'border-w-r'],
+  'border-w-l': ['border-w-s', 'border-w-e'],
+  'border-w-r': ['border-w-s', 'border-w-e'],
+  'border-w-x': ['border-w-s', 'border-w-e'],
+  start: ['left', 'right'],
+  end: ['left', 'right'],
+  left: ['start', 'end'],
+  right: ['start', 'end'],
+  'inset-x': ['start', 'end'],
+};
+
+const twMerge = extendTailwindMerge({
+  extend: { conflictingClassGroups: logicalPhysicalConflicts },
+});
 
 export const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
 
