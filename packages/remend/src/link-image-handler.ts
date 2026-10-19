@@ -1,4 +1,5 @@
 import { isInsideCodeBlock } from "./code-block-utils";
+import { findInlineBlockStart } from "./inline-block";
 import { handleIncompleteInlineCode } from "./inline-code-handler";
 import { getScan, isCompleteSpanAt, isFenceAt } from "./scan";
 import {
@@ -18,7 +19,8 @@ export const INCOMPLETE_IMAGE_PLACEHOLDER = "streamdown:incomplete-image";
 const handleIncompleteUrl = (
   text: string,
   lastParenIndex: number,
-  linkMode: LinkMode
+  linkMode: LinkMode,
+  blockStart: number
 ): string | null => {
   const afterParen = text.substring(lastParenIndex + 2);
   if (afterParen.includes(")")) {
@@ -29,7 +31,11 @@ const handleIncompleteUrl = (
   // Now find the matching opening bracket for the ] before (
   const openBracketIndex = findMatchingOpeningBracket(text, lastParenIndex);
 
-  if (openBracketIndex === -1 || isInsideCodeBlock(text, openBracketIndex)) {
+  // The link text must start in the same block as its "]("
+  if (
+    openBracketIndex < blockStart ||
+    isInsideCodeBlock(text, openBracketIndex)
+  ) {
     return null;
   }
 
@@ -57,8 +63,12 @@ const handleIncompleteUrl = (
 
 // Helper to find the first incomplete [ (for text-only mode)
 // Always returns a valid index since callers guarantee text[maxPos] is an incomplete [
-const findFirstIncompleteBracket = (text: string, maxPos: number): number => {
-  for (let j = 0; j < maxPos; j++) {
+const findFirstIncompleteBracket = (
+  text: string,
+  maxPos: number,
+  blockStart: number
+): number => {
+  for (let j = blockStart; j < maxPos; j++) {
     if (text[j] === "[" && !isInsideCodeBlock(text, j)) {
       // Skip if it's an image
       if (j > 0 && text[j - 1] === "!") {
@@ -88,7 +98,8 @@ const findFirstIncompleteBracket = (text: string, maxPos: number): number => {
 const handleIncompleteText = (
   text: string,
   i: number,
-  linkMode: LinkMode
+  linkMode: LinkMode,
+  blockStart: number
 ): string | null => {
   // Check if there's a ! before it
   const isImage = i > 0 && text[i - 1] === "!";
@@ -109,7 +120,7 @@ const handleIncompleteText = (
     // For links, handle based on linkMode
     if (linkMode === "text-only") {
       // Find the first incomplete [ and strip just that bracket
-      const firstIncomplete = findFirstIncompleteBracket(text, i);
+      const firstIncomplete = findFirstIncompleteBracket(text, i, blockStart);
       return (
         text.substring(0, firstIncomplete) + text.substring(firstIncomplete + 1)
       );
@@ -133,7 +144,7 @@ const handleIncompleteText = (
 
     if (linkMode === "text-only") {
       // Find the first incomplete [ and strip just that bracket
-      const firstIncomplete = findFirstIncompleteBracket(text, i);
+      const firstIncomplete = findFirstIncompleteBracket(text, i, blockStart);
       return (
         text.substring(0, firstIncomplete) + text.substring(firstIncomplete + 1)
       );
@@ -158,10 +169,24 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
   // Look for patterns like [text]( or ![text]( at the end of text
   // We need to handle nested brackets in the link text
 
+  // Link text cannot cross blocks, so brackets before the last inline block
+  // are literal. Healing them would append a closer to the wrong block, or
+  // drop every block after them.
+  const scan = getScan(text);
+  const blockStart = findInlineBlockStart(scan);
+
   // Start from the end and look for ]( pattern
   const lastParenIndex = text.lastIndexOf("](");
-  if (lastParenIndex !== -1 && !isInsideCodeBlock(text, lastParenIndex)) {
-    const result = handleIncompleteUrl(text, lastParenIndex, linkMode);
+  if (
+    lastParenIndex >= blockStart &&
+    !isInsideCodeBlock(text, lastParenIndex)
+  ) {
+    const result = handleIncompleteUrl(
+      text,
+      lastParenIndex,
+      linkMode,
+      blockStart
+    );
     if (result !== null) {
       return result;
     }
@@ -169,11 +194,10 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
 
   // Then check for incomplete link text: [partial-text without closing ]
   // Search backwards for an opening bracket that doesn't have a matching closing bracket
-  const scan = getScan(text);
   let enclosesLink = false;
   for (
     let i = text.lastIndexOf("[");
-    i !== -1;
+    i >= blockStart;
     i = i === 0 ? -1 : text.lastIndexOf("[", i - 1)
   ) {
     // An unclosed backtick renders as text, so a link after one still counts
@@ -187,7 +211,7 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
     const literal = isLink && enclosesLink;
     enclosesLink ||= closesHere;
     if (!(closesHere || literal || isInsideCodeBlock(text, i))) {
-      const result = handleIncompleteText(text, i, linkMode);
+      const result = handleIncompleteText(text, i, linkMode, blockStart);
       if (result !== null) {
         return result;
       }
