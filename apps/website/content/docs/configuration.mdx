@@ -173,6 +173,12 @@ Math rendering and CJK support require installing separate plugins. See [Mathema
       type: "boolean",
       default: "true",
     },
+    codeBlockRawLanguages: {
+      description:
+        "Code fence languages rendered verbatim as plain monospace text (no syntax highlighting, line numbers or controls). Useful for ASCII / Unicode box-drawing diagrams. See [Code Blocks](/docs/code-blocks#raw-languages).",
+      type: "string[]",
+      default: "[]",
+    },
     codeBlockMaxHeight: {
       description:
         "Max height for fenced code blocks. Numbers are treated as px. Strings pass through as CSS values (e.g. `50vh`). Set to `0` or `Infinity` to disable. While streaming (`isAnimating`), the block auto-scrolls to the bottom and unpins if the user scrolls up. See [Code Blocks](/docs/code-blocks#max-height).",
