@@ -1,12 +1,16 @@
 import {
   type RefObject,
-  useEffect,
   useLayoutEffect,
   useRef,
-  useState,
+  useSyncExternalStore,
 } from "react";
 
 const HIDDEN_ATTRIBUTE = "data-sd-caret-hidden";
+
+// The hydrated flag never changes after the first client render, so there is
+// nothing to subscribe to.
+const noop = () => undefined;
+const subscribeToNothing = () => noop;
 
 interface CaretHost {
   containerRef: RefObject<HTMLDivElement | null>;
@@ -25,8 +29,13 @@ export const useCaretHost = (shouldHideCaret: boolean): CaretHost => {
   // Only the client can mark the caret's host, so server markup leaves the
   // caret off the container whenever it should be hidden. The first client
   // render reads the same flag, which keeps hydration matching.
-  const [hydrated, setHydrated] = useState(false);
-  useEffect(() => setHydrated(true), []);
+  // useSyncExternalStore returns the client value on the first client render
+  // (no extra render pass), so static mode does not re-parse the document.
+  const hydrated = useSyncExternalStore(
+    subscribeToNothing,
+    () => true,
+    () => false
+  );
 
   // Hiding the caret by toggling a class or custom property on the container
   // invalidates style for the whole document, tens of milliseconds on a long

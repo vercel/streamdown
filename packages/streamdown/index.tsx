@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type AriaAttributes,
   type ComponentProps,
   type ComponentType,
   type CSSProperties,
@@ -91,6 +92,8 @@ export type {
   CustomRendererProps,
   DiagramPlugin,
   HighlightOptions,
+  HighlightResult,
+  HighlightToken,
   MathPlugin,
   PluginConfig,
   ThemeInput,
@@ -366,11 +369,27 @@ export type StreamdownProps = Options & {
   prefix?: string;
   /** Show line numbers in code blocks. @default true */
   lineNumbers?: boolean;
+  /**
+   * Code fence languages rendered verbatim as plain monospace text, without
+   * syntax highlighting, line numbers or controls. Useful for ASCII / Unicode
+   * box-drawing diagrams where column alignment matters.
+   * Custom renderers and the Mermaid plugin take precedence for matching languages.
+   * @default []
+   */
+  codeBlockRawLanguages?: string[];
   /** Called when isAnimating transitions from false to true. Suppressed in mode="static". */
   onAnimationStart?: () => void;
   /** Called when isAnimating transitions from true to false. Suppressed in mode="static". */
   onAnimationEnd?: () => void;
-};
+  /** `data-*` attributes, like `aria-*` attributes, are set on the root element. */
+  [dataAttribute: `data-${string}`]:
+    | string
+    | number
+    | bigint
+    | boolean
+    | null
+    | undefined;
+} & AriaAttributes;
 
 const defaultSanitizeSchema = {
   ...defaultSchema,
@@ -426,6 +445,8 @@ const carets = {
 export interface StreamdownContextType {
   /** Max height for fenced code blocks. @default 400 */
   codeBlockMaxHeight: number | string;
+  /** Code fence languages rendered verbatim without highlighting. */
+  codeBlockRawLanguages?: string[];
   controls: ControlsConfig;
   isAnimating: boolean;
   /** Show line numbers in code blocks. @default true */
@@ -438,6 +459,12 @@ export interface StreamdownContextType {
   /** Max height for tables. @default 300 */
   tableMaxHeight: number | string;
 }
+
+const serializeLanguages = (languages?: string[]): string =>
+  languages?.length ? JSON.stringify(languages) : "";
+
+const parseLanguages = (key: string): string[] | undefined =>
+  key ? JSON.parse(key) : undefined;
 
 const defaultShikiTheme: [ThemeInput, ThemeInput] = [
   "github-light",
@@ -587,6 +614,35 @@ export const Block = memo(
 
 Block.displayName = "Block";
 
+// TypeScript accepts any `data-*` or `aria-*` prop on a component, so these
+// have to be picked out of the rest props to reach the DOM.
+const getRootAttributes = (props: object): Record<string, unknown> => {
+  const attributes: Record<string, unknown> = {};
+  for (const [name, value] of Object.entries(props)) {
+    if (name.startsWith("data-") || name.startsWith("aria-")) {
+      attributes[name] = value;
+    }
+  }
+  return attributes;
+};
+
+const sameRootAttributes = (
+  prevProps: StreamdownProps,
+  nextProps: StreamdownProps
+): boolean => {
+  const prevAttributes = getRootAttributes(prevProps);
+  const nextAttributes = getRootAttributes(nextProps);
+  const names = Object.keys(prevAttributes);
+  return (
+    names.length === Object.keys(nextAttributes).length &&
+    names.every(
+      (name) =>
+        Object.hasOwn(nextAttributes, name) &&
+        prevAttributes[name] === nextAttributes[name]
+    )
+  );
+};
+
 export const Streamdown = memo(
   ({
     children,
@@ -613,6 +669,7 @@ export const Streamdown = memo(
     linkSafety = defaultLinkSafetyConfig,
     portal,
     lineNumbers = true,
+    codeBlockRawLanguages,
     allowedTags,
     fallbackComponent,
     literalTagContent,
@@ -626,6 +683,7 @@ export const Streamdown = memo(
   }: StreamdownProps) => {
     // All hooks must be called before any conditional returns
     const generatedId = useId();
+    const rootAttributes = getRootAttributes(props);
 
     const prefixedCn = useMemo(() => createCn(prefix), [prefix]);
 
@@ -794,10 +852,14 @@ export const Streamdown = memo(
       }
     });
 
+    // Stable key so inline arrays don't defeat memoization.
+    const rawLanguagesKey = serializeLanguages(codeBlockRawLanguages);
+
     // Combined context value - single object reduces React tree overhead
     const contextValue = useMemo<StreamdownContextType>(
       () => ({
         codeBlockMaxHeight,
+        codeBlockRawLanguages: parseLanguages(rawLanguagesKey),
         shikiTheme:
           shikiTheme ?? plugins?.code?.getThemes() ?? defaultShikiTheme,
         controls,
@@ -811,6 +873,7 @@ export const Streamdown = memo(
       }),
       [
         codeBlockMaxHeight,
+        rawLanguagesKey,
         shikiTheme,
         controls,
         isAnimating,
@@ -1066,6 +1129,7 @@ export const Streamdown = memo(
               <IconProvider icons={iconOverrides}>
                 <PrefixContext.Provider value={prefixedCn}>
                   <div
+                    {...rootAttributes}
                     className={prefixedCn(
                       // Use [&>*] arbitrary variant syntax for Tailwind v3 + v4 compat (v3 lacks the *: variant)
                       "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
@@ -1098,6 +1162,7 @@ export const Streamdown = memo(
             <IconProvider icons={iconOverrides}>
               <PrefixContext.Provider value={prefixedCn}>
                 <div
+                  {...rootAttributes}
                   className={prefixedCn(
                     // Use [&>*] arbitrary variant syntax for Tailwind v3 + v4 compat (v3 lacks the *: variant)
                     "space-y-4 whitespace-normal [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
@@ -1162,6 +1227,8 @@ export const Streamdown = memo(
     prevProps.className === nextProps.className &&
     prevProps.linkSafety === nextProps.linkSafety &&
     prevProps.lineNumbers === nextProps.lineNumbers &&
+    JSON.stringify(prevProps.codeBlockRawLanguages) ===
+      JSON.stringify(nextProps.codeBlockRawLanguages) &&
     prevProps.codeBlockMaxHeight === nextProps.codeBlockMaxHeight &&
     prevProps.tableMaxHeight === nextProps.tableMaxHeight &&
     prevProps.normalizeHtmlIndentation === nextProps.normalizeHtmlIndentation &&
@@ -1171,6 +1238,7 @@ export const Streamdown = memo(
       JSON.stringify(nextProps.translations) &&
     prevProps.prefix === nextProps.prefix &&
     prevProps.dir === nextProps.dir &&
-    prevProps.fallbackComponent === nextProps.fallbackComponent
+    prevProps.fallbackComponent === nextProps.fallbackComponent &&
+    sameRootAttributes(prevProps, nextProps)
 );
 Streamdown.displayName = "Streamdown";

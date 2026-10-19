@@ -29,6 +29,7 @@ import { MermaidDownloadDropdown } from "./mermaid/download-button";
 import { MermaidFullscreenButton } from "./mermaid/fullscreen-button";
 import { useCustomRenderer, useMermaidPlugin } from "./plugin-context";
 import { useCn } from "./prefix-context";
+import { RawCodeBlock } from "./raw-code-block";
 import { Table } from "./table";
 
 const START_LINE_PATTERN = /startLine=(\d+)/;
@@ -845,6 +846,7 @@ const CodeComponent = ({
     mermaid: mermaidContext,
     controls: controlsConfig,
     lineNumbers: contextLineNumbers,
+    codeBlockRawLanguages,
   } = useContext(StreamdownContext);
   const mermaidPlugin = useMermaidPlugin();
   const isBlockIncomplete = useIsCodeFenceIncomplete();
@@ -910,6 +912,20 @@ const CodeComponent = ({
           meta={metastring}
         />
       </Suspense>
+    );
+  }
+
+  if (
+    language &&
+    codeBlockRawLanguages?.includes(language) &&
+    !(language === "mermaid" && mermaidPlugin)
+  ) {
+    return (
+      <RawCodeBlock
+        code={code}
+        isIncomplete={isBlockIncomplete}
+        language={language}
+      />
     );
   }
 
