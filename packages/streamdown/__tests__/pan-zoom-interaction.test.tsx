@@ -233,13 +233,13 @@ describe("PanZoom pointer interactions", () => {
       </PanZoom>
     );
 
-    // Fullscreen controls should use bottom-4 left-4
+    // Fullscreen controls should use bottom-4 start-4
     const controls = container.querySelector(".absolute.z-10");
     expect(controls?.className).toContain("bottom-4");
-    expect(controls?.className).toContain("left-4");
+    expect(controls?.className).toContain("start-4");
   });
 
-  it("should position controls at bottom-2 left-2 when not fullscreen", () => {
+  it("should position controls at bottom-2 start-2 when not fullscreen", () => {
     const { container } = render(
       <PanZoom fullscreen={false}>
         <div>Content</div>
@@ -248,6 +248,6 @@ describe("PanZoom pointer interactions", () => {
 
     const controls = container.querySelector(".absolute.z-10");
     expect(controls?.className).toContain("bottom-2");
-    expect(controls?.className).toContain("left-2");
+    expect(controls?.className).toContain("start-2");
   });
 });
