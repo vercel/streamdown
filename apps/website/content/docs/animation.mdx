@@ -29,6 +29,10 @@ export default function Page() {
 
 The `isAnimating` prop controls when the animation is active. When `false`, the animate plugin is excluded from the rehype pipeline entirely, so completed messages render as plain text with no extra `<span>` wrappers.
 
+## Loading the animation
+
+The word fade ships in its own chunk. A component with `animated` set starts loading it after it first commits on the client, even while `isAnimating` is `false`. Every component shares that one load, and components that never set `animated` never request it. Until it arrives, text renders without the fade. The words on screen when it arrives stay as they are, and only text that streams in after them fades in, so on a cold start the first words of the first animated message appear without the fade. If the chunk fails to load, text keeps rendering without the fade and the error is logged to the console.
+
 ## How it works
 
 The animation is a rehype transformer that:
