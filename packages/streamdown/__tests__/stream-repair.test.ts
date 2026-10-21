@@ -95,7 +95,11 @@ describe("tail-bounded stream repair", () => {
       "\\[",
       "`",
       "```\n",
+      "````\n",
       "~~~\n",
+      "# ",
+      "1. ",
+      "> ",
       "**",
       "_",
       "[",
@@ -122,18 +126,23 @@ describe("tail-bounded stream repair", () => {
     }
   });
 
-  it("stops the settled prefix before math outside fenced code", () => {
-    const math = stream([
-      "One $x$.\n\nTwo.\n\nThree.\n\nFour",
-      "One $x$.\n\nTwo.\n\nThree.\n\nFour and",
+  it.each<{ first: string; name: string; settles: boolean }>([
+    { name: "math", first: "One $x$.", settles: false },
+    { name: "math in fenced code", first: "```sh\n$ ls\n```", settles: true },
+    { name: "an unpaired backtick", first: "Press ` to open.", settles: false },
+    { name: "a backtick run mid-line", first: "# ````", settles: false },
+    { name: "paired code spans", first: "Run `ls` or ``a``.", settles: true },
+    {
+      name: "a backtick in fenced code",
+      first: "```sh\necho `\n```",
+      settles: true,
+    },
+  ])("settles a first block with $name: $settles", ({ first, settles }) => {
+    const { state } = stream([
+      `${first}\n\nTwo.\n\nThree.\n\nFour`,
+      `${first}\n\nTwo.\n\nThree.\n\nFour and`,
     ]);
-    expect(math.state?.stableLength).toBe(0);
-
-    const fenced = stream([
-      "```sh\n$ ls\n```\n\nTwo.\n\nThree.\n\nFour",
-      "```sh\n$ ls\n```\n\nTwo.\n\nThree.\n\nFour and",
-    ]);
-    expect(fenced.state?.stableLength).toBeGreaterThan(0);
+    expect((state?.stableLength ?? 0) > 0).toBe(settles);
   });
 
   it("repairs the whole message with custom handlers", () => {
