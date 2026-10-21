@@ -25,7 +25,7 @@
     "fumadocs-core": "16.2.2",
     "fumadocs-mdx": "14.0.4",
     "fumadocs-ui": "16.2.2",
-    "katex": "^0.16.47",
+    "katex": "^0.18.2",
     "lucide-react": "^1.48.0",
     "motion": "^13.4.5",
     "next": "16.3.8",
