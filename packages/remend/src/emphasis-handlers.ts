@@ -17,6 +17,7 @@ import {
 import {
   countDoublePairs,
   getScan,
+  inAutolinkUrlAt,
   inHtmlTagAt,
   inLinkUrlAt,
   inMathAt,
@@ -318,6 +319,7 @@ const doubleUnderscoreRunFlips = (
     return false;
   }
   if (
+    inAutolinkUrlAt(scan, runStart) ||
     inMathAt(scan, runStart) ||
     inLinkUrlAt(scan, runStart) ||
     inHtmlTagAt(scan, runStart)
