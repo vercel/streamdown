@@ -1,0 +1,59 @@
+---
+title: "@streamdown/effects"
+description: Streaming text effects for the animated prop.
+type: reference
+summary: Diffusion-style effects that resolve words in scattered order, from a blur or from noise glyphs.
+prerequisites:
+  - /docs/animation
+related:
+  - /docs/smooth-streaming
+---
+
+The `@streamdown/effects` package provides [animation effects](/docs/animation#animation-effects) that reveal streaming text in scattered order, like a diffusion model resolving its output.
+
+- `diffuse`: words sharpen out of a blur.
+- `scramble`: words start as noise glyphs that change once, then resolve to the real text.
+
+## Install
+
+```package-install
+npm install @streamdown/effects
+```
+
+## Usage
+
+Import the effect and its styles, and pass the effect as `animated.animation`:
+
+```tsx title="app/page.tsx"
+import { Streamdown } from "streamdown";
+import { scramble } from "@streamdown/effects";
+import "streamdown/styles.css";
+import "@streamdown/effects/styles.css";
+
+export default function Page() {
+  return (
+    <Streamdown
+      animated={{ animation: scramble }}
+      isAnimating={status === "streaming"}
+      smooth
+    >
+      {markdown}
+    </Streamdown>
+  );
+}
+```
+
+Effects look best with [`smooth`](/docs/smooth-streaming), which reveals text a few words at a time. Without it, a large chunk resolves all at once.
+
+## Options
+
+`animated.duration`, `animated.easing`, and `animated.sep` work as they do for built-in animations. `sep: "char"` scrambles each character on its own.
+
+| Effect | Default duration | Scatter |
+|--------|------------------|---------|
+| `diffuse` | 420 ms | up to 140 ms |
+| `scramble` | 320 ms | up to 160 ms |
+
+## Accessibility
+
+`scramble` keeps the real text in the DOM. It paints the text transparent and draws the noise with CSS pseudo-elements that have empty alternative text, so selection, copy, and assistive technology get the real words. With `prefers-reduced-motion: reduce`, `scramble` falls back to a fade without glyphs.
