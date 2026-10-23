@@ -773,7 +773,11 @@ export const Streamdown = memo(
       }
       let result =
         mode === "streaming" && shouldParseIncompleteMarkdown
-          ? remend(children, remendOptions)
+          ? remend(children, {
+              ...remendOptions,
+              pendingInlineMarkers:
+                isAnimating && remendOptions?.pendingInlineMarkers,
+            })
           : children;
 
       // Escape markdown metacharacters inside literal-tag-content tags so that
@@ -797,6 +801,7 @@ export const Streamdown = memo(
       mode,
       shouldParseIncompleteMarkdown,
       remendOptions,
+      isAnimating,
       allowedTagNames,
       literalTagContent,
     ]);
