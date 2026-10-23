@@ -391,14 +391,41 @@ export type StreamdownProps = Options & {
     | undefined;
 } & AriaAttributes;
 
+const CLOBBER_PREFIX = "user-content-";
+
+type HastNode = {
+  type?: string;
+  properties?: { id?: unknown };
+  children?: HastNode[];
+};
+
+/** remark-rehype already prefixes footnote ids; sanitize prefixes again. */
+function rehypeUndoubleClobberPrefix() {
+  const doubled = `${CLOBBER_PREFIX}${CLOBBER_PREFIX}`;
+  const visit = (node: HastNode) => {
+    if (
+      node.type === "element" &&
+      typeof node.properties?.id === "string" &&
+      node.properties.id.startsWith(doubled)
+    ) {
+      node.properties.id = node.properties.id.slice(CLOBBER_PREFIX.length);
+    }
+    if (Array.isArray(node.children)) {
+      for (const child of node.children) {
+        visit(child);
+      }
+    }
+  };
+  return (tree: HastNode) => {
+    visit(tree);
+  };
+}
+
 const defaultSanitizeSchema = {
   ...defaultSchema,
-  // remark-rehype already prefixes footnote ids and backref hrefs with
-  // `user-content-` (its default `clobberPrefix`). hast-util-sanitize's default
-  // `clobberPrefix` is also `user-content-`, which would double-prefix ids like
-  // `user-content-user-content-fn-1` while leaving the (already-prefixed) href
-  // pointing at the un-doubled anchor. Disable it here to avoid the mismatch.
-  clobberPrefix: "",
+  // Keep the default `user-content-` clobberPrefix so raw HTML ids (from
+  // rehype-raw) cannot clobber `window`. remark-rehype already prefixes
+  // footnote ids; `rehypeUndoubleClobberPrefix` strips the doubled prefix.
   protocols: {
     ...defaultSchema.protocols,
     // `streamdown:` is the remend sentinel scheme for incomplete links/images
@@ -415,6 +442,7 @@ const defaultSanitizeSchema = {
 export const defaultRehypePlugins: Record<string, Pluggable> = {
   raw: rehypeRaw,
   sanitize: [rehypeSanitize, defaultSanitizeSchema],
+  undoubleClobberPrefix: rehypeUndoubleClobberPrefix,
   harden: [
     harden,
     {
@@ -1028,6 +1056,7 @@ export const Streamdown = memo(
         result = [
           defaultRehypePlugins.raw,
           [rehypeSanitize, extendedSchema],
+          defaultRehypePlugins.undoubleClobberPrefix,
           defaultRehypePlugins.harden,
         ];
       }
