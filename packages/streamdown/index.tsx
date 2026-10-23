@@ -395,11 +395,11 @@ const CLOBBER_PREFIX = "user-content-";
 
 type HastNode = {
   type?: string;
-  properties?: { id?: unknown };
+  properties?: { id?: unknown; href?: unknown };
   children?: HastNode[];
 };
 
-/** remark-rehype already prefixes footnote ids; sanitize prefixes again. */
+/** Normalize sanitized ids and keep fragment links aligned with their targets. */
 function rehypeUndoubleClobberPrefix() {
   const doubled = `${CLOBBER_PREFIX}${CLOBBER_PREFIX}`;
   const visit = (node: HastNode) => {
@@ -409,6 +409,17 @@ function rehypeUndoubleClobberPrefix() {
       node.properties.id.startsWith(doubled)
     ) {
       node.properties.id = node.properties.id.slice(CLOBBER_PREFIX.length);
+    }
+    // Fragment targets are sanitized too. Rewrite even when the target is in
+    // another streaming block, but leave already-prefixed footnote links alone.
+    if (
+      node.type === "element" &&
+      typeof node.properties?.href === "string" &&
+      node.properties.href.startsWith("#") &&
+      node.properties.href.length > 1 &&
+      !node.properties.href.startsWith(`#${CLOBBER_PREFIX}`)
+    ) {
+      node.properties.href = `#${CLOBBER_PREFIX}${node.properties.href.slice(1)}`;
     }
     if (Array.isArray(node.children)) {
       for (const child of node.children) {
