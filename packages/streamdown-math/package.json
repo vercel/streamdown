@@ -28,7 +28,7 @@
     "test:coverage": "vitest --coverage run"
   },
   "dependencies": {
-    "katex": "^0.16.27",
+    "katex": "^0.18.2",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
   },
