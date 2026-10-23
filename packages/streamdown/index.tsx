@@ -393,11 +393,11 @@ export type StreamdownProps = Options & {
 
 const CLOBBER_PREFIX = "user-content-";
 
-type HastNode = {
-  type?: string;
-  properties?: { id?: unknown; href?: unknown };
+interface HastNode {
   children?: HastNode[];
-};
+  properties?: { id?: unknown; href?: unknown };
+  type?: string;
+}
 
 /** Normalize sanitized ids and keep fragment links aligned with their targets. */
 function rehypeUndoubleClobberPrefix() {

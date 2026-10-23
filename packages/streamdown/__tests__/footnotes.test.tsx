@@ -184,9 +184,7 @@ GFM extends standard Markdown with powerful features[^1]. Here's a comprehensive
 
     expect(container.querySelector("#user-content-clobbered")).toBeTruthy();
     expect(container.querySelector("#clobbered")).toBeNull();
-    expect(
-      (globalThis as { clobbered?: unknown }).clobbered
-    ).toBeUndefined();
+    expect((globalThis as { clobbered?: unknown }).clobbered).toBeUndefined();
   });
 
   it("should show footnotes once content arrives", () => {
