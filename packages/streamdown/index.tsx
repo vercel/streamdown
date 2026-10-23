@@ -53,6 +53,11 @@ import { rehypeBlockDirection } from "./lib/rehype/block-direction";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
 import { remarkDisableAutolinkProtocols } from "./lib/remark/disable-autolink-protocols";
+import {
+  advanceStableLength,
+  repairStream,
+  type StreamRepairState,
+} from "./lib/stream-repair";
 import type { CSVSeparator } from "./lib/table/utils";
 import {
   defaultTranslations,
@@ -767,14 +772,32 @@ export const Streamdown = memo(
 
     // Apply remend to fix incomplete markdown BEFORE parsing into blocks
     // This prevents partial list items from being interpreted as setext headings
+    // Tail-bounded repair state for this message. It is checked against each
+    // input, so a render React discards cannot affect a later one.
+    const streamRepairRef = useRef<StreamRepairState | null>(null);
     const processedChildren = useMemo(() => {
       if (typeof children !== "string") {
         return "";
       }
-      let result =
-        mode === "streaming" && shouldParseIncompleteMarkdown
-          ? remend(children, remendOptions)
-          : children;
+      let result = children;
+      if (mode === "streaming" && shouldParseIncompleteMarkdown) {
+        // Block offsets come from the default parser and must match the
+        // repaired text, so custom parsers and tag preprocessing repair whole.
+        const canRepairTail =
+          parseMarkdownIntoBlocksFn === parseMarkdownIntoBlocks &&
+          !literalTagContent?.length &&
+          allowedTagNames.length === 0;
+        if (canRepairTail) {
+          streamRepairRef.current = repairStream(
+            streamRepairRef.current,
+            children,
+            remendOptions
+          );
+          result = streamRepairRef.current.repaired;
+        } else {
+          result = remend(children, remendOptions);
+        }
+      }
 
       // Escape markdown metacharacters inside literal-tag-content tags so that
       // children are rendered as plain text rather than parsed as markdown.
@@ -799,12 +822,17 @@ export const Streamdown = memo(
       remendOptions,
       allowedTagNames,
       literalTagContent,
+      parseMarkdownIntoBlocksFn,
     ]);
 
-    const blocks = useMemo(
-      () => parseMarkdownIntoBlocksFn(processedChildren),
-      [processedChildren, parseMarkdownIntoBlocksFn]
-    );
+    const blocks = useMemo(() => {
+      const parsed = parseMarkdownIntoBlocksFn(processedChildren);
+      const repair = streamRepairRef.current;
+      if (repair?.repaired === processedChildren) {
+        advanceStableLength(repair, parsed);
+      }
+      return parsed;
+    }, [processedChildren, parseMarkdownIntoBlocksFn]);
 
     // Render blocks directly. The previous displayBlocks + useTransition path
     // could be starved by sibling urgent updates when animated was off (#550),
