@@ -1,0 +1,49 @@
+Set up Vercel for me. Fetch https://vercel.com/get-started.md and follow it.
+import { Router } from "express";
+import { projectController } from "../controllers/project.controller";
+import { authenticate } from "../services/auth.service";
+
+export const projectRoutes = Router();
+
+// existing routes...
+projectRoutes.get("/:projectId/history", authenticate, async (req, res) => {
+  try {
+    const userId = (req as any).user?.uid;
+    const { projectId } = req.params;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const history = await projectController.getProjectHistory(userId, projectId);
+    return res.status(200).json(history);
+  } catch (error: any) {
+    return res.status(500).json({
+      message: error.message || "Failed to fetch project history",
+    });
+  }
+});
+
+projectRoutes.post("/:projectId/history/restore", authenticate, async (req, res) => {
+  try {
+    const userId = (req as any).user?.uid;
+    const { projectId } = req.params;
+    const { snapshotId } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const restored = await projectController.restoreProjectVersion(
+      userId,
+      projectId,
+      snapshotId
+    );
+
+    return res.status(200).json(restored);
+  } catch (error: any) {
+    return res.status(500).json({
+      message: error.message || "Failed to restore project version",
+    });
+  }
+});
