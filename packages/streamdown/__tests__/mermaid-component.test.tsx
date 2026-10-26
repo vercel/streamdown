@@ -247,6 +247,21 @@ describe("Mermaid Component", () => {
     });
   });
 
+  it("should keep the rendered SVG node when re-rendering the same chart", async () => {
+    const { container, rerender } = renderWithContext(
+      <Mermaid chart={simpleChart} />
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('[role="img"] svg')).toBeTruthy();
+    });
+    const svg = container.querySelector('[role="img"] svg');
+
+    rerender(<Mermaid chart={simpleChart} />);
+
+    expect(container.querySelector('[role="img"] svg')).toBe(svg);
+  });
+
   it("should generate unique IDs for multiple charts", async () => {
     const mockRender = vi.fn().mockResolvedValue({
       svg: "<svg><text>Chart</text></svg>",

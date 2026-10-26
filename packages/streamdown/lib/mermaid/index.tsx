@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useDeferredRender } from "../../hooks/use-deferred-render";
 import { StreamdownContext } from "../../index";
 import { useIsCodeFenceIncomplete } from "../block-incomplete-context";
@@ -218,6 +218,11 @@ export const Mermaid = ({
     // the same as the last partial one that failed
   }, [chart, config, retryCount, shouldRender, mermaidPlugin, isStreaming]);
 
+  // Always render the SVG if we have content (either current or last valid)
+  const displaySvg = svgContent || lastValidSvg;
+  // react-dom 19.2 rewrites innerHTML whenever this object's identity changes
+  const svgHtml = useMemo(() => ({ __html: displaySvg }), [displaySvg]);
+
   // Show placeholder when not scheduled to render
   if (!(shouldRender || svgContent || lastValidSvg)) {
     return (
@@ -283,9 +288,6 @@ export const Mermaid = ({
     );
   }
 
-  // Always render the SVG if we have content (either current or last valid)
-  const displaySvg = svgContent || lastValidSvg;
-
   return (
     <div
       className={cn(
@@ -318,7 +320,7 @@ export const Mermaid = ({
             fullscreen ? "size-full items-center" : null
           )}
           // biome-ignore lint/security/noDangerouslySetInnerHtml: "Required for Mermaid"
-          dangerouslySetInnerHTML={{ __html: displaySvg }}
+          dangerouslySetInnerHTML={svgHtml}
           role="img"
         />
       </PanZoom>
