@@ -216,13 +216,12 @@ Remend is built for high-performance streaming scenarios:
 
 For more info, see the [documentation](https://streamdown.ai/docs/termination).
 
-
 ### Parser-owned literal ranges
 
 `literalRanges` optionally supplies opaque source intervals to the existing repair
 scanner. Built-in handlers keep the full Markdown context but do not interpret or
-edit those literal bodies. Streamdown supplies ranges from its registered-container
-micromark grammar, not a second tag matcher.
+edit those literal bodies. A caller can supply ranges from its parser; Remend does
+not interpret container syntax.
 
 ```ts
 remend(source, {
