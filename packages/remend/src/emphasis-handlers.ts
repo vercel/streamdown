@@ -416,7 +416,10 @@ export const handleIncompleteBold = (text: string): string => {
   if (asteriskPairs % 2 === 1) {
     // Check for half-complete closing marker: **content* should become **content**
     // The trailing * is the first char of the closing ** being streamed
-    if (contentAfterMarker.endsWith("*")) {
+    if (
+      contentAfterMarker.endsWith("*") &&
+      getScan(text).regions[text.length - 1] !== REGION.LITERAL
+    ) {
       return `${text}*`;
     }
     return `${text}**`;
@@ -632,7 +635,12 @@ const insertClosingUnderscore = (text: string): string => {
   // If text ends with newline(s), insert underscore before them
   // Use string methods instead of regex to avoid ReDoS vulnerability
   let endIndex = text.length;
-  while (endIndex > 0 && text[endIndex - 1] === "\n") {
+  const scan = getScan(text);
+  while (
+    endIndex > 0 &&
+    text[endIndex - 1] === "\n" &&
+    scan.regions[endIndex - 1] !== REGION.LITERAL
+  ) {
     endIndex -= 1;
   }
   if (endIndex < text.length) {
@@ -645,7 +653,10 @@ const insertClosingUnderscore = (text: string): string => {
 
 // Helper to handle trailing ** for proper nesting of _ and ** markers
 const handleTrailingAsterisksForUnderscore = (text: string): string | null => {
-  if (!text.endsWith("**")) {
+  if (
+    !text.endsWith("**") ||
+    getScan(text).regions.indexOf(REGION.LITERAL, text.length - 2) !== -1
+  ) {
     return null;
   }
 

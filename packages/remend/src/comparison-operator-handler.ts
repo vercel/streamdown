@@ -23,7 +23,7 @@ export const handleComparisonOperators = (text: string): string => {
     LIST_COMPARISON_PATTERN,
     (match, prefix, suffix, offset) => {
       // Don't escape inside code blocks
-      if (isInsideCodeBlock(text, offset)) {
+      if (isInsideCodeBlock(text, offset + prefix.length)) {
         return match;
       }
 

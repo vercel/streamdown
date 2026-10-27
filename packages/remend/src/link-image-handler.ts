@@ -27,6 +27,13 @@ const handleIncompleteUrl = (
     return null;
   }
 
+  // URL repair ends at the first opaque boundary, not at the end of the document.
+  const literalStart = getScan(text).regions.indexOf(
+    REGION.LITERAL,
+    lastParenIndex + 2
+  );
+  const afterUrl = literalStart === -1 ? "" : text.substring(literalStart);
+
   // We have an incomplete URL like [text](partial-url
   // Now find the matching opening bracket for the ] before (
   const openBracketIndex = findMatchingOpeningBracket(text, lastParenIndex);
@@ -47,14 +54,14 @@ const handleIncompleteUrl = (
 
   if (isImage) {
     // For images with incomplete URLs, replace with placeholder marker
-    return `${beforeLink}![${altOrLinkText}](${INCOMPLETE_IMAGE_PLACEHOLDER})`;
+    return `${beforeLink}![${altOrLinkText}](${INCOMPLETE_IMAGE_PLACEHOLDER})${afterUrl}`;
   }
 
   // For links with incomplete URLs, handle based on linkMode
   if (linkMode === "text-only") {
-    return `${beforeLink}${altOrLinkText}`;
+    return `${beforeLink}${altOrLinkText}${afterUrl}`;
   }
-  return `${beforeLink}[${altOrLinkText}](streamdown:incomplete-link)`;
+  return `${beforeLink}[${altOrLinkText}](streamdown:incomplete-link)${afterUrl}`;
 };
 
 // Helper to find the first incomplete [ (for text-only mode)
@@ -154,7 +161,8 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
   let lastParenIndex = text.lastIndexOf("](");
   while (
     lastParenIndex !== -1 &&
-    getScan(text).regions[lastParenIndex] === REGION.LITERAL
+    (getScan(text).regions[lastParenIndex] === REGION.LITERAL ||
+      getScan(text).regions[lastParenIndex + 1] === REGION.LITERAL)
   ) {
     lastParenIndex =
       lastParenIndex === 0 ? -1 : text.lastIndexOf("](", lastParenIndex - 1);
