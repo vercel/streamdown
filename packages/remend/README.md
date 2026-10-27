@@ -215,3 +215,24 @@ Remend is built for high-performance streaming scenarios:
 - Early returns for common cases
 
 For more info, see the [documentation](https://streamdown.ai/docs/termination).
+
+
+### Parser-owned literal ranges
+
+`literalRanges` optionally supplies opaque source intervals to the existing repair
+scanner. Built-in handlers keep the full Markdown context but do not interpret or
+edit those literal bodies. Streamdown supplies ranges from its registered-container
+micromark grammar, not a second tag matcher.
+
+```ts
+remend(source, {
+  literalRanges: currentSource => parserLiteralRanges(currentSource),
+});
+```
+
+The callback returns UTF-16 `{ start, end }` offsets, with an exclusive end, for
+sorted, non-overlapping intervals. It is cached with the current source scan and
+called again when an earlier handler changes the source. Scope is synchronous and
+restored after nested calls or exceptions. There is no source encoding or
+fragment-by-fragment repair. User-defined custom handlers still receive the entire
+string and remain responsible for respecting literal source themselves.

@@ -398,7 +398,7 @@ export const handleIncompleteBold = (text: string): string => {
   }
 
   const contentAfterMarker = boldMatch[2];
-  const markerIndex = text.lastIndexOf(boldMatch[1]);
+  const markerIndex = boldMatch.index!;
 
   // Check if the bold marker is within a code block (fenced or inline)
   if (
@@ -469,7 +469,7 @@ export const handleIncompleteDoubleUnderscoreItalic = (
       halfCompleteUnderscorePattern
     );
     if (halfCompleteMatch) {
-      const markerIndex = text.lastIndexOf(halfCompleteMatch[1]);
+      const markerIndex = halfCompleteMatch.index!;
       if (
         !(
           isInsideCodeBlock(text, markerIndex) ||
@@ -484,7 +484,7 @@ export const handleIncompleteDoubleUnderscoreItalic = (
   }
 
   const contentAfterMarker = italicMatch[2];
-  const markerIndex = text.lastIndexOf(italicMatch[1]);
+  const markerIndex = italicMatch.index!;
 
   // Check if the italic marker is within a code block (fenced or inline)
   if (
@@ -770,7 +770,7 @@ export const handleIncompleteBoldItalic = (text: string): string => {
   }
 
   const contentAfterMarker = boldItalicMatch[2];
-  const markerIndex = text.lastIndexOf(boldItalicMatch[1]);
+  const markerIndex = boldItalicMatch.index!;
 
   if (shouldSkipBoldItalicCompletion(text, contentAfterMarker, markerIndex)) {
     return text;

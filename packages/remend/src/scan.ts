@@ -32,6 +32,8 @@
 
 export const REGION = {
   PROSE: 0,
+  /** Parser-owned literal source: opaque to all repair delimiters. */
+  LITERAL: 6,
   /** The ``` or ~~~ run that opens or closes a fence */
   FENCE_MARKER: 1,
   /** The info string on a fence opener line. Neither prose nor code body. */
@@ -220,6 +222,7 @@ const openFenceAt = (
   const contentEnd =
     lineEnd > lineStart && text[lineEnd - 1] === "\r" ? lineEnd - 1 : lineEnd;
   const prefix = skipContainerPrefix(text, lineStart, contentEnd);
+  if (regions[prefix.contentStart] === REGION.LITERAL) return null;
   const opener = text
     .slice(prefix.contentStart, contentEnd)
     .match(FENCE_RUN_PATTERN);
@@ -406,7 +409,15 @@ const paintSpans = (text: string, regions: Uint8Array): OpenSpan | null => {
 
 const scanText = (text: string): TextScan => {
   const regions = new Uint8Array(text.length);
+  const opaque = literalRanges?.(text) ?? [];
+  for (const { start, end } of opaque) {
+    regions.fill(REGION.LITERAL, start, end);
+  }
   const openFence = paintFences(text, regions);
+  // Conservative fence painting must never take ownership of literal tokens.
+  for (const { start, end } of opaque) {
+    regions.fill(REGION.LITERAL, start, end);
+  }
   const openSpan = paintSpans(text, regions);
   return {
     text,
@@ -423,6 +434,27 @@ const scanText = (text: string): TextScan => {
 // string, and remend's handler chain passes each handler's output to the
 // next, so a single-entry cache gives O(1) queries within a handler while
 // staying O(n) per handler overall.
+export type LiteralRanges = (
+  text: string
+) => ReadonlyArray<{ start: number; end: number }>;
+let literalRanges: LiteralRanges | undefined;
+
+/** Scope parser-owned opaque regions to one synchronous repair call. */
+export function withLiteralRanges<T>(
+  ranges: LiteralRanges | undefined,
+  run: () => T
+): T {
+  const previous = literalRanges;
+  literalRanges = ranges;
+  clearScanCache();
+  try {
+    return run();
+  } finally {
+    literalRanges = previous;
+    clearScanCache();
+  }
+}
+
 let cachedText: string | null = null;
 let cachedScan: TextScan | null = null;
 
@@ -464,6 +496,7 @@ export const isFenceAt = (scan: TextScan, position: number): boolean => {
   }
   const region = scan.regions[position];
   return (
+    region === REGION.LITERAL ||
     region === REGION.FENCE_MARKER ||
     region === REGION.FENCE_INFO ||
     region === REGION.FENCE_BODY
@@ -471,7 +504,8 @@ export const isFenceAt = (scan: TextScan, position: number): boolean => {
 };
 
 export const isCompleteSpanAt = (scan: TextScan, position: number): boolean =>
-  scan.regions[position] === REGION.CODE_SPAN;
+  scan.regions[position] === REGION.CODE_SPAN ||
+  scan.regions[position] === REGION.LITERAL;
 
 /** Counts non-overlapping double-character pairs (**, ~~, $$) in prose */
 export const countDoublePairs = (text: string, char: string): number => {

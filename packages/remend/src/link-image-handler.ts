@@ -1,3 +1,4 @@
+import { getScan, REGION } from "./scan";
 import { isInsideCodeBlock } from "./code-block-utils";
 import {
   findMatchingClosingBracket,
@@ -18,8 +19,11 @@ const handleIncompleteUrl = (
   lastParenIndex: number,
   linkMode: LinkMode
 ): string | null => {
-  const afterParen = text.substring(lastParenIndex + 2);
-  if (afterParen.includes(")")) {
+  let close = text.indexOf(")", lastParenIndex + 2);
+  while (close !== -1 && getScan(text).regions[close] === REGION.LITERAL) {
+    close = text.indexOf(")", close + 1);
+  }
+  if (close !== -1) {
     return null;
   }
 
@@ -93,8 +97,7 @@ const handleIncompleteText = (
   const openIndex = isImage ? i - 1 : i;
 
   // Check if we have a closing bracket after this
-  const afterOpen = text.substring(i + 1);
-  if (!afterOpen.includes("]")) {
+  if (findMatchingClosingBracket(text, i) === -1) {
     // This is an incomplete link/image
     const beforeLink = text.substring(0, openIndex);
 
@@ -148,7 +151,14 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
   // We need to handle nested brackets in the link text
 
   // Start from the end and look for ]( pattern
-  const lastParenIndex = text.lastIndexOf("](");
+  let lastParenIndex = text.lastIndexOf("](");
+  while (
+    lastParenIndex !== -1 &&
+    getScan(text).regions[lastParenIndex] === REGION.LITERAL
+  ) {
+    lastParenIndex =
+      lastParenIndex === 0 ? -1 : text.lastIndexOf("](", lastParenIndex - 1);
+  }
   if (lastParenIndex !== -1 && !isInsideCodeBlock(text, lastParenIndex)) {
     const result = handleIncompleteUrl(text, lastParenIndex, linkMode);
     if (result !== null) {
