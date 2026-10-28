@@ -52,8 +52,8 @@ export interface AnimateTimeline {
 }
 
 export interface CreateAnimateTimelineOptions {
-  maxBacklogMs?: number;
-  now?: () => number;
+  maxBacklogMs?: number | undefined;
+  now?: (() => number) | undefined;
 }
 
 const defaultNow = (): number =>
@@ -146,17 +146,17 @@ export interface AnimatePlugin {
 }
 
 export interface AnimateOptions {
-  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {});
-  duration?: number;
-  easing?: string;
+  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {}) | undefined;
+  duration?: number | undefined;
+  easing?: string | undefined;
   /**
    * Soft cap (ms) on how far ahead of wall-clock words may be scheduled.
    * Larger values favour longer cascades / stricter cross-block serialization;
    * smaller values keep a fast stream visually caught up. @default 320
    */
-  maxBacklogMs?: number;
-  sep?: "word" | "char";
-  stagger?: number;
+  maxBacklogMs?: number | undefined;
+  sep?: "word" | "char" | undefined;
+  stagger?: number | undefined;
 }
 
 const WHITESPACE_RE = /\s/;
