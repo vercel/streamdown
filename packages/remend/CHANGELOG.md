@@ -1,5 +1,11 @@
 # remend
 
+## 1.4.1
+
+### Patch Changes
+
+- ae6fa3b: Support `exactOptionalPropertyTypes`: add `| undefined` to optional props in the public types so possibly-`undefined` values can be forwarded to `<Streamdown>` and `remend` without type errors
+
 ## 1.4.0
 
 ### Minor Changes
