@@ -27,6 +27,7 @@ import {
   type AnimateTimeline,
   createAnimateTimeline,
   createRenderAnimatePlugin,
+  DEFAULT_ANIMATION_DURATION_MS,
 } from "./lib/animate";
 import { BlockIncompleteContext } from "./lib/block-incomplete-context";
 import { components as builtinComponents } from "./lib/components";
@@ -59,6 +60,7 @@ import {
   type StreamdownTranslations,
   TranslationsContext,
 } from "./lib/translations-context";
+import { useAnimateActive } from "./lib/use-animate-active";
 import { useCaretHost } from "./lib/use-caret-host";
 import { createCn } from "./lib/utils";
 
@@ -874,12 +876,6 @@ export const Streamdown = memo(
       } else if (!animateTimelineRef.current) {
         animateTimelineRef.current = createAnimateTimeline();
       }
-      // Reset the per-pass cursor from the last *committed* horizon so a
-      // StrictMode double-render recomputes the same delays instead of
-      // stacking (#482 + StrictMode).
-      if (isAnimating && animateTimelineRef.current) {
-        animateTimelineRef.current.beginPass(animateTimelineRef.current.now());
-      }
     } else {
       animateTimelineRef.current = null;
       blockAnimatePluginsRef.current = [];
@@ -887,13 +883,18 @@ export const Streamdown = memo(
       prevAnimatedKeyRef.current = "";
     }
 
-    // Commit the in-flight pass horizon after paint. Discarded concurrent
-    // renders that called beginPass never reach this effect, so they can't
-    // poison nextStartAt.
-    useLayoutEffect(() => {
-      if (isAnimating) {
-        animateTimelineRef.current?.commitPass();
-      }
+    const animateDuration =
+      animatedKey && animatedKey !== "true"
+        ? ((animated as AnimateOptions).duration ??
+          DEFAULT_ANIMATION_DURATION_MS)
+        : DEFAULT_ANIMATION_DURATION_MS;
+    // Stays true after isAnimating turns false until queued words have played
+    // out, so they don't pop in all at once (#669).
+    const isAnimateActive = useAnimateActive({
+      timeline: animateTimelineRef.current,
+      isAnimating,
+      duration: animateDuration,
+      enabled: mode !== "static",
     });
 
     // Stable key so inline arrays don't defeat memoization.
@@ -1129,7 +1130,7 @@ export const Streamdown = memo(
       blockRehypePlugins: Pluggable[];
     } => {
       let blockAnimatePlugin: AnimatePlugin | null = null;
-      if (animateTimelineRef.current && isAnimating) {
+      if (animateTimelineRef.current && isAnimateActive) {
         if (!blockAnimatePluginsRef.current[index]) {
           // maxBacklogMs is consumed by the timeline factory, not the plugin.
           const rawOpts =
