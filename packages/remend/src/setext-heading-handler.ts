@@ -1,3 +1,5 @@
+import { getScan, REGION } from "./scan";
+
 // Handles incomplete setext heading underlines during streaming
 // Setext headings use --- or === on the line below text to create headings
 // During streaming, partial list items (like "-") can be misinterpreted as setext heading underlines
@@ -22,6 +24,13 @@ export const handleIncompleteSetextHeading = (text: string): string => {
 
   // If there's no newline, we can't have a setext heading
   if (lastNewlineIndex === -1) {
+    return text;
+  }
+
+  // An opaque final line is not Markdown, even when its bytes look like an underline.
+  if (
+    getScan(text).regions.indexOf(REGION.LITERAL, lastNewlineIndex + 1) !== -1
+  ) {
     return text;
   }
 
