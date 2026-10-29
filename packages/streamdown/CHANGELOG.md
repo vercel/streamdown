@@ -1,5 +1,27 @@
 # streamdown
 
+## 2.8.0
+
+### Minor Changes
+
+- 8b0ca9f: feat: add `codeBlockRawLanguages` option to render selected code fence languages (e.g. ASCII / box-drawing diagrams) verbatim as monospace text without syntax highlighting
+
+### Patch Changes
+
+- a9fb2a2: Keep blank lines inside fenced code blocks in custom tags instead of rendering `<!---->` placeholders in the code.
+- ae6fa3b: Support `exactOptionalPropertyTypes`: add `| undefined` to optional props in the public types so possibly-`undefined` values can be forwarded to `<Streamdown>` and `remend` without type errors
+- 8aaf182: fix: use logical Tailwind classes (`ps-*`, `border-s-*`, `text-start`, `start-*`, `end-*`, `ms-*`) instead of physical left/right classes so layout mirrors in RTL text. `cn` now treats logical and physical utilities on the same axis as conflicting, so a consumer `className="pl-8"` still overrides the built-in padding. The code block keeps physical classes because it is pinned `dir="ltr"`.
+- c6f5905: perf: stop re-parsing a Mermaid diagram's SVG every time it re-renders with the same chart
+- 66779a8: fix: restore `user-content-` clobberPrefix on sanitize so raw HTML ids cannot clobber `window`, and strip the doubled prefix on footnote ids that remark-rehype already prefixed.
+- 97c1f87: fix(mermaid): stop showing "Mermaid Error" for a partial chart while its fence streams
+
+  - Keep the loader while a Mermaid fence is still streaming instead of showing the error for a partial chart
+  - Show the error once the fence closes, including when the final chart text is unchanged from the last partial render
+
+- ec1489a: Distinguish remark and rehype plugins by function identity when caching processors, so same-name plugins with different closures do not reuse each other's behavior.
+- Updated dependencies [ae6fa3b]
+  - remend@1.4.1
+
 ## 2.7.1
 
 ### Patch Changes
