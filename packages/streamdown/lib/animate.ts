@@ -52,8 +52,8 @@ export interface AnimateTimeline {
 }
 
 export interface CreateAnimateTimelineOptions {
-  maxBacklogMs?: number;
-  now?: () => number;
+  maxBacklogMs?: number | undefined;
+  now?: (() => number) | undefined;
 }
 
 const defaultNow = (): number =>
@@ -146,20 +146,25 @@ export interface AnimatePlugin {
 }
 
 export interface AnimateOptions {
-  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {});
-  duration?: number;
-  easing?: string;
+  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {}) | undefined;
+  duration?: number | undefined;
+  easing?: string | undefined;
   /**
    * Soft cap (ms) on how far ahead of wall-clock words may be scheduled.
    * Larger values favour longer cascades / stricter cross-block serialization;
    * smaller values keep a fast stream visually caught up. @default 320
    */
-  maxBacklogMs?: number;
-  sep?: "word" | "char";
-  stagger?: number;
+  maxBacklogMs?: number | undefined;
+  sep?: "word" | "char" | undefined;
+  stagger?: number | undefined;
 }
 
 const WHITESPACE_RE = /\s/;
+// Scripts written without spaces between words, plus CJK / fullwidth
+// punctuation. Each such character is its own animate unit in word mode so
+// a CJK paragraph isn't one giant "word" (#669).
+const CJK_RE =
+  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\u3000-\u303F\uFF00-\uFFEF]/u;
 const WHITESPACE_ONLY_RE = /^\s+$/;
 // Skip layout-sensitive subtrees. Fenced/highlighted blocks are protected via
 // `pre` (CommonMark always emits `pre > code`); raw inline `code` is safe to
@@ -325,10 +330,19 @@ const splitByWord = (text: string): string[] => {
   const parts: string[] = [];
   let current = "";
   let inWhitespace = false;
+  let prevCjk = false;
 
   for (const char of text) {
     const isWs = WHITESPACE_RE.test(char);
-    if (isWs !== inWhitespace && current) {
+    const isCjk = !isWs && CJK_RE.test(char);
+    // CJK has no inter-word spaces, so every CJK character starts a new unit
+    // (and so does the first non-CJK character after one).
+    const startsUnit = !isWs && current !== "" && (isCjk || prevCjk);
+    if (startsUnit) {
+      parts.push(current);
+      current = "";
+      inWhitespace = false;
+    } else if (isWs !== inWhitespace && current) {
       if (isWs) {
         current += char;
         inWhitespace = true;
@@ -339,6 +353,7 @@ const splitByWord = (text: string): string[] => {
     }
     current += char;
     inWhitespace = isWs;
+    prevCjk = isCjk;
   }
 
   if (current) {

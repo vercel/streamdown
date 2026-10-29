@@ -24,6 +24,8 @@ const INPUT_TAG_RE = /<input[^>]*>/;
 const INPUT_TAG_GLOBAL_RE = /<input[^>]*>/g;
 const IMG_TAG_RE = /<img[^>]*>/;
 const HR_TAG_RE = /<hr[^>]*>/;
+const ZERO_DURATION_RE = /--sd-duration:0ms/;
+const SPAN_TEXT_RE = /<span[^>]*>([^<]*)<\/span>/g;
 const DELAY_RE = /--sd-delay:(\d+)ms/g;
 
 const delaysOf = (html: string): number[] =>
@@ -103,6 +105,55 @@ describe("animate plugin", () => {
     it("should not wrap whitespace-only text", async () => {
       const result = await processHtml("<p>   </p>");
       expect(result).not.toContain("data-sd-animate");
+    });
+  });
+
+  describe("CJK word splitting (#669)", () => {
+    const CJK_FULL =
+      "量子電腦利用疊加與糾纏來平行處理資訊，因此在特定問題上遠快於傳統電腦。不過目前的硬體仍然很容易受到雜訊干擾。";
+
+    const animatedTexts = (html: string): string[] =>
+      Array.from(html.matchAll(SPAN_TEXT_RE))
+        .filter(([span]) => !ZERO_DURATION_RE.test(span))
+        .map(([, text]) => text);
+
+    it("splits a CJK paragraph into per-character spans in word mode", async () => {
+      const result = await processHtml("<p>量子電腦，因此</p>");
+      expect(result).toContain(">量<");
+      expect(result).toContain(">子<");
+      expect(result).toContain(">，<");
+      expect(result).toContain(">此<");
+    });
+
+    it("keeps Latin words intact and splits CJK in mixed text", async () => {
+      const result = await processHtml("<p>Hello 世界 world</p>");
+      expect(result).toContain(">Hello <");
+      expect(result).toContain(">世<");
+      expect(result).toContain(">界 <");
+      expect(result).toContain(">world<");
+    });
+
+    it("splits Latin text directly adjacent to CJK", async () => {
+      const result = await processHtml("<p>使用React框架</p>");
+      expect(result).toContain(">使<");
+      expect(result).toContain(">用<");
+      expect(result).toContain(">React<");
+      expect(result).toContain(">框<");
+      expect(result).toContain(">架<");
+    });
+
+    it("animates newly appended CJK characters on every commit", async () => {
+      const plugin = createAnimatePlugin();
+      let prev = 0;
+      for (const n of [12, 25, 40, CJK_FULL.length]) {
+        plugin.setPrevContentLength(prev);
+        const html = await processHtml(
+          `<p>${CJK_FULL.slice(0, n)}</p>`,
+          plugin
+        );
+        expect(animatedTexts(html).join("")).toBe(CJK_FULL.slice(prev, n));
+        prev = n;
+      }
     });
   });
 
