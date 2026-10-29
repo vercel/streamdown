@@ -170,9 +170,20 @@ describe("preprocessCustomTags", () => {
     expect(preprocessCustomTags(md, ["verse"])).toBe(md);
   });
 
-  it("should leave a tag after an inline tag on the same line unchanged", () => {
-    const md = "<note>a</note> <note>\n**b**\n</note>";
+  it.each([
+    ["<note>a</note> <note>\n**b**\n</note>"],
+    ["Text <note>\na</note><note>\n**b**\n</note>"],
+  ])("should leave a tag after an inline tag on the same line unchanged", (md) => {
     expect(preprocessCustomTags(md, ["note"])).toBe(md);
+  });
+
+  it.each([
+    ["<x>\na</x><y>\n**b**\n</y>"],
+    ["<x>\na</x> - <y>\n**b**\n</y>"],
+  ])("should not depend on the tag order for adjacent containers", (md) => {
+    expect(preprocessCustomTags(md, ["y", "x"])).toBe(
+      preprocessCustomTags(md, ["x", "y"])
+    );
   });
 
   it("should treat a leading byte order mark as the start of the line", () => {

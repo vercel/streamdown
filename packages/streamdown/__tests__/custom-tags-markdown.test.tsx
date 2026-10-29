@@ -193,18 +193,27 @@ describe("Custom tag position on the line", () => {
     expect(strong?.textContent).toBe("bold");
   });
 
-  it("should still parse markdown in a tag after a closing tag", () => {
+  it.each([
+    ["on its own line", "<note>\na\n</note> <note>\n**b**\n</note>"],
+    ["that ends a body line", "<note>\na</note><note>\n**b**\n</note>"],
+    ["followed by a space", "<note>\na</note> <note>\n**b**\n</note>"],
+    ["of a tag listed later", "<aside>\na</aside><note>\n**b**\n</note>"],
+    [
+      "of a tag listed later while streaming",
+      "<aside>\na</aside><note>\n**b**",
+    ],
+  ])("should still parse markdown in a tag after a closing tag %s", (_name, md) => {
     const Note = (props: CustomComponentProps) => (
       <div data-testid="note">{props.children as React.ReactNode}</div>
     );
 
     const { container } = render(
       <Streamdown
-        allowedTags={{ note: [] }}
+        allowedTags={{ note: [], aside: [] }}
         components={{ note: Note }}
         mode="static"
       >
-        {"<note>\na\n</note> <note>\n**b**\n</note>"}
+        {md}
       </Streamdown>
     );
 
