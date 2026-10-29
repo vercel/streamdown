@@ -31,9 +31,12 @@ export type UrlTransform = (
 export type Components = {
   [Key in keyof JSX.IntrinsicElements]?:
     | ComponentType<JSX.IntrinsicElements[Key] & ExtraProps>
-    | keyof JSX.IntrinsicElements;
+    | keyof JSX.IntrinsicElements
+    | undefined;
 } & {
-  inlineCode?: ComponentType<JSX.IntrinsicElements["code"] & ExtraProps>;
+  inlineCode?:
+    | ComponentType<JSX.IntrinsicElements["code"] & ExtraProps>
+    | undefined;
   [key: string]:
     | ComponentType<Record<string, unknown> & ExtraProps>
     | keyof JSX.IntrinsicElements
@@ -41,17 +44,17 @@ export type Components = {
 };
 
 export interface Options {
-  allowElement?: AllowElement;
-  allowedElements?: readonly string[];
-  children?: string;
-  components?: Components;
-  disallowedElements?: readonly string[];
-  rehypePlugins?: PluggableList;
-  remarkPlugins?: PluggableList;
-  remarkRehypeOptions?: Readonly<RemarkRehypeOptions>;
-  skipHtml?: boolean;
-  unwrapDisallowed?: boolean;
-  urlTransform?: UrlTransform;
+  allowElement?: AllowElement | undefined;
+  allowedElements?: readonly string[] | undefined;
+  children?: string | undefined;
+  components?: Components | undefined;
+  disallowedElements?: readonly string[] | undefined;
+  rehypePlugins?: PluggableList | undefined;
+  remarkPlugins?: PluggableList | undefined;
+  remarkRehypeOptions?: Readonly<RemarkRehypeOptions> | undefined;
+  skipHtml?: boolean | undefined;
+  unwrapDisallowed?: boolean | undefined;
+  urlTransform?: UrlTransform | undefined;
 }
 
 // Stable references for common cases

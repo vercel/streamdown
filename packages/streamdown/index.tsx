@@ -201,8 +201,8 @@ export type DownloadControlConfig = boolean | { filename: string };
 export type CopyControlConfig =
   | boolean
   | {
-      onCopy?: () => void;
-      onError?: (error: Error) => void;
+      onCopy?: (() => void) | undefined;
+      onError?: ((error: Error) => void) | undefined;
     };
 
 export type ControlsConfig =
@@ -211,26 +211,29 @@ export type ControlsConfig =
       table?:
         | boolean
         | {
-            copy?: boolean;
-            csvSeparator?: CSVSeparator;
-            download?: DownloadControlConfig;
-            fullscreen?: boolean;
-          };
+            copy?: boolean | undefined;
+            csvSeparator?: CSVSeparator | undefined;
+            download?: DownloadControlConfig | undefined;
+            fullscreen?: boolean | undefined;
+          }
+        | undefined;
       code?:
         | boolean
         | {
-            copy?: CopyControlConfig;
-            download?: DownloadControlConfig;
-          };
+            copy?: CopyControlConfig | undefined;
+            download?: DownloadControlConfig | undefined;
+          }
+        | undefined;
       mermaid?:
         | boolean
         | {
-            download?: DownloadControlConfig;
-            copy?: CopyControlConfig;
-            fullscreen?: boolean;
-            panZoom?: boolean;
-          };
-      image?: boolean | { download?: boolean };
+            download?: DownloadControlConfig | undefined;
+            copy?: CopyControlConfig | undefined;
+            fullscreen?: boolean | undefined;
+            panZoom?: boolean | undefined;
+          }
+        | undefined;
+      image?: boolean | { download?: boolean | undefined } | undefined;
     };
 
 export interface LinkSafetyModalProps {
@@ -242,8 +245,8 @@ export interface LinkSafetyModalProps {
 
 export interface LinkSafetyConfig {
   enabled: boolean;
-  onLinkCheck?: (url: string) => Promise<boolean> | boolean;
-  renderModal?: (props: LinkSafetyModalProps) => React.ReactNode;
+  onLinkCheck?: ((url: string) => Promise<boolean> | boolean) | undefined;
+  renderModal?: ((props: LinkSafetyModalProps) => React.ReactNode) | undefined;
 }
 
 export interface MermaidErrorComponentProps {
@@ -253,15 +256,15 @@ export interface MermaidErrorComponentProps {
 }
 
 export interface MermaidOptions {
-  config?: MermaidConfig;
-  errorComponent?: React.ComponentType<MermaidErrorComponentProps>;
+  config?: MermaidConfig | undefined;
+  errorComponent?: React.ComponentType<MermaidErrorComponentProps> | undefined;
 }
 
 export type AllowedTags = Record<string, string[]>;
 export type PortalTarget = HTMLElement | null | (() => HTMLElement | null);
 
 export type StreamdownProps = Options & {
-  mode?: "static" | "streaming";
+  mode?: "static" | "streaming" | undefined;
   /**
    * Text direction. `"ltr"` / `"rtl"` force a single direction.
    * `"auto"` detects direction per block: in streaming mode via parsed
@@ -271,39 +274,39 @@ export type StreamdownProps = Options & {
    * first-strong as the tie-breaker; fenced/inline code is excluded from
    * the evidence and code blocks are always rendered LTR.
    */
-  dir?: "auto" | "ltr" | "rtl";
-  BlockComponent?: React.ComponentType<BlockProps>;
-  parseMarkdownIntoBlocksFn?: (markdown: string) => string[];
-  parseIncompleteMarkdown?: boolean;
+  dir?: "auto" | "ltr" | "rtl" | undefined;
+  BlockComponent?: React.ComponentType<BlockProps> | undefined;
+  parseMarkdownIntoBlocksFn?: ((markdown: string) => string[]) | undefined;
+  parseIncompleteMarkdown?: boolean | undefined;
   /** Normalize HTML block indentation to prevent 4+ spaces being treated as code blocks. @default false */
-  normalizeHtmlIndentation?: boolean;
-  className?: string;
-  shikiTheme?: [ThemeInput, ThemeInput];
-  mermaid?: MermaidOptions;
+  normalizeHtmlIndentation?: boolean | undefined;
+  className?: string | undefined;
+  shikiTheme?: [ThemeInput, ThemeInput] | undefined;
+  mermaid?: MermaidOptions | undefined;
   /**
    * Max height for fenced code blocks. Numbers are treated as px.
    * Set to `0` or `Infinity` to disable. @default 400
    */
-  codeBlockMaxHeight?: number | string;
-  controls?: ControlsConfig;
-  isAnimating?: boolean;
+  codeBlockMaxHeight?: number | string | undefined;
+  controls?: ControlsConfig | undefined;
+  isAnimating?: boolean | undefined;
   /**
    * Max height for tables. Numbers are treated as px.
    * Set to `0` or `Infinity` to disable. @default 300
    */
-  tableMaxHeight?: number | string;
-  animated?: boolean | AnimateOptions;
-  caret?: keyof typeof carets;
-  plugins?: PluginConfig;
-  remend?: RemendOptions;
-  linkSafety?: LinkSafetyConfig;
+  tableMaxHeight?: number | string | undefined;
+  animated?: boolean | AnimateOptions | undefined;
+  caret?: keyof typeof carets | undefined;
+  plugins?: PluginConfig | undefined;
+  remend?: RemendOptions | undefined;
+  linkSafety?: LinkSafetyConfig | undefined;
   /**
    * DOM node for Streamdown overlays, or a function returning one.
    * Defaults to `document.body`.
    */
-  portal?: PortalTarget;
+  portal?: PortalTarget | undefined;
   /** Custom tags to allow through sanitization with their permitted attributes */
-  allowedTags?: AllowedTags;
+  allowedTags?: AllowedTags | undefined;
   /**
    * Fallback component for HTML tags or `allowedTags` entries that have no
    * matching key in the `components` map. Built-in and explicit `components`
@@ -328,7 +331,9 @@ export type StreamdownProps = Options & {
    * </Streamdown>
    * ```
    */
-  fallbackComponent?: React.ComponentType<Record<string, unknown> & ExtraProps>;
+  fallbackComponent?:
+    | React.ComponentType<Record<string, unknown> & ExtraProps>
+    | undefined;
   /**
    * Tags whose children should be treated as plain text (no markdown parsing).
    * Useful for mention/entity tags in AI UIs where child content is a data
@@ -344,7 +349,7 @@ export type StreamdownProps = Options & {
    * </Streamdown>
    * ```
    */
-  literalTagContent?: string[];
+  literalTagContent?: string[] | undefined;
   /**
    * Disable GFM / CommonMark autolinking for specific URL protocols (e.g. bare
    * email addresses become `mailto:` autolinks). Accepts protocol names with
@@ -360,15 +365,15 @@ export type StreamdownProps = Options & {
    * </Streamdown>
    * ```
    */
-  disableAutolinkProtocols?: string[];
+  disableAutolinkProtocols?: string[] | undefined;
   /** Override UI strings for i18n / custom labels */
-  translations?: Partial<StreamdownTranslations>;
+  translations?: Partial<StreamdownTranslations> | undefined;
   /** Custom icons to override the default icons used in controls */
-  icons?: Partial<IconMap>;
+  icons?: Partial<IconMap> | undefined;
   /** Tailwind CSS prefix to prepend to all utility classes (e.g. `"tw"` produces `tw:flex` instead of `flex`). Enables Tailwind v4's `prefix()` support. Note: user-supplied `className` values are also prefixed. */
-  prefix?: string;
+  prefix?: string | undefined;
   /** Show line numbers in code blocks. @default true */
-  lineNumbers?: boolean;
+  lineNumbers?: boolean | undefined;
   /**
    * Code fence languages rendered verbatim as plain monospace text, without
    * syntax highlighting, line numbers or controls. Useful for ASCII / Unicode
@@ -376,11 +381,11 @@ export type StreamdownProps = Options & {
    * Custom renderers and the Mermaid plugin take precedence for matching languages.
    * @default []
    */
-  codeBlockRawLanguages?: string[];
+  codeBlockRawLanguages?: string[] | undefined;
   /** Called when isAnimating transitions from false to true. Suppressed in mode="static". */
-  onAnimationStart?: () => void;
+  onAnimationStart?: (() => void) | undefined;
   /** Called when isAnimating transitions from true to false. Suppressed in mode="static". */
-  onAnimationEnd?: () => void;
+  onAnimationEnd?: (() => void) | undefined;
   /** `data-*` attributes, like `aria-*` attributes, are set on the root element. */
   [dataAttribute: `data-${string}`]:
     | string
@@ -485,15 +490,15 @@ export interface StreamdownContextType {
   /** Max height for fenced code blocks. @default 400 */
   codeBlockMaxHeight: number | string;
   /** Code fence languages rendered verbatim without highlighting. */
-  codeBlockRawLanguages?: string[];
+  codeBlockRawLanguages?: string[] | undefined;
   controls: ControlsConfig;
   isAnimating: boolean;
   /** Show line numbers in code blocks. @default true */
   lineNumbers: boolean;
-  linkSafety?: LinkSafetyConfig;
-  mermaid?: MermaidOptions;
+  linkSafety?: LinkSafetyConfig | undefined;
+  mermaid?: MermaidOptions | undefined;
   mode: "static" | "streaming";
-  portal?: PortalTarget;
+  portal?: PortalTarget | undefined;
   shikiTheme: [ThemeInput, ThemeInput];
   /** Max height for tables. @default 300 */
   tableMaxHeight: number | string;
@@ -539,9 +544,9 @@ export type BlockProps = Options & {
   /** Whether this block is incomplete (still being streamed) */
   isIncomplete: boolean;
   /** Resolved text direction for this block */
-  dir?: "ltr" | "rtl";
+  dir?: "ltr" | "rtl" | undefined;
   /** Animate plugin instance for tracking previous content length */
-  animatePlugin?: AnimatePlugin | null;
+  animatePlugin?: AnimatePlugin | null | undefined;
 };
 
 export const Block = memo(
