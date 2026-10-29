@@ -5,7 +5,10 @@
  *
  * 1. **Same-line content** (`<tag>**bold**</tag>`) is left alone. The parser
  *    treats the tag as inline HTML inside a paragraph, so nested markdown still
- *    runs as phrasing content.
+ *    runs as phrasing content. So is a tag that follows text on its line
+ *    (`Note: <tag>a\nb</tag>`): padding it would end the paragraph after the
+ *    opening tag and leave the tag empty. Self-closing tags (`<tag />`) are
+ *    left alone too.
  *
  * 2. **Multi-line content** must interrupt the HTML block for nested markdown
  *    to parse. HTML blocks end at a blank line, the same shape used by
@@ -17,9 +20,10 @@
  *
  *        </tag>
  *
- *    This function normalizes multi-line custom tags into that shape: a blank
- *    line after the opening tag and before the closing tag (with a trailing
- *    blank line so later markdown is not absorbed).
+ *    This function normalizes multi-line custom tags that start their line
+ *    into that shape: a blank line after the opening tag and before the
+ *    closing tag (with a trailing blank line so later markdown is not
+ *    absorbed).
  *
  * 3. **Internal blank lines** are replaced with HTML comments (`<!---->`) so
  *    that, if the block is ever treated as a contiguous HTML unit (e.g. by a
@@ -28,9 +32,10 @@
  *    is parsing between the open/close tags.
  *
  * 4. **Streaming / unclosed tags**: while the close tag has not arrived yet,
- *    the same blank-line interruption is applied after the opening tag so
- *    nested markdown can parse incrementally. Without this, incomplete tags
- *    stay a single raw HTML block and `**bold**` renders as literal text.
+ *    the same blank-line interruption is applied after an opening tag that
+ *    starts its line, so nested markdown can parse incrementally. Without
+ *    this, incomplete tags stay a single raw HTML block and `**bold**` renders
+ *    as literal text.
  *
  * `parseMarkdownIntoBlocks` re-merges the interrupted open/content/close
  * tokens so streaming still treats the whole custom tag as one block.
@@ -40,6 +45,43 @@ const LEADING_NEWLINES_RE = /^\n*/;
 const TRAILING_NEWLINES_RE = /\n*$/;
 const BLANK_LINE_RE = /\n\n/g;
 const FENCE_RE = /^[ \t]*(`{3,}|~{3,})(.*)$/;
+
+// An opening tag that is not self-closing: matches `<tag>` and `<tag a="b">`,
+// not `<tag />`.
+const openTagSource = (tagName: string): string =>
+  `<${tagName}(?=[\\s>/])(?:[^>]*[^>/])?>`;
+
+// What may precede a tag that starts a block on its line: indentation, list
+// or blockquote markers, and closing tags (usually the end of a padded
+// container, which is followed by a blank line).
+const BLOCK_PREFIX_RE =
+  /^[ \t]*(?:(?:[*+-]|\d{1,9}[.)])[ \t]+|>[ \t]*|<\/[A-Za-z][^<>]*>[ \t]*)*$/;
+
+/**
+ * Returns a check for whether the tag at an index of `markdown` follows text
+ * on its line, which makes it inline HTML rather than a container. Indexes
+ * must not decrease between calls, so each line is scanned once.
+ */
+const createFollowsText = (markdown: string) => {
+  // remark drops a byte order mark at the start of the document.
+  let lineStart = markdown.startsWith("\uFEFF") ? 1 : 0;
+  let nextNewline = markdown.indexOf("\n");
+  let checkedLineStart = -1;
+
+  return (index: number): boolean => {
+    while (nextNewline !== -1 && nextNewline < index) {
+      lineStart = nextNewline + 1;
+      nextNewline = markdown.indexOf("\n", lineStart);
+    }
+    // A later tag on the same line follows the earlier opening tag, so only
+    // the first tag of a line can start a block.
+    if (lineStart === checkedLineStart) {
+      return true;
+    }
+    checkedLineStart = lineStart;
+    return !BLOCK_PREFIX_RE.test(markdown.slice(lineStart, index));
+  };
+};
 
 /**
  * Replaces blank lines with `<!---->` placeholders, except inside fenced code
@@ -128,16 +170,18 @@ const normalizeClosedTag = (
 };
 
 /**
- * For unclosed opening tags (still streaming), ensure a blank line follows
- * the open tag when body content has started on a later line. That ends the
- * HTML block so the body can parse as markdown before the close tag arrives.
- * Internal blank lines are also replaced with `<!---->` for consistency.
+ * For unclosed opening tags that start their line (still streaming), ensure a
+ * blank line follows the open tag when body content has started on a later
+ * line. That ends the HTML block so the body can parse as markdown before the
+ * close tag arrives. Internal blank lines are also replaced with `<!---->` for
+ * consistency.
  */
 const normalizeUnclosedOpenTags = (
   markdown: string,
   tagName: string
 ): string => {
-  const openOnly = new RegExp(`<(${tagName})(?=[\\s>/])([^>]*)>`, "gi");
+  const openOnly = new RegExp(openTagSource(tagName), "gi");
+  const followsText = createFollowsText(markdown);
 
   let result = "";
   let lastIndex = 0;
@@ -145,12 +189,18 @@ const normalizeUnclosedOpenTags = (
 
   while (match) {
     const fullOpen = match[0];
-    const name = match[1];
     const openEnd = match.index + fullOpen.length;
     const after = markdown.slice(openEnd);
 
+    // A tag that follows text on its line is inline HTML, not a streaming
+    // container.
+    if (followsText(match.index)) {
+      match = openOnly.exec(markdown);
+      continue;
+    }
+
     // Skip if a matching close tag exists later — closed-pair pass owns it.
-    const closeRe = new RegExp(`</${name}\\s*>`, "i");
+    const closeRe = new RegExp(`</${tagName}\\s*>`, "i");
     if (closeRe.test(after)) {
       match = openOnly.exec(markdown);
       continue;
@@ -219,14 +269,21 @@ export const preprocessCustomTags = (
 
   for (const tagName of tagNames) {
     const closedPattern = new RegExp(
-      `(<${tagName}(?=[\\s>/])[^>]*>)([\\s\\S]*?)(</${tagName}\\s*>)`,
+      `(${openTagSource(tagName)})([\\s\\S]*?)(</${tagName}\\s*>)`,
       "gi"
     );
 
+    const followsText = createFollowsText(result);
     result = result.replace(
       closedPattern,
-      (_match, open: string, content: string, close: string) =>
-        normalizeClosedTag(open, content, close)
+      (
+        match: string,
+        open: string,
+        content: string,
+        close: string,
+        offset: number
+      ) =>
+        followsText(offset) ? match : normalizeClosedTag(open, content, close)
     );
 
     result = normalizeUnclosedOpenTags(result, tagName);

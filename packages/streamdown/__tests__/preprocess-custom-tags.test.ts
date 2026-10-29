@@ -141,4 +141,43 @@ describe("preprocessCustomTags", () => {
     const result = preprocessCustomTags(md, ["custom"]);
     expect(result).toBe("<custom>\n\n```md\n```js\n\nx\n```\n\n</custom>\n\n");
   });
+
+  it("should leave blank lines after a self-closing tag unchanged", () => {
+    const md = '<cite id="a" />\n\n- one\n\n- two\n\nLast';
+    expect(preprocessCustomTags(md, ["cite"])).toBe(md);
+  });
+
+  it("should not pair a self-closing tag with a later closing tag", () => {
+    const md = '<cite id="a" />\n\nText\n\n<cite id="b">\nBody\n</cite>';
+    const result = preprocessCustomTags(md, ["cite"]);
+    expect(result).toBe(
+      '<cite id="a" />\n\nText\n\n<cite id="b">\n\nBody\n\n</cite>\n\n'
+    );
+  });
+
+  it("should leave a tag after text with a soft line break unchanged", () => {
+    const md = "He said: <verse>line one\nline two</verse> and left.";
+    expect(preprocessCustomTags(md, ["verse"])).toBe(md);
+  });
+
+  it("should leave a tag after text unchanged when its body has a blank line", () => {
+    const md = "He said: <verse>a\n\nb</verse> and left.";
+    expect(preprocessCustomTags(md, ["verse"])).toBe(md);
+  });
+
+  it("should leave an unclosed tag after text unchanged while streaming", () => {
+    const md = "He said: <verse>\nline one";
+    expect(preprocessCustomTags(md, ["verse"])).toBe(md);
+  });
+
+  it("should leave a tag after an inline tag on the same line unchanged", () => {
+    const md = "<note>a</note> <note>\n**b**\n</note>";
+    expect(preprocessCustomTags(md, ["note"])).toBe(md);
+  });
+
+  it("should treat a leading byte order mark as the start of the line", () => {
+    expect(preprocessCustomTags("\uFEFF<x>\n**b**\n</x>", ["x"])).toBe(
+      "\uFEFF<x>\n\n**b**\n\n</x>\n\n"
+    );
+  });
 });

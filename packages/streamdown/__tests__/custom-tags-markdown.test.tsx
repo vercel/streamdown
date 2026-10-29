@@ -132,3 +132,85 @@ describe("Fenced code blocks inside custom tags", () => {
     expect(code?.textContent).not.toContain("<!---->");
   });
 });
+
+describe("Custom tag position on the line", () => {
+  it("should keep a loose list whole after a self-closing tag", () => {
+    const { container } = render(
+      <Streamdown allowedTags={{ cite: ["id"] }} mode="static">
+        {'Intro <cite id="a" />\n\n- one\n\n- two\n\nLast'}
+      </Streamdown>
+    );
+
+    const lists = container.querySelectorAll("ul");
+    expect(lists).toHaveLength(1);
+    expect(lists[0].querySelectorAll("li")).toHaveLength(2);
+  });
+
+  it("should keep a soft line break inside a tag that follows text", () => {
+    const Verse = (props: CustomComponentProps) => (
+      <span data-testid="verse">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ verse: [] }}
+        components={{ verse: Verse }}
+        mode="static"
+      >
+        {"He said: <verse>line one\nline two</verse> and left."}
+      </Streamdown>
+    );
+
+    const verse = container.querySelector('[data-testid="verse"]');
+    expect(verse?.textContent).toBe("line one\nline two");
+    expect(verse?.closest("p")?.textContent).toBe(
+      "He said: line one\nline two and left."
+    );
+  });
+
+  it.each([
+    ["a bullet item", "- <note>\n  **bold**\n  </note>"],
+    ["an ordered item", "1. <note>\n   **bold**\n   </note>"],
+    ["an indented line", "- a\n\n  <note>\n  **bold**\n  </note>"],
+  ])("should still parse markdown in a tag that starts %s", (_name, md) => {
+    const Note = (props: CustomComponentProps) => (
+      <div data-testid="note">{props.children as React.ReactNode}</div>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ note: [] }}
+        components={{ note: Note }}
+        mode="static"
+      >
+        {md}
+      </Streamdown>
+    );
+
+    const strong = container.querySelector(
+      `[data-testid="note"] ${STRONG_SELECTOR}`
+    );
+    expect(strong?.textContent).toBe("bold");
+  });
+
+  it("should still parse markdown in a tag after a closing tag", () => {
+    const Note = (props: CustomComponentProps) => (
+      <div data-testid="note">{props.children as React.ReactNode}</div>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ note: [] }}
+        components={{ note: Note }}
+        mode="static"
+      >
+        {"<note>\na\n</note> <note>\n**b**\n</note>"}
+      </Streamdown>
+    );
+
+    const strong = container.querySelector(
+      `[data-testid="note"] ${STRONG_SELECTOR}`
+    );
+    expect(strong?.textContent).toBe("b");
+  });
+});
