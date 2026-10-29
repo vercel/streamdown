@@ -16,5 +16,5 @@
     "noEmit": true
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "build", "dist"]
+  "exclude": ["node_modules", "build", "dist", "type-tests"]
 }

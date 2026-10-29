@@ -32,7 +32,7 @@ jobs:
         run: pnpm build:packages
 
       - name: Check exactOptionalPropertyTypes compatibility
-        run: pnpm --filter streamdown exec tsc -p tsconfig.exact-optional.json
+        run: pnpm --filter streamdown --filter @streamdown/code --filter @streamdown/math --filter @streamdown/mermaid exec tsc -p tsconfig.exact-optional.json
 
       - name: Build Website
         run: pnpm build --filter website

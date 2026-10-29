@@ -28,6 +28,7 @@
   "scripts": {
     "bench": "vitest bench --run > results.txt",
     "build": "tsup",
+    "check-types:exact-optional": "pnpm build && tsc -p tsconfig.exact-optional.json",
     "test": "vitest run",
     "test:coverage": "vitest --coverage run"
   },
