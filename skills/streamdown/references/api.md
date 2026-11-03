@@ -45,7 +45,6 @@ interface StreamdownProps {
   controls?: ControlsConfig; // default: true
   mermaid?: MermaidOptions;
   linkSafety?: LinkSafetyConfig; // default: { enabled: true }
-  cdnUrl?: string | null; // default: 'https://streamdown.ai/cdn'
 
   // Advanced
   BlockComponent?: React.ComponentType<BlockProps>;
