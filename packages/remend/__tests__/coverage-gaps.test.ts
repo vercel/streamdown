@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import remend from "../src";
-import { countTripleAsterisks } from "../src/emphasis-handlers";
 import {
   isHorizontalRule,
   isWithinHtmlTag,
@@ -33,24 +32,6 @@ describe("bold-italic inside code block", () => {
 
   it("should complete *** outside code block with *** inside", () => {
     expect(remend("```\n***\n```\n***text")).toBe("```\n***\n```\n***text***");
-  });
-});
-
-describe("countTripleAsterisks", () => {
-  it("should count trailing *** at end of text", () => {
-    expect(countTripleAsterisks("text***")).toBe(1);
-  });
-
-  it("should skip *** inside code blocks", () => {
-    expect(countTripleAsterisks("```\n***\n```")).toBe(0);
-  });
-
-  it("should count *** outside but not inside code blocks", () => {
-    expect(countTripleAsterisks("```\n***\n```\n***")).toBe(1);
-  });
-
-  it("should flush pending asterisks before code block toggle", () => {
-    expect(countTripleAsterisks("***```code```")).toBe(1);
   });
 });
 

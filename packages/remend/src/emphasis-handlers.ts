@@ -1,790 +1,407 @@
 import {
-  isInsideCodeBlock,
-  isWithinCompleteInlineCode,
-} from "./code-block-utils";
-import {
-  boldItalicPattern,
-  boldPattern,
-  fourOrMoreAsterisksPattern,
-  halfCompleteUnderscorePattern,
-  italicPattern,
-  listItemPattern,
-  matchTrailing,
-  singleAsteriskPattern,
-  singleUnderscorePattern,
-  whitespaceOrMarkersPattern,
-} from "./patterns";
-import {
-  countDoublePairs,
-  getScan,
-  inHtmlTagAt,
-  inLinkUrlAt,
-  inMathAt,
-  REGION,
-  type TextScan,
-} from "./scan";
-import { isHorizontalRule, isWordChar } from "./utils";
+  type DelimiterMatch,
+  type HealBase,
+  literalAfterHeal,
+  type MarkerRun,
+  matchDelimiterRuns,
+  matchHealed,
+  prepareHeal,
+} from "./emphasis-delimiters";
+import { handleIncompleteInlineCode } from "./inline-code-handler";
+import { whitespaceOrMarkersPattern } from "./patterns";
+import { getScan, isEscaped } from "./scan";
+import { isWhitespaceChar } from "./utils";
 
-// Helper function to check if an asterisk should be skipped
-const shouldSkipAsterisk = (
-  scan: TextScan,
-  index: number,
-  prevChar: string,
-  nextChar: string
-): boolean => {
-  // Skip if escaped with backslash
-  if (prevChar === "\\") {
-    return true;
-  }
-
-  // Skip if within math block
-  if (inMathAt(scan, index)) {
-    return true;
-  }
-
-  // Special handling for *** sequences
-  // If this is the first * in ***, don't skip it - it can close a single * italic
-  // Example: **bold and *italic*** should count the first * of *** as closing the italic
-  if (prevChar !== "*" && nextChar === "*") {
-    const nextNextChar =
-      index < scan.text.length - 2 ? scan.text[index + 2] : "";
-    if (nextNextChar === "*") {
-      // This is the first * in a *** sequence
-      // Count it as a single asterisk for matching purposes
-      return false;
-    }
-    // This is the first * in ** (not ***)
-    return true;
-  }
-
-  // Skip if this is the second or third * in a sequence
-  if (prevChar === "*") {
-    return true;
-  }
-
-  // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter per CommonMark)
-  // This also catches list markers (e.g., "* item") since they have whitespace on both sides
-  const prevIsWhitespace =
-    !prevChar || prevChar === " " || prevChar === "\t" || prevChar === "\n";
-  const nextIsWhitespace =
-    !nextChar || nextChar === " " || nextChar === "\t" || nextChar === "\n";
-  if (prevIsWhitespace && nextIsWhitespace) {
-    return true;
-  }
-
-  return false;
-};
-
-const isWhitespaceChar = (char: string): boolean =>
-  char === " " || char === "\t" || char === "\n";
-
-const isWordInternalAsterisk = (prevChar: string, nextChar: string): boolean =>
-  Boolean(prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar));
-
-// Decide whether a candidate single-asterisk delimiter should participate in the
-// open/close parity count used by incomplete-italic completion.
-//
-// Intraword asterisks only count while resolving an active emphasis chain:
-// they can close an open run and may reopen within the same word after a close.
-// Cold (unmatched) intraword asterisks stay literal (hello*world / #189).
-// Trailing right-flanking-only markers after a closed run also stay literal
-// (*foo*bar* / a *b*c*).
-const shouldCountSingleAsterisk = (
-  prevChar: string,
-  nextChar: string,
-  count: number,
-  inWordAsteriskChain: boolean
-): { count: true; inWordAsteriskChain: boolean } | { count: false } => {
-  const isWordInternal = isWordInternalAsterisk(prevChar, nextChar);
-  const canOpen = Boolean(nextChar) && !isWhitespaceChar(nextChar);
-  const canClose = Boolean(prevChar) && !isWhitespaceChar(prevChar);
-
-  // Do not start emphasis from a cold word-internal asterisk.
-  if (isWordInternal && count % 2 === 0 && !inWordAsteriskChain) {
-    return { count: false };
-  }
-
-  // Prefer closing an active run; only open when left-flanking.
-  if ((canClose && count % 2 === 1) || canOpen) {
-    return { count: true, inWordAsteriskChain: isWordInternal };
-  }
-
-  return { count: false };
-};
-
-export const countSingleAsterisks = (text: string): number => {
-  const scan = getScan(text);
-  let count = 0;
-  let inWordAsteriskChain = false;
-  const len = text.length;
-
-  for (let index = 0; index < len; index += 1) {
-    // Code regions neither contribute delimiters nor belong to a word chain
-    if (text[index] !== "*" || scan.regions[index] !== REGION.PROSE) {
-      if (!isWordChar(text[index])) {
-        inWordAsteriskChain = false;
-      }
-      continue;
-    }
-
-    const prevChar = index > 0 ? text[index - 1] : "";
-    const nextChar = index < len - 1 ? text[index + 1] : "";
-
-    if (shouldSkipAsterisk(scan, index, prevChar, nextChar)) {
-      continue;
-    }
-
-    const decision = shouldCountSingleAsterisk(
-      prevChar,
-      nextChar,
-      count,
-      inWordAsteriskChain
-    );
-    if (decision.count) {
-      count += 1;
-      inWordAsteriskChain = decision.inWordAsteriskChain;
-    }
-  }
-
-  return count;
-};
-
-// Helper function to check if an underscore should be skipped
-const shouldSkipUnderscore = (
-  scan: TextScan,
-  index: number,
-  prevChar: string,
-  nextChar: string
-): boolean => {
-  // Skip if escaped with backslash
-  if (prevChar === "\\") {
-    return true;
-  }
-
-  // Skip if within math block
-  if (inMathAt(scan, index)) {
-    return true;
-  }
-
-  // Skip if within a link or image URL
-  if (inLinkUrlAt(scan, index)) {
-    return true;
-  }
-
-  // Skip if within an HTML tag (e.g. <a target="_blank">)
-  if (inHtmlTagAt(scan, index)) {
-    return true;
-  }
-
-  // Skip if part of __
-  if (prevChar === "_" || nextChar === "_") {
-    return true;
-  }
-
-  // Skip if underscore is word-internal (between word characters)
-  if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
-    return true;
-  }
-
-  return false;
-};
-
-export const countSingleUnderscores = (text: string): number => {
-  const scan = getScan(text);
-  let count = 0;
-  const len = text.length;
-
-  for (let index = 0; index < len; index += 1) {
-    if (text[index] !== "_" || scan.regions[index] !== REGION.PROSE) {
-      continue;
-    }
-
-    const prevChar = index > 0 ? text[index - 1] : "";
-    const nextChar = index < len - 1 ? text[index + 1] : "";
-
-    if (!shouldSkipUnderscore(scan, index, prevChar, nextChar)) {
-      count += 1;
-    }
-  }
-
-  return count;
-};
-
-// Counts triple asterisks that are not part of quadruple or more asterisks
-// and not inside code regions
-export const countTripleAsterisks = (text: string): number => {
-  const scan = getScan(text);
-  let count = 0;
-  let consecutiveAsterisks = 0;
-
-  for (let i = 0; i < text.length; i += 1) {
-    if (text[i] === "*" && scan.regions[i] === REGION.PROSE) {
-      consecutiveAsterisks += 1;
-    } else {
-      // End of asterisk sequence
-      if (consecutiveAsterisks >= 3) {
-        count += Math.floor(consecutiveAsterisks / 3);
-      }
-      consecutiveAsterisks = 0;
-    }
-  }
-
-  // Handle trailing asterisks
-  if (consecutiveAsterisks >= 3) {
-    count += Math.floor(consecutiveAsterisks / 3);
-  }
-
-  return count;
-};
-
-const countDoubleAsterisks = (text: string): number =>
-  countDoublePairs(text, "*");
-
-// Whether the text has an unmatched __ delimiter, counted per maximal
-// underscore run.
-//
-// Counting raw occurrences misreads identifiers: a name like snake__case
-// contains __ but cannot open or close emphasis, and counting it either
-// invents a closer (odd count) or pairs it against a real delimiter and
-// swallows a closer that was needed (even count). Per run:
-//
-// - A run contributes floor(length / 2) pairs, and flips delimiter parity
-//   only when that is odd. __ and ___ flip; ____ does not.
-// - A word-internal run (word characters on both sides) is part of an
-//   identifier, never a delimiter.
-// - Runs inside code regions, math, link URLs, and HTML tags are skipped,
-//   matching the single-underscore handler's flanking rules.
-// - A run alone on its line is a thematic break, not emphasis.
-const isLineBoundaryChar = (char: string): boolean =>
-  char === "" || char === " " || char === "\t" || char === "\n";
-
-// isHorizontalRule scans the run's whole line, so its verdict is memoized
-// per line to keep run counting linear when many runs share a line
-interface ThematicBreakMemo {
-  lineEnd: number;
-  result: boolean;
+export interface EmphasisFlags {
+  bold: boolean;
+  boldItalic: boolean;
+  inlineCode: boolean;
+  /** Whether a lone `$` opens math, which hides the markers inside it */
+  inlineMath: boolean;
+  italic: boolean;
+  strikethrough: boolean;
 }
 
-const isThematicBreakRun = (
-  text: string,
-  runStart: number,
-  prevChar: string,
-  nextChar: string,
-  memo: ThematicBreakMemo
-): boolean => {
-  // A thematic break line holds only markers and whitespace, so only runs
-  // flanked by whitespace or line boundaries can be part of one
-  if (!(isLineBoundaryChar(prevChar) && isLineBoundaryChar(nextChar))) {
-    return false;
+const flagFor = (run: MarkerRun): keyof EmphasisFlags => {
+  if (run.marker === "~") {
+    return "strikethrough";
   }
-  if (runStart > memo.lineEnd) {
-    const lineEnd = text.indexOf("\n", runStart);
-    memo.lineEnd = lineEnd === -1 ? text.length : lineEnd;
-    memo.result = isHorizontalRule(text, runStart, "_");
+  if (run.count >= 3) {
+    return "boldItalic";
   }
-  return memo.result;
+  return run.count === 2 && run.marker === "*" ? "bold" : "italic";
 };
 
-// Whether an underscore run at [runStart, runEnd) flips delimiter parity
-const doubleUnderscoreRunFlips = (
-  scan: TextScan,
-  initialRunStart: number,
-  runEnd: number,
-  memo: ThematicBreakMemo
+// Closers go before trailing whitespace, which would stop them from closing,
+// and before a trailing backslash, which would escape them
+const findInsertionPoint = (text: string): number => {
+  let end = text.length;
+  while (end > 0 && isWhitespaceChar(text[end - 1])) {
+    end -= 1;
+  }
+  return text[end - 1] === "\\" && !isEscaped(text, end - 1) ? end - 1 : end;
+};
+
+const insertAtPoint = (text: string, at: number, closers: string): string =>
+  closers === "" ? text : text.slice(0, at) + closers + text.slice(at);
+
+const hasContentBefore = (
+  text: string,
+  run: MarkerRun,
+  insertAt: number
 ): boolean => {
-  const text = scan.text;
+  const content = text.slice(run.index + run.length, insertAt);
+  return content !== "" && !whitespaceOrMarkersPattern.test(content);
+};
 
-  // A backslash escapes the first underscore of the run. The escaped
-  // underscore is literal punctuation, so the rest of the run still flanks
-  // as a delimiter.
-  let runStart = initialRunStart;
-  let escaped = false;
-  if (runStart > 0 && text[runStart - 1] === "\\") {
-    runStart += 1;
-    escaped = true;
-  }
-  const runLength = runEnd - runStart;
-  if (runLength < 2) {
-    return false;
-  }
+const asciiLetterOrDigitPattern = /^[A-Za-z0-9]$/;
+const letterOrDigitPattern = /^[\p{L}\p{N}]/u;
 
-  const beforeRun = runStart > 0 ? text[runStart - 1] : "";
-  const prevChar = escaped ? "\\" : beforeRun;
-  const nextChar = runEnd < text.length ? text[runEnd] : "";
-  if (isWordChar(prevChar) && isWordChar(nextChar)) {
-    return false;
-  }
-  if (isThematicBreakRun(text, runStart, prevChar, nextChar, memo)) {
-    return false;
-  }
+const isLetterOrDigit = (char: string): boolean =>
+  asciiLetterOrDigitPattern.test(char);
+
+// An asterisk after an ASCII letter or digit opens only to continue a chain of
+// emphasis in that word, so hello*world, 2**3 and A*算法 stay literal while
+// languages written without spaces still heal. A chain whose first pair also
+// opened inside a word, as in M*A*S*H, is literal too.
+const opensColdInWord = (
+  text: string,
+  run: MarkerRun,
+  match: DelimiterMatch
+): boolean => {
   if (
-    inMathAt(scan, runStart) ||
-    inLinkUrlAt(scan, runStart) ||
-    inHtmlTagAt(scan, runStart)
+    !(
+      run.marker === "*" &&
+      isLetterOrDigit(text[run.index - 1] ?? "") &&
+      letterOrDigitPattern.test(text.slice(run.index + run.length))
+    )
   ) {
     return false;
   }
-
-  return Math.floor(runLength / 2) % 2 === 1;
-};
-
-const hasUnmatchedDoubleUnderscore = (text: string): boolean => {
-  const scan = getScan(text);
-  const n = text.length;
-  const memo: ThematicBreakMemo = { lineEnd: -1, result: false };
-  let unmatched = false;
-  let i = 0;
-
-  while (i < n) {
-    if (text[i] !== "_" || scan.regions[i] !== REGION.PROSE) {
-      i += 1;
-      continue;
-    }
-
-    const runStart = i;
-    let runEnd = i + 1;
-    while (
-      runEnd < n &&
-      text[runEnd] === "_" &&
-      scan.regions[runEnd] === REGION.PROSE
-    ) {
-      runEnd += 1;
-    }
-    i = runEnd;
-
-    if (doubleUnderscoreRunFlips(scan, runStart, runEnd, memo)) {
-      unmatched = !unmatched;
-    }
-  }
-
-  return unmatched;
-};
-
-// Helper to check if bold marker should not be completed
-const shouldSkipBoldCompletion = (
-  text: string,
-  contentAfterMarker: string,
-  markerIndex: number
-): boolean => {
+  const previous = match.runs.findLast((other) => other.index < run.index);
   if (
-    !contentAfterMarker ||
-    whitespaceOrMarkersPattern.test(contentAfterMarker)
+    !(
+      previous?.marker === "*" &&
+      [...text.slice(previous.index + previous.length, run.index)].every(
+        isLetterOrDigit
+      )
+    )
   ) {
     return true;
   }
-
-  // Check if this is in a list item with multiline content
-  const beforeMarker = text.substring(0, markerIndex);
-  const lastNewlineBeforeMarker = beforeMarker.lastIndexOf("\n");
-  const lineStart =
-    lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
-  const lineBeforeMarker = text.substring(lineStart, markerIndex);
-
-  if (listItemPattern.test(lineBeforeMarker)) {
-    const hasNewlineInContent = contentAfterMarker.includes("\n");
-    if (hasNewlineInContent) {
-      return true;
-    }
-  }
-
-  return isHorizontalRule(text, markerIndex, "*");
-};
-
-// Completes incomplete bold formatting (**)
-export const handleIncompleteBold = (text: string): string => {
-  const boldMatch = matchTrailing(text, boldPattern);
-  if (!boldMatch) {
-    return text;
-  }
-
-  const contentAfterMarker = boldMatch[2];
-  const markerIndex = text.lastIndexOf(boldMatch[1]);
-
-  // Check if the bold marker is within a code block (fenced or inline)
-  if (
-    isInsideCodeBlock(text, markerIndex) ||
-    isWithinCompleteInlineCode(text, markerIndex)
-  ) {
-    return text;
-  }
-
-  if (shouldSkipBoldCompletion(text, contentAfterMarker, markerIndex)) {
-    return text;
-  }
-
-  const asteriskPairs = countDoubleAsterisks(text);
-  if (asteriskPairs % 2 === 1) {
-    // Check for half-complete closing marker: **content* should become **content**
-    // The trailing * is the first char of the closing ** being streamed
-    if (contentAfterMarker.endsWith("*")) {
-      return `${text}*`;
-    }
-    return `${text}**`;
-  }
-
-  return text;
-};
-
-// Helper to check if italic marker should not be completed
-const shouldSkipItalicCompletion = (
-  text: string,
-  contentAfterMarker: string,
-  markerIndex: number
-): boolean => {
-  if (
-    !contentAfterMarker ||
-    whitespaceOrMarkersPattern.test(contentAfterMarker)
-  ) {
-    return true;
-  }
-
-  // Check if this is in a list item with multiline content
-  const beforeMarker = text.substring(0, markerIndex);
-  const lastNewlineBeforeMarker = beforeMarker.lastIndexOf("\n");
-  const lineStart =
-    lastNewlineBeforeMarker === -1 ? 0 : lastNewlineBeforeMarker + 1;
-  const lineBeforeMarker = text.substring(lineStart, markerIndex);
-
-  if (listItemPattern.test(lineBeforeMarker)) {
-    const hasNewlineInContent = contentAfterMarker.includes("\n");
-    if (hasNewlineInContent) {
-      return true;
-    }
-  }
-
-  return isHorizontalRule(text, markerIndex, "_");
-};
-
-// Completes incomplete italic formatting with double underscores (__)
-export const handleIncompleteDoubleUnderscoreItalic = (
-  text: string
-): string => {
-  const italicMatch = matchTrailing(text, italicPattern);
-  if (!italicMatch) {
-    // Check for half-complete closing marker: __content_ should become __content__
-    // The pattern /(__)([^_]*?)$/ won't match __content_ because it ends with _
-    // So we need a separate check for this case
-    const halfCompleteMatch = matchTrailing(
-      text,
-      halfCompleteUnderscorePattern
-    );
-    if (halfCompleteMatch) {
-      const markerIndex = text.lastIndexOf(halfCompleteMatch[1]);
-      if (
-        !(
-          isInsideCodeBlock(text, markerIndex) ||
-          isWithinCompleteInlineCode(text, markerIndex)
-        ) &&
-        hasUnmatchedDoubleUnderscore(text)
-      ) {
-        return `${text}_`;
-      }
-    }
-    return text;
-  }
-
-  const contentAfterMarker = italicMatch[2];
-  const markerIndex = text.lastIndexOf(italicMatch[1]);
-
-  // Check if the italic marker is within a code block (fenced or inline)
-  if (
-    isInsideCodeBlock(text, markerIndex) ||
-    isWithinCompleteInlineCode(text, markerIndex)
-  ) {
-    return text;
-  }
-
-  if (shouldSkipItalicCompletion(text, contentAfterMarker, markerIndex)) {
-    return text;
-  }
-
-  if (hasUnmatchedDoubleUnderscore(text)) {
-    return `${text}__`;
-  }
-
-  return text;
-};
-
-// Skips code regions when locating the asterisk.
-// A lone, unescaped asterisk in prose outside math: the only positions that
-// can open incomplete italic
-const isLoneProseAsterisk = (scan: TextScan, i: number): boolean => {
-  const { text } = scan;
+  const closed = match.pairs.find(
+    (pair) => pair.closer.index === previous.index
+  );
   return (
-    text[i] === "*" &&
-    scan.regions[i] === REGION.PROSE &&
-    text[i - 1] !== "*" &&
-    text[i + 1] !== "*" &&
-    text[i - 1] !== "\\" &&
-    !inMathAt(scan, i)
+    closed !== undefined && isLetterOrDigit(text[closed.opener.index - 1] ?? "")
   );
 };
 
-const findFirstSingleAsteriskIndex = (text: string): number => {
-  const scan = getScan(text);
+// Emphasis doesn't start with closing punctuation, so the * in (+, -, *, /)
+// is a symbol
+const closingPunctuationPattern = /^[,;]/;
 
-  for (let i = text.indexOf("*"); i !== -1; i = text.indexOf("*", i + 1)) {
-    if (!isLoneProseAsterisk(scan, i)) {
-      continue;
-    }
-    const prevChar = i > 0 ? text[i - 1] : "";
-    const nextChar = i < text.length - 1 ? text[i + 1] : "";
+const opensBeforeClosingPunctuation = (text: string, run: MarkerRun): boolean =>
+  isWhitespaceChar(text[run.index - 1] ?? " ") &&
+  closingPunctuationPattern.test(text.slice(run.index + run.length));
 
-    // Skip if flanked by whitespace on both sides (not a valid emphasis delimiter)
-    const prevIsWs = !prevChar || isWhitespaceChar(prevChar);
-    const nextIsWs = !nextChar || isWhitespaceChar(nextChar);
-    if (prevIsWs && nextIsWs) {
-      continue;
-    }
+// Writing \** usually means a literal ** with a sloppy escape, so the rest of
+// the run only closes if the author closes it
+const followsEscapedMarker = (text: string, run: MarkerRun): boolean =>
+  text[run.index - 1] === run.marker && isEscaped(text, run.index - 1);
 
-    // Skip cold word-internal asterisks; they are not openers for completion.
-    // (Active-run closers are still counted in countSingleAsterisks.)
-    if (prevChar && nextChar && isWordChar(prevChar) && isWordChar(nextChar)) {
-      continue;
-    }
+// Authors close emphasis on the line that opens it, so an opener whose line
+// ended open is usually code written outside a fence, like char *name
+const contentPattern = /\S/g;
 
-    // A right-flanking-only marker cannot open incomplete italic.
-    if (nextIsWs) {
-      continue;
-    }
-
-    return i;
+const lineEnded = (text: string, run: MarkerRun): boolean => {
+  const newline = text.indexOf("\n", run.index + run.length);
+  if (newline === -1) {
+    return false;
   }
-  return -1;
+  contentPattern.lastIndex = newline;
+  return contentPattern.test(text);
 };
 
-// Completes incomplete italic formatting with single asterisks (*)
-export const handleIncompleteSingleAsteriskItalic = (text: string): string => {
-  const singleAsteriskMatch = matchTrailing(text, singleAsteriskPattern);
-
-  if (!singleAsteriskMatch) {
-    return text;
-  }
-
-  const firstSingleAsteriskIndex = findFirstSingleAsteriskIndex(text);
-
-  if (firstSingleAsteriskIndex === -1) {
-    return text;
-  }
-
-  // Don't close if the marker is inside a complete inline code span or fenced code block
-  if (
-    isInsideCodeBlock(text, firstSingleAsteriskIndex) ||
-    isWithinCompleteInlineCode(text, firstSingleAsteriskIndex)
-  ) {
-    return text;
-  }
-
-  // Get content after the first single asterisk
-  const contentAfterFirstAsterisk = text.substring(
-    firstSingleAsteriskIndex + 1
-  );
-
-  // Check if there's meaningful content after the asterisk
-  // Don't close if content is only whitespace or emphasis markers
-  if (
-    !contentAfterFirstAsterisk ||
-    whitespaceOrMarkersPattern.test(contentAfterFirstAsterisk)
-  ) {
-    return text;
-  }
-
-  const singleAsterisks = countSingleAsterisks(text);
-  if (singleAsterisks % 2 === 1) {
-    return `${text}*`;
-  }
-
-  return text;
-};
-
-const findFirstSingleUnderscoreIndex = (text: string): number => {
-  const scan = getScan(text);
-
-  for (let i = text.indexOf("_"); i !== -1; i = text.indexOf("_", i + 1)) {
-    if (
-      scan.regions[i] === REGION.PROSE &&
-      text[i - 1] !== "_" &&
-      text[i + 1] !== "_" &&
-      text[i - 1] !== "\\" &&
-      !inMathAt(scan, i) &&
-      !inLinkUrlAt(scan, i)
-    ) {
-      // Check if underscore is word-internal (between word characters)
-      const prevChar = i > 0 ? text[i - 1] : "";
-      const nextChar = i < text.length - 1 ? text[i + 1] : "";
-      if (
-        prevChar &&
-        nextChar &&
-        isWordChar(prevChar) &&
-        isWordChar(nextChar)
-      ) {
-        continue;
-      }
-
-      return i;
-    }
-  }
-  return -1;
-};
-
-// Helper function to insert closing underscore, handling trailing newlines
-const insertClosingUnderscore = (text: string): string => {
-  // If text ends with newline(s), insert underscore before them
-  // Use string methods instead of regex to avoid ReDoS vulnerability
-  let endIndex = text.length;
-  while (endIndex > 0 && text[endIndex - 1] === "\n") {
-    endIndex -= 1;
-  }
-  if (endIndex < text.length) {
-    const textBeforeNewlines = text.slice(0, endIndex);
-    const trailingNewlines = text.slice(endIndex);
-    return `${textBeforeNewlines}_${trailingNewlines}`;
-  }
-  return `${text}_`;
-};
-
-// Helper to handle trailing ** for proper nesting of _ and ** markers
-const handleTrailingAsterisksForUnderscore = (text: string): string | null => {
-  if (!text.endsWith("**")) {
-    return null;
-  }
-
-  const textWithoutTrailingAsterisks = text.slice(0, -2);
-  const asteriskPairsAfterRemoval = countDoubleAsterisks(
-    textWithoutTrailingAsterisks
-  );
-
-  // If removing trailing ** makes the count odd, it was added to close an unclosed **
-  if (asteriskPairsAfterRemoval % 2 !== 1) {
-    return null;
-  }
-
-  const firstDoubleAsteriskIndex = textWithoutTrailingAsterisks.indexOf("**");
-  const underscoreIndex = findFirstSingleUnderscoreIndex(
-    textWithoutTrailingAsterisks
-  );
-
-  // If ** opened before _, then _ should close before **
-  if (
-    firstDoubleAsteriskIndex !== -1 &&
-    underscoreIndex !== -1 &&
-    firstDoubleAsteriskIndex < underscoreIndex
-  ) {
-    return `${textWithoutTrailingAsterisks}_**`;
-  }
-
-  return null;
-};
-
-// Completes incomplete italic formatting with single underscores (_)
-export const handleIncompleteSingleUnderscoreItalic = (
-  text: string
-): string => {
-  const singleUnderscoreMatch = matchTrailing(text, singleUnderscorePattern);
-
-  if (!singleUnderscoreMatch) {
-    return text;
-  }
-
-  const firstSingleUnderscoreIndex = findFirstSingleUnderscoreIndex(text);
-
-  if (firstSingleUnderscoreIndex === -1) {
-    return text;
-  }
-
-  // Get content after the first single underscore
-  const contentAfterFirstUnderscore = text.substring(
-    firstSingleUnderscoreIndex + 1
-  );
-
-  // Check if there's meaningful content after the underscore
-  // Don't close if content is only whitespace or emphasis markers
-  if (
-    !contentAfterFirstUnderscore ||
-    whitespaceOrMarkersPattern.test(contentAfterFirstUnderscore)
-  ) {
-    return text;
-  }
-
-  if (
-    isInsideCodeBlock(text, firstSingleUnderscoreIndex) ||
-    isWithinCompleteInlineCode(text, firstSingleUnderscoreIndex)
-  ) {
-    return text;
-  }
-
-  const singleUnderscores = countSingleUnderscores(text);
-  if (singleUnderscores % 2 === 1) {
-    // Check if we need to insert _ before trailing ** for proper nesting
-    const trailingResult = handleTrailingAsterisksForUnderscore(text);
-    if (trailingResult !== null) {
-      return trailingResult;
-    }
-    return insertClosingUnderscore(text);
-  }
-
-  return text;
-};
-
-// Helper to check if bold-italic markers are already balanced
-const areBoldItalicMarkersBalanced = (text: string): boolean => {
-  const asteriskPairs = countDoubleAsterisks(text);
-  const singleAsterisks = countSingleAsterisks(text);
-  return asteriskPairs % 2 === 0 && singleAsterisks % 2 === 0;
-};
-
-// Helper to check if bold-italic should be skipped
-const shouldSkipBoldItalicCompletion = (
+const isGated = (
   text: string,
-  contentAfterMarker: string,
-  markerIndex: number
-): boolean => {
-  if (
-    !contentAfterMarker ||
-    whitespaceOrMarkersPattern.test(contentAfterMarker)
-  ) {
-    return true;
-  }
+  run: MarkerRun,
+  insertAt: number,
+  match: DelimiterMatch
+): boolean =>
+  !hasContentBefore(text, run, insertAt) ||
+  // Prose uses a single tilde for "approximately"
+  (run.marker === "~" && run.count === 1) ||
+  // Models write fill-in blanks as long underscore runs, like Name: ______
+  (run.marker === "_" && run.length >= 4) ||
+  opensColdInWord(text, run, match) ||
+  opensBeforeClosingPunctuation(text, run) ||
+  followsEscapedMarker(text, run);
 
-  if (
-    isInsideCodeBlock(text, markerIndex) ||
-    isWithinCompleteInlineCode(text, markerIndex)
-  ) {
-    return true;
-  }
+interface HealContext {
+  base: HealBase;
+  flags: EmphasisFlags;
+  insertAt: number;
+  literal: number;
+  match: DelimiterMatch;
+  text: string;
+  /** The authored run the first closer would extend */
+  trailing: MarkerRun | undefined;
+}
 
-  return isHorizontalRule(text, markerIndex, "*");
+// More open runs than nesting plausibly reaches means the markers are
+// literal text, like a list of globs or footnote marks
+const MAX_OPEN_RUNS = 4;
+
+interface Heal {
+  closers: string;
+  literal: number;
+  targets: number[];
+}
+
+// Closers for a group of open runs, innermost first, where up to `reusable`
+// markers of the first closer come from a literal run already in the text
+const closerCandidates = (group: MarkerRun[], reusable: number): string[] => {
+  const [first] = group;
+  const own =
+    first.marker.repeat(first.count - reusable) +
+    group
+      .slice(1)
+      .map((run) => run.marker.repeat(run.count))
+      .join("");
+  // Closers for openers of one marker merge into a single run, which the rule
+  // of 3 may let close them all only at another length
+  if ([...own].every((char) => char === first.marker)) {
+    return Array.from({ length: own.length + reusable + 2 }, (_, i) =>
+      first.marker.repeat(i + 1)
+    );
+  }
+  return Array.from(
+    { length: reusable + 1 },
+    (_, i) => first.marker.repeat(i) + own
+  );
 };
 
-// Completes incomplete bold-italic formatting (***)
-export const handleIncompleteBoldItalic = (text: string): string => {
-  // Don't process if text is only asterisks and has 4 or more consecutive asterisks
-  if (fourOrMoreAsterisksPattern.test(text)) {
-    return text;
+// Two open runs of one kind are literal text, like globs or _id, _rev.
+// When only double * or _ runs are open they pair off instead, since a closer
+// that failed flanking in **Note:**text leaves an opener behind it that the
+// author may still close. Tildes stay strict because GFM matches them in a
+// separate pass.
+const withoutDuplicates = (
+  runs: readonly MarkerRun[]
+): MarkerRun[] | undefined => {
+  const byKind = new Map<string, MarkerRun[]>();
+  for (const run of runs) {
+    const kind = run.marker + run.count;
+    byKind.set(kind, [...(byKind.get(kind) ?? []), run]);
   }
-
-  const boldItalicMatch = matchTrailing(text, boldItalicPattern);
-
-  if (!boldItalicMatch) {
-    return text;
+  // Closing another kind can bury one run of a pair and expose the other
+  if (byKind.size > 1 && byKind.size < runs.length) {
+    return;
   }
-
-  const contentAfterMarker = boldItalicMatch[2];
-  const markerIndex = text.lastIndexOf(boldItalicMatch[1]);
-
-  if (shouldSkipBoldItalicCompletion(text, contentAfterMarker, markerIndex)) {
-    return text;
-  }
-
-  const tripleAsteriskCount = countTripleAsterisks(text);
-  if (tripleAsteriskCount % 2 === 1) {
-    // If both ** and * are balanced, don't add closing ***
-    // The *** is likely overlapping markers (e.g., **bold and *italic***)
-    if (areBoldItalicMarkersBalanced(text)) {
-      return text;
+  const healable = new Set<MarkerRun>();
+  for (const group of byKind.values()) {
+    if (group.length > 1 && (group[0].count === 1 || group[0].marker === "~")) {
+      return;
     }
-    return `${text}***`;
+    if (group.length % 2 === 1) {
+      healable.add(
+        group.reduce((last, run) => (run.index > last.index ? run : last))
+      );
+    }
+  }
+  return runs.filter((run) => healable.has(run));
+};
+
+// A closer's flanking can depend on the closers after it, so each step tries
+// every remaining closer at once before trying it alone
+const extendHeal = (
+  context: HealContext,
+  start: Heal,
+  open: readonly MarkerRun[]
+): Heal => {
+  const { flags, insertAt, text, trailing } = context;
+  const runs: MarkerRun[] = [];
+  for (const run of open) {
+    if (isGated(text, run, insertAt, context.match)) {
+      continue;
+    }
+    if (flags[flagFor(run)]) {
+      runs.push(run);
+    }
+    if (runs.length > MAX_OPEN_RUNS) {
+      return start;
+    }
+  }
+  // Openers on ended lines still count as duplicates, which mark the markers
+  // on later lines as literal too
+  const healable = withoutDuplicates(runs)?.filter(
+    (run) => !lineEnded(text, run)
+  );
+  if (healable === undefined) {
+    return start;
   }
 
-  return text;
+  // Closing one run can strand another behind the rule of 3 or nest it
+  // inside the same emphasis, so the greedy pass runs over every subset
+  const closeAll = (chosen: MarkerRun[]): Heal => {
+    let heal = start;
+    const tryGroup = (group: MarkerRun[]): boolean => {
+      const [first] = group;
+      const targets = [...heal.targets, ...group.map((run) => run.index)];
+      const targetSet = new Set(targets);
+      // A literal run the first closer would extend already supplies markers
+      const reusable =
+        heal.closers === "" && trailing?.marker === first.marker
+          ? Math.min(trailing.count, first.count - 1)
+          : 0;
+      let found: Heal | undefined;
+      for (const candidate of closerCandidates(group, reusable)) {
+        const closers = heal.closers + candidate;
+        const literal = literalAfterHeal(
+          context.match,
+          context.literal,
+          context.base,
+          closers,
+          targetSet
+        );
+        if (literal !== undefined && (!found || literal < found.literal)) {
+          found = { closers, literal, targets };
+        }
+      }
+      if (found) {
+        heal = found;
+      }
+      return found !== undefined;
+    };
+
+    for (let i = 0; i < chosen.length; i += 1) {
+      if (i < chosen.length - 1 && tryGroup(chosen.slice(i))) {
+        break;
+      }
+      tryGroup([chosen[i]]);
+    }
+    return heal;
+  };
+
+  // Largest subsets first, so a tie keeps the heal that closes more runs
+  const subsets: MarkerRun[][] = [[]];
+  for (const run of healable) {
+    subsets.push(...subsets.map((set) => [...set, run]));
+  }
+  subsets.reverse();
+  let best = start;
+  for (const subset of subsets) {
+    if (subset.length > 0) {
+      const heal = closeAll(subset);
+      if (heal.literal < best.literal) {
+        best = heal;
+      }
+    }
+  }
+  return best;
+};
+
+// Closers can change how authored runs flank and leave one open, so healing
+// repeats until a round adds nothing
+const healFrom = (
+  context: HealContext,
+  open: readonly MarkerRun[],
+  targets: number[] = []
+): Heal => {
+  let heal = extendHeal(
+    context,
+    { closers: "", literal: context.literal, targets },
+    open
+  );
+  while (heal.closers !== "") {
+    const reopened = matchHealed(context.base, heal.closers).open.filter(
+      (run) => run.index < context.insertAt
+    );
+    const next = extendHeal(context, heal, reopened);
+    if (next.closers === heal.closers) {
+      break;
+    }
+    heal = next;
+  }
+  return heal;
+};
+
+const healEmphasis = (text: string, flags: EmphasisFlags): string => {
+  const insertAt = findInsertionPoint(text);
+  const match = matchDelimiterRuns(text, flags.inlineMath);
+  const last = match.runs.at(-1);
+  const trailing =
+    last && last.index + last.length === insertAt ? last : undefined;
+  const context = {
+    base: prepareHeal(text, insertAt, flags.inlineMath),
+    flags,
+    insertAt,
+    literal: match.literal,
+    match,
+    text,
+    trailing,
+  };
+  let heal = healFrom(context, match.open);
+
+  // A trailing run that closes something may instead be literal text, with
+  // the runs open before it still needing closers
+  if (trailing && trailing.count < trailing.length) {
+    const prefix = matchDelimiterRuns(
+      text.slice(0, trailing.index),
+      flags.inlineMath
+    );
+    const asText = { ...trailing, count: trailing.length };
+    const streaming = trailing.count > 0 || trailing.closesPartially;
+    const alternative = healFrom(
+      {
+        ...context,
+        literal: prefix.literal + asText.count,
+        match: { ...prefix, runs: [...prefix.runs, asText] },
+        trailing: asText,
+      },
+      prefix.open,
+      streaming ? [] : [trailing.index]
+    );
+    // Reading the trailing run as text must not repair spans the author
+    // already closed by re-pairing their runs
+    const targets = new Set(alternative.targets);
+    const healed = matchHealed(context.base, alternative.closers);
+    const countBefore = new Map(
+      match.runs.map((run) => [run.index, run.count])
+    );
+    const keepsAuthoredRuns = healed.runs.every(
+      (run) =>
+        run.index >= trailing.index ||
+        targets.has(run.index) ||
+        run.count === countBefore.get(run.index)
+    );
+    if (alternative.literal < heal.literal && keepsAuthoredRuns) {
+      heal = alternative;
+    }
+  }
+
+  return insertAtPoint(text, insertAt, heal.closers);
+};
+
+export const handleIncompleteEmphasis = (
+  text: string,
+  flags: EmphasisFlags
+): string => {
+  if (!(flags.inlineCode && getScan(text).openSpan)) {
+    return healEmphasis(text, flags);
+  }
+
+  // Emphasis closers must land after the code span closes, so close it first
+  // and keep that only when emphasis needed healing too
+  const closed = handleIncompleteInlineCode(text);
+  if (closed !== text) {
+    const healed = healEmphasis(closed, flags);
+    return healed === closed ? text : healed;
+  }
+
+  // A closer that breaks up a trailing backtick run would let the span close
+  // after it, which would swallow the closer
+  const healed = healEmphasis(text, flags);
+  return handleIncompleteInlineCode(healed) === healed ? healed : text;
 };
