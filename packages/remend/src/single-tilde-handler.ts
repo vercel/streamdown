@@ -23,11 +23,14 @@ const SINGLE_TILDE = String.raw`([\p{L}\p{N}_])~(?!~)(?=[\p{L}\p{N}_])`;
 // - a URL GFM autolinks while parsing, which keeps the source as is:
 //   http(s):// after anything but a letter, and www. at the start or after a
 //   space, tab, line break or one of ( * _ [ ] ~. It runs to the next
-//   whitespace, quote, angle bracket or backtick, so a URL inside an
-//   attribute or an <autolink> stops where they do.
+//   whitespace, quote, angle bracket, backtick or unmatched ), so a URL
+//   inside an attribute, an <autolink> or a [link](url) stops where they do.
+//   Parentheses that open and close inside the URL are kept, like in
+//   https://en.wikipedia.org/wiki/Mercury_(planet).
 // As above, the character before a URL is matched instead of looked behind.
 const HTML_TAG = String.raw`<[a-z][\w-]*\s[^<>\n]*>`;
-const URL_REST = String.raw`[^\s"'<>\x60]*`;
+const URL_CHAR = String.raw`[^\s"'<>\x60()]`;
+const URL_REST = String.raw`(?:${URL_CHAR}|\(${URL_CHAR}*\))*`;
 const PROTOCOL_URL = String.raw`(?:^|[^a-z])https?:\/\/${URL_REST}`;
 const WWW_URL = String.raw`(?:^|[\t\n\r (*_\[\]~])www\.${URL_REST}`;
 

@@ -69,6 +69,28 @@ describe("single tilde escape (#445)", () => {
     );
   });
 
+  it("should not escape ~ inside a link destination or a URL with parentheses", () => {
+    expect(remend("See [docs](https://example.com/a~b) now")).toBe(
+      "See [docs](https://example.com/a~b) now"
+    );
+    expect(remend("See https://example.com/wiki/Foo(bar)~baz now")).toBe(
+      "See https://example.com/wiki/Foo(bar)~baz now"
+    );
+  });
+
+  it("should still escape ~ in prose right after a closing parenthesis", () => {
+    expect(
+      remend(
+        "See [docs](https://example.com)20~25 and [more](https://example.com)30~40"
+      )
+    ).toBe(
+      "See [docs](https://example.com)20\\~25 and [more](https://example.com)30\\~40"
+    );
+    expect(remend("(https://example.com)20~25")).toBe(
+      "(https://example.com)20\\~25"
+    );
+  });
+
   it("should not escape ~ inside an angle bracket autolink", () => {
     expect(remend("See <https://example.com/a~b> now")).toBe(
       "See <https://example.com/a~b> now"
