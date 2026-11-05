@@ -1,4 +1,4 @@
-import type { Link, Root, Text } from "mdast";
+import type { Link, Root, Strong, Text } from "mdast";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkStringify from "remark-stringify";
@@ -65,7 +65,9 @@ describe("CJK autolink boundary splitting", () => {
       .use([autolinkBoundaryPlugin])
       .use(remarkStringify);
 
-    const result = await processor.run(processor.parse(markdown));
+    const result = await processor.run(processor.parse(markdown), {
+      value: markdown,
+    });
     return result as Root;
   };
 
@@ -95,6 +97,159 @@ describe("CJK autolink boundary splitting", () => {
 
     const allText = texts.map((t) => t.value).join("");
     expect(allText).toContain("。谢谢");
+  });
+
+  it.each([
+    "**",
+    "__",
+  ])("should restore strong formatting around autolinks marked with %s", async (delimiter) => {
+    const markdown = `${delimiter}https://example.com/${delimiter}、英語版は別ページです。`;
+    const tree = await processMarkdown(markdown);
+    const strongNodes: Strong[] = [];
+    visit(tree, "strong", (node: Strong) => strongNodes.push(node));
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "https://example.com/",
+    ]);
+    expect(strongNodes).toHaveLength(1);
+    expect(strongNodes[0].children).toEqual([
+      expect.objectContaining({ type: "link", url: "https://example.com/" }),
+    ]);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe("https://example.com/、英語版は別ページです。");
+  });
+
+  it("should preserve intraword underscores around autolinks", async () => {
+    const markdown = "foo__https://example.com/__、英語版";
+    const tree = await processMarkdown(markdown);
+    const strongNodes: Strong[] = [];
+    visit(tree, "strong", (node: Strong) => strongNodes.push(node));
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "https://example.com/__",
+    ]);
+    expect(strongNodes).toHaveLength(0);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe(markdown);
+  });
+
+  it("should restore underscore emphasis after a Unicode symbol", async () => {
+    const markdown = "+__https://example.com/path__、";
+    const tree = await processMarkdown(markdown);
+    const strongNodes: Strong[] = [];
+    visit(tree, "strong", (node: Strong) => {
+      strongNodes.push(node);
+    });
+
+    expect(strongNodes).toHaveLength(1);
+    expect(strongNodes[0].children).toEqual([
+      expect.objectContaining({
+        type: "link",
+        url: "https://example.com/path",
+      }),
+    ]);
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "https://example.com/path",
+    ]);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe("+https://example.com/path、");
+  });
+
+  it("should follow GFM host validation for protocol autolinks", async () => {
+    const rejectedHost = await processMarkdown("https://__bold");
+    const singleLabelHost = await processMarkdown("https://example/__bold");
+    const localhost = await processMarkdown("https://localhost/__bold");
+    const ipv4 = await processMarkdown("https://127.0.0.1/__bold");
+    const validDomain = await processMarkdown("https://example.com/__bold");
+
+    expect(getLinks(rejectedHost)).toHaveLength(0);
+    expect(getLinks(singleLabelHost).map((link) => link.url)).toEqual([
+      "https://example/__bold",
+    ]);
+    expect(getLinks(localhost).map((link) => link.url)).toEqual([
+      "https://localhost/__bold",
+    ]);
+    expect(getLinks(ipv4).map((link) => link.url)).toEqual([
+      "https://127.0.0.1/__bold",
+    ]);
+    expect(getLinks(validDomain).map((link) => link.url)).toEqual([
+      "https://example.com/__bold",
+    ]);
+  });
+
+  it("should match GFM autolinks after unmatched brackets and block markers", async () => {
+    const markdown = [
+      "[https://example.com/__bold",
+      "![https://example.com/__bold",
+      "[label https://example.com/__bold]",
+      "[label\nhttps://example.com/__bold",
+      "[label\n\nhttps://example.com/__bold",
+      "[label\n# https://example.com/__bold",
+      "[label\n- https://example.com/__bold",
+      "[label\n> https://example.com/__bold",
+      "- [label\n  https://example.com/__bold",
+      "> [label\n> https://example.com/__bold",
+      "# https://example.com/__bold",
+      "- https://example.com/__bold",
+      "> https://example.com/__bold",
+    ];
+
+    for (const input of markdown) {
+      const tree = await processMarkdown(input);
+
+      expect(getLinks(tree).map((link) => link.url)).toContain(
+        "https://example.com/__bold"
+      );
+    }
+  });
+
+  it("should accept GFM protocol autolinks after digits and CJK letters", async () => {
+    for (const prefix of ["1", "中"]) {
+      const tree = await processMarkdown(`${prefix}https://example.com/__bold`);
+
+      expect(getLinks(tree).map((link) => link.url)).toEqual([
+        "https://example.com/__bold",
+      ]);
+      expect(
+        getLinks(tree)[0].children.map((child) =>
+          child.type === "text" ? child.value : ""
+        )
+      ).toEqual(["https://example.com/__bold"]);
+    }
+  });
+
+  it("should not create nested autolinks inside actual inline link labels", async () => {
+    const tree = await processMarkdown(
+      "[label https://example.com/__bold](target)"
+    );
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual(["target"]);
+  });
+
+  it("should not treat escaped strong delimiters as autolink formatting", async () => {
+    const markdown = String.raw`\*\*https://example.com/**，英語版は別ページです。`;
+    const tree = await processMarkdown(markdown);
+    const strongNodes: Strong[] = [];
+    visit(tree, "strong", (node: Strong) => strongNodes.push(node));
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "https://example.com/**",
+    ]);
+    expect(strongNodes).toHaveLength(0);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe("**https://example.com/**，英語版は別ページです。");
   });
 
   it("should split autolink at ideographic comma", async () => {
