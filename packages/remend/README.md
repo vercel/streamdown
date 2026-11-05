@@ -29,7 +29,7 @@ Remend intelligently completes the following incomplete Markdown patterns:
 - **Inline code**: `` `code `` → `` `code` ``
 - **Strikethrough**: `~~text` → `~~text~~`
 - **Links**: `[text](url` → `[text](streamdown:incomplete-link)`
-- **Images**: `![alt](url` → removed (can't display partial images)
+- **Images**: `![alt](url` → `![alt](streamdown:incomplete-image)` (Streamdown renders a loading placeholder)
 - **Block math**: `$$formula` → `$$formula$$`
 - **Inline math**: `$formula` → `$formula$` (opt-in, see `inlineKatex`)
 - **Single tilde escape**: `20~25` → `20\~25` (prevents false strikethrough)

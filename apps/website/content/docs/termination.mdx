@@ -169,13 +169,41 @@ import remend from 'remend';
 
 #### Images
 
-For incomplete images, Streamdown removes them entirely rather than showing broken image placeholders:
+Streamdown handles incomplete images like links, with a special placeholder URL:
 
+**Incomplete alt text:**
 ```markdown
 ![Alt text that's incomplete
 ```
+Completes to: `![Alt text that's incomplete](streamdown:incomplete-image)`
 
-This prevents visual clutter during streaming.
+**Incomplete URL:**
+```markdown
+![Diagram](https://exampl
+```
+Completes to: `![Diagram](streamdown:incomplete-image)`
+
+Streamdown renders the special `streamdown:incomplete-image` URL as an animated loading placeholder, then renders the real image once its Markdown is complete. This also applies with `linkMode: 'text-only'`.
+
+If you override the `img` component, check for this URL to render your own placeholder. `remend` also exports it as `INCOMPLETE_IMAGE_PLACEHOLDER`:
+
+```tsx
+<Streamdown
+  components={{
+    img: ({ src, alt }) => {
+      if (src === 'streamdown:incomplete-image') {
+        return <span className="text-muted-foreground">Loading image…</span>;
+      }
+
+      return <img src={src} alt={alt} />;
+    },
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+If you render `remend` output with `react-markdown`, pass a `urlTransform` that keeps `streamdown:` URLs, because react-markdown's `defaultUrlTransform` replaces them with an empty string.
 
 #### Mathematical Expressions
 
