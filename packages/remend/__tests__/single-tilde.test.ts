@@ -56,4 +56,74 @@ describe("single tilde escape (#445)", () => {
   it("should escape multiple single tildes between letters", () => {
     expect(remend("foo~bar~baz")).toBe("foo\\~bar\\~baz");
   });
+
+  it("should not escape ~ inside a bare URL", () => {
+    expect(remend("See https://example.com/v1~2/page now")).toBe(
+      "See https://example.com/v1~2/page now"
+    );
+    expect(remend("See www.example.com/a~b now")).toBe(
+      "See www.example.com/a~b now"
+    );
+    expect(remend("详见https://example.com/a~b")).toBe(
+      "详见https://example.com/a~b"
+    );
+  });
+
+  it("should not escape ~ inside a link destination or a URL with parentheses", () => {
+    expect(remend("See [docs](https://example.com/a~b) now")).toBe(
+      "See [docs](https://example.com/a~b) now"
+    );
+    expect(remend("See https://example.com/wiki/Foo(bar)~baz now")).toBe(
+      "See https://example.com/wiki/Foo(bar)~baz now"
+    );
+  });
+
+  it("should still escape ~ in prose right after a closing parenthesis", () => {
+    expect(
+      remend(
+        "See [docs](https://example.com)20~25 and [more](https://example.com)30~40"
+      )
+    ).toBe(
+      "See [docs](https://example.com)20\\~25 and [more](https://example.com)30\\~40"
+    );
+    expect(remend("(https://example.com)20~25")).toBe(
+      "(https://example.com)20\\~25"
+    );
+  });
+
+  it("should not escape ~ inside an angle bracket autolink", () => {
+    expect(remend("See <https://example.com/a~b> now")).toBe(
+      "See <https://example.com/a~b> now"
+    );
+  });
+
+  it("should not escape ~ inside an HTML attribute", () => {
+    expect(remend('<a href="https://example.com/a~b">link</a>')).toBe(
+      '<a href="https://example.com/a~b">link</a>'
+    );
+    expect(remend('<img src="/files/a~b.png">')).toBe(
+      '<img src="/files/a~b.png">'
+    );
+  });
+
+  it("should still escape ~ in prose next to URLs and tags", () => {
+    expect(remend("https://example.com 20~25")).toBe(
+      "https://example.com 20\\~25"
+    );
+    expect(remend("<b>20~25</b>")).toBe("<b>20\\~25</b>");
+    expect(remend('<a href="https://example.com">20~25</a>')).toBe(
+      '<a href="https://example.com">20\\~25</a>'
+    );
+  });
+
+  it("should still escape ~ after URL-like text that GFM does not link", () => {
+    // GFM links www. only at the start, after whitespace or after ( * _ [ ] ~
+    expect(remend("详见www.example.com，温度20~25°C，湿度40~60%")).toBe(
+      "详见www.example.com，温度20\\~25°C，湿度40\\~60%"
+    );
+    // and http(s):// only when no letter comes right before it
+    expect(remend("abchttps://example.com/a~b")).toBe(
+      "abchttps://example.com/a\\~b"
+    );
+  });
 });
