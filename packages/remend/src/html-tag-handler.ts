@@ -1,4 +1,5 @@
 import { isInsideCodeBlock } from "./code-block-utils";
+import { getScan, REGION } from "./scan";
 import { isWithinMathBlock } from "./utils";
 
 // Matches an incomplete HTML tag at the end of the string.
@@ -42,8 +43,16 @@ export const handleIncompleteHtmlTag = (text: string): string => {
       continue;
     }
 
-    // Strip the incomplete tag and any trailing whitespace before it
-    return text.substring(0, index).trimEnd();
+    const scan = getScan(text);
+    // An incomplete tag cannot consume an opaque region later in the source.
+    if (scan.regions.indexOf(REGION.LITERAL, index) !== -1) {
+      continue;
+    }
+
+    // Trim only prose whitespace: the preceding literal owns its final bytes.
+    const trimmedEnd = text.substring(0, index).trimEnd().length;
+    const literalEnd = scan.regions.lastIndexOf(REGION.LITERAL, index - 1) + 1;
+    return text.substring(0, Math.max(trimmedEnd, literalEnd));
   }
 
   return text;

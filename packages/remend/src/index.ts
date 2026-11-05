@@ -17,7 +17,13 @@ import {
   INCOMPLETE_IMAGE_PLACEHOLDER,
   type LinkMode,
 } from "./link-image-handler";
-import { clearScanCache } from "./scan";
+import {
+  clearScanCache,
+  getScan,
+  REGION,
+  withLiteralRanges,
+  type LiteralRanges,
+} from "./scan";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleSingleTildeEscape } from "./single-tilde-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
@@ -52,6 +58,8 @@ export interface RemendHandler {
  * Set an option to `false` to disable that specific completion.
  */
 export interface RemendOptions {
+  /** Parser-owned opaque source ranges, recalculated when a handler edits text. */
+  literalRanges?: LiteralRanges;
   /** Complete bold formatting (e.g., `**text` → `**text**`) */
   bold?: boolean | undefined;
   /** Complete bold-italic formatting (e.g., `***text` → `***text***`) */
@@ -119,7 +127,10 @@ const PRIORITY = {
 // Built-in handlers with their option keys and priorities
 const builtInHandlers: Array<{
   handler: RemendHandler;
-  optionKey: keyof Omit<RemendOptions, "handlers" | "linkMode">;
+  optionKey: keyof Omit<
+    RemendOptions,
+    "handlers" | "linkMode" | "literalRanges"
+  >;
   earlyReturn?: (result: string) => boolean;
 }> = [
   {
@@ -278,14 +289,18 @@ const getEnabledBuiltInHandlers = (
 };
 
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
-const remend = (text: string, options?: RemendOptions): string => {
+const repair = (text: string, options?: RemendOptions): string => {
   if (!text || typeof text !== "string") {
     return text;
   }
 
   // Remove trailing whitespace if it's not a double space
   let result =
-    text.endsWith(" ") && !text.endsWith("  ") ? text.slice(0, -1) : text;
+    text.endsWith(" ") &&
+    !text.endsWith("  ") &&
+    getScan(text).regions[text.length - 1] !== REGION.LITERAL
+      ? text.slice(0, -1)
+      : text;
 
   // Get enabled built-in handlers
   const enabledBuiltIns = getEnabledBuiltInHandlers(options);
@@ -316,7 +331,11 @@ const remend = (text: string, options?: RemendOptions): string => {
     // A handler that removes a trailing fragment can expose a trailing space
     // (e.g. dropping an incomplete image). Strip it the same way the input
     // was stripped, so healed output re-heals to itself.
-    if (result.endsWith(" ") && !result.endsWith("  ")) {
+    if (
+      result.endsWith(" ") &&
+      !result.endsWith("  ") &&
+      getScan(result).regions[result.length - 1] !== REGION.LITERAL
+    ) {
       return result.slice(0, -1);
     }
 
@@ -325,5 +344,8 @@ const remend = (text: string, options?: RemendOptions): string => {
     clearScanCache();
   }
 };
+
+const remend = (text: string, options?: RemendOptions): string =>
+  withLiteralRanges(options?.literalRanges, () => repair(text, options));
 
 export default remend;
