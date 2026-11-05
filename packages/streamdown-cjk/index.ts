@@ -56,6 +56,7 @@ const CJK_AUTOLINK_BOUNDARY_CHARS = new Set<string>([
 ]);
 
 const AUTOLINK_PREFIX_PATTERN = /^(https?:\/\/|mailto:|www\.)/i;
+const WWW_PREFIX_PATTERN = /^www\./i;
 
 const isAutolinkLiteral = (node: Link): node is Link & { children: [Text] } => {
   if (node.children.length !== 1) {
@@ -63,7 +64,13 @@ const isAutolinkLiteral = (node: Link): node is Link & { children: [Text] } => {
   }
 
   const child = node.children[0];
-  return child.type === "text" && child.value === node.url;
+  return (
+    child.type === "text" &&
+    (child.value === node.url ||
+      // GFM links a bare www. domain to http:// followed by the link text
+      (WWW_PREFIX_PATTERN.test(child.value) &&
+        node.url === `http://${child.value}`))
+  );
 };
 
 const findCjkBoundaryIndex = (url: string): number | null => {
@@ -77,13 +84,17 @@ const findCjkBoundaryIndex = (url: string): number | null => {
   return null;
 };
 
-const buildAutolink = (url: string, source: Link): Link => ({
+const buildAutolink = (
+  label: string,
+  protocol: string,
+  source: Link
+): Link => ({
   ...source,
-  url,
+  url: `${protocol}${label}`,
   children: [
     {
       type: "text",
-      value: url,
+      value: label,
     },
   ],
 });
@@ -159,14 +170,18 @@ const remarkCjkAutolinkBoundary: Plugin<[], Root> = () => (tree) => {
         return;
       }
 
-      const boundaryIndex = findCjkBoundaryIndex(node.url);
+      // Split the text rather than the URL, which has an extra http:// for
+      // www. links, then put that protocol back on the shortened URL
+      const label = node.children[0].value;
+      const protocol = node.url.slice(0, node.url.length - label.length);
+      const boundaryIndex = findCjkBoundaryIndex(label);
       if (boundaryIndex === null || boundaryIndex === 0) {
         return;
       }
 
       const nodes = [
-        buildAutolink(node.url.slice(0, boundaryIndex), node),
-        ...relinkifyTrailingText(node.url.slice(boundaryIndex)),
+        buildAutolink(label.slice(0, boundaryIndex), protocol, node),
+        ...relinkifyTrailingText(label.slice(boundaryIndex)),
       ];
       parent.children.splice(index, 1, ...nodes);
       return index + nodes.length;
