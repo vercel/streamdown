@@ -21,6 +21,7 @@
     "test:coverage": "vitest --coverage run"
   },
   "dependencies": {
+    "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
@@ -30,7 +31,6 @@
     "remark-rehype": "^11.1.2",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "unified": "^11.0.5",
     "vitest": "^5.0.0"
   },
   "author": "Hayden Bleasel <hayden.bleasel@vercel.com>",
