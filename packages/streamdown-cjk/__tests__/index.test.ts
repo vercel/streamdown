@@ -360,6 +360,25 @@ describe("CJK autolink boundary splitting", () => {
     expect(links[0].url).toBe("http://example.com/a。b");
   });
 
+  it("should not split explicit links whose text matches the URL", async () => {
+    const tree = await processMarkdown(
+      "[www.example.com/a。b](http://www.example.com/a。b) 和 [https://example.com/a。b](https://example.com/a。b)"
+    );
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "http://www.example.com/a。b",
+      "https://example.com/a。b",
+    ]);
+  });
+
+  it("should not split angle bracket autolinks", async () => {
+    const tree = await processMarkdown("<https://example.com/a。b>");
+    const links = getLinks(tree);
+
+    expect(links.length).toBe(1);
+    expect(links[0].url).toBe("https://example.com/a。b");
+  });
+
   it("should not split if CJK punctuation is at start of URL", async () => {
     // This shouldn't match the autolink pattern anyway
     const tree = await processMarkdown("。https://example.com");

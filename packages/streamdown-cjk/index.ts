@@ -58,6 +58,18 @@ const CJK_AUTOLINK_BOUNDARY_CHARS = new Set<string>([
 const AUTOLINK_PREFIX_PATTERN = /^(https?:\/\/|mailto:|www\.)/i;
 const WWW_PREFIX_PATTERN = /^www\./i;
 
+// A literal autolink's source is just its text. An explicit link such as
+// [www.example.com/a。b](http://www.example.com/a。b) can have the same text
+// and URL, but its source also has the brackets and the destination.
+const sourceIsOnlyText = (node: Link, text: string): boolean => {
+  const start = node.position?.start.offset;
+  const end = node.position?.end.offset;
+  if (start === undefined || end === undefined) {
+    return true;
+  }
+  return end - start === text.length;
+};
+
 const isAutolinkLiteral = (node: Link): node is Link & { children: [Text] } => {
   if (node.children.length !== 1) {
     return false;
@@ -66,6 +78,7 @@ const isAutolinkLiteral = (node: Link): node is Link & { children: [Text] } => {
   const child = node.children[0];
   return (
     child.type === "text" &&
+    sourceIsOnlyText(node, child.value) &&
     (child.value === node.url ||
       // GFM links a bare www. domain to http:// followed by the link text
       (WWW_PREFIX_PATTERN.test(child.value) &&
