@@ -15,7 +15,7 @@ import {
 } from "./icons";
 
 export type IconComponent = React.ComponentType<
-  SVGProps<SVGSVGElement> & { size?: number }
+  SVGProps<SVGSVGElement> & { size?: number | undefined }
 >;
 
 export interface IconMap {

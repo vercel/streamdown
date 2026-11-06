@@ -106,3 +106,29 @@ describe("Issue #478 - Markdown inside custom tags (multiline content)", () => {
     expect(text).toMatch(LITERAL_BOLD_RE);
   });
 });
+
+describe("Fenced code blocks inside custom tags", () => {
+  it("should not render HTML comment placeholders inside code", () => {
+    const Note = (props: CustomComponentProps) => (
+      <div data-testid="note">{props.children as React.ReactNode}</div>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ note: [] }}
+        components={{ note: Note }}
+        mode="static"
+      >
+        {"<note>\n```js\nconst a = 1;\n\nconst b = 2;\n```\n</note>"}
+      </Streamdown>
+    );
+
+    const note = container.querySelector('[data-testid="note"]');
+    expect(note).toBeTruthy();
+    const code = note?.querySelector("pre");
+    expect(code).toBeTruthy();
+    expect(code?.textContent).toContain("const a = 1;");
+    expect(code?.textContent).toContain("const b = 2;");
+    expect(code?.textContent).not.toContain("<!---->");
+  });
+});

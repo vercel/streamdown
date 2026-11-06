@@ -39,6 +39,68 @@
 const LEADING_NEWLINES_RE = /^\n*/;
 const TRAILING_NEWLINES_RE = /\n*$/;
 const BLANK_LINE_RE = /\n\n/g;
+const FENCE_RE = /^[ \t]*(`{3,}|~{3,})(.*)$/;
+
+/**
+ * Replaces blank lines with `<!---->` placeholders, except inside fenced code
+ * blocks. A comment inside a fence is not markup, it is literal code text, so
+ * it would show up in the rendered code. Blank lines inside a fence cannot end
+ * the surrounding HTML block anyway.
+ */
+const replaceBlankLines = (text: string): string => {
+  if (!(text.includes("```") || text.includes("~~~"))) {
+    return text.replace(BLANK_LINE_RE, "\n<!---->\n");
+  }
+
+  let result = "";
+  let segmentStart = 0;
+  let fenceChar: string | null = null;
+  let fenceLength = 0;
+  let lineStart = 0;
+
+  while (lineStart <= text.length) {
+    let lineEnd = text.indexOf("\n", lineStart);
+    if (lineEnd === -1) {
+      lineEnd = text.length;
+    }
+    const match = FENCE_RE.exec(text.slice(lineStart, lineEnd));
+
+    if (match) {
+      const run = match[1];
+      const rest = match[2];
+      if (fenceChar === null) {
+        // A backtick fence's info string cannot contain backticks.
+        if (!(run[0] === "`" && rest.includes("`"))) {
+          result += text
+            .slice(segmentStart, lineStart)
+            .replace(BLANK_LINE_RE, "\n<!---->\n");
+          segmentStart = lineStart;
+          fenceChar = run[0];
+          fenceLength = run.length;
+        }
+      } else if (
+        run[0] === fenceChar &&
+        run.length >= fenceLength &&
+        rest.trim() === ""
+      ) {
+        result += text.slice(segmentStart, lineEnd);
+        segmentStart = lineEnd;
+        fenceChar = null;
+        fenceLength = 0;
+      }
+    }
+
+    lineStart = lineEnd + 1;
+  }
+
+  const remaining = text.slice(segmentStart);
+  return (
+    result +
+    (fenceChar === null
+      ? remaining.replace(BLANK_LINE_RE, "\n<!---->\n")
+      : remaining)
+  );
+};
 
 const normalizeClosedTag = (
   open: string,
@@ -52,7 +114,7 @@ const normalizeClosedTag = (
 
   // Preserve blank-line placeholders so the tag cannot be silently split
   // if any consumer still treats the body as raw HTML text.
-  const fixedContent = content.replace(BLANK_LINE_RE, "\n<!---->\n");
+  const fixedContent = replaceBlankLines(content);
 
   // Blank-line sandwich: interrupt the HTML block after open / before close
   // so nested markdown (emphasis, lists, …) can parse.
@@ -106,7 +168,7 @@ const normalizeUnclosedOpenTags = (
     }
     if (after.startsWith("\n\n")) {
       // Keep the leading "\n\n" interrupt; replace only subsequent blanks.
-      const body = after.slice(2).replace(BLANK_LINE_RE, "\n<!---->\n");
+      const body = replaceBlankLines(after.slice(2));
       result += `${fullOpen}\n\n${body}`;
       lastIndex = markdown.length;
       break;
@@ -132,7 +194,7 @@ const normalizeUnclosedOpenTags = (
 
     // Multi-line body without blank after open: insert blank line and
     // replace internal blank lines with HTML comments.
-    const fixedBody = bodyAfterNewline.replace(BLANK_LINE_RE, "\n<!---->\n");
+    const fixedBody = replaceBlankLines(bodyAfterNewline);
     result += `${fullOpen}\n\n${fixedBody}`;
     lastIndex = markdown.length;
     break;
