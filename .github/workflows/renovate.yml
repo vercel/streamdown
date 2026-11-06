@@ -1,0 +1,77 @@
+name: Renovate
+
+on:
+  # Daily within the overnight window used by the packageRules schedule.
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      repoCache:
+        description: "Reset or disable the cache?"
+        type: choice
+        default: enabled
+        options:
+          - enabled
+          - disabled
+          - reset
+
+env:
+  cache_dir: /tmp/renovate/cache/renovate/repository
+  cache_key: renovate-cache
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}
+
+jobs:
+  renovate:
+    name: Renovate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          persist-credentials: false
+
+      - name: Restore Renovate cache
+        id: cache-restore
+        if: github.event.inputs.repoCache != 'disabled' && github.event.inputs.repoCache != 'reset'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.cache_dir }}
+          key: ${{ env.cache_key }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ env.cache_key }}-
+
+      - name: Fix restored cache ownership
+        if: steps.cache-restore.outputs.cache-matched-key != ''
+        run: |
+          sudo chown -R 12021:0 /tmp/renovate/
+          ls -R $cache_dir
+
+      - name: Generate scoped GitHub token
+        id: github-sts
+        uses: vercel/gh-sts-action@56f891d4076b9f908ce459eb475d4c1884f75ada
+        with:
+          repos: vercel/streamdown
+          permissions: '{"contents":"write","issues":"write","pull_requests":"write","statuses":"write"}'
+
+      - name: Renovate
+        uses: renovatebot/github-action@22e0a16091fc706b04affe6ae53d5e3358ac4023 # v46.1.19
+        with:
+          configurationFile: .github/renovate.js
+          token: ${{ steps.github-sts.outputs.token }}
+        env:
+          RENOVATE_NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RENOVATE_REPOSITORY_CACHE: ${{ github.event.inputs.repoCache || 'enabled' }}
+          LOG_LEVEL: debug
+
+      - name: Save Renovate cache
+        if: github.event.inputs.repoCache != 'disabled' && steps.cache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.cache_dir }}
+          key: ${{ env.cache_key }}-${{ github.run_id }}-${{ github.run_attempt }}
