@@ -63,4 +63,44 @@ describe("detectTextDirection", () => {
   it("handles inline code", () => {
     expect(detectTextDirection("`code` مرحبا")).toBe("rtl");
   });
+
+  it("does not count Arabic digits as letters", () => {
+    expect(detectTextDirection("Call ٠٥٠١٢٣٤٥٦٧ today")).toBe("ltr");
+  });
+
+  it("does not count Persian digits as letters", () => {
+    expect(detectTextDirection("Invoice ۱۴۰۳/۰۵/۲۱")).toBe("ltr");
+  });
+
+  it("does not count Hebrew vowel points as letters", () => {
+    expect(detectTextDirection("Read בְּרֵאשִׁית aloud")).toBe("ltr");
+  });
+
+  it("does not count Arabic vowel marks as letters", () => {
+    expect(detectTextDirection("Word كِتَابٌ")).toBe("ltr");
+  });
+
+  it("gives text the same direction with and without vowel marks", () => {
+    expect(detectTextDirection("Word كِتَابٌ")).toBe(
+      detectTextDirection("Word كتاب")
+    );
+  });
+
+  it("does not treat a leading Arabic digit as the first strong character", () => {
+    expect(detectTextDirection("٣ abc אבג")).toBe("ltr");
+  });
+
+  it("returns rtl for pointed text with no Latin letters", () => {
+    expect(detectTextDirection("בְּרֵאשִׁית")).toBe("rtl");
+    expect(detectTextDirection("كِتَابٌ")).toBe("rtl");
+  });
+
+  it("returns rtl for an RTL sentence with digits in it", () => {
+    expect(detectTextDirection("السعر ٢٥ ريال")).toBe("rtl");
+  });
+
+  it("returns rtl for Arabic digits with no letters", () => {
+    expect(detectTextDirection("٢٠٢٤")).toBe("rtl");
+    expect(detectTextDirection("۲۵٪")).toBe("rtl");
+  });
 });
