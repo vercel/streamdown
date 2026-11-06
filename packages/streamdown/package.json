@@ -30,6 +30,7 @@
     "bench": "vitest bench --run > results.txt",
     "bench:ui": "vitest bench --ui --run",
     "build": "tsup",
+    "check-types:exact-optional": "pnpm build && tsc -p tsconfig.exact-optional.json",
     "postbuild": "node scripts/postbuild.js",
     "size": "node scripts/bundle-size.js",
     "test": "vitest run",

@@ -236,9 +236,26 @@ describe("Markdown Components", () => {
       const blockquote = container.querySelector("blockquote");
       expect(blockquote).toBeTruthy();
       expect(blockquote?.className).toContain("my-4");
-      expect(blockquote?.className).toContain("border-l-4");
-      expect(blockquote?.className).toContain("pl-4");
+      expect(blockquote?.className).toContain("border-s-4");
+      expect(blockquote?.className).toContain("ps-4");
       expect(blockquote?.className).toContain("italic");
+    });
+
+    it("lets a physical className override the logical blockquote padding", () => {
+      const Blockquote = components.blockquote;
+      if (!Blockquote) {
+        throw new Error("Blockquote component not found");
+      }
+      const { container } = render(
+        <Blockquote className="border-l-2 pl-8" node={null as any}>
+          Quote text
+        </Blockquote>
+      );
+      const classes = container.querySelector("blockquote")?.classList;
+      expect(classes?.contains("pl-8")).toBe(true);
+      expect(classes?.contains("ps-4")).toBe(false);
+      expect(classes?.contains("border-l-2")).toBe(true);
+      expect(classes?.contains("border-s-4")).toBe(false);
     });
   });
 
@@ -525,7 +542,7 @@ describe("Markdown Components", () => {
       expect(th?.className).toContain("whitespace-nowrap");
       expect(th?.className).toContain("px-4");
       expect(th?.className).toContain("py-2");
-      expect(th?.className).toContain("text-left");
+      expect(th?.className).toContain("text-start");
       expect(th?.className).toContain("font-semibold");
       expect(th?.className).toContain("text-sm");
     });

@@ -52,8 +52,8 @@ export interface AnimateTimeline {
 }
 
 export interface CreateAnimateTimelineOptions {
-  maxBacklogMs?: number;
-  now?: () => number;
+  maxBacklogMs?: number | undefined;
+  now?: (() => number) | undefined;
 }
 
 const defaultNow = (): number =>
@@ -146,17 +146,17 @@ export interface AnimatePlugin {
 }
 
 export interface AnimateOptions {
-  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {});
-  duration?: number;
-  easing?: string;
+  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {}) | undefined;
+  duration?: number | undefined;
+  easing?: string | undefined;
   /**
    * Soft cap (ms) on how far ahead of wall-clock words may be scheduled.
    * Larger values favour longer cascades / stricter cross-block serialization;
    * smaller values keep a fast stream visually caught up. @default 320
    */
-  maxBacklogMs?: number;
-  sep?: "word" | "char";
-  stagger?: number;
+  maxBacklogMs?: number | undefined;
+  sep?: "word" | "char" | undefined;
+  stagger?: number | undefined;
 }
 
 const WHITESPACE_RE = /\s/;
@@ -590,8 +590,6 @@ const processTextNode = (
   return index + nodes.length;
 };
 
-let instanceId = 0;
-
 /**
  * Create an animate rehype plugin. The optional `timeline` is an internal
  * Streamdown wiring detail — not part of the public `animated` prop surface.
@@ -636,7 +634,6 @@ function buildAnimatePlugin(
     pendingMark: null,
   };
 
-  const id = instanceId++;
   const rehypeAnimate = () => (tree: Root) => {
     const charCounter = { count: 0, newIndex: 0 };
 
@@ -691,10 +688,6 @@ function buildAnimatePlugin(
     renderState.lastRenderCharCount = charCounter.count;
     renderState.prevContentLength = 0;
   };
-
-  Object.defineProperty(rehypeAnimate, "name", {
-    value: `rehypeAnimate$${id}`,
-  });
 
   return {
     name: "animate",

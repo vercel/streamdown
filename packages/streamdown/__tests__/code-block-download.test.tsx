@@ -82,6 +82,64 @@ describe("CodeBlockDownloadButton", () => {
     expect(save).toHaveBeenCalledWith("file.txt", "some code", "text/plain");
   });
 
+  it.each([
+    ["Python", "file.py"],
+    ["JSON", "file.json"],
+    ["TypeScript", "file.ts"],
+  ])("should match the %j language case-insensitively", async (language, filename) => {
+    const { save } = await import("../lib/utils");
+
+    const { container } = render(
+      <CodeBlock code="code" language={language}>
+        <CodeBlockDownloadButton code="code" language={language} />
+      </CodeBlock>
+    );
+
+    await waitFor(() => {
+      const button = container.querySelector(
+        '[data-streamdown="code-block-download-button"]'
+      );
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
+    const button = container.querySelector(
+      '[data-streamdown="code-block-download-button"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(button!);
+
+    expect(save).toHaveBeenCalledWith(filename, "code", "text/plain");
+  });
+
+  it.each([
+    "constructor",
+    "toString",
+    "__proto__",
+  ])("should use .txt extension for the %j language", async (language) => {
+    const { save } = await import("../lib/utils");
+
+    const { container } = render(
+      <CodeBlock code="code" language={language}>
+        <CodeBlockDownloadButton code="code" language={language} />
+      </CodeBlock>
+    );
+
+    await waitFor(() => {
+      const button = container.querySelector(
+        '[data-streamdown="code-block-download-button"]'
+      );
+      expect(button?.hasAttribute("disabled")).toBe(false);
+    });
+
+    const button = container.querySelector(
+      '[data-streamdown="code-block-download-button"]'
+    );
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(button!);
+
+    expect(save).toHaveBeenCalledWith("file.txt", "code", "text/plain");
+  });
+
   it("should call onError when save throws", async () => {
     const { save } = await import("../lib/utils");
     (save as any).mockImplementation(() => {

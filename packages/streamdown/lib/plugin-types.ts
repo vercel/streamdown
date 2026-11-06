@@ -18,21 +18,21 @@ export type ThemeInput = BundledTheme | ThemeRegistrationAny;
  * A single token in a highlighted line
  */
 export interface HighlightToken {
-  bgColor?: string;
-  color?: string;
+  bgColor?: string | undefined;
+  color?: string | undefined;
   content: string;
-  htmlAttrs?: Record<string, string>;
-  htmlStyle?: Record<string, string>;
-  offset?: number;
+  htmlAttrs?: Record<string, string> | undefined;
+  htmlStyle?: Record<string, string> | undefined;
+  offset?: number | undefined;
 }
 
 /**
  * Result from code highlighting (compatible with shiki's TokensResult)
  */
 export interface HighlightResult {
-  bg?: string;
-  fg?: string;
-  rootStyle?: string | false;
+  bg?: string | undefined;
+  fg?: string | undefined;
+  rootStyle?: string | false | undefined;
   tokens: HighlightToken[][];
 }
 
@@ -45,7 +45,7 @@ export interface HighlightOptions {
    * Whether the code block is still streaming. Its result is superseded by
    * the next update, so plugins can avoid caching it long-term.
    */
-  isIncomplete?: boolean;
+  isIncomplete?: boolean | undefined;
   language: BundledLanguage;
   themes: [ThemeInput, ThemeInput];
 }
@@ -88,13 +88,13 @@ export interface CodeHighlighterPlugin {
  * Avoids a hard dependency on the "mermaid" package in the core bundle.
  */
 export type MermaidConfig = {
-  fontFamily?: string;
-  securityLevel?: string;
-  startOnLoad?: boolean;
-  suppressErrorRendering?: boolean;
-  theme?: string;
-  themeCSS?: string;
-  themeVariables?: Record<string, unknown>;
+  fontFamily?: string | undefined;
+  securityLevel?: string | undefined;
+  startOnLoad?: boolean | undefined;
+  suppressErrorRendering?: boolean | undefined;
+  theme?: string | undefined;
+  themeCSS?: string | undefined;
+  themeVariables?: Record<string, unknown> | undefined;
   // biome-ignore lint/suspicious/noExplicitAny: open pass-through for mermaid options
 } & Record<string, any>;
 
@@ -137,7 +137,7 @@ export interface MathPlugin {
   /**
    * Get CSS styles for math rendering (injected into head)
    */
-  getStyles?: () => string;
+  getStyles?: (() => string) | undefined;
   name: "katex";
   /**
    * Get rehype plugin for rendering math
@@ -189,7 +189,7 @@ export interface CustomRendererProps {
   /** Raw metastring from the code fence (everything after the language identifier).
    * e.g. ```rust {1} title="foo"  →  meta = '{1} title="foo"'
    * Undefined when no metastring is present. */
-  meta?: string;
+  meta?: string | undefined;
 }
 
 export interface CustomRenderer {
@@ -201,9 +201,9 @@ export interface CustomRenderer {
  * Plugin configuration passed to Streamdown
  */
 export interface PluginConfig {
-  cjk?: CjkPlugin;
-  code?: CodeHighlighterPlugin;
-  math?: MathPlugin;
-  mermaid?: DiagramPlugin;
-  renderers?: CustomRenderer[];
+  cjk?: CjkPlugin | undefined;
+  code?: CodeHighlighterPlugin | undefined;
+  math?: MathPlugin | undefined;
+  mermaid?: DiagramPlugin | undefined;
+  renderers?: CustomRenderer[] | undefined;
 }

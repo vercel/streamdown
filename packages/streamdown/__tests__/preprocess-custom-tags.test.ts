@@ -111,4 +111,34 @@ describe("preprocessCustomTags", () => {
     const md = "<ai-thinking>**bol";
     expect(preprocessCustomTags(md, ["ai-thinking"])).toBe(md);
   });
+
+  it("should keep blank lines inside fenced code blocks in closed tags", () => {
+    const md = "<custom>\n```js\nconst a = 1;\n\nconst b = 2;\n```\n</custom>";
+    const result = preprocessCustomTags(md, ["custom"]);
+    expect(result).toBe(
+      "<custom>\n\n```js\nconst a = 1;\n\nconst b = 2;\n```\n\n</custom>\n\n"
+    );
+  });
+
+  it("should still replace blank lines around a fenced code block", () => {
+    const md = "<custom>\nA\n\n~~~\nx\n\ny\n~~~\n\nB\n</custom>";
+    const result = preprocessCustomTags(md, ["custom"]);
+    expect(result).toBe(
+      "<custom>\n\nA\n<!---->\n~~~\nx\n\ny\n~~~\n<!---->\nB\n\n</custom>\n\n"
+    );
+  });
+
+  it("should keep blank lines inside an unclosed fence in an unclosed tag", () => {
+    const md = "<ai-thinking>\nhello\n\n```py\na = 1\n\nb = 2";
+    const result = preprocessCustomTags(md, ["ai-thinking"]);
+    expect(result).toBe(
+      "<ai-thinking>\n\nhello\n<!---->\n```py\na = 1\n\nb = 2"
+    );
+  });
+
+  it("should not treat a backtick line with an info string as a closing fence", () => {
+    const md = "<custom>\n```md\n```js\n\nx\n```\n</custom>";
+    const result = preprocessCustomTags(md, ["custom"]);
+    expect(result).toBe("<custom>\n\n```md\n```js\n\nx\n```\n\n</custom>\n\n");
+  });
 });

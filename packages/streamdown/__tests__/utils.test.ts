@@ -71,6 +71,44 @@ describe("cn utility", () => {
   });
 });
 
+describe("cn logical/physical conflicts", () => {
+  const overrides: [string, string, string][] = [
+    ["ps-4", "pl-8", "pl-8"],
+    ["pl-4", "ps-2", "ps-2"],
+    ["pe-4", "pr-2", "pr-2"],
+    ["ms-1", "ml-3", "ml-3"],
+    ["me-1", "mr-3", "mr-3"],
+    ["border-s-4", "border-l-2", "border-l-2"],
+    ["border-l-4", "border-s-2", "border-s-2"],
+    ["end-0", "right-2", "right-2"],
+    ["start-0", "left-2", "left-2"],
+    ["text-start", "text-left", "text-left"],
+  ];
+  for (const [base, override, expected] of overrides) {
+    it(`cn("${base}", "${override}") === "${expected}"`, () => {
+      expect(cn(base, override)).toBe(expected);
+    });
+  }
+
+  const untouched: [string, string][] = [
+    ["ps-4", "pt-2"],
+    ["ps-4", "mr-2"],
+    ["border-s-4", "pl-2"],
+    ["end-0", "top-2"],
+    ["border-s-4", "border-muted"],
+  ];
+  for (const [a, b] of untouched) {
+    it(`cn("${a}", "${b}") keeps both`, () => {
+      expect(cn(a, b)).toBe(`${a} ${b}`);
+    });
+  }
+
+  it("keeps a narrow logical utility after a broad axis, like the physical one", () => {
+    expect(cn("px-4", "ps-2")).toBe("px-4 ps-2");
+    expect(cn("px-4", "pl-2")).toBe("px-4 pl-2");
+  });
+});
+
 describe("save utility", () => {
   let createObjectURLSpy: ReturnType<typeof vi.spyOn>;
   let revokeObjectURLSpy: ReturnType<typeof vi.spyOn>;
