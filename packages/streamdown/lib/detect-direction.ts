@@ -1,5 +1,6 @@
 /**
- * Unicode ranges for RTL "strong" characters.
+ * Unicode ranges for RTL scripts. These also hold vowel marks, digits and
+ * punctuation, so a match only counts as a strong character on a letter.
  * Covers: Hebrew, Arabic, Syriac, Thaana, NKo, Samaritan, Mandaic,
  * Arabic Supplement/Extended, and RTL presentation forms.
  */
@@ -33,16 +34,17 @@ export function detectTextDirection(text: string): "ltr" | "rtl" {
   let rtlCount = 0;
 
   for (const char of stripped) {
+    if (!LETTER_PATTERN.test(char)) {
+      continue;
+    }
     if (RTL_PATTERN.test(char)) {
       firstStrong ??= "rtl";
       rtlCount += 1;
       continue;
     }
     // Latin, CJK, Cyrillic, etc. — any letter that's not RTL is LTR.
-    if (LETTER_PATTERN.test(char)) {
-      firstStrong ??= "ltr";
-      ltrCount += 1;
-    }
+    firstStrong ??= "ltr";
+    ltrCount += 1;
   }
 
   if (rtlCount > ltrCount) {
@@ -51,5 +53,7 @@ export function detectTextDirection(text: string): "ltr" | "rtl" {
   if (ltrCount > rtlCount) {
     return "ltr";
   }
-  return firstStrong ?? "ltr";
+  // Text with no letters stays RTL if it has anything from the RTL ranges, so
+  // a table cell holding only Arabic digits lines up with the RTL text around it.
+  return firstStrong ?? (RTL_PATTERN.test(stripped) ? "rtl" : "ltr");
 }
