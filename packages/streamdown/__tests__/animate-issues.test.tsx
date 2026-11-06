@@ -8,9 +8,20 @@
  */
 import { act, render } from "@testing-library/react";
 import { StrictMode, useEffect } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 import { MAX_ANIMATION_BACKLOG_MS } from "../lib/animate";
+
+// Fake clock for the hold-after-isAnimating-ends behaviour (#669). Fakes
+// performance.now too, since the animate timeline reads it.
+const useFakeClock = () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "performance"] });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+};
 
 const NEW_WORD_RE = /^(Next|section|arrives)$/;
 const SPAN_GAP_RE = /<\/span> <span/;
@@ -172,6 +183,8 @@ describe("issue #550 — un-animated streaming is never starved", () => {
 });
 
 describe("issue #570 — spans come off when isAnimating goes false", () => {
+  useFakeClock();
+
   it("removes data-sd-animate spans after the stream settles", async () => {
     const FADE = {
       animation: "fadeIn" as const,
@@ -202,6 +215,13 @@ describe("issue #570 — spans come off when isAnimating goes false", () => {
     });
     await act(() => Promise.resolve());
 
+    // Spans stay while the last words finish fading (#669)…
+    expect(
+      container.querySelectorAll("[data-sd-animate]").length
+    ).toBeGreaterThan(0);
+
+    // …and come off once the timeline has played out.
+    await act(() => vi.advanceTimersByTimeAsync(FADE.duration));
     expect(container.querySelectorAll("[data-sd-animate]").length).toBe(0);
   });
 
@@ -302,5 +322,136 @@ describe("issue #570 — spans come off when isAnimating goes false", () => {
     const liveCount = durations.filter((d) => d === "200ms").length;
     expect(zeroCount).toBeGreaterThanOrEqual(3);
     expect(liveCount).toBeGreaterThanOrEqual(2);
+  });
+});
+
+describe("issue #669 — queued words finish after isAnimating goes false", () => {
+  useFakeClock();
+
+  const CONFIG = { animation: "fadeIn" as const, duration: 150, stagger: 40 };
+  const MD = "one two three four five six seven eight nine ten";
+  const countSpans = (container: HTMLElement) =>
+    container.querySelectorAll("[data-sd-animate]").length;
+
+  it("keeps the animate spans (and their delays) in place when the stream ends", async () => {
+    const { container, rerender } = render(
+      <Streamdown animated={CONFIG} isAnimating={true} mode="streaming">
+        {MD}
+      </Streamdown>
+    );
+    await act(() => Promise.resolve());
+    const before = container.innerHTML;
+    expect(countSpans(container)).toBe(10);
+
+    await act(() => {
+      rerender(
+        <Streamdown animated={CONFIG} isAnimating={false} mode="streaming">
+          {MD}
+        </Streamdown>
+      );
+    });
+
+    // Nothing was re-rendered: same spans, same --sd-delay values.
+    expect(countSpans(container)).toBe(10);
+    expect(container.innerHTML).toBe(before);
+  });
+
+  it("drops the spans once the last word's delay and fade have elapsed", async () => {
+    const { container, rerender } = render(
+      <Streamdown animated={CONFIG} isAnimating={true} mode="streaming">
+        {MD}
+      </Streamdown>
+    );
+    await act(() => Promise.resolve());
+
+    // Ten words at 40ms stagger: the last one waits on its --sd-delay and
+    // then fades for `duration` more.
+    const lastDelay = Math.max(
+      ...[...container.querySelectorAll("[data-sd-animate]")].map(parseDelay)
+    );
+    expect(lastDelay).toBeGreaterThan(0);
+
+    await act(() => {
+      rerender(
+        <Streamdown animated={CONFIG} isAnimating={false} mode="streaming">
+          {MD}
+        </Streamdown>
+      );
+    });
+
+    await act(() =>
+      vi.advanceTimersByTimeAsync(lastDelay + CONFIG.duration - 20)
+    );
+    expect(countSpans(container)).toBe(10);
+
+    await act(() => vi.advanceTimersByTimeAsync(40));
+    expect(countSpans(container)).toBe(0);
+    expect(container.textContent).toContain("one two three");
+  });
+
+  it("animates words that arrive in the same update that ends the stream", async () => {
+    const { container, rerender } = render(
+      <Streamdown animated={CONFIG} isAnimating={true} mode="streaming">
+        {"one two three"}
+      </Streamdown>
+    );
+    await act(() => Promise.resolve());
+
+    await act(() => {
+      rerender(
+        <Streamdown animated={CONFIG} isAnimating={false} mode="streaming">
+          {"one two three four five"}
+        </Streamdown>
+      );
+    });
+
+    const animated = [...container.querySelectorAll("[data-sd-animate]")];
+    const fresh = animated.filter(
+      (el) =>
+        !(el as HTMLElement).style
+          .getPropertyValue("--sd-duration")
+          .startsWith("0")
+    );
+    expect(fresh.map((el) => el.textContent?.trim())).toEqual(["four", "five"]);
+
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(countSpans(container)).toBe(0);
+  });
+
+  it("does not hold spans on a fully-settled message", async () => {
+    const { container } = render(
+      <Streamdown animated={CONFIG} isAnimating={false} mode="streaming">
+        {MD}
+      </Streamdown>
+    );
+    await act(() => Promise.resolve());
+    expect(countSpans(container)).toBe(0);
+  });
+
+  it("keeps animating when isAnimating flips back on during the hold", async () => {
+    const { container, rerender } = render(
+      <Streamdown animated={CONFIG} isAnimating={true} mode="streaming">
+        {"one two three"}
+      </Streamdown>
+    );
+    await act(() => Promise.resolve());
+    await act(() => {
+      rerender(
+        <Streamdown animated={CONFIG} isAnimating={false} mode="streaming">
+          {"one two three"}
+        </Streamdown>
+      );
+    });
+    await act(() => {
+      rerender(
+        <Streamdown animated={CONFIG} isAnimating={true} mode="streaming">
+          {"one two three four"}
+        </Streamdown>
+      );
+    });
+
+    // The hold timer from the first flip must not strip the spans.
+    await act(() => vi.advanceTimersByTimeAsync(1000));
+    expect(countSpans(container)).toBe(4);
   });
 });
