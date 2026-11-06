@@ -3,7 +3,6 @@ import { Lexer, type Token } from "marked";
 // Regex patterns moved to top level for performance
 // Footnote identifiers must be alphanumeric, underscore, or hyphen (e.g., [^1], [^note], [^my-note])
 // Previously used [^\]\s] which incorrectly matched regex character classes like [^\s...]
-const footnoteReferencePattern = /\[\^[\w-]{1,200}\](?!:)/;
 const footnoteDefinitionPattern = /\[\^[\w-]{1,200}\]:/;
 // Allow hyphens / colons so custom tags like <ai-thinking> are tracked across
 // blank-line interruptions (\w alone only matches [A-Za-z0-9_]).
@@ -13,6 +12,81 @@ const openingTagPattern = /<([A-Za-z][\w:-]*)[\s>/]/;
 // full parse. Skip incremental reuse when any are present. GFM allows 0–3
 // leading spaces before a definition (4+ is an indented code block).
 const linkDefinitionPattern = /^ {0,3}\[[^\]]+\]:/m;
+
+// These checks run on the whole document for every streaming update. Each
+// keeps the previous input and its result; when the new input extends it,
+// only the region where a new match could end is tested again.
+interface ScanMemo {
+  found: boolean;
+  input: string;
+}
+
+const extendsMemo = (memo: ScanMemo | null, input: string): memo is ScanMemo =>
+  memo !== null &&
+  input.length >= memo.input.length &&
+  input.startsWith(memo.input);
+
+// The longest footnote match: "[^", a 200-character label, "]", one more.
+const footnoteWindow = 205;
+// A footnote reference is `[^label]` not followed by ":", that is
+// /\[\^[\w-]{1,200}\](?!:)/. Its `(?!:)` can drop a match at the very end of
+// the input once ":" arrives.
+// A match followed by a known non-colon character is permanent, so track
+// those and test the end of the input separately.
+const followedFootnoteReferencePattern = /\[\^[\w-]{1,200}\][^:]/;
+const trailingFootnoteReferencePattern = /\[\^[\w-]{1,200}\]$/;
+
+let footnoteReferenceMemo: ScanMemo | null = null;
+let footnoteDefinitionMemo: ScanMemo | null = null;
+let linkDefinitionMemo: ScanMemo | null = null;
+
+const footnoteTail = (memo: ScanMemo, input: string): string =>
+  input.slice(Math.max(0, memo.input.length - footnoteWindow));
+
+export const hasFootnoteReference = (input: string): boolean => {
+  const memo = footnoteReferenceMemo;
+  const followed = extendsMemo(memo, input)
+    ? memo.found ||
+      followedFootnoteReferencePattern.test(footnoteTail(memo, input))
+    : followedFootnoteReferencePattern.test(input);
+  footnoteReferenceMemo = { input, found: followed };
+  return (
+    followed ||
+    trailingFootnoteReferencePattern.test(input.slice(-footnoteWindow))
+  );
+};
+
+export const hasFootnoteDefinition = (input: string): boolean => {
+  const memo = footnoteDefinitionMemo;
+  const found = extendsMemo(memo, input)
+    ? memo.found || footnoteDefinitionPattern.test(footnoteTail(memo, input))
+    : footnoteDefinitionPattern.test(input);
+  footnoteDefinitionMemo = { input, found };
+  return found;
+};
+
+export const hasLinkDefinition = (input: string): boolean => {
+  const memo = linkDefinitionMemo;
+  let found: boolean;
+  if (!extendsMemo(memo, input)) {
+    found = linkDefinitionPattern.test(input);
+  } else if (memo.found) {
+    found = true;
+  } else {
+    // A new match ends after the previous input, and its label holds no "]",
+    // so it starts on the line after the previous input's last "]" (ignoring
+    // its final character, which a new ":" can follow).
+    const previousLength = memo.input.length;
+    const bracket =
+      previousLength >= 2
+        ? memo.input.lastIndexOf("]", previousLength - 2)
+        : -1;
+    const start = bracket < 0 ? 0 : input.lastIndexOf("\n", bracket) + 1;
+    found = linkDefinitionPattern.test(input.slice(start));
+  }
+  linkDefinitionMemo = { input, found };
+  return found;
+};
 
 // HTML void elements (self-closing tags) that don't need closing tags
 const voidElements = new Set([
@@ -268,7 +342,7 @@ const reuseParsedBlocks = (
   // compared on every tick.
   if (
     input.slice(0, previous.input.length) !== previous.input ||
-    linkDefinitionPattern.test(input)
+    hasLinkDefinition(input)
   ) {
     return null;
   }
@@ -327,14 +401,14 @@ export const parseMarkdownIntoBlocks = (markdown: string): string[] => {
   // Footnote references: [^1], [^label], etc.
   // Footnote definitions: [^1]: text, [^label]: text, etc.
   // Use atomic groups or possessive quantifiers to prevent backtracking
-  const hasFootnoteReference = footnoteReferencePattern.test(markdown);
-  const hasFootnoteDefinition = footnoteDefinitionPattern.test(markdown);
+  const markdownHasFootnoteReference = hasFootnoteReference(markdown);
+  const markdownHasFootnoteDefinition = hasFootnoteDefinition(markdown);
 
   // If footnotes are present, return the entire document as a single block
   // This ensures footnote references and definitions remain in the same mdast tree.
   // Do not write the cache: footnote documents are not block-split, and leaving
   // a prior entry avoids poisoning the next non-footnote stream extension check.
-  if (hasFootnoteReference || hasFootnoteDefinition) {
+  if (markdownHasFootnoteReference || markdownHasFootnoteDefinition) {
     return [markdown];
   }
 

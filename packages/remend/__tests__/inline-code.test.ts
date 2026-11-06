@@ -91,4 +91,64 @@ describe("emphasis markers inside inline code spans should not leak", () => {
   it("should complete emphasis after a closed inline code span", () => {
     expect(remend("`code` **bold")).toBe("`code` **bold**");
   });
+
+  it.each<{ name: string; input: string; expected: string }>([
+    {
+      name: "opener before a setext underline",
+      input: "`a\n---",
+      expected: "`a\n---",
+    },
+    {
+      name: "opener in an earlier list item",
+      input: "- `a\n- b",
+      expected: "- `a\n- b",
+    },
+    {
+      name: "opener in a heading",
+      input: "# `a\nb",
+      expected: "# `a\nb",
+    },
+    {
+      name: "lazy continuation line",
+      input: "text `a\nb",
+      expected: "text `a\nb`",
+    },
+    {
+      name: "lone star inside a paragraph",
+      input: "text `a\n*\nb",
+      expected: "text `a\n*\nb`",
+    },
+    {
+      name: "lone star inside a quoted paragraph",
+      input: "> text `a\n> *\n> b",
+      expected: "> text `a\n> *\n> b`",
+    },
+    {
+      name: "opener before an empty item after a quote",
+      input: "> text `a\n*\nb",
+      expected: "> text `a\n*\nb",
+    },
+  ])("closes only within the opener's block: $name", ({ input, expected }) => {
+    expect(remend(input)).toBe(expected);
+    expect(remend(expected)).toBe(expected);
+  });
+
+  it.each<{ name: string; input: string; expected: string }>([
+    {
+      name: "one trailing backtick",
+      input: "a```a\n`",
+      expected: "a```a\n` ```",
+    },
+    {
+      name: "two trailing backticks",
+      input: "a```a\n``",
+      expected: "a```a\n`` ```",
+    },
+  ])("keeps a closer at line start from opening a fence: $name", ({
+    input,
+    expected,
+  }) => {
+    expect(remend(input)).toBe(expected);
+    expect(remend(expected)).toBe(expected);
+  });
 });

@@ -278,27 +278,24 @@ Built-in handlers use priorities 0-75:
 | `htmlTags` | 10 |
 | `setextHeadings` | 15 |
 | `links` | 20 |
-| `boldItalic` | 30 |
-| `bold` | 35 |
-| `italic` | 40-42 |
+| `emphasis` (bold, italic, bold italic, strikethrough) | 30 |
 | `inlineCode` | 50 |
-| `strikethrough` | 60 |
 | `katex` | 70 |
 
 Custom handlers default to priority 100, running after all built-ins. Set a lower priority to run before specific built-ins.
 
-**Example: Running Before Bold Handling**
+**Example: Running Before Emphasis Handling**
 
-To process content before bold formatting is completed (priority 30), set a lower priority:
+To process content before emphasis is completed (priority 30), set a lower priority:
 
 ```typescript
 const preprocessHandler: RemendHandler = {
   name: 'preprocess',
   handle: (text) => {
-    // Transform content before bold is completed
+    // Transform content before emphasis is completed
     return text.replace(/\{\{highlight\}\}/g, '**');
   },
-  priority: 25, // Runs before bold (35) and after links (20)
+  priority: 25, // Runs before emphasis (30) and after links (20)
 };
 ```
 

@@ -1,10 +1,7 @@
 import { handleComparisonOperators } from "./comparison-operator-handler";
 import {
-  handleIncompleteBold,
-  handleIncompleteBoldItalic,
-  handleIncompleteDoubleUnderscoreItalic,
-  handleIncompleteSingleAsteriskItalic,
-  handleIncompleteSingleUnderscoreItalic,
+  type EmphasisFlags,
+  handleIncompleteEmphasis,
 } from "./emphasis-handlers";
 import { handleIncompleteHtmlTag } from "./html-tag-handler";
 import { handleIncompleteInlineCode } from "./inline-code-handler";
@@ -17,10 +14,9 @@ import {
   INCOMPLETE_IMAGE_PLACEHOLDER,
   type LinkMode,
 } from "./link-image-handler";
-import { clearScanCache } from "./scan";
+import { clearScanCache, getScan, inMathAt, isEscaped, REGION } from "./scan";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleSingleTildeEscape } from "./single-tilde-handler";
-import { handleIncompleteStrikethrough } from "./strikethrough-handler";
 
 // biome-ignore lint/performance/noBarrelFile: "Re-exports utility functions for public API convenience"
 export {
@@ -104,13 +100,8 @@ const PRIORITY = {
   HTML_TAGS: 10,
   SETEXT_HEADINGS: 15,
   LINKS: 20,
-  BOLD_ITALIC: 30,
-  BOLD: 35,
-  ITALIC_DOUBLE_UNDERSCORE: 40,
-  ITALIC_SINGLE_ASTERISK: 41,
-  ITALIC_SINGLE_UNDERSCORE: 42,
+  EMPHASIS: 30,
   INLINE_CODE: 50,
-  STRIKETHROUGH: 60,
   KATEX: 70,
   INLINE_KATEX: 75,
   DEFAULT: 100,
@@ -167,41 +158,9 @@ const builtInHandlers: Array<{
   },
   {
     handler: {
-      name: "boldItalic",
-      handle: handleIncompleteBoldItalic,
-      priority: PRIORITY.BOLD_ITALIC,
-    },
-    optionKey: "boldItalic",
-  },
-  {
-    handler: {
-      name: "bold",
-      handle: handleIncompleteBold,
-      priority: PRIORITY.BOLD,
-    },
-    optionKey: "bold",
-  },
-  {
-    handler: {
-      name: "italicDoubleUnderscore",
-      handle: handleIncompleteDoubleUnderscoreItalic,
-      priority: PRIORITY.ITALIC_DOUBLE_UNDERSCORE,
-    },
-    optionKey: "italic",
-  },
-  {
-    handler: {
-      name: "italicSingleAsterisk",
-      handle: handleIncompleteSingleAsteriskItalic,
-      priority: PRIORITY.ITALIC_SINGLE_ASTERISK,
-    },
-    optionKey: "italic",
-  },
-  {
-    handler: {
-      name: "italicSingleUnderscore",
-      handle: handleIncompleteSingleUnderscoreItalic,
-      priority: PRIORITY.ITALIC_SINGLE_UNDERSCORE,
+      name: "emphasis",
+      handle: (text: string) => text,
+      priority: PRIORITY.EMPHASIS,
     },
     optionKey: "italic",
   },
@@ -212,14 +171,6 @@ const builtInHandlers: Array<{
       priority: PRIORITY.INLINE_CODE,
     },
     optionKey: "inlineCode",
-  },
-  {
-    handler: {
-      name: "strikethrough",
-      handle: handleIncompleteStrikethrough,
-      priority: PRIORITY.STRIKETHROUGH,
-    },
-    optionKey: "strikethrough",
   },
   {
     handler: {
@@ -247,12 +198,29 @@ const getEnabledBuiltInHandlers = (
   earlyReturn?: (result: string) => boolean;
 }> => {
   const linkMode: LinkMode = options?.linkMode ?? "protocol";
+  const emphasisFlags: EmphasisFlags = {
+    bold: isEnabled(options?.bold),
+    boldItalic: isEnabled(options?.boldItalic),
+    inlineCode: isEnabled(options?.inlineCode),
+    inlineMath: isOptedIn(options?.inlineKatex),
+    italic: isEnabled(options?.italic),
+    strikethrough: isEnabled(options?.strikethrough),
+  };
 
   return builtInHandlers
     .filter(({ handler, optionKey }) => {
       // Special case: links handler is enabled by either links or images option
       if (handler.name === "links") {
         return isEnabled(options?.links) || isEnabled(options?.images);
+      }
+      // Special case: emphasis is enabled by any of its options
+      if (handler.name === "emphasis") {
+        return (
+          emphasisFlags.bold ||
+          emphasisFlags.boldItalic ||
+          emphasisFlags.italic ||
+          emphasisFlags.strikethrough
+        );
       }
       // Special case: inlineKatex is opt-in (defaults to false, unlike other options)
       if (handler.name === "inlineKatex") {
@@ -267,14 +235,39 @@ const getEnabledBuiltInHandlers = (
           handler: {
             ...handler,
             handle: (text: string) =>
-              handleIncompleteLinksAndImages(text, linkMode),
+              handleIncompleteLinksAndImages(
+                text,
+                linkMode,
+                emphasisFlags.inlineCode
+              ),
           },
           // Only use early return for protocol mode (text-only won't end with the marker)
           earlyReturn: linkMode === "protocol" ? earlyReturn : undefined,
         };
       }
+      // Special case: wrap emphasis handler to pass its options
+      if (handler.name === "emphasis") {
+        return {
+          handler: {
+            ...handler,
+            handle: (text: string) =>
+              handleIncompleteEmphasis(text, emphasisFlags),
+          },
+          earlyReturn,
+        };
+      }
       return { handler, earlyReturn };
     });
+};
+
+// Whether the text ends with an unescaped backslash in prose
+const isTrailingEscape = (text: string): boolean => {
+  const last = text.length - 1;
+  if (text[last] !== "\\" || isEscaped(text, last)) {
+    return false;
+  }
+  const scan = getScan(text);
+  return scan.regions[last] === REGION.PROSE && !inMathAt(scan, last);
 };
 
 // Parses markdown text and removes incomplete tokens to prevent partial rendering
@@ -284,7 +277,7 @@ const remend = (text: string, options?: RemendOptions): string => {
   }
 
   // Remove trailing whitespace if it's not a double space
-  let result =
+  const result =
     text.endsWith(" ") && !text.endsWith("  ") ? text.slice(0, -1) : text;
 
   // Get enabled built-in handlers
@@ -302,25 +295,39 @@ const remend = (text: string, options?: RemendOptions): string => {
     (a, b) => (a.handler.priority ?? 0) - (b.handler.priority ?? 0)
   );
 
-  try {
+  const runHandlers = (input: string): string => {
+    let output = input;
     // Execute handlers in priority order
     for (const { handler, earlyReturn } of allHandlers) {
-      result = handler.handle(result);
+      output = handler.handle(output);
 
       // Check for early return condition (e.g., incomplete link marker)
-      if (earlyReturn?.(result)) {
-        return result;
+      if (earlyReturn?.(output)) {
+        return output;
       }
     }
 
     // A handler that removes a trailing fragment can expose a trailing space
     // (e.g. dropping an incomplete image). Strip it the same way the input
     // was stripped, so healed output re-heals to itself.
-    if (result.endsWith(" ") && !result.endsWith("  ")) {
-      return result.slice(0, -1);
+    if (output.endsWith(" ") && !output.endsWith("  ")) {
+      return output.slice(0, -1);
     }
 
-    return result;
+    return output;
+  };
+
+  try {
+    if (!isTrailingEscape(result)) {
+      return runHandlers(result);
+    }
+
+    // A trailing backslash escapes whatever follows it, so a closer appended
+    // after it would render as text. Heal with the backslash escaped, which
+    // keeps it literal without changing how the markers before it flank.
+    const escaped = `${result}\\`;
+    const healed = runHandlers(escaped);
+    return healed === escaped ? result : healed;
   } finally {
     clearScanCache();
   }
