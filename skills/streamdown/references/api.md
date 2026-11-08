@@ -200,6 +200,7 @@ interface MermaidErrorComponentProps {
   error: string;
   chart: string;
   retry: () => void;
+  cause?: unknown; // original thrown value from Mermaid
 }
 ```
 
