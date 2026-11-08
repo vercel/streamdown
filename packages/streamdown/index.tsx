@@ -251,6 +251,7 @@ export interface LinkSafetyConfig {
 
 export interface MermaidErrorComponentProps {
   chart: string;
+  cause?: unknown;
   error: string;
   retry: () => void;
 }
