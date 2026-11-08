@@ -1,0 +1,41 @@
+# Fails pull requests that contain commits without a verified signature and
+# posts (or updates) a single comment explaining how to sign and re-sign them.
+#
+# Uses `pull_request_target` so the job has permission to comment on PRs from
+# forks. This is safe because the workflow only checks out the base branch
+# (the default for `pull_request_target`) and never runs code from the PR.
+name: Verify Signed Commits
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify-signed-commits:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/workflows/actions/verify-signed-commits
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Verify signed commits
+        working-directory: .github/workflows/actions/verify-signed-commits
+        run: node index.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

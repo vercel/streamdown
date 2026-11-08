@@ -31,6 +31,9 @@ jobs:
       - name: Build Packages
         run: pnpm build:packages
 
+      - name: Check exactOptionalPropertyTypes compatibility
+        run: pnpm --filter streamdown --filter @streamdown/code --filter @streamdown/math --filter @streamdown/mermaid exec tsc -p tsconfig.exact-optional.json
+
       - name: Build Website
         run: pnpm build --filter website
 
@@ -41,6 +44,10 @@ jobs:
       # `pnpm test` does not reach it. It has no dependencies of its own.
       - name: Run verify-changesets Action Tests
         working-directory: .github/workflows/actions/verify-changesets
+        run: node --test test.js
+
+      - name: Run verify-signed-commits Action Tests
+        working-directory: .github/workflows/actions/verify-signed-commits
         run: node --test test.js
 
       - name: Check Linting and Formatting

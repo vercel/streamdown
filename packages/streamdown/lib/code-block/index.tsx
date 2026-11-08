@@ -119,6 +119,7 @@ export const CodeBlock = ({
             <HighlightedCodeBlockBody
               className={className}
               code={trimmedCode}
+              isIncomplete={isIncomplete}
               language={language}
               lineNumbers={lineNumbers}
               maxHeight={codeBlockMaxHeight}

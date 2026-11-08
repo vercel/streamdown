@@ -1,10 +1,11 @@
 import { GeistdocsHomeLayout } from "@vercel/geistdocs/home-layout";
 import { config } from "@/lib/geistdocs/config";
+import { getRootLang } from "@/lib/geistdocs/root-params";
 import { source } from "@/lib/geistdocs/source";
 import { NavbarScrollBorder } from "./components/navbar-scroll-border";
 
-const Layout = async ({ children, params }: LayoutProps<"/[lang]">) => {
-  const { lang } = await params;
+const Layout = async ({ children }: LayoutProps<"/[lang]">) => {
+  const lang = await getRootLang();
 
   return (
     <GeistdocsHomeLayout config={config} tree={source.pageTree[lang]}>

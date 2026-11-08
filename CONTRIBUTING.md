@@ -94,11 +94,57 @@ fix: resolve markdown parsing issue with nested lists
 docs: update README with new API examples
 ```
 
+## Signing Commits
+
+All commits in a pull request must have a [verified signature](https://docs.github.com/en/authentication/managing-commit-signature-verification). The **Verify Signed Commits** check fails and comments on your PR if any commit is unsigned.
+
+### 1. Configure Git to sign commits
+
+SSH signing is the simplest option if you already use an SSH key with GitHub (Git 2.34+):
+
+```bash
+# Generate a key if you don't have one
+ssh-keygen -t ed25519 -C "you@example.com"
+
+git config --global gpg.format ssh
+git config --global user.signingkey ~/.ssh/id_ed25519.pub
+git config --global commit.gpgsign true
+```
+
+Prefer GPG? See [Telling Git about your signing key](https://docs.github.com/en/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key).
+
+### 2. Add the key to GitHub
+
+- Add the public key at [github.com/settings/ssh/new](https://github.com/settings/ssh/new) with **Key type: Signing Key**. A key added only as an authentication key will not verify commits (you can add the same key twice, once for each type).
+- Make sure `git config user.email` matches a [verified email](https://github.com/settings/emails) on your GitHub account.
+
+### 3. Re-sign existing commits on your branch
+
+If your PR already has unsigned commits, re-sign them without changing their content and force-push:
+
+```bash
+git fetch https://github.com/vercel/streamdown.git main
+git rebase --exec 'git commit --amend --no-edit --no-verify -S' $(git merge-base HEAD FETCH_HEAD)
+git log --show-signature FETCH_HEAD..HEAD   # every commit should show a good signature
+git push --force-with-lease
+```
+
+Commits created in the GitHub web UI are signed automatically.
+
+### Using an AI coding agent?
+
+The failure comment on your PR includes a ready-to-paste prompt. You can also give your agent this:
+
+```text
+My pull request to vercel/streamdown is blocked because some commits are not signed. Check my git signing config (gpg.format, user.signingkey, commit.gpgsign, user.email). If it isn't set up, configure SSH commit signing with an existing or new ed25519 key, then tell me to add the public key at https://github.com/settings/ssh/new as a "Signing Key" and wait for my confirmation. Then fetch main from https://github.com/vercel/streamdown.git and re-sign every commit on my branch with `git rebase --exec 'git commit --amend --no-edit --no-verify -S' $(git merge-base HEAD FETCH_HEAD)` without rebasing onto a newer main, squashing, or editing commits. Verify with `git log --show-signature FETCH_HEAD..HEAD`, and ask me before running `git push --force-with-lease`.
+```
+
 ## Pull Request Process
 
 1. Ensure your PR:
    - Has a clear, descriptive title
    - Includes a changeset (run `pnpm changeset` if you haven't)
+   - Contains only [signed commits](#signing-commits)
    - Passes all CI checks
    - Includes tests for new functionality
    - Updates documentation if needed

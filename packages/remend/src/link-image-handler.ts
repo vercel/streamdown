@@ -142,11 +142,8 @@ const handleIncompleteText = (
   return null;
 };
 
-// Handles incomplete links and images by preserving them with a special marker
-export const handleIncompleteLinksAndImages = (
-  text: string,
-  linkMode: LinkMode = "protocol"
-): string => {
+// One healing step over the trailing incomplete link or image, if any
+const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
   // Look for patterns like [text]( or ![text]( at the end of text
   // We need to handle nested brackets in the link text
 
@@ -161,8 +158,12 @@ export const handleIncompleteLinksAndImages = (
 
   // Then check for incomplete link text: [partial-text without closing ]
   // Search backwards for an opening bracket that doesn't have a matching closing bracket
-  for (let i = text.length - 1; i >= 0; i -= 1) {
-    if (text[i] === "[" && !isInsideCodeBlock(text, i)) {
+  for (
+    let i = text.lastIndexOf("[");
+    i !== -1;
+    i = i === 0 ? -1 : text.lastIndexOf("[", i - 1)
+  ) {
+    if (!isInsideCodeBlock(text, i)) {
       const result = handleIncompleteText(text, i, linkMode);
       if (result !== null) {
         return result;
@@ -171,4 +172,32 @@ export const handleIncompleteLinksAndImages = (
   }
 
   return text;
+};
+
+// A pass costs a full rescan of the shortened text, so an adversarial tail
+// of thousands of nested incomplete constructs would turn healing quadratic
+// without a bound. Realistic nesting depth is single digits.
+const MAX_HEAL_PASSES = 32;
+
+// Preserves incomplete links and images with a special marker.
+export const handleIncompleteLinksAndImages = (
+  text: string,
+  linkMode: LinkMode = "protocol"
+): string => {
+  let current = text;
+
+  // Removing a trailing incomplete image can expose another incomplete
+  // construct that ended immediately before it (an input ending in "![!["
+  // heals to "![", which is itself incomplete). Iterate until healed text
+  // re-heals to itself, so healing is idempotent. A step that grows the text
+  // has completed the construct, and truncating steps strictly shorten,
+  // so the loop terminates.
+  for (let pass = 0; pass < MAX_HEAL_PASSES; pass += 1) {
+    const next = healTrailingLinkOrImage(current, linkMode);
+    if (next.length >= current.length) {
+      return next;
+    }
+    current = next;
+  }
+  return current;
 };

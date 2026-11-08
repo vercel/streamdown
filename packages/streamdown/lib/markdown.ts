@@ -31,9 +31,12 @@ export type UrlTransform = (
 export type Components = {
   [Key in keyof JSX.IntrinsicElements]?:
     | ComponentType<JSX.IntrinsicElements[Key] & ExtraProps>
-    | keyof JSX.IntrinsicElements;
+    | keyof JSX.IntrinsicElements
+    | undefined;
 } & {
-  inlineCode?: ComponentType<JSX.IntrinsicElements["code"] & ExtraProps>;
+  inlineCode?:
+    | ComponentType<JSX.IntrinsicElements["code"] & ExtraProps>
+    | undefined;
   [key: string]:
     | ComponentType<Record<string, unknown> & ExtraProps>
     | keyof JSX.IntrinsicElements
@@ -41,26 +44,39 @@ export type Components = {
 };
 
 export interface Options {
-  allowElement?: AllowElement;
-  allowedElements?: readonly string[];
-  children?: string;
-  components?: Components;
-  disallowedElements?: readonly string[];
-  rehypePlugins?: PluggableList;
-  remarkPlugins?: PluggableList;
-  remarkRehypeOptions?: Readonly<RemarkRehypeOptions>;
-  skipHtml?: boolean;
-  unwrapDisallowed?: boolean;
-  urlTransform?: UrlTransform;
+  allowElement?: AllowElement | undefined;
+  allowedElements?: readonly string[] | undefined;
+  children?: string | undefined;
+  components?: Components | undefined;
+  disallowedElements?: readonly string[] | undefined;
+  rehypePlugins?: PluggableList | undefined;
+  remarkPlugins?: PluggableList | undefined;
+  remarkRehypeOptions?: Readonly<RemarkRehypeOptions> | undefined;
+  skipHtml?: boolean | undefined;
+  unwrapDisallowed?: boolean | undefined;
+  urlTransform?: UrlTransform | undefined;
 }
 
 // Stable references for common cases
 const EMPTY_PLUGINS: PluggableList = [];
 const DEFAULT_REMARK_REHYPE_OPTIONS = { allowDangerousHtml: true };
 
-// Plugin name cache for faster serialization
+// Function names do not distinguish closures or minified plugins.
 // biome-ignore lint/complexity/noBannedTypes: "Need Function type for plugin caching"
-const pluginNameCache = new WeakMap<Function, string>();
+const pluginIds = new WeakMap<Function, number>();
+let nextPluginId = 0;
+
+// biome-ignore lint/complexity/noBannedTypes: "Need Function type for plugin caching"
+const getPluginId = (plugin: Function): number => {
+  const cached = pluginIds.get(plugin);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const id = nextPluginId;
+  nextPluginId += 1;
+  pluginIds.set(plugin, id);
+  return id;
+};
 
 // LRU Cache for unified processors
 class ProcessorCache {
@@ -88,7 +104,6 @@ class ProcessorCache {
     }
 
     // Optimize serialization for plugins
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Plugin serialization requires checking multiple plugin formats"
     const serializePlugins = (plugins: PluggableList | undefined): string => {
       if (!plugins || plugins.length === 0) {
         return "";
@@ -105,12 +120,7 @@ class ProcessorCache {
           // Plugin with options: [plugin, options]
           const [pluginFn, pluginOptions] = plugin;
           if (typeof pluginFn === "function") {
-            let name = pluginNameCache.get(pluginFn);
-            if (!name) {
-              name = pluginFn.name;
-              pluginNameCache.set(pluginFn, name);
-            }
-            result += name;
+            result += getPluginId(pluginFn);
           } else {
             result += String(pluginFn);
           }
@@ -118,12 +128,7 @@ class ProcessorCache {
           result += JSON.stringify(pluginOptions);
         } else if (typeof plugin === "function") {
           // Plugin without options
-          let name = pluginNameCache.get(plugin);
-          if (!name) {
-            name = plugin.name;
-            pluginNameCache.set(plugin, name);
-          }
-          result += name;
+          result += getPluginId(plugin);
         } else {
           result += String(plugin);
         }

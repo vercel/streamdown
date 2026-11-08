@@ -1,6 +1,6 @@
 {
   "name": "@streamdown/cjk",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "CJK text handling plugin for Streamdown",
   "repository": {
     "type": "git",

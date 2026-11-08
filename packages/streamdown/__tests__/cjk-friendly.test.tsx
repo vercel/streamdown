@@ -291,6 +291,20 @@ describe("CJK (Chinese, Japanese, Korean) Friendly Support (#185)", () => {
       expect(container.textContent).toBe(autolinkContent);
     });
 
+    it("splits www autolinks at CJK punctuation", () => {
+      const autolinkContent = "请访问 www.example.com。谢谢";
+      const { container } = render(
+        <Streamdown linkSafety={{ enabled: false }} plugins={{ cjk }}>
+          {autolinkContent}
+        </Streamdown>
+      );
+
+      const link = container.querySelector('[data-streamdown="link"]');
+      expect(link?.textContent).toBe("www.example.com");
+      expect(link?.getAttribute("href")).toBe("http://www.example.com/");
+      expect(container.textContent).toBe(autolinkContent);
+    });
+
     it("keeps default autolink behavior without the CJK boundary plugin", () => {
       const autolinkContent = "请访问 https://example.com。谢谢";
       const { container } = render(

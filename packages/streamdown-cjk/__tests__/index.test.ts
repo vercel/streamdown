@@ -319,6 +319,66 @@ describe("CJK autolink boundary splitting", () => {
     expect(new URL(links[0].url).hostname).toBe("www.example.com");
   });
 
+  it("should split www links at CJK punctuation", async () => {
+    const markdown = "访问 www.example.com。谢谢";
+    const tree = await processMarkdown(markdown);
+    const links = getLinks(tree);
+
+    expect(links.map((link) => link.url)).toEqual(["http://www.example.com"]);
+    expect(links[0].children).toEqual([
+      { type: "text", value: "www.example.com" },
+    ]);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe(markdown);
+  });
+
+  it("should split www links with a path at CJK punctuation", async () => {
+    const markdown = "参考：www.example.com/docs，然后 https://test.com";
+    const tree = await processMarkdown(markdown);
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "http://www.example.com/docs",
+      "https://test.com",
+    ]);
+    expect(
+      getTexts(tree)
+        .map((text) => text.value)
+        .join("")
+    ).toBe(markdown);
+  });
+
+  it("should not split links whose text is the URL without its protocol", async () => {
+    const tree = await processMarkdown(
+      "[example.com/a。b](http://example.com/a。b)"
+    );
+    const links = getLinks(tree);
+
+    expect(links.length).toBe(1);
+    expect(links[0].url).toBe("http://example.com/a。b");
+  });
+
+  it("should not split explicit links whose text matches the URL", async () => {
+    const tree = await processMarkdown(
+      "[www.example.com/a。b](http://www.example.com/a。b) 和 [https://example.com/a。b](https://example.com/a。b)"
+    );
+
+    expect(getLinks(tree).map((link) => link.url)).toEqual([
+      "http://www.example.com/a。b",
+      "https://example.com/a。b",
+    ]);
+  });
+
+  it("should not split angle bracket autolinks", async () => {
+    const tree = await processMarkdown("<https://example.com/a。b>");
+    const links = getLinks(tree);
+
+    expect(links.length).toBe(1);
+    expect(links[0].url).toBe("https://example.com/a。b");
+  });
+
   it("should not split if CJK punctuation is at start of URL", async () => {
     // This shouldn't match the autolink pattern anyway
     const tree = await processMarkdown("。https://example.com");

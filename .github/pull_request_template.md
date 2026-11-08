@@ -57,6 +57,7 @@ Related to #
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] I have created a changeset (`pnpm changeset`)
+- [ ] All my commits are [signed](https://github.com/vercel/streamdown/blob/main/CONTRIBUTING.md#signing-commits)
 
 ## Changeset
 

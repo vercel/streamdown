@@ -178,6 +178,15 @@ GFM extends standard Markdown with powerful features[^1]. Here's a comprehensive
     }
   });
 
+  it("prefixes raw HTML ids so they cannot clobber window", () => {
+    const markdown = '<div id="clobbered">raw</div>';
+    const { container } = render(<Streamdown>{markdown}</Streamdown>);
+
+    expect(container.querySelector("#user-content-clobbered")).toBeTruthy();
+    expect(container.querySelector("#clobbered")).toBeNull();
+    expect((globalThis as { clobbered?: unknown }).clobbered).toBeUndefined();
+  });
+
   it("should show footnotes once content arrives", () => {
     // Simulate streaming where definition has partial content
     const markdown = `Text with footnote[^1].

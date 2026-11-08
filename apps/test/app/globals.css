@@ -3,6 +3,7 @@
 
 @custom-variant dark (&:is(.dark *));
 @source "../node_modules/streamdown/dist/*.js";
+@source "../node_modules/streamdown-released/dist/*.js";
 
 @theme inline {
   --color-background: var(--background);

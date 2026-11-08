@@ -52,8 +52,8 @@ export interface AnimateTimeline {
 }
 
 export interface CreateAnimateTimelineOptions {
-  maxBacklogMs?: number;
-  now?: () => number;
+  maxBacklogMs?: number | undefined;
+  now?: (() => number) | undefined;
 }
 
 const defaultNow = (): number =>
@@ -153,20 +153,25 @@ export interface AnimatePlugin {
 }
 
 export interface AnimateOptions {
-  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {});
-  duration?: number;
-  easing?: string;
+  animation?: "fadeIn" | "blurIn" | "slideUp" | (string & {}) | undefined;
+  duration?: number | undefined;
+  easing?: string | undefined;
   /**
    * Soft cap (ms) on how far ahead of wall-clock words may be scheduled.
    * Larger values favour longer cascades / stricter cross-block serialization;
    * smaller values keep a fast stream visually caught up. @default 320
    */
-  maxBacklogMs?: number;
-  sep?: "word" | "char";
-  stagger?: number;
+  maxBacklogMs?: number | undefined;
+  sep?: "word" | "char" | undefined;
+  stagger?: number | undefined;
 }
 
 const WHITESPACE_RE = /\s/;
+// Scripts written without spaces between words, plus CJK / fullwidth
+// punctuation. Each such character is its own animate unit in word mode so
+// a CJK paragraph isn't one giant "word" (#669).
+const CJK_RE =
+  /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\u3000-\u303F\uFF00-\uFFEF]/u;
 const WHITESPACE_ONLY_RE = /^\s+$/;
 // Skip layout-sensitive subtrees. Fenced/highlighted blocks are protected via
 // `pre` (CommonMark always emits `pre > code`); raw inline `code` is safe to
@@ -344,10 +349,19 @@ const splitByWord = (text: string): string[] => {
   const parts: string[] = [];
   let current = "";
   let inWhitespace = false;
+  let prevCjk = false;
 
   for (const char of text) {
     const isWs = WHITESPACE_RE.test(char);
-    if (isWs !== inWhitespace && current) {
+    const isCjk = !isWs && CJK_RE.test(char);
+    // CJK has no inter-word spaces, so every CJK character starts a new unit
+    // (and so does the first non-CJK character after one).
+    const startsUnit = !isWs && current !== "" && (isCjk || prevCjk);
+    if (startsUnit) {
+      parts.push(current);
+      current = "";
+      inWhitespace = false;
+    } else if (isWs !== inWhitespace && current) {
       if (isWs) {
         current += char;
         inWhitespace = true;
@@ -358,6 +372,7 @@ const splitByWord = (text: string): string[] => {
     }
     current += char;
     inWhitespace = isWs;
+    prevCjk = isCjk;
   }
 
   if (current) {
@@ -401,24 +416,42 @@ const splitByChar = (text: string): string[] => {
   return parts;
 };
 
+// Values the style parser returns unchanged: nonempty, with no outer
+// whitespace and none of the characters that end or escape a declaration.
+const plainStyleValue = /^[^\s;:'"\\/](?:[^;:'"\\/\r\n]*[^\s;:'"\\/])?$/;
+
 const makeSpan = (
   word: string,
-  animation: string,
-  duration: number,
-  easing: string,
+  config: AnimateConfig,
   skipAnimation?: boolean,
   delay?: number
 ): Element => {
-  let style = `--sd-animation:sd-${animation};--sd-duration:${skipAnimation ? 0 : duration}ms;--sd-easing:${easing}`;
-  if (delay) {
-    style += `;--sd-delay:${Math.round(delay)}ms`;
+  const animation = `sd-${config.animation}`;
+  const duration = `${skipAnimation ? 0 : config.duration}ms`;
+  let style: string | Record<string, string>;
+  if (config.styleObjects) {
+    style = {
+      "--sd-animation": animation,
+      "--sd-duration": duration,
+      "--sd-easing": config.easing,
+    };
+    if (delay) {
+      style["--sd-delay"] = `${Math.round(delay)}ms`;
+    }
+  } else {
+    style = `--sd-animation:${animation};--sd-duration:${duration};--sd-easing:${config.easing}`;
+    if (delay) {
+      style += `;--sd-delay:${Math.round(delay)}ms`;
+    }
   }
   return {
     type: "element",
     tagName: "span",
     properties: {
       "data-sd-animate": true,
-      style,
+      // hast types properties as primitives, but hast-util-to-jsx-runtime
+      // hands an object style to React as is instead of parsing a string.
+      style: style as string,
     },
     children: [{ type: "text", value: word }],
   };
@@ -430,6 +463,8 @@ interface AnimateConfig {
   easing: string;
   sep: "word" | "char";
   stagger: number;
+  /** Give word spans a React style object instead of a CSS string */
+  styleObjects: boolean;
   timeline?: AnimateTimeline;
 }
 
@@ -566,14 +601,7 @@ const processTextNode = (
       stampCheckbox(liAncestor, config, itemDuration, delay);
       markerStamped = true;
     }
-    return makeSpan(
-      part,
-      config.animation,
-      config.duration,
-      config.easing,
-      skipAnimation,
-      delay
-    );
+    return makeSpan(part, config, skipAnimation, delay);
   });
 
   if (didAnimate) {
@@ -584,8 +612,6 @@ const processTextNode = (
   return index + nodes.length;
 };
 
-let instanceId = 0;
-
 /**
  * Create an animate rehype plugin. The optional `timeline` is an internal
  * Streamdown wiring detail — not part of the public `animated` prop surface.
@@ -593,12 +619,33 @@ let instanceId = 0;
 export function createAnimatePlugin(
   options?: AnimateOptions & { timeline?: AnimateTimeline }
 ): AnimatePlugin {
+  return buildAnimatePlugin(options, false);
+}
+
+/**
+ * The plugin Streamdown renders with. Its output only reaches React, so word
+ * spans carry style objects that skip a CSS parse per word per render.
+ */
+export const createRenderAnimatePlugin = (
+  options?: AnimateOptions & { timeline?: AnimateTimeline }
+): AnimatePlugin => buildAnimatePlugin(options, true);
+
+function buildAnimatePlugin(
+  options: (AnimateOptions & { timeline?: AnimateTimeline }) | undefined,
+  styleObjects: boolean
+): AnimatePlugin {
+  const animation = options?.animation ?? "fadeIn";
+  const easing = options?.easing ?? "ease";
   const config: AnimateConfig = {
-    animation: options?.animation ?? "fadeIn",
+    animation,
     duration: options?.duration ?? 150,
-    easing: options?.easing ?? "ease",
+    easing,
     sep: options?.sep ?? "word",
     stagger: options?.stagger ?? 40,
+    styleObjects:
+      styleObjects &&
+      plainStyleValue.test(animation) &&
+      plainStyleValue.test(easing),
     timeline: options?.timeline,
   };
 
@@ -610,7 +657,6 @@ export function createAnimatePlugin(
     pendingMark: null,
   };
 
-  const id = instanceId++;
   const rehypeAnimate = () => (tree: Root) => {
     const charCounter = { count: 0, newIndex: 0 };
 
@@ -670,10 +716,6 @@ export function createAnimatePlugin(
     renderState.lastRenderCharCount = charCounter.count;
     renderState.prevContentLength = 0;
   };
-
-  Object.defineProperty(rehypeAnimate, "name", {
-    value: `rehypeAnimate$${id}`,
-  });
 
   return {
     name: "animate",

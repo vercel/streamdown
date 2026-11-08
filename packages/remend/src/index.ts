@@ -17,6 +17,7 @@ import {
   INCOMPLETE_IMAGE_PLACEHOLDER,
   type LinkMode,
 } from "./link-image-handler";
+import { clearScanCache } from "./scan";
 import { handleIncompleteSetextHeading } from "./setext-heading-handler";
 import { handleSingleTildeEscape } from "./single-tilde-handler";
 import { handleIncompleteStrikethrough } from "./strikethrough-handler";
@@ -42,7 +43,7 @@ export interface RemendHandler {
   /** Unique identifier for this handler */
   name: string;
   /** Priority (lower runs first). Built-in priorities: 0-100. Default: 100 */
-  priority?: number;
+  priority?: number | undefined;
 }
 
 /**
@@ -52,42 +53,42 @@ export interface RemendHandler {
  */
 export interface RemendOptions {
   /** Complete bold formatting (e.g., `**text` → `**text**`) */
-  bold?: boolean;
+  bold?: boolean | undefined;
   /** Complete bold-italic formatting (e.g., `***text` → `***text***`) */
-  boldItalic?: boolean;
+  boldItalic?: boolean | undefined;
   /** Escape > as comparison operators in list items (e.g., `- > 25` → `- \> 25`) */
-  comparisonOperators?: boolean;
+  comparisonOperators?: boolean | undefined;
   /** Custom handlers to extend remend */
-  handlers?: RemendHandler[];
+  handlers?: RemendHandler[] | undefined;
   /** Strip incomplete HTML tags at end of streaming text (e.g., `text <custom` → `text`) */
-  htmlTags?: boolean;
+  htmlTags?: boolean | undefined;
   /** Complete images (e.g., `![alt](url` → `![alt](streamdown:incomplete-image)`) */
-  images?: boolean;
+  images?: boolean | undefined;
   /** Complete inline code formatting (e.g., `` `code `` → `` `code` ``) */
-  inlineCode?: boolean;
+  inlineCode?: boolean | undefined;
   /**
    * Complete inline KaTeX math (e.g., `$equation` → `$equation$`).
    * Defaults to `false` — single `$` is ambiguous with currency symbols.
    */
-  inlineKatex?: boolean;
+  inlineKatex?: boolean | undefined;
   /** Complete italic formatting (e.g., `*text` → `*text*` or `_text` → `_text_`) */
-  italic?: boolean;
+  italic?: boolean | undefined;
   /** Complete block KaTeX math (e.g., `$$equation` → `$$equation$$`) */
-  katex?: boolean;
+  katex?: boolean | undefined;
   /**
    * How to handle incomplete links:
    * - `'protocol'`: Use `streamdown:incomplete-link` placeholder URL (default)
    * - `'text-only'`: Display only the link text without any link markup
    */
-  linkMode?: "protocol" | "text-only";
+  linkMode?: "protocol" | "text-only" | undefined;
   /** Complete links and images (e.g., `[text](url` → `[text](streamdown:incomplete-link)`) */
-  links?: boolean;
+  links?: boolean | undefined;
   /** Handle incomplete setext headings to prevent misinterpretation */
-  setextHeadings?: boolean;
+  setextHeadings?: boolean | undefined;
   /** Escape single ~ between word characters to prevent false strikethrough (e.g., `20~25` → `20\~25`) */
-  singleTilde?: boolean;
+  singleTilde?: boolean | undefined;
   /** Complete strikethrough formatting (e.g., `~~text` → `~~text~~`) */
-  strikethrough?: boolean;
+  strikethrough?: boolean | undefined;
 }
 
 // Helper to check if an option is enabled (defaults to true)
@@ -301,17 +302,28 @@ const remend = (text: string, options?: RemendOptions): string => {
     (a, b) => (a.handler.priority ?? 0) - (b.handler.priority ?? 0)
   );
 
-  // Execute handlers in priority order
-  for (const { handler, earlyReturn } of allHandlers) {
-    result = handler.handle(result);
+  try {
+    // Execute handlers in priority order
+    for (const { handler, earlyReturn } of allHandlers) {
+      result = handler.handle(result);
 
-    // Check for early return condition (e.g., incomplete link marker)
-    if (earlyReturn?.(result)) {
-      return result;
+      // Check for early return condition (e.g., incomplete link marker)
+      if (earlyReturn?.(result)) {
+        return result;
+      }
     }
-  }
 
-  return result;
+    // A handler that removes a trailing fragment can expose a trailing space
+    // (e.g. dropping an incomplete image). Strip it the same way the input
+    // was stripped, so healed output re-heals to itself.
+    if (result.endsWith(" ") && !result.endsWith("  ")) {
+      return result.slice(0, -1);
+    }
+
+    return result;
+  } finally {
+    clearScanCache();
+  }
 };
 
 export default remend;

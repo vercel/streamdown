@@ -56,10 +56,14 @@ describe("Caret Feature", () => {
 
       // Check that the wrapper has the caret-related classes
       const className = wrapper?.className || "";
-      expect(className).toContain("[&>*:last-child]:after:inline");
-      expect(className).toContain("[&>*:last-child]:after:align-baseline");
       expect(className).toContain(
-        "[&>*:last-child]:after:content-[var(--streamdown-caret)]"
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:inline"
+      );
+      expect(className).toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:align-baseline"
+      );
+      expect(className).toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:content-[var(--streamdown-caret)]"
       );
 
       // Check that the CSS custom property is set
@@ -79,10 +83,14 @@ describe("Caret Feature", () => {
 
       // Check that the wrapper has the caret-related classes
       const className = wrapper?.className || "";
-      expect(className).toContain("[&>*:last-child]:after:inline");
-      expect(className).toContain("[&>*:last-child]:after:align-baseline");
       expect(className).toContain(
-        "[&>*:last-child]:after:content-[var(--streamdown-caret)]"
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:inline"
+      );
+      expect(className).toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:align-baseline"
+      );
+      expect(className).toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:content-[var(--streamdown-caret)]"
       );
 
       // Check that the CSS custom property is set
@@ -100,10 +108,14 @@ describe("Caret Feature", () => {
 
       // Check that the wrapper does NOT have the caret-related classes
       const className = wrapper?.className || "";
-      expect(className).not.toContain("[&>*:last-child]:after:inline");
-      expect(className).not.toContain("[&>*:last-child]:after:align-baseline");
       expect(className).not.toContain(
-        "[&>*:last-child]:after:content-[var(--streamdown-caret)]"
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:inline"
+      );
+      expect(className).not.toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:align-baseline"
+      );
+      expect(className).not.toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:content-[var(--streamdown-caret)]"
       );
 
       // Check that the style is not set
@@ -254,7 +266,9 @@ describe("Caret Feature", () => {
       // In static mode, the caret classes and styles are not applied
       // because static mode uses a different rendering path
       const className = wrapper?.className || "";
-      expect(className).not.toContain("[&>*:last-child]:after:inline");
+      expect(className).not.toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:inline"
+      );
     });
   });
 
@@ -359,93 +373,8 @@ const x = 1;
       expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ●"');
     });
 
-    it("should hide caret when last block has incomplete code fence", () => {
-      const { container } = render(
-        <Streamdown caret="block" isAnimating={true}>
-          {`\`\`\`javascript
-const x = 1;`}
-        </Streamdown>
-      );
-
-      const wrapper = container.firstElementChild;
-      const style = (wrapper as HTMLElement)?.style;
-      expect(style?.getPropertyValue("--streamdown-caret")).toBe("");
-
-      const className = wrapper?.className || "";
-      expect(className).not.toContain("[&>*:last-child]:after:inline");
-    });
-
-    it("should restore caret when code fence completes", () => {
-      const { container, rerender } = render(
-        <Streamdown caret="block" isAnimating={true}>
-          {`\`\`\`javascript
-const x = 1;`}
-        </Streamdown>
-      );
-
-      let wrapper = container.firstElementChild;
-      let style = (wrapper as HTMLElement)?.style;
-      expect(style?.getPropertyValue("--streamdown-caret")).toBe("");
-
-      rerender(
-        <Streamdown caret="block" isAnimating={true}>
-          {`\`\`\`javascript
-const x = 1;
-\`\`\``}
-        </Streamdown>
-      );
-
-      wrapper = container.firstElementChild;
-      style = (wrapper as HTMLElement)?.style;
-      expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ▋"');
-    });
-
-    it("should hide caret when last block contains a table", () => {
-      const { container } = render(
-        <Streamdown caret="block" isAnimating={true}>
-          {`| Name | Age |
-| --- | --- |
-| Alice | 30 |`}
-        </Streamdown>
-      );
-
-      const wrapper = container.firstElementChild;
-      const style = (wrapper as HTMLElement)?.style;
-      expect(style?.getPropertyValue("--streamdown-caret")).toBe("");
-
-      const className = wrapper?.className || "";
-      expect(className).not.toContain("[&>*:last-child]:after:inline");
-    });
-
-    it("should hide caret when streaming an incomplete table", () => {
-      const { container } = render(
-        <Streamdown caret="block" isAnimating={true}>
-          {`| Name | Age |
-| --- | --- |`}
-        </Streamdown>
-      );
-
-      const wrapper = container.firstElementChild;
-      const style = (wrapper as HTMLElement)?.style;
-      expect(style?.getPropertyValue("--streamdown-caret")).toBe("");
-    });
-
-    it("should show caret when table is followed by regular text", () => {
-      const { container } = render(
-        <Streamdown caret="block" isAnimating={true}>
-          {`| Name | Age |
-| --- | --- |
-| Alice | 30 |
-
-Here is some text after the table`}
-        </Streamdown>
-      );
-
-      const wrapper = container.firstElementChild;
-      const style = (wrapper as HTMLElement)?.style;
-      // The last block is regular text, not a table, so caret should show
-      expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ▋"');
-    });
+    // Suppressing the caret after a code block or table marks the last
+    // element instead of changing the container. See caret-suppression.test.tsx.
   });
 
   describe("Caret Memoization", () => {
@@ -531,10 +460,14 @@ Here is some text after the table`}
       const className = wrapper?.className || "";
 
       // Verify all three caret-related classes are present
-      expect(className).toContain("[&>*:last-child]:after:inline");
-      expect(className).toContain("[&>*:last-child]:after:align-baseline");
       expect(className).toContain(
-        "[&>*:last-child]:after:content-[var(--streamdown-caret)]"
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:inline"
+      );
+      expect(className).toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:align-baseline"
+      );
+      expect(className).toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:content-[var(--streamdown-caret)]"
       );
     });
 
@@ -547,10 +480,14 @@ Here is some text after the table`}
       const className = wrapper?.className || "";
 
       // Verify caret-related classes are NOT present
-      expect(className).not.toContain("[&>*:last-child]:after:inline");
-      expect(className).not.toContain("[&>*:last-child]:after:align-baseline");
       expect(className).not.toContain(
-        "[&>*:last-child]:after:content-[var(--streamdown-caret)]"
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:inline"
+      );
+      expect(className).not.toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:align-baseline"
+      );
+      expect(className).not.toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:content-[var(--streamdown-caret)]"
       );
     });
 
@@ -573,7 +510,9 @@ Here is some text after the table`}
       expect(className).toContain("another-class");
 
       // And caret classes are added
-      expect(className).toContain("[&>*:last-child]:after:inline");
+      expect(className).toContain(
+        "[&>*:last-child:not([data-sd-caret-hidden])]:after:inline"
+      );
     });
   });
 
