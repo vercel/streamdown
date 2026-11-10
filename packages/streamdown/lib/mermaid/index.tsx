@@ -34,7 +34,7 @@ interface RenderRequest {
 
 type RenderOutcome =
   | { ok: true; svg: string; size: { height: number; width: number } | null }
-  | { ok: false; error: string };
+  | { ok: false; error: string; cause?: unknown };
 
 const renderChart = async (
   plugin: NonNullable<ReturnType<typeof useMermaidPlugin>>,
@@ -64,6 +64,7 @@ const renderChart = async (
     return {
       ok: false,
       error: err instanceof Error ? err.message : fallbackError,
+      cause: err,
     };
   }
 };
@@ -77,6 +78,7 @@ export const Mermaid = ({
 }: MermaidProps) => {
   const cn = useCn();
   const [error, setError] = useState<string | null>(null);
+  const [errorCause, setErrorCause] = useState<unknown>(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [svgContent, setSvgContent] = useState<string>("");
   const [svgSize, setSvgSize] = useState<{
@@ -146,6 +148,7 @@ export const Mermaid = ({
       setError(
         "Mermaid plugin not available. Please add the mermaid plugin to enable diagram rendering."
       );
+      setErrorCause(undefined);
       return;
     }
 
@@ -171,12 +174,14 @@ export const Mermaid = ({
         // chart fails. Keep the last valid SVG; the error only shows when
         // there is nothing to display, and only for the latest chart
         setError(rendered.error);
+        setErrorCause(rendered.cause);
       }
     };
 
     const renderLatest = async () => {
       inFlightRef.current = true;
       setError(null);
+      setErrorCause(undefined);
       setIsLoading(true);
       try {
         let request = latestRequestRef.current;
@@ -258,7 +263,12 @@ export const Mermaid = ({
     if (ErrorComponent) {
       return (
         <div ref={containerRef}>
-          <ErrorComponent chart={chart} error={error} retry={retry} />
+          <ErrorComponent
+            cause={errorCause}
+            chart={chart}
+            error={error}
+            retry={retry}
+          />
         </div>
       );
     }

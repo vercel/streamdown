@@ -433,6 +433,7 @@ The error component receives three props:
 - **error** (`string`) - The error message from Mermaid
 - **chart** (`string`) - The original Mermaid diagram code
 - **retry** (`() => void`) - Function to retry rendering the diagram
+- **cause** (`unknown`, optional) - The original value thrown by Mermaid. Its shape depends on the parser: Jison errors expose a `hash` (token, line, expected tokens), while Langium errors do not, so check the shape before reading properties.
 
 ### Example: Logging Errors
 
