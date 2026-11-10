@@ -26,7 +26,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
 
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.keyDown(backdrop!, { key: "Escape" });
-    expect(onClose).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledExactlyOnceWith();
   });
 
   it("should not call onClose for non-Escape keys on backdrop", () => {
