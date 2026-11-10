@@ -199,6 +199,7 @@ interface MermaidOptions {
 interface MermaidErrorComponentProps {
   error: string;
   chart: string;
+  hasFallback: boolean;
   retry: () => void;
 }
 ```

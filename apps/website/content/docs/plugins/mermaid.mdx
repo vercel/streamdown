@@ -428,10 +428,11 @@ export default function Page() {
 }
 ```
 
-The error component receives three props:
+The error component receives four props:
 
 - **error** (`string`) - The error message from Mermaid
 - **chart** (`string`) - The original Mermaid diagram code
+- **hasFallback** (`boolean`) - Whether a last valid diagram is still shown below the error, so you can render a more compact variant
 - **retry** (`() => void`) - Function to retry rendering the diagram
 
 ### Example: Logging Errors
