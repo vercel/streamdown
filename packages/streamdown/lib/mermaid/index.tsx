@@ -250,10 +250,10 @@ export const Mermaid = ({
     );
   }
 
-  // Only show error if we have no valid SVG to display
-  if (error && !svgContent && !lastValidSvg) {
-    const retry = () => setRetryCount((count) => count + 1);
+  const retry = () => setRetryCount((count) => count + 1);
 
+  // Only show the full-page error if we have no valid SVG to fall back on
+  if (error && !displaySvg) {
     // Use custom error component if provided
     if (ErrorComponent) {
       return (
@@ -297,6 +297,19 @@ export const Mermaid = ({
       data-streamdown="mermaid"
       ref={containerRef}
     >
+      {/* The chart changed to an invalid one; keep the last valid diagram
+          below but flag that it no longer matches the current source */}
+      {error &&
+        displaySvg &&
+        (ErrorComponent ? (
+          <ErrorComponent chart={chart} error={error} retry={retry} />
+        ) : (
+          <div className={cn("mb-2 rounded-md bg-red-50 p-2")}>
+            <p className={cn("font-mono text-red-700 text-xs")}>
+              Mermaid Error: {error}
+            </p>
+          </div>
+        ))}
       <PanZoom
         className={cn(
           fullscreen

@@ -227,6 +227,33 @@ describe("Mermaid Component", () => {
     });
   });
 
+  it("should show an error when a previously valid chart becomes invalid", async () => {
+    const mockRender = vi.fn().mockResolvedValueOnce({
+      svg: '<svg data-testid="valid-svg"><text>Valid</text></svg>',
+    });
+    const plugin = createMockMermaidPlugin(mockRender);
+
+    const { container, rerender } = renderWithContext(
+      <Mermaid chart={simpleChart} />,
+      {},
+      { mermaid: plugin }
+    );
+
+    await waitFor(() => {
+      const svg = container.querySelector('[data-testid="valid-svg"]');
+      expect(svg).toBeTruthy();
+    });
+
+    // Closed fence, same as the first render, but now the chart is invalid
+    mockRender.mockRejectedValueOnce(new Error("Parse error on line 2"));
+
+    rerender(<Mermaid chart="new invalid chart" />);
+
+    await waitFor(() => {
+      expect(container.textContent).toContain("Parse error on line 2");
+    });
+  });
+
   it("should have aria-label on chart container", async () => {
     const { container } = renderWithContext(<Mermaid chart={simpleChart} />);
 
