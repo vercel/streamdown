@@ -73,6 +73,7 @@ export const LinkSafetyModal = ({
       onClick={onClose}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
+          e.stopPropagation();
           onClose();
         }
       }}
