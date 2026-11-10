@@ -252,6 +252,8 @@ export interface LinkSafetyConfig {
 export interface MermaidErrorComponentProps {
   chart: string;
   error: string;
+  // Whether a last valid diagram is still shown below the error
+  hasFallback: boolean;
   retry: () => void;
 }
 

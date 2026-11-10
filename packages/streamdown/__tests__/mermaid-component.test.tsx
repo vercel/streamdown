@@ -227,6 +227,85 @@ describe("Mermaid Component", () => {
     });
   });
 
+  it("should show an error when a previously valid chart becomes invalid", async () => {
+    const mockRender = vi.fn().mockResolvedValueOnce({
+      svg: '<svg data-testid="valid-svg"><text>Valid</text></svg>',
+    });
+    const plugin = createMockMermaidPlugin(mockRender);
+
+    const { container, rerender } = renderWithContext(
+      <Mermaid chart={simpleChart} />,
+      {},
+      { mermaid: plugin }
+    );
+
+    await waitFor(() => {
+      const svg = container.querySelector('[data-testid="valid-svg"]');
+      expect(svg).toBeTruthy();
+    });
+
+    // Closed fence, same as the first render, but now the chart is invalid
+    mockRender.mockRejectedValueOnce(new Error("Parse error on line 2"));
+
+    rerender(<Mermaid chart="new invalid chart" />);
+
+    await waitFor(() => {
+      expect(container.textContent).toContain("Parse error on line 2");
+    });
+  });
+
+  it("should render the custom error component alongside the last valid SVG", async () => {
+    const mockRender = vi.fn().mockResolvedValueOnce({
+      svg: '<svg data-testid="valid-svg"><text>Valid</text></svg>',
+    });
+    const plugin = createMockMermaidPlugin(mockRender);
+
+    const CustomError = ({
+      error,
+      hasFallback,
+      retry,
+    }: {
+      error: string;
+      chart: string;
+      hasFallback: boolean;
+      retry: () => void;
+    }) => (
+      <div data-testid="custom-error">
+        Custom Error: {error} (hasFallback: {String(hasFallback)})
+        <button onClick={retry} type="button">
+          Retry
+        </button>
+      </div>
+    );
+
+    const { container, rerender } = renderWithContext(
+      <Mermaid chart={simpleChart} />,
+      { mermaid: { errorComponent: CustomError } },
+      { mermaid: plugin }
+    );
+
+    await waitFor(() => {
+      const svg = container.querySelector('[data-testid="valid-svg"]');
+      expect(svg).toBeTruthy();
+    });
+
+    mockRender.mockRejectedValueOnce(new Error("Parse error on line 2"));
+    rerender(<Mermaid chart="new invalid chart" />);
+
+    await waitFor(() => {
+      const customError = container.querySelector(
+        '[data-testid="custom-error"]'
+      );
+      expect(customError).toBeTruthy();
+      expect(customError?.textContent).toContain("Parse error on line 2");
+      expect(customError?.textContent).toContain("hasFallback: true");
+      // The last valid diagram stays visible alongside the custom error
+      expect(
+        container.querySelector('[data-testid="valid-svg"]')
+      ).toBeTruthy();
+    });
+  });
+
   it("should have aria-label on chart container", async () => {
     const { container } = renderWithContext(<Mermaid chart={simpleChart} />);
 
