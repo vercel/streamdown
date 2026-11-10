@@ -544,20 +544,21 @@ describe("Table Utils", () => {
       expect(extractTableDataFromElement(restoredTable)).toEqual(data);
     });
 
-    it("documents that other Markdown syntax is still re-parsed on render", () => {
-      // Pre-existing limitation: export escapes HTML (&/< />) and table syntax
-      // (|, \, newlines), but not general Markdown metacharacters. So pasted
-      // cells like **bold**, `code`, and [link](url) re-interpret on render.
-      // Broader metachar escaping is out of scope for the HTML-literal fix.
+    it("should preserve literal Markdown syntax when rendered again", () => {
       const data: TableData = {
-        headers: ["Cell"],
-        rows: [["**bold**"], ["`code`"], ["[link](https://example.com)"]],
+        headers: ["**Cell**"],
+        rows: [
+          ["**bold**"],
+          ["_italic_"],
+          ["~~deleted~~"],
+          ["`code`"],
+          ["[link](https://example.com)"],
+          ["![image](https://example.com/image.png)"],
+          ["[reference]"],
+          ["a\\b | *value* & <tag>"],
+        ],
       };
       const markdown = tableDataToMarkdown(data);
-
-      expect(markdown).toContain("**bold**");
-      expect(markdown).toContain("`code`");
-      expect(markdown).toContain("[link](https://example.com)");
 
       const { container } = render(
         Markdown({
@@ -566,13 +567,14 @@ describe("Table Utils", () => {
           rehypePlugins: [rehypeRaw],
         })
       );
-      const cells = [...container.querySelectorAll("tbody td")].map(
-        (cell) => cell.innerHTML
-      );
+      const restoredTable = container.querySelector(
+        "table"
+      ) as HTMLTableElement;
 
-      expect(cells[0]).toContain("<strong>");
-      expect(cells[1]).toContain("<code>");
-      expect(cells[2]).toContain("<a ");
+      expect(extractTableDataFromElement(restoredTable)).toEqual(data);
+      expect(
+        restoredTable.querySelector("strong, em, del, code, img")
+      ).toBeNull();
     });
 
     it("should convert simple table data to Markdown", () => {

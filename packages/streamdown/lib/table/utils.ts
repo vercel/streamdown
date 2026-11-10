@@ -178,6 +178,8 @@ export const tableDataToTSV = (data: TableData): string => {
   return tsvRows.join("\n");
 };
 
+const markdownTableEscapes = new Set(["\\", "|", "`", "*", "_", "~", "[", "]"]);
+
 // Helper function to properly escape markdown table cells
 // Must escape backslashes first, then pipes to avoid incomplete escaping
 export const escapeMarkdownTableCell = (cell: string): string => {
@@ -185,8 +187,7 @@ export const escapeMarkdownTableCell = (cell: string): string => {
   let needsEscaping = false;
   for (const char of cell) {
     if (
-      char === "\\" ||
-      char === "|" ||
+      markdownTableEscapes.has(char) ||
       char === "\n" ||
       char === "&" ||
       char === "<" ||
@@ -203,10 +204,8 @@ export const escapeMarkdownTableCell = (cell: string): string => {
 
   const parts: string[] = [];
   for (const char of cell) {
-    if (char === "\\") {
-      parts.push("\\\\");
-    } else if (char === "|") {
-      parts.push("\\|");
+    if (markdownTableEscapes.has(char)) {
+      parts.push(`\\${char}`);
     } else if (char === "\n") {
       parts.push("<br>");
     } else if (char === "&") {
