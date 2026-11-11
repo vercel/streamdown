@@ -178,6 +178,25 @@ export const tableDataToTSV = (data: TableData): string => {
   return tsvRows.join("\n");
 };
 
+const markdownTableEscapes = new Set([
+  "\\",
+  "|",
+  "`",
+  "*",
+  "_",
+  "~",
+  "[",
+  "]",
+  "$",
+  "@",
+]);
+
+// Breaking autolink prefixes lets Markdown escapes decode before GFM linkification.
+const isAutolinkPrefix = (cell: string, index: number): boolean =>
+  (cell[index] === ":" && cell[index + 1] === "/" && cell[index + 2] === "/") ||
+  (cell[index] === "." &&
+    cell.slice(Math.max(0, index - 3), index).toLowerCase() === "www");
+
 // Helper function to properly escape markdown table cells
 // Must escape backslashes first, then pipes to avoid incomplete escaping
 export const escapeMarkdownTableCell = (cell: string): string => {
@@ -185,8 +204,7 @@ export const escapeMarkdownTableCell = (cell: string): string => {
   let needsEscaping = false;
   for (const char of cell) {
     if (
-      char === "\\" ||
-      char === "|" ||
+      markdownTableEscapes.has(char) ||
       char === "\n" ||
       char === "&" ||
       char === "<" ||
@@ -202,11 +220,10 @@ export const escapeMarkdownTableCell = (cell: string): string => {
   }
 
   const parts: string[] = [];
-  for (const char of cell) {
-    if (char === "\\") {
-      parts.push("\\\\");
-    } else if (char === "|") {
-      parts.push("\\|");
+  for (let index = 0; index < cell.length; index += 1) {
+    const char = cell[index];
+    if (markdownTableEscapes.has(char) || isAutolinkPrefix(cell, index)) {
+      parts.push(`\\${char}`);
     } else if (char === "\n") {
       parts.push("<br>");
     } else if (char === "&") {
