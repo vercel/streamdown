@@ -1,3 +1,4 @@
+import mermaidLib from "mermaid";
 import { describe, expect, it, vi } from "vitest";
 import { createMermaidPlugin, mermaid } from "../index";
 
@@ -139,5 +140,104 @@ describe("MermaidInstance", () => {
     }
 
     consoleSpy.mockRestore();
+  });
+});
+
+describe("Mermaid native defaults", () => {
+  it("should preserve existing defaults by default", () => {
+    const initializeSpy = vi.spyOn(mermaidLib, "initialize");
+
+    try {
+      const plugin = createMermaidPlugin();
+      plugin.getMermaid().initialize({});
+
+      expect(initializeSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          theme: "default",
+          fontFamily: "monospace",
+          startOnLoad: false,
+          securityLevel: "strict",
+          suppressErrorRendering: true,
+        })
+      );
+    } finally {
+      initializeSpy.mockRestore();
+    }
+  });
+
+  it("should omit theme and font when native defaults are enabled", () => {
+    const initializeSpy = vi.spyOn(mermaidLib, "initialize");
+
+    try {
+      const plugin = createMermaidPlugin({
+        useMermaidDefaults: true,
+      });
+
+      plugin.getMermaid().initialize({});
+
+      const config = initializeSpy.mock.calls.at(-1)?.[0];
+
+      expect(config).not.toHaveProperty("theme");
+      expect(config).not.toHaveProperty("fontFamily");
+      expect(config).toMatchObject({
+        startOnLoad: false,
+        securityLevel: "strict",
+        suppressErrorRendering: true,
+      });
+    } finally {
+      initializeSpy.mockRestore();
+    }
+  });
+
+  it("should allow explicit theme and font overrides in native mode", () => {
+    const initializeSpy = vi.spyOn(mermaidLib, "initialize");
+
+    try {
+      const plugin = createMermaidPlugin({
+        useMermaidDefaults: true,
+        config: {
+          theme: "dark",
+          fontFamily: "Inter",
+        },
+      });
+
+      plugin.getMermaid().initialize({});
+
+      expect(initializeSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          theme: "dark",
+          fontFamily: "Inter",
+        })
+      );
+    } finally {
+      initializeSpy.mockRestore();
+    }
+  });
+
+  it("should allow getMermaid config to override native defaults", () => {
+    const initializeSpy = vi.spyOn(mermaidLib, "initialize");
+
+    try {
+      const plugin = createMermaidPlugin({
+        useMermaidDefaults: true,
+      });
+
+      plugin.getMermaid({
+        theme: "dark",
+        fontFamily: "Inter",
+      });
+
+      expect(initializeSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          theme: "dark",
+          fontFamily: "Inter",
+          startOnLoad: false,
+          securityLevel: "strict",
+          suppressErrorRendering: true,
+        })
+      );
+    } finally {
+      initializeSpy.mockRestore();
+    }
   });
 });

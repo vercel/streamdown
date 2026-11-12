@@ -35,15 +35,12 @@ export interface MermaidPluginOptions {
    * Default Mermaid configuration
    */
   config?: MermaidConfig | undefined;
-}
 
-const defaultConfig: MermaidConfig = {
-  startOnLoad: false,
-  theme: "default",
-  securityLevel: "strict",
-  fontFamily: "monospace",
-  suppressErrorRendering: true,
-};
+  /**
+   * Use Mermaid's native theme and font defaults
+   */
+  useMermaidDefaults?: boolean;
+}
 
 /**
  * Create a Mermaid plugin with optional configuration
@@ -51,6 +48,17 @@ const defaultConfig: MermaidConfig = {
 export function createMermaidPlugin(
   options: MermaidPluginOptions = {}
 ): DiagramPlugin {
+  const defaultConfig: MermaidConfig = {
+    startOnLoad: false,
+    securityLevel: "strict",
+    suppressErrorRendering: true,
+    ...(options.useMermaidDefaults
+      ? {}
+      : {
+          theme: "default",
+          fontFamily: "monospace",
+        }),
+  };
   let initialized = false;
   let currentConfig: MermaidConfig = { ...defaultConfig, ...options.config };
 
