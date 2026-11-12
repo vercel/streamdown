@@ -80,6 +80,8 @@ export const TableFullscreenButton = ({
               onClick={handleClose}
               onKeyDown={(e) => {
                 if (e.key === "Escape") {
+                  // Handle it here only, so the document listener does not run too.
+                  e.stopPropagation();
                   handleClose();
                 }
               }}
@@ -90,7 +92,12 @@ export const TableFullscreenButton = ({
                 className={cn("flex h-full flex-col")}
                 data-streamdown="table-wrapper"
                 onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  // Let Escape reach the dialog so it closes from any focused control.
+                  if (e.key !== "Escape") {
+                    e.stopPropagation();
+                  }
+                }}
                 role="presentation"
               >
                 <div className={cn("flex items-center justify-end gap-1 p-4")}>
