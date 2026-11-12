@@ -158,4 +158,20 @@ describe("setext heading handling", () => {
     // Only the final "-" should be modified
     expect(result).toBe("Text 1\n-\nText 2\n-\u200B");
   });
+
+  it("should NOT modify a dash that starts a new list item", () => {
+    // A setext underline can't be a lazy continuation line, so after a list
+    // item the dash starts a new (empty) item instead of a heading
+    expect(remend("- a\n- b\n-")).toBe("- a\n- b\n-");
+    expect(remend("1. a\n2. b\n-")).toBe("1. a\n2. b\n-");
+  });
+
+  it("should NOT modify a dash after a block quote", () => {
+    expect(remend("> quote\n-")).toBe("> quote\n-");
+  });
+
+  it("should still protect a dash indented into the list item", () => {
+    // Indented to the item's content, the dash would underline "a"
+    expect(remend("- a\n  -")).toBe("- a\n  -\u200B");
+  });
 });

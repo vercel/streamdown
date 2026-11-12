@@ -7,6 +7,24 @@ const DASH_ONLY_PATTERN = /^-{1,2}$/;
 const DASH_WITH_SPACE_PATTERN = /^[\s]*-{1,2}[\s]+$/;
 const EQUALS_ONLY_PATTERN = /^={1,2}$/;
 const EQUALS_WITH_SPACE_PATTERN = /^[\s]*={1,2}[\s]+$/;
+const LIST_ITEM_PATTERN = /^ {0,3}(?:[-+*]|\d{1,9}[.)])(?: +|\t)/;
+const BLOCKQUOTE_PATTERN = /^ {0,3}>/;
+const LEADING_SPACES_PATTERN = /^ */;
+
+// A setext underline cannot be a lazy continuation line. When the previous
+// line is a list item or block quote and the dash is not indented into it,
+// the dash starts a new list item, so no heading can form.
+const isOutsidePreviousContainer = (
+  previousLine: string,
+  lastLine: string
+): boolean => {
+  const listItem = LIST_ITEM_PATTERN.exec(previousLine);
+  if (listItem) {
+    const indent = LEADING_SPACES_PATTERN.exec(lastLine)?.[0].length ?? 0;
+    return indent < listItem[0].length;
+  }
+  return BLOCKQUOTE_PATTERN.test(previousLine);
+};
 
 /**
  * Detects if the text ends with a potential incomplete setext heading underline
@@ -46,7 +64,11 @@ export const handleIncompleteSetextHeading = (text: string): string => {
     const previousLine = lines.at(-1);
 
     // If the previous line has content, this could be interpreted as a setext heading
-    if (previousLine && previousLine.trim().length > 0) {
+    if (
+      previousLine &&
+      previousLine.trim().length > 0 &&
+      !isOutsidePreviousContainer(previousLine, lastLine)
+    ) {
       // Add text to break the setext heading pattern
       // We add a zero-width space (\u200B) which breaks the pattern without being visible
       // This is better than adding a regular space which markdown parsers may still interpret
