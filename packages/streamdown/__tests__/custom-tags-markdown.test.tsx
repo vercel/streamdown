@@ -226,33 +226,30 @@ describe("Custom tag position on the line", () => {
   it.each([
     ["outer tag first", { outer: [], inner: [] }],
     ["inner tag first", { inner: [], outer: [] }],
-  ])(
-    "should parse markdown in a nested tag with the %s",
-    (_name, allowedTags) => {
-      const Outer = (props: CustomComponentProps) => (
-        <div data-testid="outer">{props.children as React.ReactNode}</div>
-      );
-      const Inner = (props: CustomComponentProps) => (
-        <div data-testid="inner">{props.children as React.ReactNode}</div>
-      );
+  ])("should parse markdown in a nested tag with the %s", (_name, allowedTags) => {
+    const Outer = (props: CustomComponentProps) => (
+      <div data-testid="outer">{props.children as React.ReactNode}</div>
+    );
+    const Inner = (props: CustomComponentProps) => (
+      <div data-testid="inner">{props.children as React.ReactNode}</div>
+    );
 
-      const { container } = render(
-        <Streamdown
-          allowedTags={allowedTags}
-          components={{ outer: Outer, inner: Inner }}
-          mode="static"
-        >
-          {"<outer>\n<inner>\n**b**\n</inner>\n</outer>"}
-        </Streamdown>
-      );
+    const { container } = render(
+      <Streamdown
+        allowedTags={allowedTags}
+        components={{ outer: Outer, inner: Inner }}
+        mode="static"
+      >
+        {"<outer>\n<inner>\n**b**\n</inner>\n</outer>"}
+      </Streamdown>
+    );
 
-      const strong = container.querySelector(
-        `[data-testid="inner"] ${STRONG_SELECTOR}`
-      );
-      expect(strong?.textContent).toBe("b");
-      expect(container.querySelector('[data-testid="outer"]')).toContainElement(
-        container.querySelector('[data-testid="inner"]')
-      );
-    }
-  );
+    const strong = container.querySelector(
+      `[data-testid="inner"] ${STRONG_SELECTOR}`
+    );
+    expect(strong?.textContent).toBe("b");
+    expect(container.querySelector('[data-testid="outer"]')).toContainElement(
+      container.querySelector('[data-testid="inner"]')
+    );
+  });
 });
