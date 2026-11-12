@@ -2,6 +2,7 @@ import { type ComponentProps, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
 import { CodeBlockCopyButton } from "../code-block/copy-button";
+import { getCopyCallbacks } from "../controls";
 import { useIcons } from "../icon-context";
 import type { MermaidConfig } from "../plugin-types";
 import { resolvePortalTarget } from "../portal";
@@ -154,7 +155,12 @@ export const MermaidFullscreenButton = ({
                 {showDownload ? (
                   <MermaidDownloadDropdown chart={chart} config={config} />
                 ) : null}
-                {showCopy ? <CodeBlockCopyButton code={chart} /> : null}
+                {showCopy ? (
+                  <CodeBlockCopyButton
+                    code={chart}
+                    {...getCopyCallbacks(controlsConfig, "mermaid")}
+                  />
+                ) : null}
                 <button
                   aria-label={t.exitFullscreen}
                   className={cn(
