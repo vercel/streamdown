@@ -377,7 +377,9 @@ describe("MermaidFullscreenButton", () => {
         }
       );
 
-      const openBtn = container.querySelector('button[title="View fullscreen"]');
+      const openBtn = container.querySelector(
+        'button[title="View fullscreen"]'
+      );
       // biome-ignore lint/style/noNonNullAssertion: test assertion
       fireEvent.click(openBtn!);
 
@@ -434,7 +436,9 @@ describe("MermaidFullscreenButton", () => {
         }
       );
 
-      const openBtn = container.querySelector('button[title="View fullscreen"]');
+      const openBtn = container.querySelector(
+        'button[title="View fullscreen"]'
+      );
       // biome-ignore lint/style/noNonNullAssertion: test assertion
       fireEvent.click(openBtn!);
 
