@@ -4,7 +4,7 @@ import type { PluggableList, Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
-import { Markdown } from "../lib/markdown";
+import { Markdown, type Options } from "../lib/markdown";
 
 const createPlugin = (value: string): Plugin<[{ suffix?: string }?], Root> =>
   function replaceText(options) {
@@ -86,4 +86,112 @@ describe("processor plugin identity", () => {
       ).toBe("right");
     });
   }
+});
+
+describe("processor callback options", () => {
+  for (const stage of ["remarkPlugins", "rehypePlugins"] as const) {
+    for (const mode of ["static", "streaming"] as const) {
+      it(`isolates callback options in ${stage}, ${mode}`, () => {
+        const plugin: Plugin<[{ format: (text: string) => string }], Root> =
+          (options) => (tree) => {
+            visit(tree, "text", (node) => {
+              node.value = options.format(node.value);
+            });
+          };
+        const content = (label: string) => (
+          <Streamdown
+            mode={mode}
+            {...{
+              [stage]: [[plugin, { format: (text: string) => label + text }]],
+            }}
+          >
+            input
+          </Streamdown>
+        );
+        const { container } = render(
+          <>
+            {content("left:")}
+            {content("right:")}
+          </>
+        );
+        expect(container.textContent).toBe("left:inputright:input");
+      });
+    }
+  }
+
+  for (const mode of ["static", "streaming"] as const) {
+    it(`isolates remark-rehype handlers in ${mode}`, () => {
+      const options = (text: string): Options["remarkRehypeOptions"] => ({
+        handlers: {
+          strong: () => ({ type: "text", value: text }),
+        },
+      });
+      const { container } = render(
+        <>
+          <Streamdown mode={mode} remarkRehypeOptions={options("left")}>
+            **input**
+          </Streamdown>
+          <Streamdown mode={mode} remarkRehypeOptions={options("right")}>
+            **input**
+          </Streamdown>
+        </>
+      );
+      expect(container.textContent).toBe("leftright");
+    });
+  }
+
+  it("reuses processors for the same callback in new option wrappers", () => {
+    let setups = 0;
+    const plugin: Plugin<[{ format: () => string }], Root> = (options) => {
+      setups += 1;
+      return (tree) => {
+        visit(tree, "text", (node) => {
+          node.value = options.format();
+        });
+      };
+    };
+    const format = () => "formatted";
+    const { container, rerender } = render(
+      <Markdown remarkPlugins={[[plugin, { format }]]}>first</Markdown>
+    );
+    rerender(
+      <Markdown remarkPlugins={[[plugin, { format }]]}>second</Markdown>
+    );
+    expect(container.textContent).toBe("formatted");
+    expect(setups).toBe(1);
+  });
+
+  it("distinguishes callback paths and ordinary JSON data", () => {
+    interface Config {
+      left?: { format?: () => string };
+      right?: { format?: () => string };
+      value?: unknown;
+    }
+    const plugin: Plugin<[Config], Root> = (options) => (tree) => {
+      visit(tree, "text", (node) => {
+        if (options.left?.format) {
+          node.value = `left:${options.left.format()}`;
+        } else if (options.right?.format) {
+          node.value = `right:${options.right.format()}`;
+        } else {
+          node.value = JSON.stringify(options.value);
+        }
+      });
+    };
+    const callback = () => "callback";
+    const cases: [Config, string][] = [
+      [{ left: { format: callback }, right: {} }, "left:callback"],
+      [{ left: {}, right: { format: callback } }, "right:callback"],
+      [{ value: "callback" }, '"callback"'],
+      [{ value: ["function", 0] }, '["function",0]'],
+      [{ value: { handlers: { strong: 0 } } }, '{"handlers":{"strong":0}}'],
+    ];
+    for (const [options, expected] of cases) {
+      const { container, unmount } = render(
+        <Markdown remarkPlugins={[[plugin, options]]}>input</Markdown>
+      );
+      expect(container.textContent).toBe(expected);
+      unmount();
+    }
+  });
 });
