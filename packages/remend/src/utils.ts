@@ -1,5 +1,12 @@
 import { letterNumberUnderscorePattern } from "./patterns";
-import { getScan, inHtmlTagAt, inLinkUrlAt, inMathAt, isFenceAt } from "./scan";
+import {
+  getScan,
+  inHtmlTagAt,
+  inLinkUrlAt,
+  inMathAt,
+  isFenceAt,
+  REGION,
+} from "./scan";
 
 // OPTIMIZATION: Precompute which characters are word characters
 // Using ASCII fast path before falling back to Unicode regex
@@ -32,6 +39,7 @@ export const findMatchingOpeningBracket = (
 ): number => {
   let depth = 1;
   for (let i = closeIndex - 1; i >= 0; i -= 1) {
+    if (getScan(text).regions[i] === REGION.LITERAL) continue;
     if (text[i] === "]") {
       depth += 1;
     } else if (text[i] === "[") {
@@ -52,6 +60,7 @@ export const findMatchingClosingBracket = (
 ): number => {
   let depth = 1;
   for (let i = openIndex + 1; i < text.length; i += 1) {
+    if (getScan(text).regions[i] === REGION.LITERAL) continue;
     if (text[i] === "[") {
       depth += 1;
     } else if (text[i] === "]") {

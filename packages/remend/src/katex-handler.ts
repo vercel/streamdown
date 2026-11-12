@@ -33,7 +33,11 @@ const countSingleDollars = (text: string): number => {
 const addClosingKatex = (text: string): string => {
   // If the text already ends with a partial closing $ (but not $$),
   // just append one more $ to complete the $$ marker.
-  if (text.endsWith("$") && !text.endsWith("$$")) {
+  if (
+    text.endsWith("$") &&
+    !text.endsWith("$$") &&
+    getScan(text).regions[text.length - 1] !== REGION.LITERAL
+  ) {
     return `${text}$`;
   }
 

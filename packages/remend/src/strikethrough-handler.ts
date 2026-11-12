@@ -32,7 +32,7 @@ export const handleIncompleteStrikethrough = (text: string): string => {
     }
 
     // Don't close if the marker is inside an inline code span or fenced code block
-    const markerIndex = text.lastIndexOf(strikethroughMatch[1]);
+    const markerIndex = strikethroughMatch.index!;
     if (
       isInsideCodeBlock(text, markerIndex) ||
       isWithinCompleteInlineCode(text, markerIndex)
@@ -49,7 +49,7 @@ export const handleIncompleteStrikethrough = (text: string): string => {
     const halfCompleteMatch = matchTrailing(text, halfCompleteTildePattern);
     if (halfCompleteMatch) {
       // Don't close if the marker is inside an inline code span or fenced code block
-      const markerIndex = text.lastIndexOf(halfCompleteMatch[0].slice(0, 2));
+      const markerIndex = halfCompleteMatch.index!;
       if (
         isInsideCodeBlock(text, markerIndex) ||
         isWithinCompleteInlineCode(text, markerIndex)

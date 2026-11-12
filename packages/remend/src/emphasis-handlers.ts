@@ -398,7 +398,7 @@ export const handleIncompleteBold = (text: string): string => {
   }
 
   const contentAfterMarker = boldMatch[2];
-  const markerIndex = text.lastIndexOf(boldMatch[1]);
+  const markerIndex = boldMatch.index!;
 
   // Check if the bold marker is within a code block (fenced or inline)
   if (
@@ -416,7 +416,10 @@ export const handleIncompleteBold = (text: string): string => {
   if (asteriskPairs % 2 === 1) {
     // Check for half-complete closing marker: **content* should become **content**
     // The trailing * is the first char of the closing ** being streamed
-    if (contentAfterMarker.endsWith("*")) {
+    if (
+      contentAfterMarker.endsWith("*") &&
+      getScan(text).regions[text.length - 1] !== REGION.LITERAL
+    ) {
       return `${text}*`;
     }
     return `${text}**`;
@@ -469,7 +472,7 @@ export const handleIncompleteDoubleUnderscoreItalic = (
       halfCompleteUnderscorePattern
     );
     if (halfCompleteMatch) {
-      const markerIndex = text.lastIndexOf(halfCompleteMatch[1]);
+      const markerIndex = halfCompleteMatch.index!;
       if (
         !(
           isInsideCodeBlock(text, markerIndex) ||
@@ -484,7 +487,7 @@ export const handleIncompleteDoubleUnderscoreItalic = (
   }
 
   const contentAfterMarker = italicMatch[2];
-  const markerIndex = text.lastIndexOf(italicMatch[1]);
+  const markerIndex = italicMatch.index!;
 
   // Check if the italic marker is within a code block (fenced or inline)
   if (
@@ -632,7 +635,12 @@ const insertClosingUnderscore = (text: string): string => {
   // If text ends with newline(s), insert underscore before them
   // Use string methods instead of regex to avoid ReDoS vulnerability
   let endIndex = text.length;
-  while (endIndex > 0 && text[endIndex - 1] === "\n") {
+  const scan = getScan(text);
+  while (
+    endIndex > 0 &&
+    text[endIndex - 1] === "\n" &&
+    scan.regions[endIndex - 1] !== REGION.LITERAL
+  ) {
     endIndex -= 1;
   }
   if (endIndex < text.length) {
@@ -645,7 +653,10 @@ const insertClosingUnderscore = (text: string): string => {
 
 // Helper to handle trailing ** for proper nesting of _ and ** markers
 const handleTrailingAsterisksForUnderscore = (text: string): string | null => {
-  if (!text.endsWith("**")) {
+  if (
+    !text.endsWith("**") ||
+    getScan(text).regions.indexOf(REGION.LITERAL, text.length - 2) !== -1
+  ) {
     return null;
   }
 
@@ -770,7 +781,7 @@ export const handleIncompleteBoldItalic = (text: string): string => {
   }
 
   const contentAfterMarker = boldItalicMatch[2];
-  const markerIndex = text.lastIndexOf(boldItalicMatch[1]);
+  const markerIndex = boldItalicMatch.index!;
 
   if (shouldSkipBoldItalicCompletion(text, contentAfterMarker, markerIndex)) {
     return text;
