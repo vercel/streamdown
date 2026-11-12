@@ -191,4 +191,45 @@ describe("preprocessCustomTags", () => {
       "\uFEFF<x>\n\n**b**\n\n</x>\n\n"
     );
   });
+
+  it("should pad a nested tag the same in either allowedTags order", () => {
+    const md = "<outer>\n<inner>\n**b**\n</inner>\n</outer>";
+    const padded = "<outer>\n\n<inner>\n\n**b**\n\n</inner>\n\n</outer>\n\n";
+    expect(preprocessCustomTags(md, ["outer", "inner"])).toBe(padded);
+    expect(preprocessCustomTags(md, ["inner", "outer"])).toBe(padded);
+  });
+
+  it("should pad a nested tag of the same name", () => {
+    expect(
+      preprocessCustomTags("<note>\n<note>\n**b**\n</note>\n</note>", ["note"])
+    ).toBe("<note>\n\n<note>\n\n**b**\n\n</note>\n\n</note>\n\n");
+  });
+
+  it("should not duplicate text for crossing tags", () => {
+    expect(preprocessCustomTags("<a>\n<b>\n</a>\nmid\n</b>", ["a", "b"])).toBe(
+      "<a>\n\n<b>\n\n</a>\n\n\nmid\n</b>"
+    );
+  });
+
+  it("should pad deeply nested and many sibling tags quickly", () => {
+    const depth = 200;
+    const nested = `${"<note>\n".repeat(depth)}**b**\n${"</note>\n".repeat(depth)}`;
+    const siblings = Array.from(
+      { length: 3000 },
+      (_, i) => `<note>\nitem ${i}\n</note>`
+    ).join("\n\n");
+
+    const start = performance.now();
+    const result = preprocessCustomTags(nested, ["note"]);
+    preprocessCustomTags(siblings, ["note"]);
+    expect(performance.now() - start).toBeLessThan(500);
+    expect(result.match(/<note>\n\n/g)).toHaveLength(depth);
+  });
+
+  it("should pad an unclosed nested tag while streaming, in either order", () => {
+    const md = "<outer>\n<inner>\n**b**";
+    const padded = "<outer>\n\n<inner>\n\n**b**";
+    expect(preprocessCustomTags(md, ["outer", "inner"])).toBe(padded);
+    expect(preprocessCustomTags(md, ["inner", "outer"])).toBe(padded);
+  });
 });
