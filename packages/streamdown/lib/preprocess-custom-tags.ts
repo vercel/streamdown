@@ -47,6 +47,11 @@ const BLANK_LINE_RE = /\n\n/g;
 const FENCE_RE = /^[ \t]*(`{3,}|~{3,})(.*)$/;
 const REGEXP_METACHAR_RE = /[.*+?^${}()|[\]\\]/g;
 
+// Containers nested deeper than this are left as raw text in their ancestor's
+// body. Each padded level re-reads its body, so depth multiplies the work, and
+// legitimate documents do not nest custom tags anywhere near this deep.
+const MAX_CONTAINER_DEPTH = 256;
+
 const escapeRegExp = (value: string): string =>
   value.replace(REGEXP_METACHAR_RE, "\\$&");
 
@@ -87,6 +92,71 @@ interface Container {
   padded: boolean;
 }
 
+/**
+ * Fenced code blocks as `[start, end)` offsets: from the start of the opening
+ * fence line to the end of the closing fence line (exclusive of its newline),
+ * or to the end of the text while the fence is still open.
+ */
+const findFences = (text: string): [number, number][] => {
+  const fences: [number, number][] = [];
+  if (!(text.includes("```") || text.includes("~~~"))) {
+    return fences;
+  }
+
+  let fenceStart = -1;
+  let fenceChar = "";
+  let fenceLength = 0;
+  let lineStart = 0;
+
+  while (lineStart <= text.length) {
+    let lineEnd = text.indexOf("\n", lineStart);
+    if (lineEnd === -1) {
+      lineEnd = text.length;
+    }
+    const match = FENCE_RE.exec(text.slice(lineStart, lineEnd));
+
+    if (match) {
+      const run = match[1];
+      const rest = match[2];
+      if (fenceStart === -1) {
+        // A backtick fence's info string cannot contain backticks.
+        if (!(run[0] === "`" && rest.includes("`"))) {
+          fenceStart = lineStart;
+          fenceChar = run[0];
+          fenceLength = run.length;
+        }
+      } else if (
+        run[0] === fenceChar &&
+        run.length >= fenceLength &&
+        rest.trim() === ""
+      ) {
+        fences.push([fenceStart, lineEnd]);
+        fenceStart = -1;
+      }
+    }
+
+    lineStart = lineEnd + 1;
+  }
+
+  if (fenceStart !== -1) {
+    fences.push([fenceStart, text.length]);
+  }
+  return fences;
+};
+
+// A predicate for whether an offset is inside fenced code. Offsets must be
+// queried in ascending order.
+const createInFence = (text: string) => {
+  const fences = findFences(text);
+  let i = 0;
+  return (index: number): boolean => {
+    while (i < fences.length && fences[i][1] <= index) {
+      i += 1;
+    }
+    return i < fences.length && fences[i][0] <= index;
+  };
+};
+
 const SELF_CLOSING_END_RE = /\/\s*>$/;
 const TAG_NAME_RE = /^<([A-Za-z][\w:-]*)/;
 
@@ -95,15 +165,22 @@ const TAG_NAME_RE = /^<([A-Za-z][\w:-]*)/;
 // nearest unmatched opening tag of the same name, so an outer tag is not
 // stopped at an inner tag's closing tag. Matching each tag name on its own
 // does that, and then which pairs are seen depends on the allowedTags order.
+// Tags inside fenced code are code text, not markup, so they are skipped.
 const multilinePairs = (markdown: string, tagNames: string[]): Container[] => {
   const boundary = new RegExp(
     `<(/?)(${tagNames.map(escapeRegExp).join("|")})(?=[\\s>/])[^>]*>`,
     "gi"
   );
+  const inFence = createInFence(markdown);
   const pairs: Container[] = [];
-  const openStack: { name: string; index: number; end: number }[] = [];
+  // One stack per tag name: a closing tag pairs with the nearest unmatched
+  // opening tag of its own name, whatever other tags are open in between.
+  const openStacks = new Map<string, { index: number; end: number }[]>();
 
   for (const match of markdown.matchAll(boundary)) {
+    if (inFence(match.index)) {
+      continue;
+    }
     const name = match[2].toLowerCase();
     const isClose = match[1] === "/";
     const end = match.index + match[0].length;
@@ -111,28 +188,30 @@ const multilinePairs = (markdown: string, tagNames: string[]): Container[] => {
     if (isSelfClosing) {
       continue;
     }
+    let openStack = openStacks.get(name);
     if (!isClose) {
-      openStack.push({ name, index: match.index, end });
+      if (!openStack) {
+        openStack = [];
+        openStacks.set(name, openStack);
+      }
+      openStack.push({ index: match.index, end });
       continue;
     }
-    for (let i = openStack.length - 1; i >= 0; i -= 1) {
-      if (openStack[i].name !== name) {
-        continue;
-      }
-      const { index: open, end: openEnd } = openStack[i];
-      openStack.splice(i, 1);
-      const newline = markdown.indexOf("\n", open);
-      if (newline !== -1 && newline < match.index) {
-        pairs.push({
-          open,
-          openEnd,
-          closeStart: match.index,
-          closeEnd: end,
-          children: [],
-          padded: false,
-        });
-      }
-      break;
+    const opener = openStack?.pop();
+    if (!opener) {
+      continue;
+    }
+    const { index: open, end: openEnd } = opener;
+    const newline = markdown.indexOf("\n", open);
+    if (newline !== -1 && newline < match.index) {
+      pairs.push({
+        open,
+        openEnd,
+        closeStart: match.index,
+        closeEnd: end,
+        children: [],
+        padded: false,
+      });
     }
   }
 
@@ -194,7 +273,7 @@ const createLineScanner = (markdown: string) => {
  * container only depends on containers that close before it opens, and those
  * are already decided when containers are visited in document order. A pair
  * that crosses an open container (`<a>\n<b>\n</a>\n</b>`) cannot nest, so it
- * is left as is.
+ * is left as is, and so is a pair nested deeper than MAX_CONTAINER_DEPTH.
  */
 const parseContainers = (markdown: string, tagNames: string[]) => {
   const startsBlock = createLineScanner(markdown);
@@ -217,7 +296,10 @@ const parseContainers = (markdown: string, tagNames: string[]) => {
       stack.pop();
       parent = stack.at(-1);
     }
-    if (parent && pair.closeEnd > parent.closeStart) {
+    if (
+      (parent && pair.closeEnd > parent.closeStart) ||
+      stack.length >= MAX_CONTAINER_DEPTH
+    ) {
       continue;
     }
     pair.padded = startsBlock(pair.open, paddedEnd);
@@ -254,61 +336,16 @@ const replaceBlankLines = (text: string): string => {
     value.replace(ALREADY_PADDED_RE, (run) => run.replace("\n\n", "\n\0"));
   const restore = (value: string): string => value.replaceAll("\0", "\n");
 
-  if (!(text.includes("```") || text.includes("~~~"))) {
-    return restore(protect(text).replace(BLANK_LINE_RE, "\n<!---->\n"));
-  }
+  const replace = (value: string): string =>
+    restore(protect(value).replace(BLANK_LINE_RE, "\n<!---->\n"));
 
   let result = "";
-  let segmentStart = 0;
-  let fenceChar: string | null = null;
-  let fenceLength = 0;
-  let lineStart = 0;
-
-  while (lineStart <= text.length) {
-    let lineEnd = text.indexOf("\n", lineStart);
-    if (lineEnd === -1) {
-      lineEnd = text.length;
-    }
-    const match = FENCE_RE.exec(text.slice(lineStart, lineEnd));
-
-    if (match) {
-      const run = match[1];
-      const rest = match[2];
-      if (fenceChar === null) {
-        // A backtick fence's info string cannot contain backticks.
-        if (!(run[0] === "`" && rest.includes("`"))) {
-          result += restore(
-            protect(text.slice(segmentStart, lineStart)).replace(
-              BLANK_LINE_RE,
-              "\n<!---->\n"
-            )
-          );
-          segmentStart = lineStart;
-          fenceChar = run[0];
-          fenceLength = run.length;
-        }
-      } else if (
-        run[0] === fenceChar &&
-        run.length >= fenceLength &&
-        rest.trim() === ""
-      ) {
-        result += text.slice(segmentStart, lineEnd);
-        segmentStart = lineEnd;
-        fenceChar = null;
-        fenceLength = 0;
-      }
-    }
-
-    lineStart = lineEnd + 1;
+  let cursor = 0;
+  for (const [start, end] of findFences(text)) {
+    result += replace(text.slice(cursor, start)) + text.slice(start, end);
+    cursor = end;
   }
-
-  const remaining = text.slice(segmentStart);
-  return (
-    result +
-    (fenceChar === null
-      ? restore(protect(remaining).replace(BLANK_LINE_RE, "\n<!---->\n"))
-      : remaining)
-  );
+  return result + replace(text.slice(cursor));
 };
 
 const normalizeClosedTag = (
@@ -349,6 +386,21 @@ const normalizeUnclosedOpenTags = (
 ): string => {
   const openOnly = new RegExp(tagNames.map(openTagSource).join("|"), "gi");
   let startsBlock: ((index: number) => boolean) | undefined;
+  let lastCloses: Map<string, number> | undefined;
+  // Where the last closing tag of each name starts, so checking for a tag's
+  // own close does not rescan the rest of the document for every open tag.
+  const findLastCloses = (): Map<string, number> => {
+    const closes = new Map<string, number>();
+    const closeRe = new RegExp(
+      `</(${tagNames.map(escapeRegExp).join("|")})\\s*>`,
+      "gi"
+    );
+    for (const close of markdown.matchAll(closeRe)) {
+      closes.set(close[1].toLowerCase(), close.index);
+    }
+    return closes;
+  };
+  const nonSpace = /\S/g;
 
   let result = "";
   let lastIndex = 0;
@@ -357,7 +409,6 @@ const normalizeUnclosedOpenTags = (
   while (match) {
     const fullOpen = match[0];
     const openEnd = match.index + fullOpen.length;
-    const after = markdown.slice(openEnd);
 
     // A tag that follows text on its line is inline HTML, not a streaming
     // container.
@@ -370,8 +421,9 @@ const normalizeUnclosedOpenTags = (
     // The tag's own close tag, not any allowed one. A nested tag whose
     // container is still unclosed has no close of its own and still needs the
     // interrupt; checking any close skips it.
-    const name = TAG_NAME_RE.exec(fullOpen)?.[1] ?? "";
-    if (new RegExp(`</${escapeRegExp(name)}\\s*>`, "i").test(after)) {
+    const name = (TAG_NAME_RE.exec(fullOpen)?.[1] ?? "").toLowerCase();
+    lastCloses ??= findLastCloses();
+    if ((lastCloses.get(name) ?? -1) >= openEnd) {
       match = openOnly.exec(markdown);
       continue;
     }
@@ -380,15 +432,15 @@ const normalizeUnclosedOpenTags = (
 
     // Already blank-line interrupted, or no body yet — leave the interrupt
     // intact, but still normalize further blank lines inside the body.
-    if (after.length === 0) {
+    if (openEnd === markdown.length) {
       result += fullOpen;
       lastIndex = openEnd;
       match = openOnly.exec(markdown);
       continue;
     }
-    if (after.startsWith("\n\n")) {
+    if (markdown.startsWith("\n\n", openEnd)) {
       // Keep the leading "\n\n" interrupt; replace only subsequent blanks.
-      const body = replaceBlankLines(after.slice(2));
+      const body = replaceBlankLines(markdown.slice(openEnd + 2));
       result += `${fullOpen}\n\n${body}`;
       lastIndex = markdown.length;
       break;
@@ -396,7 +448,7 @@ const normalizeUnclosedOpenTags = (
 
     // Body on same line as open (inline incomplete) — leave as-is so
     // phrasing content can still bold once complete.
-    if (!after.startsWith("\n")) {
+    if (markdown[openEnd] !== "\n") {
       result += fullOpen;
       lastIndex = openEnd;
       match = openOnly.exec(markdown);
@@ -404,8 +456,8 @@ const normalizeUnclosedOpenTags = (
     }
 
     // Open + newline but no real body yet (still waiting for first chars).
-    const bodyAfterNewline = after.slice(1);
-    if (bodyAfterNewline.trim().length === 0) {
+    nonSpace.lastIndex = openEnd + 1;
+    if (!nonSpace.test(markdown)) {
       result += fullOpen;
       lastIndex = openEnd;
       match = openOnly.exec(markdown);

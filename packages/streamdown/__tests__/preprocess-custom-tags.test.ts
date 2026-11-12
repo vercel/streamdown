@@ -226,6 +226,29 @@ describe("preprocessCustomTags", () => {
     expect(result.match(/<note>\n\n/g)).toHaveLength(depth);
   });
 
+  it("should not pair or pad tags inside fenced code", () => {
+    const md = "```\n<note>\nx\n</note>\n```";
+    expect(preprocessCustomTags(md, ["note"])).toBe(md);
+
+    const outer = "<note>\n```\n</note>\n```\n</note>";
+    expect(preprocessCustomTags(outer, ["note"])).toBe(
+      "<note>\n\n```\n</note>\n```\n\n</note>\n\n"
+    );
+  });
+
+  it("should not overflow the stack on pathologically deep nesting", () => {
+    const depth = 20_000;
+    const nested = `${"<note>\n".repeat(depth)}${"</note>\n".repeat(depth)}`;
+    const inline = `${"<note>".repeat(depth)}\n${"</note>".repeat(depth)}`;
+    const fenced = `\`\`\`\n${nested}\`\`\`\n`;
+
+    const start = performance.now();
+    expect(() => preprocessCustomTags(nested, ["note"])).not.toThrow();
+    expect(() => preprocessCustomTags(inline, ["note"])).not.toThrow();
+    expect(preprocessCustomTags(fenced, ["note"])).toBe(fenced);
+    expect(performance.now() - start).toBeLessThan(2000);
+  });
+
   it("should pad an unclosed nested tag while streaming, in either order", () => {
     const md = "<outer>\n<inner>\n**b**";
     const padded = "<outer>\n\n<inner>\n\n**b**";
