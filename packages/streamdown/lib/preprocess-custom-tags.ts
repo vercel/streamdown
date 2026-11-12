@@ -401,14 +401,32 @@ const normalizeUnclosedOpenTags = (
     return closes;
   };
   const nonSpace = /\S/g;
+  const inFence = createInFence(markdown);
 
   let result = "";
   let lastIndex = 0;
   let match = openOnly.exec(markdown);
 
+  // Text after the first handled tag is inside an unclosed body, so its blank
+  // lines become placeholders. Text before it is outside every tag.
+  // The segment keeps the `<` of the tag that ends it, so a blank line right
+  // before that tag is still recognized as padding (see ALREADY_PADDED_RE).
+  const appendUpTo = (index: number) => {
+    result +=
+      lastIndex === 0
+        ? markdown.slice(0, index)
+        : replaceBlankLines(markdown.slice(lastIndex, index + 1)).slice(0, -1);
+  };
+
   while (match) {
     const fullOpen = match[0];
     const openEnd = match.index + fullOpen.length;
+
+    // A tag inside fenced code is code text, not a container.
+    if (inFence(match.index)) {
+      match = openOnly.exec(markdown);
+      continue;
+    }
 
     // A tag that follows text on its line is inline HTML, not a streaming
     // container.
@@ -428,7 +446,7 @@ const normalizeUnclosedOpenTags = (
       continue;
     }
 
-    result += markdown.slice(lastIndex, match.index);
+    appendUpTo(match.index);
 
     // Already blank-line interrupted, or no body yet — leave the interrupt
     // intact, but still normalize further blank lines inside the body.
@@ -439,11 +457,13 @@ const normalizeUnclosedOpenTags = (
       continue;
     }
     if (markdown.startsWith("\n\n", openEnd)) {
-      // Keep the leading "\n\n" interrupt; replace only subsequent blanks.
-      const body = replaceBlankLines(markdown.slice(openEnd + 2));
-      result += `${fullOpen}\n\n${body}`;
-      lastIndex = markdown.length;
-      break;
+      // Keep the leading "\n\n" interrupt; later blanks become placeholders.
+      // Keep scanning: a nested unclosed tag in the body needs its own
+      // interrupt.
+      result += `${fullOpen}\n\n`;
+      lastIndex = openEnd + 2;
+      match = openOnly.exec(markdown);
+      continue;
     }
 
     // Body on same line as open (inline incomplete) — leave as-is so

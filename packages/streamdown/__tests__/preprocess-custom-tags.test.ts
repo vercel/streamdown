@@ -98,6 +98,28 @@ describe("preprocessCustomTags", () => {
     expect(result).toBe("<ai-thinking>\n\n**bold**");
   });
 
+  it("should pad a nested unclosed tag after an already-interrupted one", () => {
+    const md = "<outer>\n\n**x**\n<inner>\n**y**";
+    const result = preprocessCustomTags(md, ["outer", "inner"]);
+    expect(result).toBe("<outer>\n\n**x**\n<inner>\n\n**y**");
+  });
+
+  it("should replace blank lines between nested unclosed tags either way", () => {
+    const expected = "<outer>\n\nx\n<!---->\ny\n<inner>\n\nz\n<!---->\nw";
+    const tags = ["outer", "inner"];
+    expect(preprocessCustomTags("<outer>\nx\n\ny\n<inner>\nz\n\nw", tags)).toBe(
+      expected
+    );
+    expect(
+      preprocessCustomTags("<outer>\n\nx\n\ny\n<inner>\nz\n\nw", tags)
+    ).toBe(expected);
+  });
+
+  it("should not pad an unclosed tag inside fenced code", () => {
+    const md = "<outer>\n\n```\n<inner>\nz\n```";
+    expect(preprocessCustomTags(md, ["outer", "inner"])).toBe(md);
+  });
+
   it("should leave unclosed open-only tags without body unchanged", () => {
     expect(preprocessCustomTags("<ai-thinking>", ["ai-thinking"])).toBe(
       "<ai-thinking>"
