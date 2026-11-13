@@ -164,6 +164,18 @@ describe("setext heading handling", () => {
     // item the dash starts a new (empty) item instead of a heading
     expect(remend("- a\n- b\n-")).toBe("- a\n- b\n-");
     expect(remend("1. a\n2. b\n-")).toBe("1. a\n2. b\n-");
+    expect(remend("- a\n2. b\n-")).toBe("- a\n2. b\n-");
+    expect(remend("text\n\n2. item\n-")).toBe("text\n\n2. item\n-");
+    expect(remend("2. item\n-")).toBe("2. item\n-");
+  });
+
+  it("should protect numbered text that continues a paragraph", () => {
+    // Only "1." can interrupt a paragraph, so "2. item" here is paragraph text
+    expect(remend("text\n2. item\n-")).toBe("text\n2. item\n-\u200B");
+    expect(remend("text\n2. item\n3. item\n-")).toBe(
+      "text\n2. item\n3. item\n-\u200B"
+    );
+    expect(remend("text\n0. item\n-")).toBe("text\n0. item\n-\u200B");
   });
 
   it("should NOT modify a dash after a block quote", () => {
@@ -173,5 +185,8 @@ describe("setext heading handling", () => {
   it("should still protect a dash indented into the list item", () => {
     // Indented to the item's content, the dash would underline "a"
     expect(remend("- a\n  -")).toBe("- a\n  -\u200B");
+    // Tabs expand to column 4, which is inside the item
+    expect(remend("- a\n\t-")).toBe("- a\n\t-\u200B");
+    expect(remend("- a\n \t-")).toBe("- a\n \t-\u200B");
   });
 });
