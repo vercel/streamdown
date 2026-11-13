@@ -272,7 +272,7 @@ describe("TableFullscreenButton", () => {
     ).toBeFalsy();
   });
 
-  it("should not close fullscreen on keyDown inside inner presentation div", () => {
+  it("should close fullscreen on Escape from inside the content", () => {
     const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
@@ -283,16 +283,57 @@ describe("TableFullscreenButton", () => {
     const overlay = document.querySelector(
       '[data-streamdown="table-fullscreen"]'
     );
-    expect(overlay).toBeTruthy();
-
-    // Fire keyDown on the inner presentation div (covers line 91 stopPropagation)
     const innerDiv = overlay?.querySelector('[role="presentation"]');
     expect(innerDiv).toBeTruthy();
     if (innerDiv) {
       fireEvent.keyDown(innerDiv, { key: "Escape" });
     }
 
-    // Should still be open because stopPropagation prevents it from reaching the dialog
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeFalsy();
+  });
+
+  it("should close fullscreen on Escape when a control inside has focus", () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    const copyBtn = overlay?.querySelector(
+      'button[title="Copy table"]'
+    ) as HTMLButtonElement;
+    expect(copyBtn).toBeTruthy();
+    copyBtn.focus();
+    fireEvent.keyDown(copyBtn, { key: "Escape" });
+
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeFalsy();
+  });
+
+  it("should not close fullscreen on other keys inside the content", () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    const innerDiv = overlay?.querySelector('[role="presentation"]');
+    expect(innerDiv).toBeTruthy();
+    if (innerDiv) {
+      fireEvent.keyDown(innerDiv, { key: "Enter" });
+    }
+
     expect(
       document.querySelector('[data-streamdown="table-fullscreen"]')
     ).toBeTruthy();

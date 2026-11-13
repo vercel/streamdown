@@ -138,6 +138,8 @@ export const MermaidFullscreenButton = ({
               onClick={handleToggle}
               onKeyDown={(e) => {
                 if (e.key === "Escape") {
+                  // Handle it here only, so the document listener does not run too.
+                  e.stopPropagation();
                   handleToggle();
                 }
               }}
@@ -149,7 +151,12 @@ export const MermaidFullscreenButton = ({
                   "absolute end-4 top-4 z-10 flex items-center gap-1"
                 )}
                 onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  // Let Escape reach the dialog so it closes from any focused control.
+                  if (e.key !== "Escape") {
+                    e.stopPropagation();
+                  }
+                }}
                 role="presentation"
               >
                 {showDownload ? (
@@ -177,7 +184,12 @@ export const MermaidFullscreenButton = ({
               <div
                 className={cn("flex size-full items-center justify-center p-4")}
                 onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  // Let Escape reach the dialog so it closes from any focused control.
+                  if (e.key !== "Escape") {
+                    e.stopPropagation();
+                  }
+                }}
                 role="presentation"
               >
                 <Mermaid

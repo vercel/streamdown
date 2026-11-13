@@ -227,7 +227,7 @@ describe("MermaidFullscreenButton", () => {
     expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
   });
 
-  it("should stop keydown propagation on content area", async () => {
+  it("should close fullscreen on Escape from the content area", async () => {
     const { container } = renderWithContext({ chart: "graph TD; A-->B" });
 
     const openBtn = container.querySelector('button[title="View fullscreen"]');
@@ -238,12 +238,55 @@ describe("MermaidFullscreenButton", () => {
       expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
     });
 
-    // Press Escape on content area - should not close
-    const contentArea = document.querySelector('[role="presentation"]');
+    const contentArea = Array.from(
+      document.querySelectorAll('[role="presentation"]')
+    ).at(-1);
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.keyDown(contentArea!, { key: "Escape" });
 
-    // Should still be open
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeFalsy();
+    });
+  });
+
+  it("should close fullscreen on Escape when a toolbar control has focus", async () => {
+    const { container } = renderWithContext({ chart: "graph TD; A-->B" });
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+    });
+
+    const exitBtn = document.querySelector(
+      'button[title="Exit fullscreen"]'
+    ) as HTMLButtonElement;
+    expect(exitBtn).toBeTruthy();
+    exitBtn.focus();
+    fireEvent.keyDown(exitBtn, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeFalsy();
+    });
+  });
+
+  it("should not close fullscreen on other keys inside the overlay", async () => {
+    const { container } = renderWithContext({ chart: "graph TD; A-->B" });
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+    });
+
+    for (const area of document.querySelectorAll('[role="presentation"]')) {
+      fireEvent.keyDown(area, { key: "Enter" });
+    }
+
     expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
   });
 

@@ -86,7 +86,12 @@ export const LinkSafetyModal = ({
           "relative mx-4 flex w-full max-w-md flex-col gap-4 rounded-xl border bg-background p-6 shadow-lg"
         )}
         onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          // Let Escape reach the backdrop so it closes from any focused control.
+          if (e.key !== "Escape") {
+            e.stopPropagation();
+          }
+        }}
         role="presentation"
       >
         <button
