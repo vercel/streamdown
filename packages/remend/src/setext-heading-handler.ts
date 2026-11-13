@@ -36,7 +36,9 @@ const startsOrderedList = (previousLines: string[]): boolean => {
         BLOCKQUOTE_PATTERN.test(line)
       );
     }
-    if (Number(match[1]) === 1) {
+    // CommonMark requires the literal marker "1" to interrupt a paragraph, so
+    // zero-padded markers like "01." do not count.
+    if (match[1] === "1") {
       return true;
     }
   }

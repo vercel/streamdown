@@ -176,6 +176,10 @@ describe("setext heading handling", () => {
       "text\n2. item\n3. item\n-\u200B"
     );
     expect(remend("text\n0. item\n-")).toBe("text\n0. item\n-\u200B");
+    expect(remend("text\n01. item\n-")).toBe("text\n01. item\n-\u200B");
+    expect(remend("text\n001. item\n-")).toBe("text\n001. item\n-\u200B");
+    expect(remend("text\n01) item\n-")).toBe("text\n01) item\n-\u200B");
+    expect(remend("01. item\n-")).toBe("01. item\n-");
   });
 
   it("should NOT modify a dash after a block quote", () => {
