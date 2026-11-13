@@ -1,5 +1,13 @@
 # remend
 
+## 1.4.1
+
+### Patch Changes
+
+- ae6fa3b: Support `exactOptionalPropertyTypes`: add `| undefined` to optional props in the public types so possibly-`undefined` values can be forwarded to `<Streamdown>` and `remend` without type errors
+- e54bc44: docs: describe the loading placeholder for incomplete images in the README
+- b393921: Stop adding a zero-width space to a dash that starts a new list item after a list item or block quote, which made it show as a stray "-" on the line above.
+
 ## 1.4.0
 
 ### Minor Changes

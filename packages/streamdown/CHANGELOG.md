@@ -1,5 +1,44 @@
 # streamdown
 
+## 2.8.0
+
+### Minor Changes
+
+- 8b0ca9f: feat: add `codeBlockRawLanguages` option to render selected code fence languages (e.g. ASCII / box-drawing diagrams) verbatim as monospace text without syntax highlighting
+
+### Patch Changes
+
+- d1c8d66: Keep callback options isolated between Markdown processors so custom handlers and plugin callbacks render the correct content across Streamdown instances.
+- 4e2c00a: Match code block languages case-insensitively when picking the download file extension, so `Python` downloads as `file.py`, and fall back to `.txt` for names like `constructor` instead of reading them from the object prototype.
+- a9fb2a2: Keep blank lines inside fenced code blocks in custom tags instead of rendering `<!---->` placeholders in the code.
+- b3394d2: Close fullscreen tables, fullscreen Mermaid diagrams and the link safety modal on Escape when focus is on a control inside them.
+- ae6fa3b: Support `exactOptionalPropertyTypes`: add `| undefined` to optional props in the public types so possibly-`undefined` values can be forwarded to `<Streamdown>` and `remend` without type errors
+- 096a06b: ### Pass the original thrown value to the Mermaid `errorComponent` as an optional `cause` prop, so custom error components can read structured parser details such as the Jison `hash` without re-parsing the chart.
+  - Add an optional `cause?: unknown` property to `MermaidErrorComponentProps`.
+  - Preserve the original thrown error in the Mermaid rendering failure result.
+  - Forward the original error object to custom error components without losing parser-specific details.
+  - Maintain backward compatibility with existing custom error components.
+  - Enable access to structured Jison and Langium parser errors without performing an additional parse.
+- c4cccb5: Stop treating self-closing custom tags as containers: they no longer turn later blank lines into `<!---->`, which split loose lists, or pair with a later closing tag. Leave a custom tag that follows text on its line as inline HTML, so a line break inside it no longer moves its body out of the tag.
+- 8aaf182: fix: use logical Tailwind classes (`ps-*`, `border-s-*`, `text-start`, `start-*`, `end-*`, `ms-*`) instead of physical left/right classes so layout mirrors in RTL text. `cn` now treats logical and physical utilities on the same axis as conflicting, so a consumer `className="pl-8"` still overrides the built-in padding. The code block keeps physical classes because it is pinned `dir="ltr"`.
+- 1c5a7f0: Forward `controls.mermaid.copy` callbacks (`onCopy`, `onError`) to the Mermaid fullscreen copy button.
+- c6f5905: perf: stop re-parsing a Mermaid diagram's SVG every time it re-renders with the same chart
+- 469ba74: Remove the obsolete rehypeAnimate name override; processor caching now uses function identity.
+- 66779a8: fix: restore `user-content-` clobberPrefix on sanitize so raw HTML ids cannot clobber `window`, and strip the doubled prefix on footnote ids that remark-rehype already prefixed.
+- e7471fe: Call the link safety modal's onClose callback once when Escape is pressed on its backdrop.
+- 97c1f87: fix(mermaid): stop showing "Mermaid Error" for a partial chart while its fence streams
+
+  - Keep the loader while a Mermaid fence is still streaming instead of showing the error for a partial chart
+  - Show the error once the fence closes, including when the final chart text is unchanged from the last partial render
+
+- ec1489a: Distinguish remark and rehype plugins by function identity when caching processors, so same-name plugins with different closures do not reuse each other's behavior. Apps that create plugin functions during render now get a new processor on each render. This is slower for that pattern but does not grow memory; create plugins once (module scope or `useMemo`) to keep cache hits.
+- 426f9c3: Count only letters when detecting text direction, so Arabic digits, vowel marks and punctuation no longer push mostly English text to RTL. Text with no letters keeps its direction, so a table cell holding only Arabic digits stays RTL.
+- ede7f0d: Preserve literal Markdown delimiters when copying or downloading tables as Markdown.
+- Updated dependencies [ae6fa3b]
+- Updated dependencies [e54bc44]
+- Updated dependencies [b393921]
+  - remend@1.4.1
+
 ## 2.7.1
 
 ### Patch Changes
