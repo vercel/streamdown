@@ -227,7 +227,7 @@ describe("MermaidFullscreenButton", () => {
     expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
   });
 
-  it("should stop keydown propagation on content area", async () => {
+  it("should not close on non-Escape keydown on content area", async () => {
     const { container } = renderWithContext({ chart: "graph TD; A-->B" });
 
     const openBtn = container.querySelector('button[title="View fullscreen"]');
@@ -238,13 +238,96 @@ describe("MermaidFullscreenButton", () => {
       expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
     });
 
-    // Press Escape on content area - should not close
+    const contentArea = document.querySelector('[role="presentation"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.keyDown(contentArea!, { key: "Enter" });
+
+    // Should still be open
+    expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+  });
+
+  it("should close on Escape keydown on content area", async () => {
+    const { container } = renderWithContext({ chart: "graph TD; A-->B" });
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+    });
+
     const contentArea = document.querySelector('[role="presentation"]');
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.keyDown(contentArea!, { key: "Escape" });
 
-    // Should still be open
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeFalsy();
+    });
+  });
+
+  it("should close on Escape when a button inside the overlay is focused", async () => {
+    const onExit = vi.fn();
+    const { container } = renderWithContext({
+      chart: "graph TD; A-->B",
+      onExit,
+    });
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+    });
+    onExit.mockClear();
+
+    const exitButton = document.querySelector(
+      '.fixed.inset-0 button[title="Exit fullscreen"]'
+    ) as HTMLButtonElement;
+    exitButton.focus();
+    fireEvent.keyDown(exitButton, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeFalsy();
+    });
+    expect(onExit).toHaveBeenCalledTimes(1);
+  });
+
+  it("should close only the download menu on first Escape, then the overlay", async () => {
+    const { container } = renderWithContext({ chart: "graph TD; A-->B" });
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+    });
+
+    const trigger = document.querySelector(
+      '.fixed.inset-0 button[title="Download diagram"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(trigger);
+
+    const svgItem = document.querySelector(
+      'button[title="Download diagram as SVG"]'
+    ) as HTMLButtonElement;
+    expect(svgItem).toBeTruthy();
+    svgItem.focus();
+    fireEvent.keyDown(svgItem, { key: "Escape" });
+
+    expect(
+      document.querySelector('button[title="Download diagram as SVG"]')
+    ).toBeFalsy();
     expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+    expect(document.activeElement).toBe(trigger);
+
+    fireEvent.keyDown(trigger, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeFalsy();
+    });
   });
 
   it("should unlock body scroll when fullscreen closes", async () => {

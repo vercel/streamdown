@@ -272,7 +272,7 @@ describe("TableFullscreenButton", () => {
     ).toBeFalsy();
   });
 
-  it("should not close fullscreen on keyDown inside inner presentation div", () => {
+  it("should not close fullscreen on non-Escape keyDown inside inner presentation div", () => {
     const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
@@ -283,19 +283,99 @@ describe("TableFullscreenButton", () => {
     const overlay = document.querySelector(
       '[data-streamdown="table-fullscreen"]'
     );
-    expect(overlay).toBeTruthy();
+    const innerDiv = overlay?.querySelector('[role="presentation"]');
+    expect(innerDiv).toBeTruthy();
+    if (innerDiv) {
+      fireEvent.keyDown(innerDiv, { key: "Enter" });
+      fireEvent.keyDown(innerDiv, { key: "a" });
+    }
 
-    // Fire keyDown on the inner presentation div (covers line 91 stopPropagation)
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeTruthy();
+  });
+
+  it("should close fullscreen on Escape keyDown inside inner presentation div", () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
     const innerDiv = overlay?.querySelector('[role="presentation"]');
     expect(innerDiv).toBeTruthy();
     if (innerDiv) {
       fireEvent.keyDown(innerDiv, { key: "Escape" });
     }
 
-    // Should still be open because stopPropagation prevents it from reaching the dialog
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeFalsy();
+  });
+
+  it("should close fullscreen on Escape when a button inside the overlay is focused", () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    const closeBtn = overlay?.querySelector(
+      'button[title="Exit fullscreen"]'
+    ) as HTMLButtonElement;
+    closeBtn.focus();
+    fireEvent.keyDown(closeBtn, { key: "Escape" });
+
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeFalsy();
+    expect(document.body.style.overflow).toBe("");
+  });
+
+  it.each([
+    ["Copy table", 'button[title="Copy table as Markdown"]'],
+    ["Download table", 'button[title="Download table as CSV"]'],
+  ])("should close only the %s menu on first Escape, then the overlay", (title, itemSelector) => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    const trigger = overlay?.querySelector(
+      `button[title="${title}"]`
+    ) as HTMLButtonElement;
+    fireEvent.click(trigger);
+
+    const menuItem = overlay?.querySelector(itemSelector) as HTMLButtonElement;
+    expect(menuItem).toBeTruthy();
+    menuItem.focus();
+    fireEvent.keyDown(menuItem, { key: "Escape" });
+
+    // Menu closed, overlay still open, focus returned to the trigger
+    expect(overlay?.querySelector(itemSelector)).toBeFalsy();
     expect(
       document.querySelector('[data-streamdown="table-fullscreen"]')
     ).toBeTruthy();
+    expect(document.activeElement).toBe(trigger);
+
+    fireEvent.keyDown(trigger, { key: "Escape" });
+
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeFalsy();
   });
 
   it("should hide copy in fullscreen when table copy is false", () => {

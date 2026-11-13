@@ -70,7 +70,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("should stop key propagation on inner content", () => {
+  it("should not call onClose for non-Escape keys on inner content", () => {
     const onClose = vi.fn();
     render(
       <LinkSafetyModal
@@ -83,10 +83,30 @@ describe("LinkSafetyModal keyboard and interaction", () => {
 
     const innerContent = document.querySelector('[role="presentation"]');
     // biome-ignore lint/style/noNonNullAssertion: test assertion
-    fireEvent.keyDown(innerContent!, { key: "Escape" });
+    fireEvent.keyDown(innerContent!, { key: "Enter" });
 
-    // onClose should NOT be called because keydown is stopped
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("should call onClose once when Escape is pressed on a focused button inside", () => {
+    const onClose = vi.fn();
+    render(
+      <LinkSafetyModal
+        isOpen={true}
+        onClose={onClose}
+        onConfirm={vi.fn()}
+        url="https://example.com"
+      />
+    );
+
+    const closeButton = document.querySelector(
+      '[data-streamdown="link-safety-modal"] button[title="Close"]'
+    ) as HTMLButtonElement;
+    expect(closeButton).toBeTruthy();
+    closeButton.focus();
+    fireEvent.keyDown(closeButton, { key: "Escape" });
+
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("should return null when not open", () => {

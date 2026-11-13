@@ -29,6 +29,7 @@ export const MermaidDownloadDropdown = ({
   const cn = useCn();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const { isAnimating, controls } = useContext(StreamdownContext);
   const icons = useIcons();
   const mermaidPlugin = useMermaidPlugin();
@@ -108,8 +109,23 @@ export const MermaidDownloadDropdown = ({
     };
   }, []);
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape" && isOpen) {
+      // Close only the menu, not an enclosing fullscreen overlay
+      event.stopPropagation();
+      setIsOpen(false);
+      triggerRef.current?.focus();
+    }
+  };
+
   return (
-    <div className={cn("relative")} ref={dropdownRef}>
+    // biome-ignore lint/a11y/noStaticElementInteractions: "closes the menu on Escape from any of its buttons"
+    <div
+      className={cn("relative")}
+      onKeyDown={handleKeyDown}
+      ref={dropdownRef}
+      role="presentation"
+    >
       <button
         aria-label={t.downloadDiagram}
         className={cn(
@@ -118,6 +134,7 @@ export const MermaidDownloadDropdown = ({
         )}
         disabled={isAnimating}
         onClick={() => setIsOpen(!isOpen)}
+        ref={triggerRef}
         title={t.downloadDiagram}
         type="button"
       >

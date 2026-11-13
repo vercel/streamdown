@@ -116,6 +116,7 @@ export const TableDownloadDropdown = ({
   const cn = useCn();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const { isAnimating, controls } = useContext(StreamdownContext);
   const t = useTranslations();
   const icons = useIcons();
@@ -166,8 +167,23 @@ export const TableDownloadDropdown = ({
     };
   }, []);
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape" && isOpen) {
+      // Close only the menu, not an enclosing fullscreen overlay
+      event.stopPropagation();
+      setIsOpen(false);
+      triggerRef.current?.focus();
+    }
+  };
+
   return (
-    <div className={cn("relative")} ref={dropdownRef}>
+    // biome-ignore lint/a11y/noStaticElementInteractions: "closes the menu on Escape from any of its buttons"
+    <div
+      className={cn("relative")}
+      onKeyDown={handleKeyDown}
+      ref={dropdownRef}
+      role="presentation"
+    >
       <button
         className={cn(
           "cursor-pointer p-1 text-muted-foreground transition-all hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50",
@@ -175,6 +191,7 @@ export const TableDownloadDropdown = ({
         )}
         disabled={isAnimating}
         onClick={() => setIsOpen(!isOpen)}
+        ref={triggerRef}
         title={t.downloadTable}
         type="button"
       >

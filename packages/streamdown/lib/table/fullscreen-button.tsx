@@ -90,7 +90,12 @@ export const TableFullscreenButton = ({
                 className={cn("flex h-full flex-col")}
                 data-streamdown="table-wrapper"
                 onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  // Let Escape bubble so it can close the overlay
+                  if (e.key !== "Escape") {
+                    e.stopPropagation();
+                  }
+                }}
                 role="presentation"
               >
                 <div className={cn("flex items-center justify-end gap-1 p-4")}>
