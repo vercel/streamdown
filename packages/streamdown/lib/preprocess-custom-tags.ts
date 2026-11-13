@@ -5,7 +5,10 @@
  *
  * 1. **Same-line content** (`<tag>**bold**</tag>`) is left alone. The parser
  *    treats the tag as inline HTML inside a paragraph, so nested markdown still
- *    runs as phrasing content.
+ *    runs as phrasing content. So is a tag that follows text on its line
+ *    (`Note: <tag>a\nb</tag>`): padding it would end the paragraph after the
+ *    opening tag and leave the tag empty. Self-closing tags (`<tag />`) are
+ *    left alone too.
  *
  * 2. **Multi-line content** must interrupt the HTML block for nested markdown
  *    to parse. HTML blocks end at a blank line, the same shape used by
@@ -17,9 +20,10 @@
  *
  *        </tag>
  *
- *    This function normalizes multi-line custom tags into that shape: a blank
- *    line after the opening tag and before the closing tag (with a trailing
- *    blank line so later markdown is not absorbed).
+ *    This function normalizes multi-line custom tags that start a block (see
+ *    createStartsBlock) into that shape: a blank line after the opening tag
+ *    and before the closing tag (with a trailing blank line so later markdown
+ *    is not absorbed).
  *
  * 3. **Internal blank lines** are replaced with HTML comments (`<!---->`) so
  *    that, if the block is ever treated as a contiguous HTML unit (e.g. by a
@@ -28,9 +32,10 @@
  *    is parsing between the open/close tags.
  *
  * 4. **Streaming / unclosed tags**: while the close tag has not arrived yet,
- *    the same blank-line interruption is applied after the opening tag so
- *    nested markdown can parse incrementally. Without this, incomplete tags
- *    stay a single raw HTML block and `**bold**` renders as literal text.
+ *    the same blank-line interruption is applied after an opening tag that
+ *    starts a block, so nested markdown can parse incrementally. Without
+ *    this, incomplete tags stay a single raw HTML block and `**bold**` renders
+ *    as literal text.
  *
  * `parseMarkdownIntoBlocks` re-merges the interrupted open/content/close
  * tokens so streaming still treats the whole custom tag as one block.
@@ -40,21 +45,66 @@ const LEADING_NEWLINES_RE = /^\n*/;
 const TRAILING_NEWLINES_RE = /\n*$/;
 const BLANK_LINE_RE = /\n\n/g;
 const FENCE_RE = /^[ \t]*(`{3,}|~{3,})(.*)$/;
+const REGEXP_METACHAR_RE = /[.*+?^${}()|[\]\\]/g;
+
+// Containers nested deeper than this are left as raw text in their ancestor's
+// body. Each padded level re-reads its body, so depth multiplies the work, and
+// legitimate documents do not nest custom tags anywhere near this deep.
+const MAX_CONTAINER_DEPTH = 256;
+
+const escapeRegExp = (value: string): string =>
+  value.replace(REGEXP_METACHAR_RE, "\\$&");
+
+// An opening tag that is not self-closing: matches `<tag>` and `<tag a="b">`,
+// not `<tag />`.
+const openTagSource = (tagName: string): string =>
+  `<${escapeRegExp(tagName)}(?=[\\s>/])(?:[^>]*[^>/])?>`;
+
+// A run that a tag may follow at the start of its line, or after the closing
+// tag of a padded container, and still start a block: indentation, list or
+// blockquote markers, and closing tags.
+const BLOCK_PREFIX_RE =
+  /[ \t]*(?:(?:[*+-]|\d{1,9}[.)])[ \t]+|>[ \t]*|<\/[A-Za-z][^<>\n]*>[ \t]*)*/y;
+
+// Index of the last number in ascending `sorted` that is at most `value`.
+const findLastAtMost = (sorted: number[], value: number): number => {
+  let low = -1;
+  let high = sorted.length - 1;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    if (sorted[mid] <= value) {
+      low = mid;
+    } else {
+      high = mid - 1;
+    }
+  }
+  return low;
+};
+
+// An allowed tag pair with a multi-line body, as offsets into the markdown.
+interface Container {
+  children: Container[];
+  closeEnd: number;
+  closeStart: number;
+  open: number;
+  openEnd: number;
+  // Whether the opening tag starts a block, so the pair gets padded.
+  padded: boolean;
+}
 
 /**
- * Replaces blank lines with `<!---->` placeholders, except inside fenced code
- * blocks. A comment inside a fence is not markup, it is literal code text, so
- * it would show up in the rendered code. Blank lines inside a fence cannot end
- * the surrounding HTML block anyway.
+ * Fenced code blocks as `[start, end)` offsets: from the start of the opening
+ * fence line to the end of the closing fence line (exclusive of its newline),
+ * or to the end of the text while the fence is still open.
  */
-const replaceBlankLines = (text: string): string => {
+const findFences = (text: string): [number, number][] => {
+  const fences: [number, number][] = [];
   if (!(text.includes("```") || text.includes("~~~"))) {
-    return text.replace(BLANK_LINE_RE, "\n<!---->\n");
+    return fences;
   }
 
-  let result = "";
-  let segmentStart = 0;
-  let fenceChar: string | null = null;
+  let fenceStart = -1;
+  let fenceChar = "";
   let fenceLength = 0;
   let lineStart = 0;
 
@@ -68,13 +118,10 @@ const replaceBlankLines = (text: string): string => {
     if (match) {
       const run = match[1];
       const rest = match[2];
-      if (fenceChar === null) {
+      if (fenceStart === -1) {
         // A backtick fence's info string cannot contain backticks.
         if (!(run[0] === "`" && rest.includes("`"))) {
-          result += text
-            .slice(segmentStart, lineStart)
-            .replace(BLANK_LINE_RE, "\n<!---->\n");
-          segmentStart = lineStart;
+          fenceStart = lineStart;
           fenceChar = run[0];
           fenceLength = run.length;
         }
@@ -83,23 +130,222 @@ const replaceBlankLines = (text: string): string => {
         run.length >= fenceLength &&
         rest.trim() === ""
       ) {
-        result += text.slice(segmentStart, lineEnd);
-        segmentStart = lineEnd;
-        fenceChar = null;
-        fenceLength = 0;
+        fences.push([fenceStart, lineEnd]);
+        fenceStart = -1;
       }
     }
 
     lineStart = lineEnd + 1;
   }
 
-  const remaining = text.slice(segmentStart);
-  return (
-    result +
-    (fenceChar === null
-      ? remaining.replace(BLANK_LINE_RE, "\n<!---->\n")
-      : remaining)
+  if (fenceStart !== -1) {
+    fences.push([fenceStart, text.length]);
+  }
+  return fences;
+};
+
+// A predicate for whether an offset is inside fenced code. Offsets must be
+// queried in ascending order.
+const createInFence = (text: string) => {
+  const fences = findFences(text);
+  let i = 0;
+  return (index: number): boolean => {
+    while (i < fences.length && fences[i][1] <= index) {
+      i += 1;
+    }
+    return i < fences.length && fences[i][0] <= index;
+  };
+};
+
+const SELF_CLOSING_END_RE = /\/\s*>$/;
+const TAG_NAME_RE = /^<([A-Za-z][\w:-]*)/;
+
+// Every allowed pair with a multi-line body, in document order with an outer
+// pair before the pairs it contains. One scan pairs each closing tag with the
+// nearest unmatched opening tag of the same name, so an outer tag is not
+// stopped at an inner tag's closing tag. Matching each tag name on its own
+// does that, and then which pairs are seen depends on the allowedTags order.
+// Tags inside fenced code are code text, not markup, so they are skipped.
+const multilinePairs = (markdown: string, tagNames: string[]): Container[] => {
+  const boundary = new RegExp(
+    `<(/?)(${tagNames.map(escapeRegExp).join("|")})(?=[\\s>/])[^>]*>`,
+    "gi"
   );
+  const inFence = createInFence(markdown);
+  const pairs: Container[] = [];
+  // One stack per tag name: a closing tag pairs with the nearest unmatched
+  // opening tag of its own name, whatever other tags are open in between.
+  const openStacks = new Map<string, { index: number; end: number }[]>();
+
+  for (const match of markdown.matchAll(boundary)) {
+    if (inFence(match.index)) {
+      continue;
+    }
+    const name = match[2].toLowerCase();
+    const isClose = match[1] === "/";
+    const end = match.index + match[0].length;
+    const isSelfClosing = !isClose && SELF_CLOSING_END_RE.test(match[0]);
+    if (isSelfClosing) {
+      continue;
+    }
+    let openStack = openStacks.get(name);
+    if (!isClose) {
+      if (!openStack) {
+        openStack = [];
+        openStacks.set(name, openStack);
+      }
+      openStack.push({ index: match.index, end });
+      continue;
+    }
+    const opener = openStack?.pop();
+    if (!opener) {
+      continue;
+    }
+    const { index: open, end: openEnd } = opener;
+    const newline = markdown.indexOf("\n", open);
+    if (newline !== -1 && newline < match.index) {
+      pairs.push({
+        open,
+        openEnd,
+        closeStart: match.index,
+        closeEnd: end,
+        children: [],
+        padded: false,
+      });
+    }
+  }
+
+  return pairs.sort((a, b) => a.open - b.open || b.closeEnd - a.closeEnd);
+};
+
+const createLineScanner = (markdown: string) => {
+  const prefixEnds = new Map<number, number>();
+  let lineStarts: number[] | undefined;
+
+  const lineStartOf = (index: number): number => {
+    if (!lineStarts) {
+      // remark drops a byte order mark at the start of the document.
+      lineStarts = [markdown.startsWith("\uFEFF") ? 1 : 0];
+      for (
+        let newline = markdown.indexOf("\n");
+        newline !== -1;
+        newline = markdown.indexOf("\n", newline + 1)
+      ) {
+        lineStarts.push(newline + 1);
+      }
+    }
+    return lineStarts[findLastAtMost(lineStarts, index)];
+  };
+
+  // Where the block prefix run that begins at `start` ends.
+  const prefixEnd = (start: number): number => {
+    let end = prefixEnds.get(start);
+    if (end === undefined) {
+      BLOCK_PREFIX_RE.lastIndex = start;
+      end = start + (BLOCK_PREFIX_RE.exec(markdown)?.[0].length ?? 0);
+      prefixEnds.set(start, end);
+    }
+    return end;
+  };
+
+  /**
+   * Whether the tag at `index` starts a block. It does when only a block
+   * prefix run (see BLOCK_PREFIX_RE) precedes it on its line, or separates it
+   * from the closing tag of a padded container: padding puts a blank line
+   * after that closing tag. `paddedEnd` is the nearest padded closing tag end
+   * at or before `index`; a padded close further back would have to reach the
+   * tag through it, so it settles the second case. Otherwise the tag follows
+   * text, which makes it inline HTML rather than a container.
+   */
+  const startsBlock = (index: number, paddedEnd: number): boolean => {
+    const lineStart = lineStartOf(index);
+    return (
+      prefixEnd(lineStart) === index ||
+      (paddedEnd > lineStart && prefixEnd(paddedEnd) === index)
+    );
+  };
+
+  return startsBlock;
+};
+
+/**
+ * Builds the tree of multi-line containers and decides which are padded. A
+ * container only depends on containers that close before it opens, and those
+ * are already decided when containers are visited in document order. A pair
+ * that crosses an open container (`<a>\n<b>\n</a>\n</b>`) cannot nest, so it
+ * is left as is, and so is a pair nested deeper than MAX_CONTAINER_DEPTH.
+ */
+const parseContainers = (markdown: string, tagNames: string[]) => {
+  const startsBlock = createLineScanner(markdown);
+  const roots: Container[] = [];
+  const stack: Container[] = [];
+  const paddedEnds: number[] = [];
+  let paddedEnd = -1;
+
+  const close = (container: Container) => {
+    if (container.padded) {
+      paddedEnds.push(container.closeEnd);
+      paddedEnd = Math.max(paddedEnd, container.closeEnd);
+    }
+  };
+
+  for (const pair of multilinePairs(markdown, tagNames)) {
+    let parent = stack.at(-1);
+    while (parent && parent.closeEnd <= pair.open) {
+      close(parent);
+      stack.pop();
+      parent = stack.at(-1);
+    }
+    if (
+      (parent && pair.closeEnd > parent.closeStart) ||
+      stack.length >= MAX_CONTAINER_DEPTH
+    ) {
+      continue;
+    }
+    pair.padded = startsBlock(pair.open, paddedEnd);
+    (parent ? parent.children : roots).push(pair);
+    stack.push(pair);
+  }
+  for (const container of stack) {
+    close(container);
+  }
+  paddedEnds.sort((a, b) => a - b);
+
+  return {
+    roots,
+    startsBlock: (index: number): boolean => {
+      const i = findLastAtMost(paddedEnds, index);
+      return startsBlock(index, i === -1 ? -1 : paddedEnds[i]);
+    },
+  };
+};
+
+/**
+ * Replaces blank lines with `<!---->` placeholders, except inside fenced code
+ * blocks. A comment inside a fence is not markup, it is literal code text, so
+ * it would show up in the rendered code. Blank lines inside a fence cannot end
+ * the surrounding HTML block anyway.
+ */
+// A nested tag padded before its parent already has the blank lines this
+// replacement would add. Mark a doubled newline that follows or precedes a tag
+// so only the parent's own blank lines become placeholders.
+const ALREADY_PADDED_RE = /(?<=<[^<>\n]*>)\n\n|\n\n(?=<)/g;
+
+const replaceBlankLines = (text: string): string => {
+  const protect = (value: string): string =>
+    value.replace(ALREADY_PADDED_RE, (run) => run.replace("\n\n", "\n\0"));
+  const restore = (value: string): string => value.replaceAll("\0", "\n");
+
+  const replace = (value: string): string =>
+    restore(protect(value).replace(BLANK_LINE_RE, "\n<!---->\n"));
+
+  let result = "";
+  let cursor = 0;
+  for (const [start, end] of findFences(text)) {
+    result += replace(text.slice(cursor, start)) + text.slice(start, end);
+    cursor = end;
+  }
+  return result + replace(text.slice(cursor));
 };
 
 const normalizeClosedTag = (
@@ -128,55 +374,101 @@ const normalizeClosedTag = (
 };
 
 /**
- * For unclosed opening tags (still streaming), ensure a blank line follows
- * the open tag when body content has started on a later line. That ends the
- * HTML block so the body can parse as markdown before the close tag arrives.
- * Internal blank lines are also replaced with `<!---->` for consistency.
+ * For unclosed opening tags that start a block (still streaming), ensure a
+ * blank line follows the open tag when body content has started on a later
+ * line. That ends the HTML block so the body can parse as markdown before the
+ * close tag arrives. Internal blank lines are also replaced with `<!---->` for
+ * consistency.
  */
 const normalizeUnclosedOpenTags = (
   markdown: string,
-  tagName: string
+  tagNames: string[]
 ): string => {
-  const openOnly = new RegExp(`<(${tagName})(?=[\\s>/])([^>]*)>`, "gi");
+  const openOnly = new RegExp(tagNames.map(openTagSource).join("|"), "gi");
+  let startsBlock: ((index: number) => boolean) | undefined;
+  let lastCloses: Map<string, number> | undefined;
+  // Where the last closing tag of each name starts, so checking for a tag's
+  // own close does not rescan the rest of the document for every open tag.
+  const findLastCloses = (): Map<string, number> => {
+    const closes = new Map<string, number>();
+    const closeRe = new RegExp(
+      `</(${tagNames.map(escapeRegExp).join("|")})\\s*>`,
+      "gi"
+    );
+    for (const close of markdown.matchAll(closeRe)) {
+      closes.set(close[1].toLowerCase(), close.index);
+    }
+    return closes;
+  };
+  const nonSpace = /\S/g;
+  const inFence = createInFence(markdown);
 
   let result = "";
   let lastIndex = 0;
   let match = openOnly.exec(markdown);
 
+  // Text after the first handled tag is inside an unclosed body, so its blank
+  // lines become placeholders. Text before it is outside every tag.
+  // The segment keeps the `<` of the tag that ends it, so a blank line right
+  // before that tag is still recognized as padding (see ALREADY_PADDED_RE).
+  const appendUpTo = (index: number) => {
+    result +=
+      lastIndex === 0
+        ? markdown.slice(0, index)
+        : replaceBlankLines(markdown.slice(lastIndex, index + 1)).slice(0, -1);
+  };
+
   while (match) {
     const fullOpen = match[0];
-    const name = match[1];
     const openEnd = match.index + fullOpen.length;
-    const after = markdown.slice(openEnd);
 
-    // Skip if a matching close tag exists later — closed-pair pass owns it.
-    const closeRe = new RegExp(`</${name}\\s*>`, "i");
-    if (closeRe.test(after)) {
+    // A tag inside fenced code is code text, not a container.
+    if (inFence(match.index)) {
       match = openOnly.exec(markdown);
       continue;
     }
 
-    result += markdown.slice(lastIndex, match.index);
+    // A tag that follows text on its line is inline HTML, not a streaming
+    // container.
+    startsBlock ??= parseContainers(markdown, tagNames).startsBlock;
+    if (!startsBlock(match.index)) {
+      match = openOnly.exec(markdown);
+      continue;
+    }
+
+    // The tag's own close tag, not any allowed one. A nested tag whose
+    // container is still unclosed has no close of its own and still needs the
+    // interrupt; checking any close skips it.
+    const name = (TAG_NAME_RE.exec(fullOpen)?.[1] ?? "").toLowerCase();
+    lastCloses ??= findLastCloses();
+    if ((lastCloses.get(name) ?? -1) >= openEnd) {
+      match = openOnly.exec(markdown);
+      continue;
+    }
+
+    appendUpTo(match.index);
 
     // Already blank-line interrupted, or no body yet — leave the interrupt
     // intact, but still normalize further blank lines inside the body.
-    if (after.length === 0) {
+    if (openEnd === markdown.length) {
       result += fullOpen;
       lastIndex = openEnd;
       match = openOnly.exec(markdown);
       continue;
     }
-    if (after.startsWith("\n\n")) {
-      // Keep the leading "\n\n" interrupt; replace only subsequent blanks.
-      const body = replaceBlankLines(after.slice(2));
-      result += `${fullOpen}\n\n${body}`;
-      lastIndex = markdown.length;
-      break;
+    if (markdown.startsWith("\n\n", openEnd)) {
+      // Keep the leading "\n\n" interrupt; later blanks become placeholders.
+      // Keep scanning: a nested unclosed tag in the body needs its own
+      // interrupt.
+      result += `${fullOpen}\n\n`;
+      lastIndex = openEnd + 2;
+      match = openOnly.exec(markdown);
+      continue;
     }
 
     // Body on same line as open (inline incomplete) — leave as-is so
     // phrasing content can still bold once complete.
-    if (!after.startsWith("\n")) {
+    if (markdown[openEnd] !== "\n") {
       result += fullOpen;
       lastIndex = openEnd;
       match = openOnly.exec(markdown);
@@ -184,27 +476,61 @@ const normalizeUnclosedOpenTags = (
     }
 
     // Open + newline but no real body yet (still waiting for first chars).
-    const bodyAfterNewline = after.slice(1);
-    if (bodyAfterNewline.trim().length === 0) {
+    nonSpace.lastIndex = openEnd + 1;
+    if (!nonSpace.test(markdown)) {
       result += fullOpen;
       lastIndex = openEnd;
       match = openOnly.exec(markdown);
       continue;
     }
 
-    // Multi-line body without blank after open: insert blank line and
-    // replace internal blank lines with HTML comments.
-    const fixedBody = replaceBlankLines(bodyAfterNewline);
-    result += `${fullOpen}\n\n${fixedBody}`;
-    lastIndex = markdown.length;
-    break;
+    // Multi-line body without blank after open: insert blank line and keep
+    // scanning. A nested tag starts after this one and needs its own interrupt;
+    // stopping here leaves it unpadded.
+    result += `${fullOpen}\n\n`;
+    lastIndex = openEnd + 1;
+    openOnly.lastIndex = lastIndex;
+    match = openOnly.exec(markdown);
   }
 
   if (lastIndex === 0) {
     return markdown;
   }
 
-  return result + markdown.slice(lastIndex);
+  return result + replaceBlankLines(markdown.slice(lastIndex));
+};
+
+// Pad a range, and the containers nested inside it. Children are padded first,
+// so the text a container reads as its body already contains their padding.
+const padRange = (
+  markdown: string,
+  from: number,
+  to: number,
+  containers: Container[]
+): string => {
+  let result = "";
+  let cursor = from;
+  for (const container of containers) {
+    const { open, openEnd, closeStart, closeEnd } = container;
+    const openTag = markdown.slice(open, openEnd);
+    const closeTag = markdown.slice(closeStart, closeEnd);
+    const inner = padRange(markdown, openEnd, closeStart, container.children);
+    result +=
+      markdown.slice(cursor, open) +
+      (container.padded
+        ? normalizeClosedTag(openTag, inner, closeTag)
+        : openTag + inner + closeTag);
+    cursor = closeEnd;
+  }
+  return result + markdown.slice(cursor, to);
+};
+
+const normalizeClosedTags = (markdown: string, tagNames: string[]): string => {
+  const { roots } = parseContainers(markdown, tagNames);
+  if (!roots.length) {
+    return markdown;
+  }
+  return padRange(markdown, 0, markdown.length, roots);
 };
 
 export const preprocessCustomTags = (
@@ -215,22 +541,8 @@ export const preprocessCustomTags = (
     return markdown;
   }
 
-  let result = markdown;
-
-  for (const tagName of tagNames) {
-    const closedPattern = new RegExp(
-      `(<${tagName}(?=[\\s>/])[^>]*>)([\\s\\S]*?)(</${tagName}\\s*>)`,
-      "gi"
-    );
-
-    result = result.replace(
-      closedPattern,
-      (_match, open: string, content: string, close: string) =>
-        normalizeClosedTag(open, content, close)
-    );
-
-    result = normalizeUnclosedOpenTags(result, tagName);
-  }
-
-  return result;
+  return normalizeUnclosedOpenTags(
+    normalizeClosedTags(markdown, tagNames),
+    tagNames
+  );
 };
