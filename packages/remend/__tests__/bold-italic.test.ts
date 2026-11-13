@@ -39,7 +39,7 @@ describe("bold-italic formatting (***)", () => {
 
   it("should handle nested formatting with triple asterisks", () => {
     expect(remend("***bold-italic with `code")).toBe(
-      "***bold-italic with `code***`"
+      "***bold-italic with `code`***"
     );
   });
 
