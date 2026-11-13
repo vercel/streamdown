@@ -276,10 +276,12 @@ gitGraph
 The Mermaid plugin uses these defaults:
 
 - `startOnLoad: false` - Diagrams render on demand
-- `theme: "default"` - Mermaid's default theme
+- `theme: "default"` - Default plugin theme
 - `securityLevel: "strict"` - Secure rendering
 - `fontFamily: "monospace"` - Consistent code-like typography
 - `suppressErrorRendering: true` - Prevents partial renders on errors
+
+By default, the plugin provides its own theme and font settings for backward compatibility. To use Mermaid's native theme and font defaults instead, enable the `useMermaidDefaults` option when creating the plugin.
 
 ### Theme Customization
 
@@ -373,13 +375,21 @@ For advanced configuration, use `createMermaidPlugin`:
 ```tsx
 import { createMermaidPlugin } from '@streamdown/mermaid';
 
+// Override the theme and font explicitly
 const mermaid = createMermaidPlugin({
   config: {
     theme: 'dark',
     fontFamily: 'monospace',
   },
 });
+
+// Use Mermaid's native theme and font defaults
+const nativeMermaid = createMermaidPlugin({
+  useMermaidDefaults: true,
+});
 ```
+
+When `useMermaidDefaults` is enabled, the plugin does not specify `theme` or `fontFamily`. You can still provide either property through `config` or the configuration passed to `getMermaid()`.
 
 ## Error Handling
 
