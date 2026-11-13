@@ -39,7 +39,7 @@ export interface MermaidPluginOptions {
   /**
    * Use Mermaid's native theme and font defaults
    */
-  useMermaidDefaults?: boolean;
+  useMermaidDefaults?: boolean | undefined;
 }
 
 /**

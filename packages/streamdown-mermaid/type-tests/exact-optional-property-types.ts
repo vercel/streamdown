@@ -10,10 +10,17 @@ import { createMermaidPlugin } from "../dist/index";
 
 interface MermaidOptions {
   config?: MermaidConfig;
+  useMermaidDefaults?: boolean;
 }
 
 // Forwarding possibly-`undefined` optional props must type-check.
 export const createPlugin = (options: MermaidOptions) =>
-  createMermaidPlugin({ config: options.config });
+  createMermaidPlugin({
+    config: options.config,
+    useMermaidDefaults: options.useMermaidDefaults,
+  });
 
-export const plugin = createMermaidPlugin({ config: undefined });
+export const plugin = createMermaidPlugin({
+  config: undefined,
+  useMermaidDefaults: undefined,
+});
