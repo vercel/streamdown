@@ -1,6 +1,6 @@
 {
   "name": "@streamdown/math",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "KaTeX math rendering plugin for Streamdown",
   "repository": {
     "type": "git",
