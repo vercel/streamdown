@@ -349,6 +349,123 @@ describe("MermaidFullscreenButton", () => {
     ).toBeFalsy();
   });
 
+  it("should forward controls.mermaid.copy callbacks to fullscreen copy button", async () => {
+    const originalClipboard = navigator.clipboard;
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: writeTextMock,
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    try {
+      const onCopy = vi.fn();
+      const onError = vi.fn();
+      const { container } = renderWithContext(
+        { chart: "graph TD; A-->B" },
+        {
+          controls: {
+            mermaid: {
+              copy: {
+                onCopy,
+                onError,
+              },
+            },
+          },
+        }
+      );
+
+      const openBtn = container.querySelector(
+        'button[title="View fullscreen"]'
+      );
+      // biome-ignore lint/style/noNonNullAssertion: test assertion
+      fireEvent.click(openBtn!);
+
+      await waitFor(() => {
+        expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+      });
+
+      const copyBtn = document.querySelector(
+        'button[data-streamdown="code-block-copy-button"]'
+      );
+      expect(copyBtn).toBeTruthy();
+      // biome-ignore lint/style/noNonNullAssertion: test assertion
+      fireEvent.click(copyBtn!);
+
+      await waitFor(() => {
+        expect(writeTextMock).toHaveBeenCalledWith("graph TD; A-->B");
+        expect(onCopy).toHaveBeenCalled();
+        expect(onError).not.toHaveBeenCalled();
+      });
+    } finally {
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    }
+  });
+
+  it("should forward onError callback to fullscreen copy button on failure", async () => {
+    const originalClipboard = navigator.clipboard;
+    const testError = new Error("Clipboard write rejected");
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: vi.fn().mockRejectedValue(testError),
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    try {
+      const onCopy = vi.fn();
+      const onError = vi.fn();
+      const { container } = renderWithContext(
+        { chart: "graph TD; A-->B" },
+        {
+          controls: {
+            mermaid: {
+              copy: {
+                onCopy,
+                onError,
+              },
+            },
+          },
+        }
+      );
+
+      const openBtn = container.querySelector(
+        'button[title="View fullscreen"]'
+      );
+      // biome-ignore lint/style/noNonNullAssertion: test assertion
+      fireEvent.click(openBtn!);
+
+      await waitFor(() => {
+        expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+      });
+
+      const copyBtn = document.querySelector(
+        'button[data-streamdown="code-block-copy-button"]'
+      );
+      expect(copyBtn).toBeTruthy();
+      // biome-ignore lint/style/noNonNullAssertion: test assertion
+      fireEvent.click(copyBtn!);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledWith(testError);
+        expect(onCopy).not.toHaveBeenCalled();
+      });
+    } finally {
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    }
+  });
+
   it("should portal fullscreen overlay to the configured portal target", async () => {
     const portalRoot = document.createElement("div");
     document.body.appendChild(portalRoot);
