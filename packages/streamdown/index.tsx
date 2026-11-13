@@ -19,8 +19,10 @@ import { harden } from "rehype-harden";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
+import remarkGfmAdmonition from "remark-gfm-admonition";
 import remend, { type RemendOptions } from "remend";
 import type { Pluggable } from "unified";
+import type { AdmonitionProps } from "./lib/admonition";
 import {
   type AnimateOptions,
   type AnimatePlugin,
@@ -51,6 +53,7 @@ import { preprocessCustomTags } from "./lib/preprocess-custom-tags";
 import { preprocessLiteralTagContent } from "./lib/preprocess-literal-tag-content";
 import { rehypeBlockDirection } from "./lib/rehype/block-direction";
 import { rehypeLiteralTagContent } from "./lib/rehype/literal-tag-content";
+import { remarkAdmonitionStreamdown } from "./lib/remark/admonition-streamdown";
 import { remarkCodeMeta } from "./lib/remark/code-meta";
 import { remarkDisableAutolinkProtocols } from "./lib/remark/disable-autolink-protocols";
 import type { CSVSeparator } from "./lib/table/utils";
@@ -62,8 +65,10 @@ import {
 import { useCaretHost } from "./lib/use-caret-host";
 import { createCn } from "./lib/utils";
 
-export type { AnimateOptions } from "./lib/animate";
 // biome-ignore lint/performance/noBarrelFile: "required"
+export { default as remarkAdmonition } from "remark-gfm-admonition";
+export type { AdmonitionProps } from "./lib/admonition";
+export type { AnimateOptions } from "./lib/animate";
 export { createAnimatePlugin } from "./lib/animate";
 export { useIsCodeFenceIncomplete } from "./lib/block-incomplete-context";
 export { CodeBlock } from "./lib/code-block";
@@ -74,7 +79,6 @@ export { CodeBlockHeader } from "./lib/code-block/header";
 export { CodeBlockSkeleton } from "./lib/code-block/skeleton";
 export { detectTextDirection } from "./lib/detect-direction";
 export type { IconMap } from "./lib/icon-context";
-
 export type {
   AllowElement,
   Components,
@@ -99,6 +103,7 @@ export type {
   ThemeInput,
   ThemeRegistrationAny,
 } from "./lib/plugin-types";
+export { remarkAdmonitionStreamdown } from "./lib/remark/admonition-streamdown";
 export {
   TableCopyDropdown,
   type TableCopyDropdownProps,
@@ -136,6 +141,7 @@ type DefaultElementComponent<K extends keyof JSX.IntrinsicElements> =
  */
 export interface DefaultComponents {
   a: DefaultElementComponent<"a">;
+  admonition: ComponentType<AdmonitionProps>;
   blockquote: DefaultElementComponent<"blockquote">;
   code: DefaultElementComponent<"code">;
   h1: DefaultElementComponent<"h1">;
@@ -163,7 +169,8 @@ export interface DefaultComponents {
   ul: DefaultElementComponent<"ul">;
 }
 
-export const defaultComponents = builtinComponents as DefaultComponents;
+export const defaultComponents =
+  builtinComponents as unknown as DefaultComponents;
 
 // Matches lowercase HTML / custom tag names (first char is a-z)
 const LOWERCASE_TAG_PATTERN = /^[a-z]/;
@@ -443,6 +450,7 @@ const defaultSanitizeSchema = {
   // Keep the default `user-content-` clobberPrefix so raw HTML ids (from
   // rehype-raw) cannot clobber `window`. remark-rehype already prefixes
   // footnote ids; `rehypeUndoubleClobberPrefix` strips the doubled prefix.
+  tagNames: [...(defaultSchema.tagNames ?? []), "admonition"],
   protocols: {
     ...defaultSchema.protocols,
     // `streamdown:` is the remend sentinel scheme for incomplete links/images
@@ -452,6 +460,8 @@ const defaultSanitizeSchema = {
   },
   attributes: {
     ...defaultSchema.attributes,
+    // rehype-raw normalizes `data-admonition-type` to camelCase first.
+    admonition: ["dataAdmonitionType"],
     code: [...(defaultSchema.attributes?.code ?? []), "metastring"],
   },
 };
@@ -475,6 +485,8 @@ export const defaultRehypePlugins: Record<string, Pluggable> = {
 export const defaultRemarkPlugins: Record<string, Pluggable> = {
   gfm: [remarkGfm, {}],
   codeMeta: remarkCodeMeta,
+  admonition: remarkGfmAdmonition,
+  admonitionStreamdown: remarkAdmonitionStreamdown,
 } as const;
 
 // Stable plugin arrays for cache efficiency - created once at module level

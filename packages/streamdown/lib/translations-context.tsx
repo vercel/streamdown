@@ -3,6 +3,12 @@
 import { createContext, useContext } from "react";
 
 export interface StreamdownTranslations {
+  // Admonition
+  admonitionCaution: string;
+  admonitionImportant: string;
+  admonitionNote: string;
+  admonitionTip: string;
+  admonitionWarning: string;
   // Link modal
   close: string;
   copied: string;
@@ -45,6 +51,12 @@ export interface StreamdownTranslations {
 }
 
 export const defaultTranslations: StreamdownTranslations = {
+  // Admonition
+  admonitionCaution: "Caution",
+  admonitionImportant: "Important",
+  admonitionNote: "Note",
+  admonitionTip: "Tip",
+  admonitionWarning: "Warning",
   // Code block
   copyCode: "Copy Code",
   downloadFile: "Download file",
