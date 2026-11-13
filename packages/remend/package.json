@@ -36,6 +36,8 @@
     "@vitest/coverage-v8": "^4.1.10",
     "fast-check": "^4.9.0",
     "mdast-util-from-markdown": "^2.0.3",
+    "mdast-util-gfm-strikethrough": "^2.0.0",
+    "micromark-extension-gfm-strikethrough": "^2.1.0",
     "tsup": "^8.5.1",
     "vitest": "^5.0.0"
   }
