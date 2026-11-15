@@ -531,4 +531,76 @@ describe("MermaidFullscreenButton", () => {
     unmount();
     portalRoot.remove();
   });
+
+  describe("focus", () => {
+    const openFullscreen = () => {
+      const { container } = renderWithContext({ chart: "graph TD; A-->B" });
+      const openBtn = container.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement;
+      openBtn.focus();
+      fireEvent.click(openBtn);
+      const overlay = document.querySelector(
+        '[data-streamdown="mermaid-fullscreen"]'
+      ) as HTMLElement;
+      return { openBtn, overlay };
+    };
+
+    it("should move focus to the close button when opened", () => {
+      const { overlay } = openFullscreen();
+
+      expect(document.activeElement).toBe(
+        overlay.querySelector('button[title="Exit fullscreen"]')
+      );
+    });
+
+    it("should keep Tab and Shift+Tab inside the dialog", () => {
+      const { overlay } = openFullscreen();
+      const buttons = Array.from(overlay.querySelectorAll("button"));
+      const first = buttons[0] as HTMLButtonElement;
+      const last = buttons.at(-1) as HTMLButtonElement;
+
+      last.focus();
+      fireEvent.keyDown(last, { key: "Tab" });
+      expect(document.activeElement).toBe(first);
+
+      fireEvent.keyDown(first, { key: "Tab", shiftKey: true });
+      expect(document.activeElement).toBe(last);
+    });
+
+    it("should return focus to the fullscreen button when closed with the close button", () => {
+      const { openBtn, overlay } = openFullscreen();
+      const closeBtn = overlay.querySelector(
+        'button[title="Exit fullscreen"]'
+      ) as HTMLButtonElement;
+
+      closeBtn.focus();
+      fireEvent.click(closeBtn);
+
+      expect(document.activeElement).toBe(openBtn);
+    });
+
+    it("should return focus to the fullscreen button when closed with Escape", () => {
+      const { openBtn, overlay } = openFullscreen();
+      const closeBtn = overlay.querySelector(
+        'button[title="Exit fullscreen"]'
+      ) as HTMLButtonElement;
+
+      closeBtn.focus();
+      fireEvent.keyDown(closeBtn, { key: "Escape" });
+
+      expect(document.activeElement).toBe(openBtn);
+    });
+
+    it("should return focus to the fullscreen button when closed with a backdrop click", () => {
+      const { openBtn, overlay } = openFullscreen();
+
+      (
+        overlay.querySelector('button[title="Exit fullscreen"]') as HTMLElement
+      ).focus();
+      fireEvent.click(overlay);
+
+      expect(document.activeElement).toBe(openBtn);
+    });
+  });
 });

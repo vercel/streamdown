@@ -9,6 +9,7 @@ import { resolvePortalTarget } from "../portal";
 import { useCn } from "../prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
 import { useTranslations } from "../translations-context";
+import { useDialogFocus } from "../use-dialog-focus";
 import { Mermaid } from ".";
 import { MermaidDownloadDropdown } from "./download-button";
 
@@ -36,6 +37,7 @@ export const MermaidFullscreenButton = ({
     portal,
   } = useContext(StreamdownContext);
   const t = useTranslations();
+  const { dialogRef, initialFocusRef } = useDialogFocus(isFullscreen);
   const showPanZoomControls = (() => {
     if (typeof controlsConfig === "boolean") {
       return controlsConfig;
@@ -143,6 +145,7 @@ export const MermaidFullscreenButton = ({
                   handleToggle();
                 }
               }}
+              ref={dialogRef}
               role="dialog"
             >
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
@@ -174,6 +177,7 @@ export const MermaidFullscreenButton = ({
                     "rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
                   )}
                   onClick={handleToggle}
+                  ref={initialFocusRef}
                   title={t.exitFullscreen}
                   type="button"
                 >
