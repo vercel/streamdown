@@ -548,3 +548,45 @@ describe("TableFullscreenButton copy and download", () => {
     );
   });
 });
+
+describe("TableFullscreenButton focus management", () => {
+  const open = () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+    const trigger = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    trigger.focus();
+    fireEvent.click(trigger);
+    return trigger;
+  };
+
+  it("moves focus into the dialog when opened", () => {
+    open();
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    ) as HTMLElement;
+    expect(overlay.contains(document.activeElement)).toBe(true);
+  });
+
+  it("keeps Tab focus inside the dialog", () => {
+    open();
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    ) as HTMLElement;
+    const buttons = Array.from(overlay.querySelectorAll("button"));
+    const last = buttons.at(-1) as HTMLElement;
+    last.focus();
+    fireEvent.keyDown(last, { key: "Tab" });
+    expect(overlay.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).not.toBe(last);
+  });
+
+  it("restores focus to the trigger when closed", () => {
+    const trigger = open();
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeFalsy();
+    expect(document.activeElement).toBe(trigger);
+  });
+});

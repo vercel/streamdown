@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
@@ -6,6 +6,7 @@ import { resolvePortalTarget } from "../portal";
 import { useCn } from "../prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
 import { useTranslations } from "../translations-context";
+import { useDialogFocus } from "../use-dialog-focus";
 import { TableCopyDropdown } from "./copy-dropdown";
 import { TableDownloadDropdown } from "./download-dropdown";
 
@@ -27,6 +28,7 @@ export const TableFullscreenButton = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { isAnimating, portal } = useContext(StreamdownContext);
   const t = useTranslations();
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const handleOpen = () => {
     setIsFullscreen(true);
@@ -53,6 +55,8 @@ export const TableFullscreenButton = ({
       };
     }
   }, [isFullscreen]);
+
+  useDialogFocus(isFullscreen, dialogRef);
 
   return (
     <>
@@ -85,7 +89,9 @@ export const TableFullscreenButton = ({
                   handleClose();
                 }
               }}
+              ref={dialogRef}
               role="dialog"
+              tabIndex={-1}
             >
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
               <div

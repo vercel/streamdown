@@ -1,4 +1,10 @@
-import { type ComponentProps, useContext, useEffect, useState } from "react";
+import {
+  type ComponentProps,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
 import { CodeBlockCopyButton } from "../code-block/copy-button";
@@ -9,6 +15,7 @@ import { resolvePortalTarget } from "../portal";
 import { useCn } from "../prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
 import { useTranslations } from "../translations-context";
+import { useDialogFocus } from "../use-dialog-focus";
 import { Mermaid } from ".";
 import { MermaidDownloadDropdown } from "./download-button";
 
@@ -36,6 +43,7 @@ export const MermaidFullscreenButton = ({
     portal,
   } = useContext(StreamdownContext);
   const t = useTranslations();
+  const dialogRef = useRef<HTMLDivElement>(null);
   const showPanZoomControls = (() => {
     if (typeof controlsConfig === "boolean") {
       return controlsConfig;
@@ -108,6 +116,8 @@ export const MermaidFullscreenButton = ({
     }
   }, [isFullscreen, onFullscreen, onExit]);
 
+  useDialogFocus(isFullscreen, dialogRef);
+
   return (
     <>
       <button
@@ -143,7 +153,9 @@ export const MermaidFullscreenButton = ({
                   handleToggle();
                 }
               }}
+              ref={dialogRef}
               role="dialog"
+              tabIndex={-1}
             >
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
               <div

@@ -531,4 +531,31 @@ describe("MermaidFullscreenButton", () => {
     unmount();
     portalRoot.remove();
   });
+
+  it("moves focus into the dialog and restores it to the trigger on close", () => {
+    const { container } = renderWithContext({ chart: "graph TD; A-->B" });
+    const trigger = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    trigger.focus();
+    fireEvent.click(trigger);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="mermaid-fullscreen"]'
+    ) as HTMLElement;
+    expect(overlay.contains(document.activeElement)).toBe(true);
+
+    const buttons = Array.from(overlay.querySelectorAll("button"));
+    const last = buttons.at(-1) as HTMLElement;
+    last.focus();
+    fireEvent.keyDown(last, { key: "Tab" });
+    expect(overlay.contains(document.activeElement)).toBe(true);
+    expect(document.activeElement).not.toBe(last);
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(
+      document.querySelector('[data-streamdown="mermaid-fullscreen"]')
+    ).toBeFalsy();
+    expect(document.activeElement).toBe(trigger);
+  });
 });
