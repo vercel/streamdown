@@ -29,7 +29,7 @@ const SINGLE_TILDE = String.raw`([\p{L}\p{N}_])~(?!~)(?=[\p{L}\p{N}_])`;
 //   https://en.wikipedia.org/wiki/Mercury_(planet).
 // As above, the character before a URL is matched instead of looked behind.
 const HTML_TAG = String.raw`<[a-z][\w-]*\s[^<>\n]*>`;
-const URL_CHAR = String.raw`[^\s"'<>\x60()]`;
+const URL_CHAR = String.raw`[^\s"'<>\x60()\[\]]`;
 const URL_REST = String.raw`(?:${URL_CHAR}|\(${URL_CHAR}*\))*`;
 const PROTOCOL_URL = String.raw`(?:^|[^a-z])https?:\/\/${URL_REST}`;
 const WWW_URL = String.raw`(?:^|[\t\n\r (*_\[\]~])www\.${URL_REST}`;

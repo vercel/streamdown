@@ -126,4 +126,22 @@ describe("single tilde escape (#445)", () => {
       "abchttps://example.com/a\\~b"
     );
   });
+
+  it("should still escape ~ in prose after a link whose label is a URL", () => {
+    expect(remend("[https://example.com](https://example.com)20~25")).toBe(
+      "[https://example.com](https://example.com)20\\~25"
+    );
+    expect(remend("[www.example.com](https://example.com)20~25")).toBe(
+      "[www.example.com](https://example.com)20\\~25"
+    );
+    expect(
+      remend("详见[https://example.com](https://example.com)，温度20~25°C")
+    ).toBe("详见[https://example.com](https://example.com)，温度20\\~25°C");
+  });
+
+  it("should not escape ~ in the destination of a link whose label is a URL", () => {
+    expect(remend("[https://example.com](https://example.com/a~b) now")).toBe(
+      "[https://example.com](https://example.com/a~b) now"
+    );
+  });
 });
