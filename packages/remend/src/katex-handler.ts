@@ -2,6 +2,23 @@ import { countDoublePairs, getScan, REGION } from "./scan";
 
 const countDollarPairs = (text: string): number => countDoublePairs(text, "$");
 
+// Pairs $$ markers the same way countDoublePairs does, so with an odd count
+// the last prose marker is the one still open.
+const findLastDollarPair = (text: string): number => {
+  const scan = getScan(text);
+  let last = -1;
+
+  for (let i = text.indexOf("$$"); i !== -1; i = text.indexOf("$$", i)) {
+    if (scan.regions[i] === REGION.PROSE) {
+      last = i;
+      i += 2;
+    } else {
+      i += 1;
+    }
+  }
+  return last;
+};
+
 // Excludes $$ pairs and any $ inside code regions.
 const countSingleDollars = (text: string): number => {
   const scan = getScan(text);
@@ -37,9 +54,9 @@ const addClosingKatex = (text: string): string => {
     return `${text}$`;
   }
 
-  const firstDollarIndex = text.indexOf("$$");
+  const openDollarIndex = findLastDollarPair(text);
   const hasNewlineAfterStart =
-    firstDollarIndex !== -1 && text.indexOf("\n", firstDollarIndex) !== -1;
+    openDollarIndex !== -1 && text.indexOf("\n", openDollarIndex) !== -1;
 
   if (hasNewlineAfterStart && !text.endsWith("\n")) {
     return `${text}\n$$`;
