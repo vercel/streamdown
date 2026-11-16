@@ -66,6 +66,7 @@ export interface OpenSpan {
 }
 
 export interface TextScan {
+  autolinkMask: Uint8Array | null;
   htmlTagMask: Uint8Array | null;
   linkUrlMask: Uint8Array | null;
   /** Lazily computed; stays null until first needed */
@@ -419,6 +420,7 @@ const scanText = (text: string): TextScan => {
     mathMaskWithoutDollar: null,
     linkUrlMask: null,
     htmlTagMask: null,
+    autolinkMask: null,
   };
 };
 
@@ -750,4 +752,197 @@ export const inHtmlTagAt = (scan: TextScan, position: number): boolean => {
       : EMPTY_MASK;
   }
   return scan.htmlTagMask[position] === 1;
+};
+
+// Literal autolink mask: positions inside a bare http://, https:// or www.
+// URL, which GFM links without any markup. A marker there is part of the
+// URL, like the _ in https://example.com/_next, but GFM leaves trailing
+// punctuation out of the link, so the ** in **https://example.com** still
+// closes. These are the rules of micromark's GFM autolink literals:
+//
+// - http:// and https:// can't follow an ASCII letter. www. only starts a
+//   link at the start of a line or block quote, after a space or tab, or
+//   after one of ( * _ [ ] ~.
+// - The domain runs to whitespace or punctuation other than - . _, and isn't
+//   linked when its last two segments have an underscore.
+// - The URL runs to whitespace, a <, or a ] followed by ( or [, and leaves
+//   out trailing ! " ' ) * , . : ; ? _ ~ ] and character references like
+//   &amp;.
+// - A URL in code, a tag or a link destination isn't a literal autolink.
+//
+// Like micromark, characters are tested as UTF-16 code units, so an emoji
+// counts as neither whitespace nor punctuation.
+const AUTOLINK_START_PATTERN = /https?:\/\/|www\./gi;
+const AUTOLINK_HINT_PATTERN = /:\/\/|www\./i;
+const AUTOLINK_TRAIL = "!\"')*,.:;?_~]";
+const WWW_PREVIOUS = " \t\n\r(*_[]~";
+const asciiLetterPattern = /^[A-Za-z]$/;
+const whitespaceOrPunctuationPattern = /[\s\p{P}\p{S}]/u;
+const whitespacePattern = /\s/;
+
+const isDomainChar = (char: string): boolean =>
+  char === "-" ||
+  char === "." ||
+  char === "_" ||
+  !whitespaceOrPunctuationPattern.test(char);
+
+// Whether only block quote markers come before `start` on its line
+const followsQuoteMarkers = (text: string, start: number): boolean => {
+  let i = start;
+  while (i > 0 && (text[i - 1] === ">" || text[i - 1] === " ")) {
+    i -= 1;
+  }
+  return i === 0 || text[i - 1] === "\n";
+};
+
+// Whether a literal autolink can start at the http://, https:// or www. at
+// `start`, given the character before it and the one after the prefix
+const opensAutolink = (
+  text: string,
+  start: number,
+  prefix: string
+): boolean => {
+  const previous = text[start - 1];
+  const next = text[start + prefix.length];
+  if (next === undefined) {
+    return false;
+  }
+  if (prefix.length === 4) {
+    return (
+      previous === undefined ||
+      WWW_PREVIOUS.includes(previous) ||
+      (previous === ">" && followsQuoteMarkers(text, start))
+    );
+  }
+  return (
+    !asciiLetterPattern.test(previous ?? "") &&
+    next >= " " &&
+    next !== "\x7f" &&
+    !whitespaceOrPunctuationPattern.test(next)
+  );
+};
+
+// Where the punctuation GFM drops from the end of [start, end) begins
+const trimAutolinkTrail = (
+  text: string,
+  start: number,
+  end: number
+): number => {
+  let i = end;
+  while (i > start) {
+    if (text[i - 1] === ";") {
+      // A character reference like &amp; trails as a whole
+      let j = i - 2;
+      while (j >= start && asciiLetterPattern.test(text[j])) {
+        j -= 1;
+      }
+      if (j < i - 2 && j >= start && text[j] === "&") {
+        i = j;
+        continue;
+      }
+    }
+    if (!AUTOLINK_TRAIL.includes(text[i - 1])) {
+      break;
+    }
+    i -= 1;
+  }
+  return i;
+};
+
+// The last underscore in the domain's last two segments, or -1 if none
+const findDomainUnderscore = (
+  text: string,
+  start: number,
+  end: number
+): number => {
+  let dots = 0;
+  for (let i = end - 1; i >= start && dots < 2; i -= 1) {
+    if (text[i] === "_") {
+      return i;
+    }
+    if (text[i] === ".") {
+      dots += 1;
+    }
+  }
+  return -1;
+};
+
+// Where the literal autolink whose domain starts at `domainStart` ends, or -1
+// when GFM doesn't link it, and where the next one can start
+const measureAutolink = (
+  text: string,
+  domainStart: number
+): { end: number; skipTo: number } => {
+  let domainEnd = domainStart;
+  while (domainEnd < text.length && isDomainChar(text[domainEnd])) {
+    domainEnd += 1;
+  }
+  let runEnd = domainEnd;
+  while (
+    runEnd < text.length &&
+    text[runEnd] !== "<" &&
+    !whitespacePattern.test(text[runEnd]) &&
+    !(
+      text[runEnd] === "]" &&
+      (text[runEnd + 1] === "(" || text[runEnd + 1] === "[")
+    )
+  ) {
+    runEnd += 1;
+  }
+  const end = trimAutolinkTrail(text, domainStart, runEnd);
+  const underscore = findDomainUnderscore(
+    text,
+    domainStart,
+    Math.min(domainEnd, end)
+  );
+  // A www. inside a domain GFM rejects can only link if it starts after
+  // that domain's last underscore
+  return underscore === -1
+    ? { end, skipTo: end }
+    : { end: -1, skipTo: underscore + 1 };
+};
+
+const buildAutolinkMask = (scan: TextScan): Uint8Array => {
+  const { text, regions } = scan;
+  const mask = new Uint8Array(text.length);
+  const pattern = AUTOLINK_START_PATTERN;
+  pattern.lastIndex = 0;
+
+  for (let match = pattern.exec(text); match !== null; ) {
+    const start = match.index;
+    const prefix = match[0];
+    // An unclosed code span is literal text
+    const inProse =
+      regions[start] === REGION.PROSE ||
+      regions[start] === REGION.CODE_SPAN_OPEN;
+    if (
+      inProse &&
+      opensAutolink(text, start, prefix) &&
+      !inHtmlTagAt(scan, start) &&
+      !inLinkUrlAt(scan, start)
+    ) {
+      const domainStart = prefix.length === 4 ? start : start + prefix.length;
+      const { end, skipTo } = measureAutolink(text, domainStart);
+      if (end !== -1) {
+        mask.fill(1, start, end);
+      }
+      // Resuming past each URL keeps the scan linear
+      pattern.lastIndex = Math.max(pattern.lastIndex, skipTo);
+    }
+    match = pattern.exec(text);
+  }
+
+  return mask;
+};
+
+export const inAutolinkAt = (scan: TextScan, position: number): boolean => {
+  if (position < 0 || position >= scan.text.length) {
+    return false;
+  }
+  if (scan.autolinkMask === null) {
+    scan.autolinkMask = AUTOLINK_HINT_PATTERN.test(scan.text)
+      ? buildAutolinkMask(scan)
+      : EMPTY_MASK;
+  }
+  return scan.autolinkMask[position] === 1;
 };
