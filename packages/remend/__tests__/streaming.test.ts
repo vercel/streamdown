@@ -4,7 +4,7 @@ import remend from "../src";
 describe("chunked streaming scenarios", () => {
   it("should handle nested formatting cut mid-stream", () => {
     expect(remend("This is **bold with *ital")).toBe(
-      "This is **bold with *ital*"
+      "This is **bold with *ital***"
     );
     // When underscore opens after bold, underscore should close before bold (proper nesting)
     expect(remend("**bold _und")).toBe("**bold _und_**");
@@ -27,15 +27,13 @@ describe("chunked streaming scenarios", () => {
   });
 
   it("should handle complex nested structures from chunks", () => {
-    // Backticks spanning multiple lines need special handling
-    expect(remend("1. First item\n   - Nested with `code\n2. Second")).toBe(
-      "1. First item\n   - Nested with `code\n2. Second`"
-    );
+    // A code span can't cross list items, so the backtick stays literal
+    const text = "1. First item\n   - Nested with `code\n2. Second";
+    expect(remend(text)).toBe(text);
   });
 
   it("should handle multiple incomplete formats in one chunk", () => {
-    // Formats are closed in order they're processed
-    expect(remend("Text **bold `code")).toBe("Text **bold `code**`");
+    expect(remend("Text **bold `code")).toBe("Text **bold `code`**");
   });
 });
 

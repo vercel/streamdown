@@ -131,11 +131,8 @@ Built-in handlers use priorities 0-75. Custom handlers default to 100 (run after
 | `htmlTags` | 10 |
 | `setextHeadings` | 15 |
 | `links` | 20 |
-| `boldItalic` | 30 |
-| `bold` | 35 |
-| `italic` | 40-42 |
+| `emphasis` (bold, italic, bold italic, strikethrough) | 30 |
 | `inlineCode` | 50 |
-| `strikethrough` | 60 |
 | `katex` | 70 |
 | `inlineKatex` | 75 |
 | Custom (default) | 100 |

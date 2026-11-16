@@ -70,6 +70,8 @@ export interface TextScan {
   linkUrlMask: Uint8Array | null;
   /** Lazily computed; stays null until first needed */
   mathMask: Uint8Array | null;
+  /** The math mask when a lone `$` is text, also lazily computed */
+  mathMaskWithoutDollar: Uint8Array | null;
   openFence: OpenFence | null;
   openSpan: OpenSpan | null;
   regions: Uint8Array;
@@ -98,7 +100,7 @@ const skipListMarker = (text: string, start: number): number => {
   return text[i] === " " ? i + 1 : -1;
 };
 
-interface ContainerPrefix {
+export interface ContainerPrefix {
   /** Index of the first character after the markers and indentation */
   contentStart: number;
   listIndent: number;
@@ -108,7 +110,7 @@ interface ContainerPrefix {
 // Walks the block quote and list markers that open a line. A single forward
 // pass: a regex with nested repetition over these markers backtracks
 // exponentially on a line of repeated list markers.
-const skipContainerPrefix = (
+export const skipContainerPrefix = (
   text: string,
   lineStart: number,
   lineEnd: number
@@ -342,7 +344,7 @@ const nextSpanOpener = (
       return -1;
     }
     const escaped =
-      next > i && text[next - 1] === "\\" && regions[next - 1] === REGION.PROSE;
+      next > i && regions[next - 1] === REGION.PROSE && isEscaped(text, next);
     if (regions[next] === REGION.PROSE && !escaped) {
       return next;
     }
@@ -414,6 +416,7 @@ const scanText = (text: string): TextScan => {
     openFence,
     openSpan,
     mathMask: null,
+    mathMaskWithoutDollar: null,
     linkUrlMask: null,
     htmlTagMask: null,
   };
@@ -473,6 +476,15 @@ export const isFenceAt = (scan: TextScan, position: number): boolean => {
 export const isCompleteSpanAt = (scan: TextScan, position: number): boolean =>
   scan.regions[position] === REGION.CODE_SPAN;
 
+/** Whether the character at position follows an odd run of backslashes */
+export const isEscaped = (text: string, position: number): boolean => {
+  let backslashes = 0;
+  for (let i = position - 1; i >= 0 && text[i] === "\\"; i -= 1) {
+    backslashes += 1;
+  }
+  return backslashes % 2 === 1;
+};
+
 /** Counts non-overlapping double-character pairs (**, ~~, $$) in prose */
 export const countDoublePairs = (text: string, char: string): number => {
   const scan = getScan(text);
@@ -480,7 +492,9 @@ export const countDoublePairs = (text: string, char: string): number => {
   let count = 0;
 
   for (let i = text.indexOf(pair); i !== -1; i = text.indexOf(pair, i)) {
-    if (scan.regions[i] === REGION.PROSE) {
+    // Inside math a backslash is TeX, so only markdown markers can be escaped
+    const escaped = char !== "$" && isEscaped(text, i);
+    if (scan.regions[i] === REGION.PROSE && !escaped) {
       count += 1;
       i += 2;
     } else {
@@ -549,7 +563,8 @@ interface MathDelimiter {
 const mathDelimiterAt = (
   text: string,
   i: number,
-  context: MathContext
+  context: MathContext,
+  singleDollar: boolean
 ): MathDelimiter | null => {
   const next = text[i + 1];
   if (text[i] === "\\") {
@@ -561,6 +576,9 @@ const mathDelimiterAt = (
   }
   if (text[i] === "$" && !isLatexMathContext(context)) {
     const isBlockDelimiter = next === "$";
+    if (!(isBlockDelimiter || singleDollar)) {
+      return null;
+    }
     return {
       context: getDollarMathContext(context, isBlockDelimiter),
       length: isBlockDelimiter ? 2 : 1,
@@ -573,7 +591,7 @@ const mathDelimiterAt = (
 // \(...\) or \[...\]. Delimiters inside code regions are literal and do
 // not change math state. A two-character delimiter marks its second
 // character with the context it establishes.
-const buildMathMask = (scan: TextScan): Uint8Array => {
+const buildMathMask = (scan: TextScan, singleDollar: boolean): Uint8Array => {
   const { text, regions } = scan;
   const n = text.length;
   const mask = new Uint8Array(n);
@@ -583,7 +601,9 @@ const buildMathMask = (scan: TextScan): Uint8Array => {
   while (i < n) {
     mask[i] = context === "none" ? 0 : 1;
     const delimiter: MathDelimiter | null =
-      regions[i] === REGION.PROSE ? mathDelimiterAt(text, i, context) : null;
+      regions[i] === REGION.PROSE
+        ? mathDelimiterAt(text, i, context, singleDollar)
+        : null;
     if (delimiter === null) {
       i += 1;
       continue;
@@ -598,16 +618,24 @@ const buildMathMask = (scan: TextScan): Uint8Array => {
   return mask;
 };
 
-export const inMathAt = (scan: TextScan, position: number): boolean => {
+/** Whether position is in math, where `singleDollar` decides if a lone `$` opens it */
+export const inMathAt = (
+  scan: TextScan,
+  position: number,
+  singleDollar = true
+): boolean => {
   if (position < 0 || position >= scan.text.length) {
     return false;
   }
-  if (scan.mathMask === null) {
-    scan.mathMask = hasMathDelimiters(scan.text)
-      ? buildMathMask(scan)
+  const key = singleDollar ? "mathMask" : "mathMaskWithoutDollar";
+  let mask = scan[key];
+  if (mask === null) {
+    mask = hasMathDelimiters(scan.text)
+      ? buildMathMask(scan, singleDollar)
       : EMPTY_MASK;
+    scan[key] = mask;
   }
-  return scan.mathMask[position] === 1;
+  return mask[position] === 1;
 };
 
 // Marks the URL positions of one line: those between a "](" opener and the
