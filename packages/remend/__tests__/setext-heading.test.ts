@@ -205,6 +205,17 @@ describe("setext heading handling", () => {
     expect(remend("Intro\n\n> 2. item\n> -")).toBe("Intro\n\n> 2. item\n> -");
   });
 
+  it("should NOT modify a dash inside an unclosed code fence", () => {
+    // The lines are code, so a zero-width space would end up in the code
+    expect(remend("```\n> Steps:\n> -")).toBe("```\n> Steps:\n> -");
+    expect(remend("~~~md\n> Title\n> =")).toBe("~~~md\n> Title\n> =");
+    expect(remend("```sql\nSELECT 1;\n--")).toBe("```sql\nSELECT 1;\n--");
+    // A closed fence doesn't change anything after it
+    expect(remend("```\ncode\n```\n> Steps:\n> -")).toBe(
+      "```\ncode\n```\n> Steps:\n> -​"
+    );
+  });
+
   it("should NOT modify a dash in another block quote", () => {
     // A different number of markers puts the dash in another container
     expect(remend("> quote\n> > -")).toBe("> quote\n> > -");

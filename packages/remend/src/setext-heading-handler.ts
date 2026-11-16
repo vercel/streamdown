@@ -2,6 +2,8 @@
 // Setext headings use --- or === on the line below text to create headings
 // During streaming, partial list items (like "-") can be misinterpreted as setext heading underlines
 
+import { getScan } from "./scan";
+
 // Regex patterns defined at top level for performance
 const DASH_ONLY_PATTERN = /^-{1,2}$/;
 const DASH_WITH_SPACE_PATTERN = /^[\s]*-{1,2}[\s]+$/;
@@ -99,6 +101,12 @@ export const handleIncompleteSetextHeading = (text: string): string => {
 
   // If there's no newline, we can't have a setext heading
   if (lastNewlineIndex === -1) {
+    return text;
+  }
+
+  // Inside an unterminated fenced code block every line is code, so nothing
+  // can turn into a heading and a zero-width space would end up in the code
+  if (getScan(text).openFence) {
     return text;
   }
 
