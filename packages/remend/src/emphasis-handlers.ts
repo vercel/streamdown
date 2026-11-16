@@ -45,13 +45,39 @@ const findInsertionPoint = (text: string): number => {
 const insertAtPoint = (text: string, at: number, closers: string): string =>
   closers === "" ? text : text.slice(0, at) + closers + text.slice(at);
 
-const hasContentBefore = (
+interface GateContext {
+  firstClosedBy: Map<number, MarkerRun>;
+  lastContent: number;
+  previousRun: Map<number, MarkerRun>;
+}
+
+// All openers share the insertion point. Find the last content character once,
+// rather than scanning overlapping suffixes even for runs that won't heal.
+const prepareGates = (
   text: string,
-  run: MarkerRun,
-  insertAt: number
-): boolean => {
-  const content = text.slice(run.index + run.length, insertAt);
-  return content !== "" && !whitespaceOrMarkersPattern.test(content);
+  insertAt: number,
+  match: DelimiterMatch
+): GateContext => {
+  let lastContent = insertAt - 1;
+  while (
+    lastContent >= 0 &&
+    whitespaceOrMarkersPattern.test(text[lastContent])
+  ) {
+    lastContent -= 1;
+  }
+  // Word-chain gates inspect adjacent gaps, so those character scans do not
+  // overlap. Index their run/pair lookups too, including for gated openers.
+  const previousRun = new Map<number, MarkerRun>();
+  for (let i = 1; i < match.runs.length; i += 1) {
+    previousRun.set(match.runs[i].index, match.runs[i - 1]);
+  }
+  const firstClosedBy = new Map<number, MarkerRun>();
+  for (const pair of match.pairs) {
+    if (!firstClosedBy.has(pair.closer.index)) {
+      firstClosedBy.set(pair.closer.index, pair.opener);
+    }
+  }
+  return { firstClosedBy, lastContent, previousRun };
 };
 
 const asciiLetterOrDigitPattern = /^[A-Za-z0-9]$/;
@@ -67,18 +93,20 @@ const isLetterOrDigit = (char: string): boolean =>
 const opensColdInWord = (
   text: string,
   run: MarkerRun,
-  match: DelimiterMatch
+  gates: GateContext
 ): boolean => {
   if (
     !(
       run.marker === "*" &&
       isLetterOrDigit(text[run.index - 1] ?? "") &&
-      letterOrDigitPattern.test(text.slice(run.index + run.length))
+      letterOrDigitPattern.test(
+        text.slice(run.index + run.length, run.index + run.length + 2)
+      )
     )
   ) {
     return false;
   }
-  const previous = match.runs.findLast((other) => other.index < run.index);
+  const previous = gates.previousRun.get(run.index);
   if (
     !(
       previous?.marker === "*" &&
@@ -89,12 +117,8 @@ const opensColdInWord = (
   ) {
     return true;
   }
-  const closed = match.pairs.find(
-    (pair) => pair.closer.index === previous.index
-  );
-  return (
-    closed !== undefined && isLetterOrDigit(text[closed.opener.index - 1] ?? "")
-  );
+  const closed = gates.firstClosedBy.get(previous.index);
+  return closed !== undefined && isLetterOrDigit(text[closed.index - 1] ?? "");
 };
 
 // Emphasis doesn't start with closing punctuation, so the * in (+, -, *, /)
@@ -103,7 +127,7 @@ const closingPunctuationPattern = /^[,;]/;
 
 const opensBeforeClosingPunctuation = (text: string, run: MarkerRun): boolean =>
   isWhitespaceChar(text[run.index - 1] ?? " ") &&
-  closingPunctuationPattern.test(text.slice(run.index + run.length));
+  closingPunctuationPattern.test(text[run.index + run.length] ?? "");
 
 // Writing \** usually means a literal ** with a sloppy escape, so the rest of
 // the run only closes if the author closes it
@@ -123,24 +147,20 @@ const lineEnded = (text: string, run: MarkerRun): boolean => {
   return contentPattern.test(text);
 };
 
-const isGated = (
-  text: string,
-  run: MarkerRun,
-  insertAt: number,
-  match: DelimiterMatch
-): boolean =>
-  !hasContentBefore(text, run, insertAt) ||
+const isGated = (text: string, run: MarkerRun, gates: GateContext): boolean =>
+  run.index + run.length > gates.lastContent ||
   // Prose uses a single tilde for "approximately"
   (run.marker === "~" && run.count === 1) ||
   // Models write fill-in blanks as long underscore runs, like Name: ______
   (run.marker === "_" && run.length >= 4) ||
-  opensColdInWord(text, run, match) ||
+  opensColdInWord(text, run, gates) ||
   opensBeforeClosingPunctuation(text, run) ||
   followsEscapedMarker(text, run);
 
 interface HealContext {
   base: HealBase;
   flags: EmphasisFlags;
+  gates: GateContext;
   insertAt: number;
   literal: number;
   match: DelimiterMatch;
@@ -277,19 +297,17 @@ const extendHeal = (
   open: readonly MarkerRun[],
   budget: HealBudget
 ): Heal | undefined => {
-  const { flags, insertAt, text, trailing } = context;
+  const { flags, gates, text, trailing } = context;
   const runs: MarkerRun[] = [];
   for (const run of open) {
-    if (isGated(text, run, insertAt, context.match)) {
+    // Dividers and disabled kinds can't heal, and need no gating work.
+    if (run.length > MAX_DELIMITER_RUN || !flags[flagFor(run)]) {
       continue;
     }
-    // A run this long is a divider, not emphasis, so it can't be healed
-    if (run.length > MAX_DELIMITER_RUN) {
+    if (isGated(text, run, gates)) {
       continue;
     }
-    if (flags[flagFor(run)]) {
-      runs.push(run);
-    }
+    runs.push(run);
     if (runs.length > MAX_OPEN_RUNS) {
       return start;
     }
@@ -409,6 +427,7 @@ const healEmphasis = (text: string, flags: EmphasisFlags): string => {
   const context = {
     base: prepareHeal(text, insertAt, flags.inlineMath),
     flags,
+    gates: prepareGates(text, insertAt, match),
     insertAt,
     literal: match.literal,
     match,
@@ -427,11 +446,13 @@ const healEmphasis = (text: string, flags: EmphasisFlags): string => {
     );
     const asText = { ...trailing, count: trailing.length };
     const streaming = trailing.count > 0 || trailing.closesPartially;
+    const alternateMatch = { ...prefix, runs: [...prefix.runs, asText] };
     const alternative = healFrom(
       {
         ...context,
+        gates: prepareGates(text, insertAt, alternateMatch),
         literal: prefix.literal + asText.count,
-        match: { ...prefix, runs: [...prefix.runs, asText] },
+        match: alternateMatch,
         trailing: asText,
       },
       prefix.open,
