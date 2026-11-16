@@ -137,6 +137,16 @@ describe("tail-bounded stream repair", () => {
       first: "```sh\necho `\n```",
       settles: true,
     },
+    {
+      name: "math in a fence with a shorter closer",
+      first: "````sh\n$ ls\n```",
+      settles: false,
+    },
+    {
+      name: "math in a fence with a longer closer",
+      first: "```sh\n$ ls\n````",
+      settles: true,
+    },
   ])("settles a first block with $name: $settles", ({ first, settles }) => {
     const { state } = stream([
       `${first}\n\nTwo.\n\nThree.\n\nFour`,

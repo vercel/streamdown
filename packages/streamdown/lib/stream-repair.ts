@@ -25,8 +25,8 @@ const backtickRunPattern = /`+/g;
 const whitespacePattern = /\s/;
 
 // Whether the block is one CommonMark fence, found by a scan rather than a
-// regex. The opening run can be any prefix of the line's marker run, and a
-// regex that lets it shrink backtracks over every shorter opener.
+// regex, which would backtrack over every shorter opener. The opener is the
+// line's whole marker run, as in remend's scanner.
 const isWholeFenceBlock = (block: string): boolean => {
   let indent = 0;
   while (block[indent] === " " && indent < 3) {
@@ -40,8 +40,7 @@ const isWholeFenceBlock = (block: string): boolean => {
   while (block[open] === marker) {
     open += 1;
   }
-  // The opener used is a prefix of this run of at least 3, so the run only
-  // has to be that long. A longer closer's extra markers are its trailing run.
+  // The opener run must be at least 3 markers long to open a fence.
   if (open - indent < 3) {
     return false;
   }
@@ -65,7 +64,10 @@ const isWholeFenceBlock = (block: string): boolean => {
   while (block[close] === marker) {
     close += 1;
   }
-  return close === end && close - closer >= 3;
+  // A fence closes only on a run of the same marker at least as long as the
+  // opener, matching remend's scanner (isFenceCloser). A shorter closing run
+  // leaves the fence open, spanning into later blocks.
+  return close === end && close - closer >= open - indent;
 };
 
 const hasMathDelimiter = (block: string): boolean =>
