@@ -7,12 +7,12 @@ interface Row {
   name: string;
 }
 
-const bestTime = (input: string) => {
-  remend(input);
+const bestTime = (input: string, options?: Parameters<typeof remend>[1]) => {
+  remend(input, options);
   let best = Number.POSITIVE_INFINITY;
   for (let i = 0; i < 5; i++) {
     const start = performance.now();
-    remend(input);
+    remend(input, options);
     best = Math.min(best, performance.now() - start);
   }
   return best;
@@ -20,8 +20,11 @@ const bestTime = (input: string) => {
 
 // Wall-clock budgets flake on shared CI runners, so compare growth instead:
 // quadrupling the input costs ~4x when linear and ~16x when quadratic.
-const growth = (make: (n: number) => string, n: number) =>
-  bestTime(make(n * 4)) / bestTime(make(n));
+const growth = (
+  make: (n: number) => string,
+  n: number,
+  options?: Parameters<typeof remend>[1]
+) => bestTime(make(n * 4), options) / bestTime(make(n), options);
 
 describe("emphasis nesting", () => {
   it.each<Row>([
@@ -258,6 +261,28 @@ describe("emphasis nesting", () => {
     },
   ])("stays linear on $name", ({ make, n }) => {
     expect(growth(make, n)).toBeLessThan(10);
+  });
+
+  it.each([
+    {
+      name: "overlength openers",
+      unit: `${"*".repeat(17)}~~~ `,
+      options: {},
+    },
+    {
+      name: "blank underscore openers",
+      unit: "____~~~ ",
+      options: {},
+    },
+    {
+      name: "disabled italic openers",
+      unit: "*~~~ ",
+      options: { italic: false },
+    },
+  ])("stays linear when gating skips $name", ({ unit, options }) => {
+    const make = (n: number) => `${unit.repeat(n)}x`;
+    expect(remend(make(8000), options)).toBe(make(8000));
+    expect(growth(make, 2000, options)).toBeLessThan(10);
   });
 
   // Every heal attempt rematches the whole block. These took seconds when an
