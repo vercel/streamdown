@@ -181,7 +181,8 @@ const findLinkLabels = (
 ): LinkLabel[] => {
   const { text } = scan;
   const labels: LinkLabel[] = [];
-  const openers: { active: boolean; start: number }[] = [];
+  const openers: number[] = [];
+  let inactiveThrough = -1;
   for (let i = from; i < text.length; i += 1) {
     const char = text[i];
     if (
@@ -192,17 +193,22 @@ const findLinkLabels = (
       continue;
     }
     if (char === "[") {
-      openers.push({ active: true, start: i });
+      openers.push(i);
       continue;
     }
     const opener = openers.pop();
-    if (opener?.active && text[i + 1] === "(" && inLinkUrlAt(scan, i + 2)) {
-      labels.push({ end: i, start: opener.start });
-      // Links cannot contain links, so a link deactivates every bracket that could enclose it
-      if (text[opener.start - 1] !== "!" || isEscaped(text, opener.start - 1)) {
-        for (const outer of openers) {
-          outer.active = false;
-        }
+    if (
+      opener !== undefined &&
+      opener > inactiveThrough &&
+      text[i + 1] === "(" &&
+      inLinkUrlAt(scan, i + 2)
+    ) {
+      labels.push({ end: i, start: opener });
+      // Links cannot contain links. All remaining openers precede this one,
+      // so a boundary deactivates them without revisiting the retained prefix.
+      // Keep inactive openers on the stack to consume their closing brackets.
+      if (text[opener - 1] !== "!" || isEscaped(text, opener - 1)) {
+        inactiveThrough = opener;
       }
     }
   }
