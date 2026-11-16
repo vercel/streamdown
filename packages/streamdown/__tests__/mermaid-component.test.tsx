@@ -171,6 +171,71 @@ describe("Mermaid Component", () => {
     });
   });
 
+  it("should pass the original thrown error as cause to the custom error component", async () => {
+    const original = Object.assign(new Error("Parse error"), {
+      hash: { token: 1, expected: ["'SQE'"] },
+    });
+    const plugin = createMockMermaidPlugin(vi.fn().mockRejectedValue(original));
+    const received: unknown[] = [];
+
+    const CustomError = ({
+      error,
+      cause,
+    }: {
+      error: string;
+      chart: string;
+      retry: () => void;
+      cause?: unknown;
+    }) => {
+      received.push(cause);
+      return <div data-testid="custom-error">{error}</div>;
+    };
+
+    const { container } = renderWithContext(
+      <Mermaid chart="invalid" />,
+      { mermaid: { errorComponent: CustomError } },
+      { mermaid: plugin }
+    );
+
+    await waitFor(() => {
+      expect(
+        container.querySelector('[data-testid="custom-error"]')
+      ).toBeTruthy();
+    });
+    expect(received.at(-1)).toBe(original);
+  });
+
+  it("should pass non-Error thrown values as cause", async () => {
+    const thrown = { hash: { line: 3 } };
+    const plugin = createMockMermaidPlugin(vi.fn().mockRejectedValue(thrown));
+    let receivedCause: unknown;
+
+    const CustomError = ({
+      cause,
+    }: {
+      error: string;
+      chart: string;
+      retry: () => void;
+      cause?: unknown;
+    }) => {
+      receivedCause = cause;
+      return <div data-testid="custom-error">failed</div>;
+    };
+
+    const { container } = renderWithContext(
+      <Mermaid chart="invalid" />,
+      { mermaid: { errorComponent: CustomError } },
+      { mermaid: plugin }
+    );
+
+    await waitFor(() => {
+      expect(
+        container.querySelector('[data-testid="custom-error"]')
+      ).toBeTruthy();
+    });
+    expect(receivedCause).toBe(thrown);
+  });
+
   it("should render in fullscreen mode", async () => {
     const { container } = renderWithContext(
       <Mermaid chart={simpleChart} fullscreen={true} />
@@ -245,6 +310,21 @@ describe("Mermaid Component", () => {
       const chartContainer = container.querySelector('[role="img"]');
       expect(chartContainer).toBeTruthy();
     });
+  });
+
+  it("should keep the rendered SVG node when re-rendering the same chart", async () => {
+    const { container, rerender } = renderWithContext(
+      <Mermaid chart={simpleChart} />
+    );
+
+    await waitFor(() => {
+      expect(container.querySelector('[role="img"] svg')).toBeTruthy();
+    });
+    const svg = container.querySelector('[role="img"] svg');
+
+    rerender(<Mermaid chart={simpleChart} />);
+
+    expect(container.querySelector('[role="img"] svg')).toBe(svg);
   });
 
   it("should generate unique IDs for multiple charts", async () => {
@@ -553,6 +633,47 @@ describe("Mermaid Component", () => {
         expect(container.querySelector('[data-chart="final"]')).toBeTruthy();
       });
       expect(container.textContent).not.toContain("Parse error");
+    });
+
+    it("does not show an error for a partial chart while the fence streams", async () => {
+      const { mockRender, pending } = deferredRender();
+      const plugin = createMockMermaidPlugin(mockRender);
+
+      const { container } = renderWithContext(
+        streaming("graph TD;\n    A--", true),
+        {},
+        { mermaid: plugin }
+      );
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(1));
+      await settle(() => pending[0].reject(new Error("Parse error on line 2")));
+      await wait(20);
+
+      expect(container.textContent).not.toContain("Parse error");
+      expect(container.textContent).not.toContain("Mermaid Error");
+      expect(container.textContent).toContain("Loading diagram");
+    });
+
+    it("shows the error once the fence closes with the same chart", async () => {
+      const { mockRender, pending } = deferredRender();
+      const plugin = createMockMermaidPlugin(mockRender);
+      const chart = "graph TD;\n    A--";
+
+      const { container, rerender } = renderWithContext(
+        streaming(chart, true),
+        {},
+        { mermaid: plugin }
+      );
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(1));
+      await settle(() => pending[0].reject(new Error("Parse error on line 2")));
+      await wait(20);
+
+      rerender(streaming(chart, false));
+      await waitFor(() => expect(mockRender).toHaveBeenCalledTimes(2));
+      await settle(() => pending[1].reject(new Error("Parse error on line 2")));
+
+      await waitFor(() => {
+        expect(container.textContent).toContain("Parse error on line 2");
+      });
     });
 
     it("stops after unmounting while a render is pending", async () => {

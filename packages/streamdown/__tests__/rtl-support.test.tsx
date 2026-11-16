@@ -209,6 +209,47 @@ Mixed paragraph: Hello مرحبا World عالم.
       expect(dirElements.length).toBeGreaterThanOrEqual(1);
     });
 
+    it("ignores Arabic digits and vowel marks per block in static mode", () => {
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {"Call ٠٥٠١٢٣٤٥٦٧ today\n\nWord كِتَابٌ"}
+        </Streamdown>
+      );
+
+      const paragraphs = container.querySelectorAll("p");
+
+      expect(paragraphs[0]?.getAttribute("dir")).toBe("ltr");
+      expect(paragraphs[1]?.getAttribute("dir")).toBe("ltr");
+    });
+
+    it("ignores Arabic digits and vowel marks in streaming mode", () => {
+      const { container } = render(
+        <Streamdown dir="auto" mode="streaming">
+          {"Call ٠٥٠١٢٣٤٥٦٧ today\n\nWord كِتَابٌ"}
+        </Streamdown>
+      );
+
+      const blocks = container.querySelectorAll("[dir]");
+
+      expect(blocks).toHaveLength(2);
+      expect(blocks[0]?.getAttribute("dir")).toBe("ltr");
+      expect(blocks[1]?.getAttribute("dir")).toBe("ltr");
+    });
+
+    it("keeps table cells with only Arabic digits RTL in static mode", () => {
+      const content = "| المنتج | السعر |\n| --- | --- |\n| كتاب | ٢٥ |";
+      const { container } = render(
+        <Streamdown dir="auto" mode="static">
+          {content}
+        </Streamdown>
+      );
+
+      const cells = container.querySelectorAll("td");
+
+      expect(cells[1]?.textContent).toBe("٢٥");
+      expect(cells[1]?.getAttribute("dir")).toBe("rtl");
+    });
+
     it("uses display:contents on block dir wrapper", () => {
       const { container } = render(
         <Streamdown dir="rtl">{"مرحبا بالعالم"}</Streamdown>

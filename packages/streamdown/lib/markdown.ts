@@ -31,9 +31,12 @@ export type UrlTransform = (
 export type Components = {
   [Key in keyof JSX.IntrinsicElements]?:
     | ComponentType<JSX.IntrinsicElements[Key] & ExtraProps>
-    | keyof JSX.IntrinsicElements;
+    | keyof JSX.IntrinsicElements
+    | undefined;
 } & {
-  inlineCode?: ComponentType<JSX.IntrinsicElements["code"] & ExtraProps>;
+  inlineCode?:
+    | ComponentType<JSX.IntrinsicElements["code"] & ExtraProps>
+    | undefined;
   [key: string]:
     | ComponentType<Record<string, unknown> & ExtraProps>
     | keyof JSX.IntrinsicElements
@@ -41,26 +44,59 @@ export type Components = {
 };
 
 export interface Options {
-  allowElement?: AllowElement;
-  allowedElements?: readonly string[];
-  children?: string;
-  components?: Components;
-  disallowedElements?: readonly string[];
-  rehypePlugins?: PluggableList;
-  remarkPlugins?: PluggableList;
-  remarkRehypeOptions?: Readonly<RemarkRehypeOptions>;
-  skipHtml?: boolean;
-  unwrapDisallowed?: boolean;
-  urlTransform?: UrlTransform;
+  allowElement?: AllowElement | undefined;
+  allowedElements?: readonly string[] | undefined;
+  children?: string | undefined;
+  components?: Components | undefined;
+  disallowedElements?: readonly string[] | undefined;
+  rehypePlugins?: PluggableList | undefined;
+  remarkPlugins?: PluggableList | undefined;
+  remarkRehypeOptions?: Readonly<RemarkRehypeOptions> | undefined;
+  skipHtml?: boolean | undefined;
+  unwrapDisallowed?: boolean | undefined;
+  urlTransform?: UrlTransform | undefined;
 }
 
 // Stable references for common cases
 const EMPTY_PLUGINS: PluggableList = [];
 const DEFAULT_REMARK_REHYPE_OPTIONS = { allowDangerousHtml: true };
 
-// Plugin name cache for faster serialization
+// Function names do not distinguish closures or minified plugins.
 // biome-ignore lint/complexity/noBannedTypes: "Need Function type for plugin caching"
-const pluginNameCache = new WeakMap<Function, string>();
+const pluginIds = new WeakMap<Function, number>();
+let nextPluginId = 0;
+
+// biome-ignore lint/complexity/noBannedTypes: "Need Function type for plugin caching"
+const getPluginId = (plugin: Function): number => {
+  const cached = pluginIds.get(plugin);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const id = nextPluginId;
+  nextPluginId += 1;
+  pluginIds.set(plugin, id);
+  return id;
+};
+
+const serializeOptions = (options: unknown): string => {
+  const paths = new WeakMap<object, string[]>();
+  const callbacks: [string[], number][] = [];
+  const data = JSON.stringify(
+    options,
+    function (this: object, key, value: unknown) {
+      const parentPath = paths.get(this);
+      const path = parentPath ? [...parentPath, key] : [];
+      if (typeof value === "function") {
+        callbacks.push([path, getPluginId(value)]);
+      } else if (value !== null && typeof value === "object") {
+        paths.set(value, path);
+      }
+      return value;
+    }
+  );
+  // Separate callback paths/identities from user data to avoid tag collisions.
+  return JSON.stringify([data, callbacks]);
+};
 
 // LRU Cache for unified processors
 class ProcessorCache {
@@ -88,7 +124,6 @@ class ProcessorCache {
     }
 
     // Optimize serialization for plugins
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: "Plugin serialization requires checking multiple plugin formats"
     const serializePlugins = (plugins: PluggableList | undefined): string => {
       if (!plugins || plugins.length === 0) {
         return "";
@@ -105,25 +140,15 @@ class ProcessorCache {
           // Plugin with options: [plugin, options]
           const [pluginFn, pluginOptions] = plugin;
           if (typeof pluginFn === "function") {
-            let name = pluginNameCache.get(pluginFn);
-            if (!name) {
-              name = pluginFn.name;
-              pluginNameCache.set(pluginFn, name);
-            }
-            result += name;
+            result += getPluginId(pluginFn);
           } else {
             result += String(pluginFn);
           }
           result += ":";
-          result += JSON.stringify(pluginOptions);
+          result += serializeOptions(pluginOptions);
         } else if (typeof plugin === "function") {
           // Plugin without options
-          let name = pluginNameCache.get(plugin);
-          if (!name) {
-            name = plugin.name;
-            pluginNameCache.set(plugin, name);
-          }
-          result += name;
+          result += getPluginId(plugin);
         } else {
           result += String(plugin);
         }
@@ -134,7 +159,7 @@ class ProcessorCache {
     const rehypeKey = serializePlugins(rehypePlugins);
     const remarkKey = serializePlugins(remarkPlugins);
     const optionsKey = remarkRehypeOptions
-      ? JSON.stringify(remarkRehypeOptions)
+      ? serializeOptions(remarkRehypeOptions)
       : "";
 
     const key = `${remarkKey}::${rehypeKey}::${optionsKey}`;

@@ -65,7 +65,7 @@ Preprocessor that completes incomplete Markdown during streaming.
 | `` `code `` | `` `code` `` |
 | `~~text` | `~~text~~` |
 | `[text` | `[text](streamdown:incomplete-link)` or `text` |
-| `![alt` | Removed entirely |
+| `![alt` | `![alt](streamdown:incomplete-image)` (loading placeholder) |
 | `$$\n math` | `$$\n math $$` |
 
 **Disable:**

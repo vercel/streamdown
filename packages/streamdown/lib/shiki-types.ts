@@ -30,14 +30,14 @@ export type BundledTheme = string;
  * `@streamdown/code` / Shiki remain assignable without a type dependency.
  */
 export interface ThemeRegistrationAny {
-  bg?: string;
-  colors?: Record<string, string>;
-  displayName?: string;
-  fg?: string;
-  name?: string;
-  semanticHighlighting?: boolean;
-  semanticTokenColors?: Record<string, unknown>;
-  settings?: unknown[];
-  tokenColors?: unknown[];
-  type?: "light" | "dark";
+  bg?: string | undefined;
+  colors?: Record<string, string> | undefined;
+  displayName?: string | undefined;
+  fg?: string | undefined;
+  name?: string | undefined;
+  semanticHighlighting?: boolean | undefined;
+  semanticTokenColors?: Record<string, unknown> | undefined;
+  settings?: unknown[] | undefined;
+  tokenColors?: unknown[] | undefined;
+  type?: "light" | "dark" | undefined;
 }

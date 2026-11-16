@@ -1,8 +1,11 @@
-import { render } from "@testing-library/react";
+import { createMathPlugin } from "@streamdown/math";
+import { fireEvent, render } from "@testing-library/react";
 import { marked } from "marked";
+import { createElement } from "react";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Streamdown } from "../index";
 import { Markdown } from "../lib/markdown";
 import {
   escapeMarkdownTableCell,
@@ -497,6 +500,161 @@ describe("Table Utils", () => {
   });
 
   describe("tableDataToMarkdown", () => {
+    it.each([
+      ["https://example.com", "https://example.com"],
+      ["https://example.com/a_b", "https://example.com/a_b"],
+      ["https://example.com/a~b", "https://example.com/a~b"],
+      ["www.example.com/a_b", "http://www.example.com/a_b"],
+      ["user@example.com", "mailto:user@example.com"],
+      ["user_name@example.com", "mailto:user_name@example.com"],
+      [
+        "https://example.com/a?x=one_two&y=three_four",
+        "https://example.com/a?x=one_two&y=three_four",
+      ],
+      [
+        "www.example.com/a_b?x=one_two&y=3",
+        "http://www.example.com/a_b?x=one_two&y=3",
+      ],
+      [
+        "first.last+tag_name@example-domain.com",
+        "mailto:first.last+tag_name@example-domain.com",
+      ],
+    ])("should preserve the text and target of the bare link %s", (text, href) => {
+      const data: TableData = { headers: [text], rows: [[text]] };
+      const { container } = render(
+        Markdown({
+          children: tableDataToMarkdown(data),
+          remarkPlugins: [remarkGfm],
+          rehypePlugins: [rehypeRaw],
+        })
+      );
+      const table = container.querySelector("table") as HTMLTableElement;
+
+      expect(extractTableDataFromElement(table)).toEqual(data);
+      expect(
+        [...table.querySelectorAll("a")].map((link) =>
+          link.getAttribute("href")
+        )
+      ).toEqual([href, href]);
+    });
+
+    it.each([
+      "`https://example.com/a_b`",
+      "**https://example.com/a_b**",
+      "_https://example.com/a_b_",
+      "~~https://example.com/a_b~~",
+      "[label](https://example.com/a_b)",
+      "![alt](https://example.com/a_b)",
+      "https://example.com/a_b and **literal**",
+      "**before** https://example.com/a_b _after_",
+      "https://example.com/a_b, https://example.com/c_d",
+      "(https://example.com/a_(b))",
+      "www.example.com/a_b.",
+      "https://example.com/a?x=one_two&y=three_four",
+      "HTTPS://EXAMPLE.COM/a_b",
+      "ftp://example.com/a_b",
+      "prefixhttps://example.com/a_b",
+      "mailto:user_name@example.com",
+      "user+tag_name@example.com",
+      "user*name@example.com",
+      "<https://example.com/a_b>",
+      "网址：https://example.com/中_文",
+      "😀 https://example.com/a_b",
+      "https://example.com/*a* _literal_",
+      "https://example.com/[a_b]",
+      "**https://example.com/a**",
+      "https://example.com/a`b`",
+      "[reference] https://example.com/a_b\n`code`",
+      "https://example.com/a|b",
+      "https://example.com/a_b $x + 1$",
+      "$https://example.com/x$ and $y$",
+      "www.example.com/path_*value*",
+      "https://example.com/a\\b",
+      "https://example.com/a&amp;b",
+      "https://example.com/a&#95;b",
+    ])("should preserve literal link boundaries: %s", (text) => {
+      const data: TableData = { headers: [text], rows: [[text]] };
+      const markdown = tableDataToMarkdown(data);
+      const { container } = render(
+        Markdown({
+          children: markdown,
+          remarkPlugins: [remarkGfm],
+          rehypePlugins: [rehypeRaw],
+        })
+      );
+      const table = container.querySelector("table") as HTMLTableElement;
+      expect(extractTableDataFromElement(table)).toEqual(data);
+
+      const markedContainer = document.createElement("div");
+      markedContainer.innerHTML = marked.parse(markdown, { async: false });
+      expect(
+        extractTableDataFromElement(
+          markedContainer.querySelector("table") as HTMLTableElement
+        )
+      ).toEqual(data);
+    });
+
+    it.each([
+      false,
+      true,
+    ])("should preserve literal math with singleDollarTextMath=%s", (singleDollarTextMath) => {
+      const math = createMathPlugin({ singleDollarTextMath });
+      const data: TableData = {
+        headers: ["$Math$"],
+        rows: [
+          ["$x + 1$"],
+          ["$$x + 1$$"],
+          ["$\\alpha_1$"],
+          ["https://example.com/a_b $x_1$"],
+        ],
+      };
+      const { container } = render(
+        Markdown({
+          children: tableDataToMarkdown(data),
+          remarkPlugins: [remarkGfm, math.remarkPlugin],
+          rehypePlugins: [rehypeRaw, math.rehypePlugin],
+        })
+      );
+      const table = container.querySelector("table") as HTMLTableElement;
+
+      expect(extractTableDataFromElement(table)).toEqual(data);
+      expect(table.querySelector(".katex, math, code")).toBeNull();
+    });
+
+    it.each([
+      "static",
+      "streaming",
+    ] as const)("should preserve exported text through Streamdown in %s mode", (mode) => {
+      const math = createMathPlugin({ singleDollarTextMath: true });
+      const data: TableData = {
+        headers: ["**Cell**"],
+        rows: [
+          ["https://example.com/a?x=one_two&y=three_four"],
+          ["**https://example.com/a_b**"],
+          ["$\\alpha_1$"],
+          ["First line\nSecond line"],
+        ],
+      };
+      const { container } = render(
+        createElement(
+          Streamdown,
+          { mode, plugins: { math } },
+          tableDataToMarkdown(data)
+        )
+      );
+      const table = container.querySelector("table") as HTMLTableElement;
+
+      expect(extractTableDataFromElement(table)).toEqual(data);
+      fireEvent.click(
+        table.querySelector('[data-streamdown="link"]') as HTMLElement
+      );
+      expect(
+        document.querySelector('[data-streamdown="link-safety-modal"]')
+          ?.textContent
+      ).toContain(data.rows[0][0]);
+      expect(table.querySelector(".katex, math, strong, code")).toBeNull();
+    });
+
     it("should preserve literal HTML and entities when rendered again", () => {
       const table = document.createElement("table");
       table.innerHTML = `
@@ -544,20 +702,21 @@ describe("Table Utils", () => {
       expect(extractTableDataFromElement(restoredTable)).toEqual(data);
     });
 
-    it("documents that other Markdown syntax is still re-parsed on render", () => {
-      // Pre-existing limitation: export escapes HTML (&/< />) and table syntax
-      // (|, \, newlines), but not general Markdown metacharacters. So pasted
-      // cells like **bold**, `code`, and [link](url) re-interpret on render.
-      // Broader metachar escaping is out of scope for the HTML-literal fix.
+    it("should preserve literal Markdown syntax when rendered again", () => {
       const data: TableData = {
-        headers: ["Cell"],
-        rows: [["**bold**"], ["`code`"], ["[link](https://example.com)"]],
+        headers: ["**Cell**"],
+        rows: [
+          ["**bold**"],
+          ["_italic_"],
+          ["~~deleted~~"],
+          ["`code`"],
+          ["[link](https://example.com)"],
+          ["![image](https://example.com/image.png)"],
+          ["[reference]"],
+          ["a\\b | *value* & <tag>"],
+        ],
       };
       const markdown = tableDataToMarkdown(data);
-
-      expect(markdown).toContain("**bold**");
-      expect(markdown).toContain("`code`");
-      expect(markdown).toContain("[link](https://example.com)");
 
       const { container } = render(
         Markdown({
@@ -566,13 +725,14 @@ describe("Table Utils", () => {
           rehypePlugins: [rehypeRaw],
         })
       );
-      const cells = [...container.querySelectorAll("tbody td")].map(
-        (cell) => cell.innerHTML
-      );
+      const restoredTable = container.querySelector(
+        "table"
+      ) as HTMLTableElement;
 
-      expect(cells[0]).toContain("<strong>");
-      expect(cells[1]).toContain("<code>");
-      expect(cells[2]).toContain("<a ");
+      expect(extractTableDataFromElement(restoredTable)).toEqual(data);
+      expect(
+        restoredTable.querySelector("strong, em, del, code, img")
+      ).toBeNull();
     });
 
     it("should convert simple table data to Markdown", () => {

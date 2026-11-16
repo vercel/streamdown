@@ -125,8 +125,12 @@ Content for snippet 2
       </Streamdown>
     );
 
-    const snippet1 = container.querySelector('[data-testid="snippet-1"]');
-    const snippet2 = container.querySelector('[data-testid="snippet-2"]');
+    const snippet1 = container.querySelector(
+      '[data-testid="snippet-user-content-1"]'
+    );
+    const snippet2 = container.querySelector(
+      '[data-testid="snippet-user-content-2"]'
+    );
     expect(snippet1).toBeTruthy();
     expect(snippet2).toBeTruthy();
     expect(snippet1?.textContent).not.toContain("Snippet 2");
