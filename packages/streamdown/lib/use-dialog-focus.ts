@@ -18,7 +18,8 @@ const getWrapTarget = (dialog: HTMLElement, shiftKey: boolean) => {
   const focusable = getFocusableElements(dialog);
   const first = focusable[0];
   const last = focusable.at(-1);
-  // Nothing to focus: still keep Tab from leaving the dialog.
+  // Nothing to focus: the dialog has no tabindex, so focusing it does nothing,
+  // but the caller still prevents the default and focus stays where it is.
   if (!(first && last)) {
     return dialog;
   }
