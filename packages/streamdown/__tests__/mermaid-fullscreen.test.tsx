@@ -602,5 +602,20 @@ describe("MermaidFullscreenButton", () => {
 
       expect(document.activeElement).toBe(openBtn);
     });
+
+    it("should return focus to the fullscreen button when it was not focused before opening", () => {
+      const { container } = renderWithContext({ chart: "graph TD; A-->B" });
+      const openBtn = container.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement;
+
+      // Safari does not focus a button on mouse click.
+      fireEvent.click(openBtn);
+      fireEvent.click(
+        document.querySelector('button[title="Exit fullscreen"]') as HTMLElement
+      );
+
+      expect(document.activeElement).toBe(openBtn);
+    });
   });
 });

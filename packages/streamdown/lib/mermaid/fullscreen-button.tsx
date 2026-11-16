@@ -1,4 +1,10 @@
-import { type ComponentProps, useContext, useEffect, useState } from "react";
+import {
+  type ComponentProps,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
 import { CodeBlockCopyButton } from "../code-block/copy-button";
@@ -37,7 +43,11 @@ export const MermaidFullscreenButton = ({
     portal,
   } = useContext(StreamdownContext);
   const t = useTranslations();
-  const { dialogRef, initialFocusRef } = useDialogFocus(isFullscreen);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const { dialogRef, initialFocusRef } = useDialogFocus(
+    isFullscreen,
+    triggerRef
+  );
   const showPanZoomControls = (() => {
     if (typeof controlsConfig === "boolean") {
       return controlsConfig;
@@ -119,6 +129,7 @@ export const MermaidFullscreenButton = ({
         )}
         disabled={isAnimating}
         onClick={handleToggle}
+        ref={triggerRef}
         title={t.viewFullscreen}
         type="button"
         {...props}

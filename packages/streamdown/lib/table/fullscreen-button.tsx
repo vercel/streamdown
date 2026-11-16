@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
@@ -28,7 +28,11 @@ export const TableFullscreenButton = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { isAnimating, portal } = useContext(StreamdownContext);
   const t = useTranslations();
-  const { dialogRef, initialFocusRef } = useDialogFocus(isFullscreen);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const { dialogRef, initialFocusRef } = useDialogFocus(
+    isFullscreen,
+    triggerRef
+  );
 
   const handleOpen = () => {
     setIsFullscreen(true);
@@ -65,6 +69,7 @@ export const TableFullscreenButton = ({
         )}
         disabled={isAnimating}
         onClick={handleOpen}
+        ref={triggerRef}
         title={t.viewFullscreen}
         type="button"
       >

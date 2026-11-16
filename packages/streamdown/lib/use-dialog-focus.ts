@@ -36,10 +36,14 @@ interface DialogFocus {
 
 /**
  * Modal dialog focus handling: move focus into the dialog when it opens, keep
- * Tab and Shift+Tab inside it, and return focus to the element that had it
- * before opening once the dialog closes.
+ * Tab and Shift+Tab inside it, and return focus once the dialog closes. Focus
+ * returns to `triggerRef` when given, otherwise to the element that had it
+ * before opening (some browsers do not focus a button on mouse click).
  */
-export const useDialogFocus = (open: boolean): DialogFocus => {
+export const useDialogFocus = (
+  open: boolean,
+  triggerRef?: RefObject<HTMLElement | null>
+): DialogFocus => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const initialFocusRef = useRef<HTMLButtonElement>(null);
 
@@ -49,9 +53,10 @@ export const useDialogFocus = (open: boolean): DialogFocus => {
     }
 
     const previousFocus =
-      document.activeElement instanceof HTMLElement
+      triggerRef?.current ??
+      (document.activeElement instanceof HTMLElement
         ? document.activeElement
-        : null;
+        : null);
     initialFocusRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -82,7 +87,7 @@ export const useDialogFocus = (open: boolean): DialogFocus => {
         previousFocus.focus();
       }
     };
-  }, [open]);
+  }, [open, triggerRef]);
 
   return { dialogRef, initialFocusRef };
 };
