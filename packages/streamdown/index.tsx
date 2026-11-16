@@ -555,6 +555,22 @@ export type BlockProps = Options & {
   animatePlugin?: AnimatePlugin | null | undefined;
 };
 
+const sameComponents = (
+  prev: Options["components"],
+  next: Options["components"]
+): boolean => {
+  if (prev === next) {
+    return true;
+  }
+  const prevKeys = Object.keys(prev ?? {});
+  return (
+    prevKeys.length === Object.keys(next ?? {}).length &&
+    prevKeys.every(
+      (key) => Object.hasOwn(next ?? {}, key) && prev?.[key] === next?.[key]
+    )
+  );
+};
+
 export const Block = memo(
   // Destructure internal props to prevent them from leaking to the DOM
   ({
@@ -624,22 +640,8 @@ export const Block = memo(
       return false;
     }
 
-    // Check if components object changed (shallow comparison)
-    if (prevProps.components !== nextProps.components) {
-      // If references differ, check if keys are the same
-      const prevKeys = Object.keys(prevProps.components || {});
-      const nextKeys = Object.keys(nextProps.components || {});
-
-      if (prevKeys.length !== nextKeys.length) {
-        return false;
-      }
-      if (
-        prevKeys.some(
-          (key) => prevProps.components?.[key] !== nextProps.components?.[key]
-        )
-      ) {
-        return false;
-      }
+    if (!sameComponents(prevProps.components, nextProps.components)) {
+      return false;
     }
 
     // Check if rehypePlugins changed (reference comparison)
@@ -1293,6 +1295,7 @@ export const Streamdown = memo(
   },
   (prevProps, nextProps) =>
     prevProps.children === nextProps.children &&
+    sameComponents(prevProps.components, nextProps.components) &&
     prevProps.shikiTheme === nextProps.shikiTheme &&
     prevProps.isAnimating === nextProps.isAnimating &&
     prevProps.animated === nextProps.animated &&
