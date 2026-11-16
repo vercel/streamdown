@@ -8,7 +8,7 @@ describe("mixed formatting", () => {
   });
 
   it("should complete multiple incomplete formats", () => {
-    expect(remend("**bold and *italic")).toBe("**bold and *italic*");
+    expect(remend("**bold and *italic")).toBe("**bold and *italic***");
   });
 
   it("should handle nested formatting", () => {
@@ -33,8 +33,7 @@ describe("mixed formatting", () => {
   });
 
   it("should handle code inside bold", () => {
-    // Bold gets closed first, then code
-    expect(remend("**bold with `code")).toBe("**bold with `code**`");
+    expect(remend("**bold with `code")).toBe("**bold with `code`**");
   });
 
   it("should handle strikethrough with other formatting", () => {
@@ -48,11 +47,9 @@ describe("mixed formatting", () => {
   });
 
   it("should handle deeply nested incomplete formatting", () => {
-    // Formats are closed in the order they're processed.
-    // The ~~ isn't closed because it ends up inside the completed inline code span (`code ~~strike`),
-    // so remend correctly leaves it alone.
+    // The ~~ is code once the span closes, so it gets no closer
     expect(remend("**bold *italic `code ~~strike")).toBe(
-      "**bold *italic `code ~~strike*`"
+      "**bold *italic `code ~~strike`***"
     );
   });
 

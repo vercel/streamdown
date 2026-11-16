@@ -6,6 +6,7 @@ import { resolvePortalTarget } from "./portal";
 import { useCn } from "./prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "./scroll-lock";
 import { useTranslations } from "./translations-context";
+import { useDialogFocus } from "./use-dialog-focus";
 
 interface LinkSafetyModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export const LinkSafetyModal = ({
   const [copied, setCopied] = useState(false);
   const t = useTranslations();
   const { portal } = useContext(StreamdownContext);
+  const { dialogRef, initialFocusRef } = useDialogFocus(isOpen);
 
   const handleCopy = useCallback(async () => {
     try {
@@ -73,9 +75,11 @@ export const LinkSafetyModal = ({
       onClick={onClose}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
+          e.stopPropagation();
           onClose();
         }
       }}
+      ref={dialogRef}
       role="button"
       tabIndex={0}
     >
@@ -85,7 +89,12 @@ export const LinkSafetyModal = ({
           "relative mx-4 flex w-full max-w-md flex-col gap-4 rounded-xl border bg-background p-6 shadow-lg"
         )}
         onClick={(e) => e.stopPropagation()}
-        onKeyDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          // Let Escape reach the backdrop so it closes from any focused control.
+          if (e.key !== "Escape") {
+            e.stopPropagation();
+          }
+        }}
         role="presentation"
       >
         <button
@@ -93,6 +102,7 @@ export const LinkSafetyModal = ({
             "absolute end-4 top-4 rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
           )}
           onClick={onClose}
+          ref={initialFocusRef}
           title={t.close}
           type="button"
         >

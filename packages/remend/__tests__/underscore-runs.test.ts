@@ -51,7 +51,57 @@ describe("underscore run lengths", () => {
 });
 
 describe("escaped underscores", () => {
-  it("should treat the run after an escaped underscore as a delimiter", () => {
-    expect(remend("\\___bold")).toBe("\\___bold__");
+  it("should leave the run after an escaped underscore for the author to close", () => {
+    expect(remend("\\___bold")).toBe("\\___bold");
+  });
+
+  it("should not treat a run after an escaped backslash as escaped", () => {
+    expect(remend("\\\\__bold")).toBe("\\\\__bold__");
+  });
+});
+
+describe("underscore delimiter matching", () => {
+  it.each<[string, string]>([
+    ["a run followed by whitespace", "__ foo"],
+    ["two open runs of one marker and length", "_a *_a"],
+    ["the run left after an escaped underscore", "a __ b \\__c"],
+    ["the run left after an escaped underscore at the start", "__ \\__alph"],
+    ["the run left after an escaped underscore and a backslash", "\\_____\\a"],
+    ["a run after a letter and before punctuation", "a__."],
+    ["a closer-only run with nothing open", "__ a__ a"],
+    ["a longer run that closes the opener", "__a____.a"],
+  ])("should not append a closer for %s", (_name, input) => {
+    expect(remend(input)).toBe(input);
+  });
+
+  it("should still close an opener after a spaced run", () => {
+    expect(remend("a __ b __bold")).toBe("a __ b __bold__");
+  });
+
+  it.each<{ name: string; input: string; expected: string }>([
+    {
+      name: "an inner run after an escaped one",
+      input: "\\__._a",
+      expected: "\\__._a_",
+    },
+    {
+      name: "the underscore an escaped run leaves open",
+      input: "__\\__ a",
+      expected: "__\\__ a_",
+    },
+    {
+      name: "a run after an open code span",
+      input: "__`x",
+      expected: "__`x`__",
+    },
+    {
+      name: "a run after an open code span ending in a backslash",
+      input: "__`x\\",
+      expected: "__`x\\`__",
+    },
+  ])("should close $name in one pass", ({ input, expected }) => {
+    const healed = remend(input);
+    expect(healed).toBe(expected);
+    expect(remend(healed)).toBe(healed);
   });
 });

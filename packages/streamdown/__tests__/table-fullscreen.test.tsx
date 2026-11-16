@@ -272,7 +272,7 @@ describe("TableFullscreenButton", () => {
     ).toBeFalsy();
   });
 
-  it("should not close fullscreen on keyDown inside inner presentation div", () => {
+  it("should close fullscreen on Escape from inside the content", () => {
     const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
 
     const btn = container.querySelector(
@@ -283,16 +283,57 @@ describe("TableFullscreenButton", () => {
     const overlay = document.querySelector(
       '[data-streamdown="table-fullscreen"]'
     );
-    expect(overlay).toBeTruthy();
-
-    // Fire keyDown on the inner presentation div (covers line 91 stopPropagation)
     const innerDiv = overlay?.querySelector('[role="presentation"]');
     expect(innerDiv).toBeTruthy();
     if (innerDiv) {
       fireEvent.keyDown(innerDiv, { key: "Escape" });
     }
 
-    // Should still be open because stopPropagation prevents it from reaching the dialog
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeFalsy();
+  });
+
+  it("should close fullscreen on Escape when a control inside has focus", () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    const copyBtn = overlay?.querySelector(
+      'button[title="Copy table"]'
+    ) as HTMLButtonElement;
+    expect(copyBtn).toBeTruthy();
+    copyBtn.focus();
+    fireEvent.keyDown(copyBtn, { key: "Escape" });
+
+    expect(
+      document.querySelector('[data-streamdown="table-fullscreen"]')
+    ).toBeFalsy();
+  });
+
+  it("should not close fullscreen on other keys inside the content", () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+
+    const btn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    fireEvent.click(btn);
+
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    );
+    const innerDiv = overlay?.querySelector('[role="presentation"]');
+    expect(innerDiv).toBeTruthy();
+    if (innerDiv) {
+      fireEvent.keyDown(innerDiv, { key: "Enter" });
+    }
+
     expect(
       document.querySelector('[data-streamdown="table-fullscreen"]')
     ).toBeTruthy();
@@ -410,6 +451,150 @@ describe("TableFullscreenButton", () => {
 
     unmount();
     portalRoot.remove();
+  });
+});
+
+describe("TableFullscreenButton focus", () => {
+  const openFullscreen = () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+    const openBtn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+    openBtn.focus();
+    fireEvent.click(openBtn);
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    ) as HTMLElement;
+    return { openBtn, overlay };
+  };
+
+  it("should move focus to the close button when opened", () => {
+    const { overlay } = openFullscreen();
+
+    expect(document.activeElement).toBe(
+      overlay.querySelector('button[title="Exit fullscreen"]')
+    );
+  });
+
+  it("should keep Tab and Shift+Tab inside the dialog", () => {
+    const { overlay } = openFullscreen();
+    const buttons = Array.from(overlay.querySelectorAll("button"));
+    const first = buttons[0] as HTMLButtonElement;
+    const last = buttons.at(-1) as HTMLButtonElement;
+
+    last.focus();
+    fireEvent.keyDown(last, { key: "Tab" });
+    expect(document.activeElement).toBe(first);
+
+    fireEvent.keyDown(first, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(last);
+  });
+
+  it("should leave Tab from a middle control to the browser", () => {
+    const { overlay } = openFullscreen();
+    const middle = overlay.querySelectorAll("button")[1] as HTMLButtonElement;
+
+    middle.focus();
+    // fireEvent returns false when the default action was prevented.
+    expect(fireEvent.keyDown(middle, { key: "Tab" })).toBe(true);
+    expect(document.activeElement).toBe(middle);
+  });
+
+  it("should move focus into the dialog on Tab from the body", () => {
+    const { overlay } = openFullscreen();
+
+    (document.activeElement as HTMLElement).blur();
+    fireEvent.keyDown(document.body, { key: "Tab" });
+
+    expect(document.activeElement).toBe(overlay.querySelector("button"));
+  });
+
+  it("should return focus to the fullscreen button when closed with the close button", () => {
+    const { openBtn, overlay } = openFullscreen();
+    const closeBtn = overlay.querySelector(
+      'button[title="Exit fullscreen"]'
+    ) as HTMLButtonElement;
+
+    closeBtn.focus();
+    fireEvent.click(closeBtn);
+
+    expect(document.activeElement).toBe(openBtn);
+  });
+
+  it("should return focus to the fullscreen button when closed with Escape", () => {
+    const { openBtn, overlay } = openFullscreen();
+    const copyBtn = overlay.querySelector(
+      'button[title="Copy table"]'
+    ) as HTMLButtonElement;
+
+    copyBtn.focus();
+    fireEvent.keyDown(copyBtn, { key: "Escape" });
+
+    expect(document.activeElement).toBe(openBtn);
+  });
+
+  it("should return focus to the fullscreen button when closed with a backdrop click", () => {
+    const { openBtn, overlay } = openFullscreen();
+
+    (
+      overlay.querySelector('button[title="Copy table"]') as HTMLElement
+    ).focus();
+    fireEvent.click(overlay);
+
+    expect(document.activeElement).toBe(openBtn);
+  });
+
+  it("should return focus to the fullscreen button when it was not focused before opening", () => {
+    const { container } = render(<Streamdown>{markdownWithTable}</Streamdown>);
+    const openBtn = container.querySelector(
+      'button[title="View fullscreen"]'
+    ) as HTMLButtonElement;
+
+    // Safari does not focus a button on mouse click.
+    fireEvent.click(openBtn);
+    fireEvent.click(
+      document.querySelector('button[title="Exit fullscreen"]') as HTMLElement
+    );
+
+    expect(document.activeElement).toBe(openBtn);
+  });
+
+  it("should move focus into the link safety modal and keep Tab there", () => {
+    const { container } = render(
+      <Streamdown>
+        {`
+| Name | Site |
+|------|------|
+| Alice | [Example](https://example.com) |
+`}
+      </Streamdown>
+    );
+    fireEvent.click(
+      container.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement
+    );
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    ) as HTMLElement;
+    const link = overlay.querySelector(
+      '[data-streamdown="link"]'
+    ) as HTMLButtonElement;
+
+    link.focus();
+    fireEvent.click(link);
+    const modal = document.querySelector(
+      '[data-streamdown="link-safety-modal"]'
+    ) as HTMLElement;
+    const modalButtons = Array.from(modal.querySelectorAll("button"));
+    const first = modalButtons[0] as HTMLButtonElement;
+    const last = modalButtons.at(-1) as HTMLButtonElement;
+
+    expect(document.activeElement).toBe(first);
+
+    last.focus();
+    fireEvent.keyDown(last, { key: "Tab" });
+    expect(document.activeElement).toBe(first);
   });
 });
 

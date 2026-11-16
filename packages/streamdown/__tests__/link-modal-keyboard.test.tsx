@@ -26,7 +26,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
 
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.keyDown(backdrop!, { key: "Escape" });
-    expect(onClose).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledExactlyOnceWith();
   });
 
   it("should not call onClose for non-Escape keys on backdrop", () => {
@@ -70,7 +70,7 @@ describe("LinkSafetyModal keyboard and interaction", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it("should stop key propagation on inner content", () => {
+  it("should call onClose once on Escape from inner content", () => {
     const onClose = vi.fn();
     render(
       <LinkSafetyModal
@@ -85,7 +85,45 @@ describe("LinkSafetyModal keyboard and interaction", () => {
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.keyDown(innerContent!, { key: "Escape" });
 
-    // onClose should NOT be called because keydown is stopped
+    expect(onClose).toHaveBeenCalledExactlyOnceWith();
+  });
+
+  it("should call onClose once on Escape when a button inside has focus", () => {
+    const onClose = vi.fn();
+    render(
+      <LinkSafetyModal
+        isOpen={true}
+        onClose={onClose}
+        onConfirm={vi.fn()}
+        url="https://example.com"
+      />
+    );
+
+    const closeBtn = document.querySelector(
+      'button[title="Close"]'
+    ) as HTMLButtonElement;
+    expect(closeBtn).toBeTruthy();
+    closeBtn.focus();
+    fireEvent.keyDown(closeBtn, { key: "Escape" });
+
+    expect(onClose).toHaveBeenCalledExactlyOnceWith();
+  });
+
+  it("should not call onClose for other keys on inner content", () => {
+    const onClose = vi.fn();
+    render(
+      <LinkSafetyModal
+        isOpen={true}
+        onClose={onClose}
+        onConfirm={vi.fn()}
+        url="https://example.com"
+      />
+    );
+
+    const innerContent = document.querySelector('[role="presentation"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.keyDown(innerContent!, { key: "Enter" });
+
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -228,6 +266,38 @@ describe("LinkSafetyModal keyboard and interaction", () => {
     // Fire on document level (the useEffect handler)
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it("should move focus to the close button when opened", () => {
+    render(
+      <LinkSafetyModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+        url="https://example.com"
+      />
+    );
+
+    expect(document.activeElement).toBe(
+      document.querySelector('button[title="Close"]')
+    );
+  });
+
+  it("should return focus to the link when closed", () => {
+    const { container } = render(
+      <Streamdown>{"[External link](https://example.com)"}</Streamdown>
+    );
+    const link = container.querySelector(
+      '[data-streamdown="link"]'
+    ) as HTMLButtonElement;
+
+    link.focus();
+    fireEvent.click(link);
+    fireEvent.click(
+      document.querySelector('button[title="Close"]') as HTMLButtonElement
+    );
+
+    expect(document.activeElement).toBe(link);
   });
 
   it("should portal the default modal to the configured portal target", () => {

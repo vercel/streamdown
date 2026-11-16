@@ -227,7 +227,7 @@ describe("MermaidFullscreenButton", () => {
     expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
   });
 
-  it("should stop keydown propagation on content area", async () => {
+  it("should close fullscreen on Escape from the content area", async () => {
     const { container } = renderWithContext({ chart: "graph TD; A-->B" });
 
     const openBtn = container.querySelector('button[title="View fullscreen"]');
@@ -238,12 +238,55 @@ describe("MermaidFullscreenButton", () => {
       expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
     });
 
-    // Press Escape on content area - should not close
-    const contentArea = document.querySelector('[role="presentation"]');
+    const contentArea = Array.from(
+      document.querySelectorAll('[role="presentation"]')
+    ).at(-1);
     // biome-ignore lint/style/noNonNullAssertion: test assertion
     fireEvent.keyDown(contentArea!, { key: "Escape" });
 
-    // Should still be open
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeFalsy();
+    });
+  });
+
+  it("should close fullscreen on Escape when a toolbar control has focus", async () => {
+    const { container } = renderWithContext({ chart: "graph TD; A-->B" });
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+    });
+
+    const exitBtn = document.querySelector(
+      'button[title="Exit fullscreen"]'
+    ) as HTMLButtonElement;
+    expect(exitBtn).toBeTruthy();
+    exitBtn.focus();
+    fireEvent.keyDown(exitBtn, { key: "Escape" });
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeFalsy();
+    });
+  });
+
+  it("should not close fullscreen on other keys inside the overlay", async () => {
+    const { container } = renderWithContext({ chart: "graph TD; A-->B" });
+
+    const openBtn = container.querySelector('button[title="View fullscreen"]');
+    // biome-ignore lint/style/noNonNullAssertion: test assertion
+    fireEvent.click(openBtn!);
+
+    await waitFor(() => {
+      expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+    });
+
+    for (const area of document.querySelectorAll('[role="presentation"]')) {
+      fireEvent.keyDown(area, { key: "Enter" });
+    }
+
     expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
   });
 
@@ -349,6 +392,123 @@ describe("MermaidFullscreenButton", () => {
     ).toBeFalsy();
   });
 
+  it("should forward controls.mermaid.copy callbacks to fullscreen copy button", async () => {
+    const originalClipboard = navigator.clipboard;
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: writeTextMock,
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    try {
+      const onCopy = vi.fn();
+      const onError = vi.fn();
+      const { container } = renderWithContext(
+        { chart: "graph TD; A-->B" },
+        {
+          controls: {
+            mermaid: {
+              copy: {
+                onCopy,
+                onError,
+              },
+            },
+          },
+        }
+      );
+
+      const openBtn = container.querySelector(
+        'button[title="View fullscreen"]'
+      );
+      // biome-ignore lint/style/noNonNullAssertion: test assertion
+      fireEvent.click(openBtn!);
+
+      await waitFor(() => {
+        expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+      });
+
+      const copyBtn = document.querySelector(
+        'button[data-streamdown="code-block-copy-button"]'
+      );
+      expect(copyBtn).toBeTruthy();
+      // biome-ignore lint/style/noNonNullAssertion: test assertion
+      fireEvent.click(copyBtn!);
+
+      await waitFor(() => {
+        expect(writeTextMock).toHaveBeenCalledWith("graph TD; A-->B");
+        expect(onCopy).toHaveBeenCalled();
+        expect(onError).not.toHaveBeenCalled();
+      });
+    } finally {
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    }
+  });
+
+  it("should forward onError callback to fullscreen copy button on failure", async () => {
+    const originalClipboard = navigator.clipboard;
+    const testError = new Error("Clipboard write rejected");
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: vi.fn().mockRejectedValue(testError),
+      },
+      writable: true,
+      configurable: true,
+    });
+
+    try {
+      const onCopy = vi.fn();
+      const onError = vi.fn();
+      const { container } = renderWithContext(
+        { chart: "graph TD; A-->B" },
+        {
+          controls: {
+            mermaid: {
+              copy: {
+                onCopy,
+                onError,
+              },
+            },
+          },
+        }
+      );
+
+      const openBtn = container.querySelector(
+        'button[title="View fullscreen"]'
+      );
+      // biome-ignore lint/style/noNonNullAssertion: test assertion
+      fireEvent.click(openBtn!);
+
+      await waitFor(() => {
+        expect(document.querySelector(".fixed.inset-0")).toBeTruthy();
+      });
+
+      const copyBtn = document.querySelector(
+        'button[data-streamdown="code-block-copy-button"]'
+      );
+      expect(copyBtn).toBeTruthy();
+      // biome-ignore lint/style/noNonNullAssertion: test assertion
+      fireEvent.click(copyBtn!);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledWith(testError);
+        expect(onCopy).not.toHaveBeenCalled();
+      });
+    } finally {
+      Object.defineProperty(navigator, "clipboard", {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    }
+  });
+
   it("should portal fullscreen overlay to the configured portal target", async () => {
     const portalRoot = document.createElement("div");
     document.body.appendChild(portalRoot);
@@ -370,5 +530,111 @@ describe("MermaidFullscreenButton", () => {
 
     unmount();
     portalRoot.remove();
+  });
+
+  describe("focus", () => {
+    const openFullscreen = () => {
+      const { container } = renderWithContext({ chart: "graph TD; A-->B" });
+      const openBtn = container.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement;
+      openBtn.focus();
+      fireEvent.click(openBtn);
+      const overlay = document.querySelector(
+        '[data-streamdown="mermaid-fullscreen"]'
+      ) as HTMLElement;
+      return { openBtn, overlay };
+    };
+
+    it("should move focus to the close button when opened", () => {
+      const { overlay } = openFullscreen();
+
+      expect(document.activeElement).toBe(
+        overlay.querySelector('button[title="Exit fullscreen"]')
+      );
+    });
+
+    it("should keep Tab and Shift+Tab inside the dialog", () => {
+      const { overlay } = openFullscreen();
+      const buttons = Array.from(overlay.querySelectorAll("button"));
+      const first = buttons[0] as HTMLButtonElement;
+      const last = buttons.at(-1) as HTMLButtonElement;
+
+      last.focus();
+      fireEvent.keyDown(last, { key: "Tab" });
+      expect(document.activeElement).toBe(first);
+
+      fireEvent.keyDown(first, { key: "Tab", shiftKey: true });
+      expect(document.activeElement).toBe(last);
+    });
+
+    it("should leave Tab from a middle control to the browser", () => {
+      const { overlay } = openFullscreen();
+      const middle = overlay.querySelectorAll("button")[1] as HTMLButtonElement;
+
+      middle.focus();
+      // fireEvent returns false when the default action was prevented.
+      expect(fireEvent.keyDown(middle, { key: "Tab" })).toBe(true);
+      expect(document.activeElement).toBe(middle);
+    });
+
+    it("should move focus into the dialog on Tab from the body", () => {
+      const { overlay } = openFullscreen();
+
+      (document.activeElement as HTMLElement).blur();
+      fireEvent.keyDown(document.body, { key: "Tab" });
+
+      expect(document.activeElement).toBe(overlay.querySelector("button"));
+    });
+
+    it("should return focus to the fullscreen button when closed with the close button", () => {
+      const { openBtn, overlay } = openFullscreen();
+      const closeBtn = overlay.querySelector(
+        'button[title="Exit fullscreen"]'
+      ) as HTMLButtonElement;
+
+      closeBtn.focus();
+      fireEvent.click(closeBtn);
+
+      expect(document.activeElement).toBe(openBtn);
+    });
+
+    it("should return focus to the fullscreen button when closed with Escape", () => {
+      const { openBtn, overlay } = openFullscreen();
+      const closeBtn = overlay.querySelector(
+        'button[title="Exit fullscreen"]'
+      ) as HTMLButtonElement;
+
+      closeBtn.focus();
+      fireEvent.keyDown(closeBtn, { key: "Escape" });
+
+      expect(document.activeElement).toBe(openBtn);
+    });
+
+    it("should return focus to the fullscreen button when closed with a backdrop click", () => {
+      const { openBtn, overlay } = openFullscreen();
+
+      (
+        overlay.querySelector('button[title="Exit fullscreen"]') as HTMLElement
+      ).focus();
+      fireEvent.click(overlay);
+
+      expect(document.activeElement).toBe(openBtn);
+    });
+
+    it("should return focus to the fullscreen button when it was not focused before opening", () => {
+      const { container } = renderWithContext({ chart: "graph TD; A-->B" });
+      const openBtn = container.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement;
+
+      // Safari does not focus a button on mouse click.
+      fireEvent.click(openBtn);
+      fireEvent.click(
+        document.querySelector('button[title="Exit fullscreen"]') as HTMLElement
+      );
+
+      expect(document.activeElement).toBe(openBtn);
+    });
   });
 });

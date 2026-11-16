@@ -171,6 +171,71 @@ describe("Mermaid Component", () => {
     });
   });
 
+  it("should pass the original thrown error as cause to the custom error component", async () => {
+    const original = Object.assign(new Error("Parse error"), {
+      hash: { token: 1, expected: ["'SQE'"] },
+    });
+    const plugin = createMockMermaidPlugin(vi.fn().mockRejectedValue(original));
+    const received: unknown[] = [];
+
+    const CustomError = ({
+      error,
+      cause,
+    }: {
+      error: string;
+      chart: string;
+      retry: () => void;
+      cause?: unknown;
+    }) => {
+      received.push(cause);
+      return <div data-testid="custom-error">{error}</div>;
+    };
+
+    const { container } = renderWithContext(
+      <Mermaid chart="invalid" />,
+      { mermaid: { errorComponent: CustomError } },
+      { mermaid: plugin }
+    );
+
+    await waitFor(() => {
+      expect(
+        container.querySelector('[data-testid="custom-error"]')
+      ).toBeTruthy();
+    });
+    expect(received.at(-1)).toBe(original);
+  });
+
+  it("should pass non-Error thrown values as cause", async () => {
+    const thrown = { hash: { line: 3 } };
+    const plugin = createMockMermaidPlugin(vi.fn().mockRejectedValue(thrown));
+    let receivedCause: unknown;
+
+    const CustomError = ({
+      cause,
+    }: {
+      error: string;
+      chart: string;
+      retry: () => void;
+      cause?: unknown;
+    }) => {
+      receivedCause = cause;
+      return <div data-testid="custom-error">failed</div>;
+    };
+
+    const { container } = renderWithContext(
+      <Mermaid chart="invalid" />,
+      { mermaid: { errorComponent: CustomError } },
+      { mermaid: plugin }
+    );
+
+    await waitFor(() => {
+      expect(
+        container.querySelector('[data-testid="custom-error"]')
+      ).toBeTruthy();
+    });
+    expect(receivedCause).toBe(thrown);
+  });
+
   it("should render in fullscreen mode", async () => {
     const { container } = renderWithContext(
       <Mermaid chart={simpleChart} fullscreen={true} />

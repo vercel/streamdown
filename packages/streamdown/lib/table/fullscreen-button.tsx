@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
 import { useIcons } from "../icon-context";
@@ -6,6 +6,7 @@ import { resolvePortalTarget } from "../portal";
 import { useCn } from "../prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
 import { useTranslations } from "../translations-context";
+import { useDialogFocus } from "../use-dialog-focus";
 import { TableCopyDropdown } from "./copy-dropdown";
 import { TableDownloadDropdown } from "./download-dropdown";
 
@@ -27,6 +28,11 @@ export const TableFullscreenButton = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const { isAnimating, portal } = useContext(StreamdownContext);
   const t = useTranslations();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const { dialogRef, initialFocusRef } = useDialogFocus(
+    isFullscreen,
+    triggerRef
+  );
 
   const handleOpen = () => {
     setIsFullscreen(true);
@@ -63,6 +69,7 @@ export const TableFullscreenButton = ({
         )}
         disabled={isAnimating}
         onClick={handleOpen}
+        ref={triggerRef}
         title={t.viewFullscreen}
         type="button"
       >
@@ -80,9 +87,12 @@ export const TableFullscreenButton = ({
               onClick={handleClose}
               onKeyDown={(e) => {
                 if (e.key === "Escape") {
+                  // Handle it here only, so the document listener does not run too.
+                  e.stopPropagation();
                   handleClose();
                 }
               }}
+              ref={dialogRef}
               role="dialog"
             >
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
@@ -90,7 +100,12 @@ export const TableFullscreenButton = ({
                 className={cn("flex h-full flex-col")}
                 data-streamdown="table-wrapper"
                 onClick={(e) => e.stopPropagation()}
-                onKeyDown={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  // Let Escape reach the dialog so it closes from any focused control.
+                  if (e.key !== "Escape") {
+                    e.stopPropagation();
+                  }
+                }}
                 role="presentation"
               >
                 <div className={cn("flex items-center justify-end gap-1 p-4")}>
@@ -101,6 +116,7 @@ export const TableFullscreenButton = ({
                       "rounded-md p-1 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
                     )}
                     onClick={handleClose}
+                    ref={initialFocusRef}
                     title={t.exitFullscreen}
                     type="button"
                   >

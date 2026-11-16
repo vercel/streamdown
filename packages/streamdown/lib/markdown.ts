@@ -78,6 +78,26 @@ const getPluginId = (plugin: Function): number => {
   return id;
 };
 
+const serializeOptions = (options: unknown): string => {
+  const paths = new WeakMap<object, string[]>();
+  const callbacks: [string[], number][] = [];
+  const data = JSON.stringify(
+    options,
+    function (this: object, key, value: unknown) {
+      const parentPath = paths.get(this);
+      const path = parentPath ? [...parentPath, key] : [];
+      if (typeof value === "function") {
+        callbacks.push([path, getPluginId(value)]);
+      } else if (value !== null && typeof value === "object") {
+        paths.set(value, path);
+      }
+      return value;
+    }
+  );
+  // Separate callback paths/identities from user data to avoid tag collisions.
+  return JSON.stringify([data, callbacks]);
+};
+
 // LRU Cache for unified processors
 class ProcessorCache {
   // biome-ignore lint/suspicious/noExplicitAny: Processor type is complex and varies with plugins
@@ -125,7 +145,7 @@ class ProcessorCache {
             result += String(pluginFn);
           }
           result += ":";
-          result += JSON.stringify(pluginOptions);
+          result += serializeOptions(pluginOptions);
         } else if (typeof plugin === "function") {
           // Plugin without options
           result += getPluginId(plugin);
@@ -139,7 +159,7 @@ class ProcessorCache {
     const rehypeKey = serializePlugins(rehypePlugins);
     const remarkKey = serializePlugins(remarkPlugins);
     const optionsKey = remarkRehypeOptions
-      ? JSON.stringify(remarkRehypeOptions)
+      ? serializeOptions(remarkRehypeOptions)
       : "";
 
     const key = `${remarkKey}::${rehypeKey}::${optionsKey}`;

@@ -590,8 +590,6 @@ const processTextNode = (
   return index + nodes.length;
 };
 
-let instanceId = 0;
-
 /**
  * Create an animate rehype plugin. The optional `timeline` is an internal
  * Streamdown wiring detail — not part of the public `animated` prop surface.
@@ -636,7 +634,6 @@ function buildAnimatePlugin(
     pendingMark: null,
   };
 
-  const id = instanceId++;
   const rehypeAnimate = () => (tree: Root) => {
     const charCounter = { count: 0, newIndex: 0 };
 
@@ -691,10 +688,6 @@ function buildAnimatePlugin(
     renderState.lastRenderCharCount = charCounter.count;
     renderState.prevContentLength = 0;
   };
-
-  Object.defineProperty(rehypeAnimate, "name", {
-    value: `rehypeAnimate$${id}`,
-  });
 
   return {
     name: "animate",
