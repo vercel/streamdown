@@ -7,6 +7,22 @@ interface Row {
   name: string;
 }
 
+const bestTime = (input: string) => {
+  remend(input);
+  let best = Number.POSITIVE_INFINITY;
+  for (let i = 0; i < 5; i++) {
+    const start = performance.now();
+    remend(input);
+    best = Math.min(best, performance.now() - start);
+  }
+  return best;
+};
+
+// Wall-clock budgets flake on shared CI runners, so compare growth instead:
+// quadrupling the input costs ~4x when linear and ~16x when quadratic.
+const growth = (make: (n: number) => string, n: number) =>
+  bestTime(make(n * 4)) / bestTime(make(n));
+
 describe("emphasis nesting", () => {
   it.each<Row>([
     {
@@ -204,44 +220,44 @@ describe("emphasis nesting", () => {
     expect(remend(expected)).toBe(expected);
   });
 
-  it.each([
-    { name: "many open italic runs", input: " *x".repeat(200) },
-    {
-      name: "many distinct open runs",
-      input: [
-        ..."123456".split("").map((n) => ` ${"*".repeat(Number(n))}a`),
-        ..."12345".split("").map((n) => ` ${"_".repeat(Number(n))}b`),
-        " ~~c",
-      ].join(""),
-    },
-    {
-      name: "long prose with an open bold",
-      input: `${"prose with *emph* and **bold** here. ".repeat(300)}**tail`,
-    },
-  ])("stays fast: $name", ({ input }) => {
-    remend(input);
-    const start = performance.now();
-    remend(input);
-    expect(performance.now() - start).toBeLessThan(50);
+  it("stays fast: many distinct open runs", () => {
+    const input = [
+      ..."123456".split("").map((n) => ` ${"*".repeat(Number(n))}a`),
+      ..."12345".split("").map((n) => ` ${"_".repeat(Number(n))}b`),
+      " ~~c",
+    ].join("");
+    expect(bestTime(input)).toBeLessThan(50);
   });
 
   it.each([
     {
+      name: "many open italic runs",
+      make: (n: number) => " *x".repeat(n),
+      n: 800,
+    },
+    {
+      name: "long prose with an open bold",
+      make: (n: number) =>
+        `${"prose with *emph* and **bold** here. ".repeat(n)}**tail`,
+      n: 300,
+    },
+    {
       name: "a long delimiter run",
-      input: `${"*".repeat(16_000)}text`,
+      make: (n: number) => `${"*".repeat(n)}text`,
+      n: 16_000,
     },
     {
       name: "many mismatched delimiter runs",
-      input: " *a_".repeat(8000),
+      make: (n: number) => " *a_".repeat(n),
+      n: 2000,
     },
     {
       name: "many link labels",
-      input: "[*a](u)".repeat(4000),
+      make: (n: number) => "[*a](u)".repeat(n),
+      n: 1000,
     },
-  ])("stays linear on $name", ({ input }) => {
-    const start = performance.now();
-    remend(input);
-    expect(performance.now() - start).toBeLessThan(100);
+  ])("stays linear on $name", ({ make, n }) => {
+    expect(growth(make, n)).toBeLessThan(10);
   });
 
   // Every heal attempt rematches the whole block. These took seconds when an
@@ -249,30 +265,35 @@ describe("emphasis nesting", () => {
   it.each([
     {
       name: "many closed spans before an open bold",
-      input: `${"*a* ".repeat(16_000)}**x`,
+      make: (n: number) => `${"*a* ".repeat(n)}**x`,
+      n: 4000,
     },
     {
       name: "many nested closed spans before an open bold",
-      input: `${"**a *b* c** ".repeat(5000)}**x`,
+      make: (n: number) => `${"**a *b* c** ".repeat(n)}**x`,
+      n: 1250,
     },
-  ])("heals in linear time after $name", ({ input }) => {
-    const start = performance.now();
+  ])("heals in linear time after $name", ({ make, n }) => {
+    const input = make(n * 4);
     expect(remend(input)).toBe(`${input}**`);
-    expect(performance.now() - start).toBeLessThan(500);
+    expect(growth(make, n)).toBeLessThan(10);
   });
-
 
   // Many closed spans times the attempts several open runs need runs past
   // the work budget, which leaves the markers literal
+  const severalOpenRuns = (n: number) => `${"*a* ".repeat(n)}**x *y _z ~~w`;
+
   it.each([
     { name: "16k closed spans", repeat: 16_000 },
     { name: "60k closed spans", repeat: 60_000 },
   ])("leaves several open runs literal past the budget: $name", ({
     repeat,
   }) => {
-    const input = `${"*a* ".repeat(repeat)}**x *y _z ~~w`;
-    const start = performance.now();
+    const input = severalOpenRuns(repeat);
     expect(remend(input)).toBe(input);
-    expect(performance.now() - start).toBeLessThan(500);
+  });
+
+  it("stays linear past the budget", () => {
+    expect(growth(severalOpenRuns, 15_000)).toBeLessThan(10);
   });
 });
