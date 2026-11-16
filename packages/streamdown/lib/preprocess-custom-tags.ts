@@ -176,6 +176,8 @@ const multilinePairs = (markdown: string, tagNames: string[]): Container[] => {
   // One stack per tag name: a closing tag pairs with the nearest unmatched
   // opening tag of its own name, whatever other tags are open in between.
   const openStacks = new Map<string, { index: number; end: number }[]>();
+  let lastNewline = -1;
+  let nextNewline = markdown.indexOf("\n");
 
   for (const match of markdown.matchAll(boundary)) {
     if (inFence(match.index)) {
@@ -202,8 +204,13 @@ const multilinePairs = (markdown: string, tagNames: string[]): Container[] => {
       continue;
     }
     const { index: open, end: openEnd } = opener;
-    const newline = markdown.indexOf("\n", open);
-    if (newline !== -1 && newline < match.index) {
+    // Closing tags arrive in document order. Advance through newlines once,
+    // rather than rescanning the remaining document for every inline pair.
+    while (nextNewline !== -1 && nextNewline < match.index) {
+      lastNewline = nextNewline;
+      nextNewline = markdown.indexOf("\n", nextNewline + 1);
+    }
+    if (lastNewline >= open) {
       pairs.push({
         open,
         openEnd,
