@@ -248,6 +248,26 @@ describe("preprocessCustomTags", () => {
     expect(result.match(/<note>\n\n/g)).toHaveLength(depth);
   });
 
+  it.each([
+    "",
+    "\n",
+  ])("should leave many inline siblings unchanged quickly (suffix %j)", (suffix) => {
+    const md = "<note>x</note>".repeat(200_000) + suffix;
+
+    const start = performance.now();
+    const result = preprocessCustomTags(md, ["note"]);
+    expect(performance.now() - start).toBeLessThan(2000);
+    expect(result).toBe(md);
+  });
+
+  it("should distinguish inline and multiline siblings across lines", () => {
+    const md =
+      "<note>x</note>\n<note>y</note>\n<note>\nz\n</note>\n<note>w</note>";
+    expect(preprocessCustomTags(md, ["note"])).toBe(
+      "<note>x</note>\n<note>y</note>\n<note>\n\nz\n\n</note>\n\n\n<note>w</note>"
+    );
+  });
+
   it("should not pair or pad tags inside fenced code", () => {
     const md = "```\n<note>\nx\n</note>\n```";
     expect(preprocessCustomTags(md, ["note"])).toBe(md);
