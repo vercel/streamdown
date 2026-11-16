@@ -206,11 +206,15 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
       isFenceAt(scan, i) ||
       isCompleteSpanAt(scan, i)
     );
+    // Links can't contain links, so a link bracket before one is literal text.
+    // Skip its completed-link probe too: unmatched prefixes would otherwise
+    // each rescan the remaining suffix, making this loop quadratic.
+    if (isLink && enclosesLink) {
+      continue;
+    }
     const closesHere = isLink && opensCompleteLink(text, i);
-    // Links can't contain links, so a link bracket before one is literal text
-    const literal = isLink && enclosesLink;
     enclosesLink ||= closesHere;
-    if (!(closesHere || literal || isInsideCodeBlock(text, i))) {
+    if (!(closesHere || isInsideCodeBlock(text, i))) {
       const result = handleIncompleteText(text, i, linkMode, blockStart);
       if (result !== null) {
         return result;
