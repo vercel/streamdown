@@ -524,6 +524,44 @@ describe("TableFullscreenButton focus", () => {
 
     expect(document.activeElement).toBe(openBtn);
   });
+
+  it("should move focus into the link safety modal and keep Tab there", () => {
+    const { container } = render(
+      <Streamdown>
+        {`
+| Name | Site |
+|------|------|
+| Alice | [Example](https://example.com) |
+`}
+      </Streamdown>
+    );
+    fireEvent.click(
+      container.querySelector(
+        'button[title="View fullscreen"]'
+      ) as HTMLButtonElement
+    );
+    const overlay = document.querySelector(
+      '[data-streamdown="table-fullscreen"]'
+    ) as HTMLElement;
+    const link = overlay.querySelector(
+      '[data-streamdown="link"]'
+    ) as HTMLButtonElement;
+
+    link.focus();
+    fireEvent.click(link);
+    const modal = document.querySelector(
+      '[data-streamdown="link-safety-modal"]'
+    ) as HTMLElement;
+    const modalButtons = Array.from(modal.querySelectorAll("button"));
+    const first = modalButtons[0] as HTMLButtonElement;
+    const last = modalButtons.at(-1) as HTMLButtonElement;
+
+    expect(document.activeElement).toBe(first);
+
+    last.focus();
+    fireEvent.keyDown(last, { key: "Tab" });
+    expect(document.activeElement).toBe(first);
+  });
 });
 
 describe("TableFullscreenButton copy and download", () => {
