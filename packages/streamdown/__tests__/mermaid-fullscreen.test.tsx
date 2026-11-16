@@ -568,6 +568,25 @@ describe("MermaidFullscreenButton", () => {
       expect(document.activeElement).toBe(last);
     });
 
+    it("should leave Tab from a middle control to the browser", () => {
+      const { overlay } = openFullscreen();
+      const middle = overlay.querySelectorAll("button")[1] as HTMLButtonElement;
+
+      middle.focus();
+      // fireEvent returns false when the default action was prevented.
+      expect(fireEvent.keyDown(middle, { key: "Tab" })).toBe(true);
+      expect(document.activeElement).toBe(middle);
+    });
+
+    it("should move focus into the dialog on Tab from the body", () => {
+      const { overlay } = openFullscreen();
+
+      (document.activeElement as HTMLElement).blur();
+      fireEvent.keyDown(document.body, { key: "Tab" });
+
+      expect(document.activeElement).toBe(overlay.querySelector("button"));
+    });
+
     it("should return focus to the fullscreen button when closed with the close button", () => {
       const { openBtn, overlay } = openFullscreen();
       const closeBtn = overlay.querySelector(
