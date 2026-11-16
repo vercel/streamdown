@@ -268,6 +268,38 @@ describe("LinkSafetyModal keyboard and interaction", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it("should move focus to the close button when opened", () => {
+    render(
+      <LinkSafetyModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+        url="https://example.com"
+      />
+    );
+
+    expect(document.activeElement).toBe(
+      document.querySelector('button[title="Close"]')
+    );
+  });
+
+  it("should return focus to the link when closed", () => {
+    const { container } = render(
+      <Streamdown>{"[External link](https://example.com)"}</Streamdown>
+    );
+    const link = container.querySelector(
+      '[data-streamdown="link"]'
+    ) as HTMLButtonElement;
+
+    link.focus();
+    fireEvent.click(link);
+    fireEvent.click(
+      document.querySelector('button[title="Close"]') as HTMLButtonElement
+    );
+
+    expect(document.activeElement).toBe(link);
+  });
+
   it("should portal the default modal to the configured portal target", () => {
     const portalRoot = document.createElement("div");
     document.body.appendChild(portalRoot);

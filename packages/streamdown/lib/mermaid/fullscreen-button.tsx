@@ -1,4 +1,10 @@
-import { type ComponentProps, useContext, useEffect, useState } from "react";
+import {
+  type ComponentProps,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
 import { StreamdownContext } from "../../index";
 import { CodeBlockCopyButton } from "../code-block/copy-button";
@@ -9,6 +15,7 @@ import { resolvePortalTarget } from "../portal";
 import { useCn } from "../prefix-context";
 import { lockBodyScroll, unlockBodyScroll } from "../scroll-lock";
 import { useTranslations } from "../translations-context";
+import { useDialogFocus } from "../use-dialog-focus";
 import { Mermaid } from ".";
 import { MermaidDownloadDropdown } from "./download-button";
 
@@ -36,6 +43,11 @@ export const MermaidFullscreenButton = ({
     portal,
   } = useContext(StreamdownContext);
   const t = useTranslations();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const { dialogRef, initialFocusRef } = useDialogFocus(
+    isFullscreen,
+    triggerRef
+  );
   const showPanZoomControls = (() => {
     if (typeof controlsConfig === "boolean") {
       return controlsConfig;
@@ -117,6 +129,7 @@ export const MermaidFullscreenButton = ({
         )}
         disabled={isAnimating}
         onClick={handleToggle}
+        ref={triggerRef}
         title={t.viewFullscreen}
         type="button"
         {...props}
@@ -143,6 +156,7 @@ export const MermaidFullscreenButton = ({
                   handleToggle();
                 }
               }}
+              ref={dialogRef}
               role="dialog"
             >
               {/* biome-ignore lint/a11y/noStaticElementInteractions: "div with role=presentation is used for event propagation control" */}
@@ -174,6 +188,7 @@ export const MermaidFullscreenButton = ({
                     "rounded-md p-2 text-muted-foreground transition-all hover:bg-muted hover:text-foreground"
                   )}
                   onClick={handleToggle}
+                  ref={initialFocusRef}
                   title={t.exitFullscreen}
                   type="button"
                 >
