@@ -263,6 +263,47 @@ describe("emphasis nesting", () => {
     expect(growth(make, n)).toBeLessThan(10);
   });
 
+  it.each<Row>([
+    {
+      name: "a link deactivates its enclosing bracket",
+      input: "[*outer [inner](u)](v)",
+      expected: "[*outer [inner](u)](v)*",
+    },
+    {
+      name: "an image leaves its enclosing bracket active",
+      input: "[*outer ![inner](u)](v)",
+      expected: "[*outer ![inner](u)](v)",
+    },
+    {
+      name: "an escaped image marker still deactivates enclosing brackets",
+      input: "[*outer \\![inner](u)](v)",
+      expected: "[*outer \\![inner](u)](v)*",
+    },
+    {
+      name: "new brackets stay active after an earlier link",
+      input: "[one](u) [*two](v)",
+      expected: "[one](u) [*two](v)",
+    },
+    {
+      name: "inactive brackets consume closers before a later link",
+      input: "[*outer [inner](u)](v) [*next](w)",
+      expected: "[*outer [inner](u)](v) [*next](w)*",
+    },
+  ])("preserves link label scoping: $name", ({ input, expected }) => {
+    const options = { links: false, images: false };
+    expect(remend(input, options)).toBe(expected);
+    expect(remend(expected, options)).toBe(expected);
+  });
+
+  it("stays linear for unmatched brackets before sibling links with link healing disabled", () => {
+    const make = (n: number) => `${"[".repeat(n)}${"[*a](u)".repeat(n)}`;
+    const options = { links: false, images: false };
+    const input = make(16_000);
+
+    expect(remend(input, options)).toBe(input);
+    expect(growth(make, 4000, options)).toBeLessThan(10);
+  });
+
   it.each([
     {
       name: "overlength openers",
