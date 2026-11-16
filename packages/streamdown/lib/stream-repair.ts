@@ -20,18 +20,62 @@ const MUTABLE_BLOCKS = 2;
 // Delimiters inside fenced code are literal, except "$$": remend finds the
 // first "$$" in the message to choose how to close an open one.
 const mathDelimiterPattern = /\$|\\[([]/;
-const fencedBlockPattern = /^ {0,3}(([`~])\2{2,})[\s\S]*\n {0,3}\1\2*\s*$/;
 
 const backtickRunPattern = /`+/g;
+const whitespacePattern = /\s/;
+
+// Whether the block is one CommonMark fence, found by a scan rather than a
+// regex. The opening run can be any prefix of the line's marker run, and a
+// regex that lets it shrink backtracks over every shorter opener.
+const isWholeFenceBlock = (block: string): boolean => {
+  let indent = 0;
+  while (block[indent] === " " && indent < 3) {
+    indent += 1;
+  }
+  const marker = block[indent];
+  if (marker !== "`" && marker !== "~") {
+    return false;
+  }
+  let open = indent;
+  while (block[open] === marker) {
+    open += 1;
+  }
+  // The opener used is a prefix of this run of at least 3, so the run only
+  // has to be that long. A longer closer's extra markers are its trailing run.
+  if (open - indent < 3) {
+    return false;
+  }
+
+  // The closer is the block's last non-whitespace line, since anything after
+  // it must be whitespace for the fence to be the whole block
+  let end = block.length;
+  while (end > 0 && whitespacePattern.test(block[end - 1])) {
+    end -= 1;
+  }
+  const line = block.lastIndexOf("\n", end - 1) + 1;
+  // A closer on the opening line would need a newline before it
+  if (line < indent + 3) {
+    return false;
+  }
+  let closer = line;
+  while (block[closer] === " " && closer - line < 3) {
+    closer += 1;
+  }
+  let close = closer;
+  while (block[close] === marker) {
+    close += 1;
+  }
+  return close === end && close - closer >= 3;
+};
 
 const hasMathDelimiter = (block: string): boolean =>
   block.includes("$$") ||
-  (mathDelimiterPattern.test(block) && !fencedBlockPattern.test(block));
+  (mathDelimiterPattern.test(block) && !isWholeFenceBlock(block));
 
 // Remend pairs backtick runs across the whole message, so a run left unpaired
 // in one block can open a code span or fence over later text.
 const hasUnpairedBacktickRun = (block: string): boolean => {
-  if (!block.includes("`") || fencedBlockPattern.test(block)) {
+  if (!block.includes("`") || isWholeFenceBlock(block)) {
     return false;
   }
   const counts = new Map<number, number>();

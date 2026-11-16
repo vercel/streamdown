@@ -224,4 +224,55 @@ describe("emphasis nesting", () => {
     remend(input);
     expect(performance.now() - start).toBeLessThan(50);
   });
+
+  it.each([
+    {
+      name: "a long delimiter run",
+      input: `${"*".repeat(16_000)}text`,
+    },
+    {
+      name: "many mismatched delimiter runs",
+      input: " *a_".repeat(8000),
+    },
+    {
+      name: "many link labels",
+      input: "[*a](u)".repeat(4000),
+    },
+  ])("stays linear on $name", ({ input }) => {
+    const start = performance.now();
+    remend(input);
+    expect(performance.now() - start).toBeLessThan(100);
+  });
+
+  // Every heal attempt rematches the whole block. These took seconds when an
+  // attempt also compared every pair with every other to find nesting.
+  it.each([
+    {
+      name: "many closed spans before an open bold",
+      input: `${"*a* ".repeat(16_000)}**x`,
+    },
+    {
+      name: "many nested closed spans before an open bold",
+      input: `${"**a *b* c** ".repeat(5000)}**x`,
+    },
+  ])("heals in linear time after $name", ({ input }) => {
+    const start = performance.now();
+    expect(remend(input)).toBe(`${input}**`);
+    expect(performance.now() - start).toBeLessThan(500);
+  });
+
+
+  // Many closed spans times the attempts several open runs need runs past
+  // the work budget, which leaves the markers literal
+  it.each([
+    { name: "16k closed spans", repeat: 16_000 },
+    { name: "60k closed spans", repeat: 60_000 },
+  ])("leaves several open runs literal past the budget: $name", ({
+    repeat,
+  }) => {
+    const input = `${"*a* ".repeat(repeat)}**x *y _z ~~w`;
+    const start = performance.now();
+    expect(remend(input)).toBe(input);
+    expect(performance.now() - start).toBeLessThan(500);
+  });
 });

@@ -153,25 +153,81 @@ interface HealContext {
 // literal text, like a list of globs or footnote marks
 const MAX_OPEN_RUNS = 4;
 
+// A run longer than this is a divider or filler, not emphasis an author is
+// still typing, and searching a closer for it is quadratic in its length
+const MAX_DELIMITER_RUN = 16;
+
+// How much matching one text's heal may do, counted in delimiter runs
+// rematched, since every attempt rematches the whole block. Real text spends
+// a few hundred; past this the markers are literal text and the input is
+// returned unchanged rather than stalling the render.
+const MAX_HEAL_WORK = 250_000;
+
 interface Heal {
   closers: string;
   literal: number;
   targets: number[];
 }
 
+interface HealBudget {
+  remaining: number;
+}
+
+// Charges one rematch of the block, false once the budget is spent
+const spend = (budget: HealBudget, context: HealContext): boolean => {
+  budget.remaining -= context.base.runs.length + 1;
+  return budget.remaining >= 0;
+};
+
+// The candidate that leaves the fewest markers literal, or undefined when
+// none closes the targets or the search runs past its budget
+const bestCandidate = (
+  context: HealContext,
+  budget: HealBudget,
+  heal: Heal,
+  targets: number[],
+  candidates: readonly string[]
+): Heal | undefined => {
+  const targetSet = new Set(targets);
+  let found: Heal | undefined;
+  for (const candidate of candidates) {
+    if (!spend(budget, context)) {
+      return;
+    }
+    const literal = literalAfterHeal(
+      context.match,
+      context.literal,
+      context.base,
+      heal.closers + candidate,
+      targetSet
+    );
+    if (literal !== undefined && (!found || literal < found.literal)) {
+      found = { closers: heal.closers + candidate, literal, targets };
+    }
+  }
+  return found;
+};
+
 // Closers for a group of open runs, innermost first, where up to `reusable`
-// markers of the first closer come from a literal run already in the text
-const closerCandidates = (group: MarkerRun[], reusable: number): string[] => {
+// markers of the first closer come from a literal run already in the text.
+// Undefined when the group is too long to search: its markers are literal.
+const closerCandidates = (
+  group: MarkerRun[],
+  reusable: number
+): string[] | undefined => {
   const [first] = group;
-  const own =
-    first.marker.repeat(first.count - reusable) +
-    group
-      .slice(1)
-      .map((run) => run.marker.repeat(run.count))
-      .join("");
+  let own = first.marker.repeat(first.count - reusable);
+  let uniform = true;
+  for (const run of group.slice(1)) {
+    own += run.marker.repeat(run.count);
+    uniform &&= run.marker === first.marker;
+  }
+  if (own.length > MAX_DELIMITER_RUN) {
+    return;
+  }
   // Closers for openers of one marker merge into a single run, which the rule
   // of 3 may let close them all only at another length
-  if ([...own].every((char) => char === first.marker)) {
+  if (uniform) {
     return Array.from({ length: own.length + reusable + 2 }, (_, i) =>
       first.marker.repeat(i + 1)
     );
@@ -218,12 +274,17 @@ const withoutDuplicates = (
 const extendHeal = (
   context: HealContext,
   start: Heal,
-  open: readonly MarkerRun[]
-): Heal => {
+  open: readonly MarkerRun[],
+  budget: HealBudget
+): Heal | undefined => {
   const { flags, insertAt, text, trailing } = context;
   const runs: MarkerRun[] = [];
   for (const run of open) {
     if (isGated(text, run, insertAt, context.match)) {
+      continue;
+    }
+    // A run this long is a divider, not emphasis, so it can't be healed
+    if (run.length > MAX_DELIMITER_RUN) {
       continue;
     }
     if (flags[flagFor(run)]) {
@@ -242,44 +303,47 @@ const extendHeal = (
     return start;
   }
 
+  // Undefined when the search runs past its budget; false when none closed.
+  const tryGroup = (heal: Heal, group: MarkerRun[]): boolean | undefined => {
+    const [first] = group;
+    const targets = [...heal.targets, ...group.map((run) => run.index)];
+    // A literal run the first closer would extend already supplies markers
+    const reusable =
+      heal.closers === "" && trailing?.marker === first.marker
+        ? Math.min(trailing.count, first.count - 1)
+        : 0;
+    const candidates = closerCandidates(group, reusable);
+    if (!candidates) {
+      return false;
+    }
+    const found = bestCandidate(context, budget, heal, targets, candidates);
+    if (found === undefined && budget.remaining < 0) {
+      return;
+    }
+    if (found) {
+      Object.assign(heal, found);
+    }
+    return found !== undefined;
+  };
+
   // Closing one run can strand another behind the rule of 3 or nest it
   // inside the same emphasis, so the greedy pass runs over every subset
-  const closeAll = (chosen: MarkerRun[]): Heal => {
-    let heal = start;
-    const tryGroup = (group: MarkerRun[]): boolean => {
-      const [first] = group;
-      const targets = [...heal.targets, ...group.map((run) => run.index)];
-      const targetSet = new Set(targets);
-      // A literal run the first closer would extend already supplies markers
-      const reusable =
-        heal.closers === "" && trailing?.marker === first.marker
-          ? Math.min(trailing.count, first.count - 1)
-          : 0;
-      let found: Heal | undefined;
-      for (const candidate of closerCandidates(group, reusable)) {
-        const closers = heal.closers + candidate;
-        const literal = literalAfterHeal(
-          context.match,
-          context.literal,
-          context.base,
-          closers,
-          targetSet
-        );
-        if (literal !== undefined && (!found || literal < found.literal)) {
-          found = { closers, literal, targets };
-        }
-      }
-      if (found) {
-        heal = found;
-      }
-      return found !== undefined;
-    };
+  const closeAll = (chosen: MarkerRun[]): Heal | undefined => {
+    const heal = { ...start, targets: [...start.targets] };
 
     for (let i = 0; i < chosen.length; i += 1) {
-      if (i < chosen.length - 1 && tryGroup(chosen.slice(i))) {
-        break;
+      if (i < chosen.length - 1) {
+        const closed = tryGroup(heal, chosen.slice(i));
+        if (closed === undefined) {
+          return;
+        }
+        if (closed) {
+          break;
+        }
       }
-      tryGroup([chosen[i]]);
+      if (tryGroup(heal, [chosen[i]]) === undefined) {
+        return;
+      }
     }
     return heal;
   };
@@ -294,6 +358,9 @@ const extendHeal = (
   for (const subset of subsets) {
     if (subset.length > 0) {
       const heal = closeAll(subset);
+      if (!heal) {
+        return;
+      }
       if (heal.literal < best.literal) {
         best = heal;
       }
@@ -307,19 +374,25 @@ const extendHeal = (
 const healFrom = (
   context: HealContext,
   open: readonly MarkerRun[],
+  budget: HealBudget,
   targets: number[] = []
-): Heal => {
+): Heal | undefined => {
   let heal = extendHeal(
     context,
     { closers: "", literal: context.literal, targets },
-    open
+    open,
+    budget
   );
-  while (heal.closers !== "") {
+  while (heal && heal.closers !== "") {
+    if (!spend(budget, context)) {
+      return;
+    }
     const reopened = matchHealed(context.base, heal.closers).open.filter(
       (run) => run.index < context.insertAt
     );
-    const next = extendHeal(context, heal, reopened);
-    if (next.closers === heal.closers) {
+    const next = extendHeal(context, heal, reopened, budget);
+    if (!next || next.closers === heal.closers) {
+      heal = next;
       break;
     }
     heal = next;
@@ -342,7 +415,8 @@ const healEmphasis = (text: string, flags: EmphasisFlags): string => {
     text,
     trailing,
   };
-  let heal = healFrom(context, match.open);
+  const budget = { remaining: MAX_HEAL_WORK };
+  let heal = healFrom(context, match.open, budget);
 
   // A trailing run that closes something may instead be literal text, with
   // the runs open before it still needing closers
@@ -361,8 +435,12 @@ const healEmphasis = (text: string, flags: EmphasisFlags): string => {
         trailing: asText,
       },
       prefix.open,
+      budget,
       streaming ? [] : [trailing.index]
     );
+    if (!alternative) {
+      return text;
+    }
     // Reading the trailing run as text must not repair spans the author
     // already closed by re-pairing their runs
     const targets = new Set(alternative.targets);
@@ -376,12 +454,13 @@ const healEmphasis = (text: string, flags: EmphasisFlags): string => {
         targets.has(run.index) ||
         run.count === countBefore.get(run.index)
     );
-    if (alternative.literal < heal.literal && keepsAuthoredRuns) {
+    if (heal && alternative.literal < heal.literal && keepsAuthoredRuns) {
       heal = alternative;
     }
   }
 
-  return insertAtPoint(text, insertAt, heal.closers);
+  // A search past the budget means the markers are literal text
+  return heal ? insertAtPoint(text, insertAt, heal.closers) : text;
 };
 
 export const handleIncompleteEmphasis = (

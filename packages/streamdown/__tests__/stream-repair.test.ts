@@ -161,6 +161,17 @@ describe("tail-bounded stream repair", () => {
     expect(state?.stableLength).toBe(0);
   });
 
+  it("classifies a long inline code span without backtracking", () => {
+    const ticks = "`".repeat(30_000);
+    const input = `${ticks}code ${ticks}\n\nOne.\n\nTwo.\n\nThree.`;
+    const start = performance.now();
+    const { state, mismatches } = stream([input]);
+    expect(performance.now() - start).toBeLessThan(100);
+    expect(mismatches).toEqual([]);
+    // Paired runs don't cross blocks, so the span doesn't hold the boundary.
+    expect(state?.stableLength).toBeGreaterThan(0);
+  });
+
   it("skips the settled prefix once later blocks exist", () => {
     const { state } = stream([
       "One.\n\nTwo.\n\nThree.\n\nFour",
