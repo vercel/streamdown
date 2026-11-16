@@ -6,7 +6,9 @@ const FOCUSABLE_SELECTOR =
 const getFocusableElements = (container: HTMLElement) =>
   Array.from(
     container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
-  ).filter((element) => !element.hasAttribute("disabled"));
+  ).filter(
+    (element) => element.tabIndex >= 0 && !element.hasAttribute("disabled")
+  );
 
 const isInside = (dialog: HTMLElement, node: EventTarget | null) =>
   node instanceof Node && dialog.contains(node);
