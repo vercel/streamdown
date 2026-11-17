@@ -3,7 +3,32 @@ export interface TableData {
   rows: string[][];
 }
 
-function extractCellText(node: Node): string {
+const IMAGE_START = "\uE000";
+const IMAGE_END = "\uE001";
+
+const escapeImageAlt = (alt: string): string =>
+  alt.replace(/[\\[\]|]/g, (char) => `\\${char}`).replace(/\n/g, " ");
+
+const encodeImageSrc = (src: string): string =>
+  src.replace(/[\s()|]/g, (char) =>
+    char === "(" ? "%28" : char === ")" ? "%29" : encodeURIComponent(char)
+  );
+
+// Serialises an <img> as Markdown from its attributes, so the result never
+// depends on whether the image actually loaded.
+const imageToMarkdown = (img: Element): string =>
+  `![${escapeImageAlt(img.getAttribute("alt") ?? "")}](${encodeImageSrc(img.getAttribute("src") ?? "")})`;
+
+// Remembers which `![alt](src)` strings in a TableData came from real <img>
+// elements (as opposed to literal text), so tableDataToMarkdown can keep them
+// unescaped without changing the shape of TableData.
+interface TableImages {
+  headers: string[][];
+  rows: string[][][];
+}
+const tableImages = new WeakMap<TableData, TableImages>();
+
+function extractCellText(node: Node, images: string[]): string {
   if (node.nodeType === Node.TEXT_NODE) {
     return node.textContent ?? "";
   }
@@ -18,7 +43,23 @@ function extractCellText(node: Node): string {
     return "\n";
   }
 
-  return Array.from(element.childNodes).map(extractCellText).join("");
+  // UI-only fallback ("Image not available"), never part of the content
+  if (element.getAttribute("data-streamdown") === "image-fallback") {
+    return "";
+  }
+
+  if (element.tagName === "IMG") {
+    if (!element.getAttribute("src")) {
+      return "";
+    }
+    const markdown = imageToMarkdown(element);
+    images.push(markdown);
+    return markdown;
+  }
+
+  return Array.from(element.childNodes)
+    .map((child) => extractCellText(child, images))
+    .join("");
 }
 
 export const extractTableDataFromElement = (
@@ -26,25 +67,34 @@ export const extractTableDataFromElement = (
 ): TableData => {
   const headers: string[] = [];
   const rows: string[][] = [];
+  const imageMap: TableImages = { headers: [], rows: [] };
 
   // Extract headers
   const headerCells = tableElement.querySelectorAll("thead th");
   for (const cell of headerCells) {
-    headers.push(extractCellText(cell).trim());
+    const images: string[] = [];
+    headers.push(extractCellText(cell, images).trim());
+    imageMap.headers.push(images);
   }
 
   // Extract rows
   const bodyRows = tableElement.querySelectorAll("tbody tr");
   for (const row of bodyRows) {
     const rowData: string[] = [];
+    const rowImages: string[][] = [];
     const cells = row.querySelectorAll("td");
     for (const cell of cells) {
-      rowData.push(extractCellText(cell).trim());
+      const images: string[] = [];
+      rowData.push(extractCellText(cell, images).trim());
+      rowImages.push(images);
     }
     rows.push(rowData);
+    imageMap.rows.push(rowImages);
   }
 
-  return { headers, rows };
+  const data: TableData = { headers, rows };
+  tableImages.set(data, imageMap);
+  return data;
 };
 
 export type CSVSeparator = "," | ";" | "\t" | "auto";
@@ -239,8 +289,40 @@ export const escapeMarkdownTableCell = (cell: string): string => {
   return parts.join("");
 };
 
+const imagePlaceholderPattern = new RegExp(
+  `${IMAGE_START}(\\d+)${IMAGE_END}`,
+  "g"
+);
+
+// Escapes a cell while leaving the given real images (in order) as Markdown.
+const escapeCellKeepingImages = (cell: string, images: string[] = []) => {
+  if (images.length === 0) {
+    return escapeMarkdownTableCell(cell);
+  }
+
+  let rest = cell;
+  let text = "";
+  const kept: string[] = [];
+  for (const image of images) {
+    const at = rest.indexOf(image);
+    if (at === -1) {
+      continue;
+    }
+    text += `${rest.slice(0, at)}${IMAGE_START}${kept.length}${IMAGE_END}`;
+    kept.push(image);
+    rest = rest.slice(at + image.length);
+  }
+  text += rest;
+
+  return escapeMarkdownTableCell(text).replace(
+    imagePlaceholderPattern,
+    (match, index) => kept[Number(index)] ?? match
+  );
+};
+
 export const tableDataToMarkdown = (data: TableData) => {
   const { headers, rows } = data;
+  const images = tableImages.get(data);
 
   if (headers.length === 0) {
     return "";
@@ -251,7 +333,9 @@ export const tableDataToMarkdown = (data: TableData) => {
   let rowIndex = 0;
 
   // Add headers
-  const escapedHeaders = headers.map((h) => escapeMarkdownTableCell(h));
+  const escapedHeaders = headers.map((h, i) =>
+    escapeCellKeepingImages(h, images?.headers[i])
+  );
   markdownRows[rowIndex] = `| ${escapedHeaders.join(" | ")} |`;
   rowIndex += 1;
 
@@ -265,18 +349,20 @@ export const tableDataToMarkdown = (data: TableData) => {
   rowIndex += 1;
 
   // Add data rows
-  for (const row of rows) {
+  for (const [r, row] of rows.entries()) {
     // Pad row with empty strings if it's shorter than headers
     // OPTIMIZATION: Only pad if necessary
     if (row.length < headers.length) {
       const paddedRow = new Array(headers.length);
       for (let i = 0; i < headers.length; i += 1) {
-        paddedRow[i] = i < row.length ? escapeMarkdownTableCell(row[i]) : "";
+        paddedRow[i] = i < row.length ? escapeCellKeepingImages(row[i], images?.rows[r]?.[i]) : "";
       }
       markdownRows[rowIndex] = `| ${paddedRow.join(" | ")} |`;
       rowIndex += 1;
     } else {
-      const escapedRow = row.map((cell) => escapeMarkdownTableCell(cell));
+      const escapedRow = row.map((cell, i) =>
+        escapeCellKeepingImages(cell, images?.rows[r]?.[i])
+      );
       markdownRows[rowIndex] = `| ${escapedRow.join(" | ")} |`;
       rowIndex += 1;
     }
