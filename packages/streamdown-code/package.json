@@ -33,13 +33,13 @@
     "test:coverage": "vitest --coverage run"
   },
   "dependencies": {
-    "shiki": "^4.4.3"
+    "shiki": "^4.6.0"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.10",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
-    "vitest": "^5.0.0"
+    "vitest": "^5.1.0"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
