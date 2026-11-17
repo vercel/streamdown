@@ -786,15 +786,30 @@ describe("Table Utils", () => {
       );
     });
 
-    it("should return empty string if no headers", () => {
+    it("should emit an empty header row when there are no headers", () => {
       const data: TableData = {
         headers: [],
         rows: [["Value1", "Value2"]],
       };
 
-      const result = tableDataToMarkdown(data);
+      expect(tableDataToMarkdown(data)).toBe(
+        "|  |  |\n| --- | --- |\n| Value1 | Value2 |"
+      );
+    });
 
-      expect(result).toBe("");
+    it("should size the empty header row to the widest row", () => {
+      const data: TableData = {
+        headers: [],
+        rows: [["a"], ["b", "c", "d"]],
+      };
+
+      expect(tableDataToMarkdown(data)).toBe(
+        "|  |  |  |\n| --- | --- | --- |\n| a |  |  |\n| b | c | d |"
+      );
+    });
+
+    it("should return empty string if there are no headers and no rows", () => {
+      expect(tableDataToMarkdown({ headers: [], rows: [] })).toBe("");
     });
 
     it("should handle empty rows", () => {
@@ -979,6 +994,80 @@ describe("Table Utils", () => {
       expect(toMarkdown(table)).toBe(
         "| Logo | Name |\n| --- | --- |\n| ![Acme logo](https://example.com/hfbhb.png) | not working |"
       );
+    });
+  });
+
+  describe("tables with row headers and no header row", () => {
+    const htmlTable =
+      "<table><tbody><tr><th>Revenue</th><td>100</td></tr><tr><th>Costs</th><td>40</td></tr></tbody></table>";
+    const buildTable = (html: string) => {
+      const container = document.createElement("div");
+      container.innerHTML = html;
+      return container.querySelector("table") as HTMLTableElement;
+    };
+
+    it("should keep <th> cells in body rows", () => {
+      expect(extractTableDataFromElement(buildTable(htmlTable))).toEqual({
+        headers: [],
+        rows: [
+          ["Revenue", "100"],
+          ["Costs", "40"],
+        ],
+      });
+    });
+
+    it("should copy a table without a header row as valid Markdown", () => {
+      const table = buildTable(htmlTable);
+
+      expect(tableDataToMarkdown(extractTableDataFromElement(table))).toBe(
+        "|  |  |\n| --- | --- |\n| Revenue | 100 |\n| Costs | 40 |"
+      );
+    });
+
+    it("should keep every cell in CSV and TSV", () => {
+      const data = extractTableDataFromElement(buildTable(htmlTable));
+
+      expect(tableDataToCSV(data)).toBe("Revenue,100\nCosts,40");
+      expect(tableDataToTSV(data)).toBe("Revenue\t100\nCosts\t40");
+    });
+
+    it("should keep row headers when the table also has a thead", () => {
+      const table = buildTable(
+        "<table><thead><tr><th>Item</th><th>Amount</th></tr></thead><tbody><tr><th>Revenue</th><td>100</td></tr></tbody></table>"
+      );
+
+      expect(tableDataToMarkdown(extractTableDataFromElement(table))).toBe(
+        "| Item | Amount |\n| --- | --- |\n| Revenue | 100 |"
+      );
+    });
+
+    it("should keep images in row headers", () => {
+      const table = buildTable(
+        '<table><tbody><tr><th><img alt="Acme" src="https://example.com/a.png"></th><td>1</td></tr></tbody></table>'
+      );
+
+      expect(tableDataToMarkdown(extractTableDataFromElement(table))).toBe(
+        "|  |  |\n| --- | --- |\n| ![Acme](https://example.com/a.png) | 1 |"
+      );
+    });
+
+    it("should produce a table that renders back with the same cells", () => {
+      const markdown = tableDataToMarkdown(
+        extractTableDataFromElement(buildTable(htmlTable))
+      );
+      const { container } = render(
+        Markdown({ children: markdown, remarkPlugins: [remarkGfm] })
+      );
+      const restored = container.querySelector("table") as HTMLTableElement;
+
+      expect(
+        [...restored.querySelectorAll("tbody tr")].map((row) =>
+          [...row.querySelectorAll("td")].map((cell) => cell.textContent)
+        )
+      ).toEqual([
+        ["Revenue", "100"],
+        ["Costs", "40"],
+      ]);
     });
   });
 });

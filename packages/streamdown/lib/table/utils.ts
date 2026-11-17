@@ -82,7 +82,8 @@ export const extractTableDataFromElement = (
   for (const row of bodyRows) {
     const rowData: string[] = [];
     const rowImages: string[][] = [];
-    const cells = row.querySelectorAll("td");
+    // Row headers (<th scope="row">) are content too, so keep them in order
+    const cells = row.querySelectorAll("th, td");
     for (const cell of cells) {
       const images: string[] = [];
       rowData.push(extractCellText(cell, images).trim());
@@ -324,7 +325,17 @@ export const tableDataToMarkdown = (data: TableData) => {
   const { headers, rows } = data;
   const images = tableImages.get(data);
 
-  if (headers.length === 0) {
+  // A GFM table needs a header row. When the source has none (e.g. a raw HTML
+  // table with only a <tbody>), emit an empty one so no cell is lost.
+  const hasHeaders = headers.length > 0;
+  let columnCount = headers.length;
+  if (!hasHeaders) {
+    for (const row of rows) {
+      columnCount = Math.max(columnCount, row.length);
+    }
+  }
+
+  if (columnCount === 0) {
     return "";
   }
 
@@ -332,17 +343,21 @@ export const tableDataToMarkdown = (data: TableData) => {
   const markdownRows: string[] = new Array(rows.length + 2);
   let rowIndex = 0;
 
-  // Add headers
-  const escapedHeaders = headers.map((h, i) =>
-    escapeCellKeepingImages(h, images?.headers[i])
-  );
+  // Add headers (an empty header row when there are none)
+  const escapedHeaders = new Array(columnCount);
+  for (let i = 0; i < columnCount; i += 1) {
+    escapedHeaders[i] =
+      i < headers.length
+        ? escapeCellKeepingImages(headers[i], images?.headers[i])
+        : "";
+  }
   markdownRows[rowIndex] = `| ${escapedHeaders.join(" | ")} |`;
   rowIndex += 1;
 
   // Add separator row
   // OPTIMIZATION: Build separator more efficiently
-  const separatorParts = new Array(headers.length);
-  for (let i = 0; i < headers.length; i += 1) {
+  const separatorParts = new Array(columnCount);
+  for (let i = 0; i < columnCount; i += 1) {
     separatorParts[i] = "---";
   }
   markdownRows[rowIndex] = `| ${separatorParts.join(" | ")} |`;
@@ -350,12 +365,15 @@ export const tableDataToMarkdown = (data: TableData) => {
 
   // Add data rows
   for (const [r, row] of rows.entries()) {
-    // Pad row with empty strings if it's shorter than headers
+    // Pad row with empty strings if it's shorter than the column count
     // OPTIMIZATION: Only pad if necessary
-    if (row.length < headers.length) {
-      const paddedRow = new Array(headers.length);
-      for (let i = 0; i < headers.length; i += 1) {
-        paddedRow[i] = i < row.length ? escapeCellKeepingImages(row[i], images?.rows[r]?.[i]) : "";
+    if (row.length < columnCount) {
+      const paddedRow = new Array(columnCount);
+      for (let i = 0; i < columnCount; i += 1) {
+        paddedRow[i] =
+          i < row.length
+            ? escapeCellKeepingImages(row[i], images?.rows[r]?.[i])
+            : "";
       }
       markdownRows[rowIndex] = `| ${paddedRow.join(" | ")} |`;
       rowIndex += 1;
