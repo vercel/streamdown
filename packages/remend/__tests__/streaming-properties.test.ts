@@ -218,6 +218,9 @@ const containedArbitrary = (docArbitrary: fc.Arbitrary<string>) =>
     );
 
 describe("streaming properties", () => {
+  // fast-check's 2000-run sweep is fine alone (~0.5s) but shares a
+  // GitHub-hosted runner with the other package suites. Under that load it
+  // exceeds Vitest's default 5s test timeout without failing an assertion.
   it("preserves authored text and re-heals to itself on every cut", () => {
     fc.assert(
       fc.property(documentArbitrary, fc.nat(), (doc, cutSeed) => {
@@ -226,7 +229,7 @@ describe("streaming properties", () => {
       }),
       { numRuns: 2000 }
     );
-  });
+  }, 30_000);
 
   it("preserves authored text and code on every cut inside containers", () => {
     fc.assert(
@@ -240,7 +243,7 @@ describe("streaming properties", () => {
       ),
       { numRuns: 2000 }
     );
-  });
+  }, 30_000);
 
   it("does not modify complete documents", () => {
     // Escape-oriented handlers (comparison operators, single tilde between
