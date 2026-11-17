@@ -1,10 +1,22 @@
 import { render } from "@testing-library/react";
 import type { Root } from "hast";
+import rehypeRaw from "rehype-raw";
+import rehypeSanitize, {
+  defaultSchema,
+  type Options as SanitizeSchema,
+} from "rehype-sanitize";
 import type { PluggableList, Plugin } from "unified";
 import { visit } from "unist-util-visit";
 import { describe, expect, it } from "vitest";
 import { Streamdown } from "../index";
 import { Markdown, type Options } from "../lib/markdown";
+
+const LEFT_PATTERN = /left/;
+const RIGHT_PATTERN = /right/;
+const UPPER_RIGHT_PATTERN = /RIGHT/;
+const UPPER_RIGHT_PATTERN_ANY_CASE = /RIGHT/i;
+const LEFT_CLASS = /^left$/;
+const RIGHT_CLASS = /^right$/;
 
 const createPlugin = (value: string): Plugin<[{ suffix?: string }?], Root> =>
   function replaceText(options) {
@@ -189,6 +201,185 @@ describe("processor callback options", () => {
     for (const [options, expected] of cases) {
       const { container, unmount } = render(
         <Markdown remarkPlugins={[[plugin, options]]}>input</Markdown>
+      );
+      expect(container.textContent).toBe(expected);
+      unmount();
+    }
+  });
+});
+
+describe("processor options that JSON cannot represent", () => {
+  const replacePattern: Plugin<[{ pattern: RegExp }], Root> =
+    (options) => (tree) => {
+      visit(tree, "text", (node) => {
+        node.value = node.value.replace(options.pattern, "*");
+      });
+    };
+
+  it("keeps RegExp options distinct for the same function", () => {
+    const { container, rerender } = render(
+      <Markdown remarkPlugins={[[replacePattern, { pattern: LEFT_PATTERN }]]}>
+        left right
+      </Markdown>
+    );
+    expect(container.textContent).toBe("* right");
+    rerender(
+      <Markdown remarkPlugins={[[replacePattern, { pattern: RIGHT_PATTERN }]]}>
+        left right
+      </Markdown>
+    );
+    expect(container.textContent).toBe("left *");
+    rerender(
+      <Markdown
+        remarkPlugins={[[replacePattern, { pattern: UPPER_RIGHT_PATTERN }]]}
+      >
+        left right
+      </Markdown>
+    );
+    expect(container.textContent).toBe("left right");
+    rerender(
+      <Markdown
+        remarkPlugins={[
+          [replacePattern, { pattern: UPPER_RIGHT_PATTERN_ANY_CASE }],
+        ]}
+      >
+        left right
+      </Markdown>
+    );
+    expect(container.textContent).toBe("left *");
+  });
+
+  it("keeps Map and Set options distinct for the same function", () => {
+    const replaceWords: Plugin<
+      [{ hide?: Set<string>; rename?: Map<string, string> }],
+      Root
+    > = (options) => (tree) => {
+      visit(tree, "text", (node) => {
+        node.value = node.value
+          .split(" ")
+          .map((word) =>
+            options.hide?.has(word) ? "*" : (options.rename?.get(word) ?? word)
+          )
+          .join(" ");
+      });
+    };
+    const { container, rerender } = render(
+      <Markdown remarkPlugins={[[replaceWords, { hide: new Set(["left"]) }]]}>
+        left right
+      </Markdown>
+    );
+    expect(container.textContent).toBe("* right");
+    rerender(
+      <Markdown remarkPlugins={[[replaceWords, { hide: new Set(["right"]) }]]}>
+        left right
+      </Markdown>
+    );
+    expect(container.textContent).toBe("left *");
+    rerender(
+      <Markdown
+        remarkPlugins={[[replaceWords, { rename: new Map([["left", "up"]]) }]]}
+      >
+        left right
+      </Markdown>
+    );
+    expect(container.textContent).toBe("up right");
+    rerender(
+      <Markdown
+        remarkPlugins={[
+          [replaceWords, { rename: new Map([["left", "down"]]) }],
+        ]}
+      >
+        left right
+      </Markdown>
+    );
+    expect(container.textContent).toBe("down right");
+  });
+
+  for (const mode of ["static", "streaming"] as const) {
+    it(`isolates sanitize schemas that differ only in a RegExp in ${mode} mode`, () => {
+      const schema = (className: RegExp): SanitizeSchema => ({
+        ...defaultSchema,
+        attributes: {
+          ...defaultSchema.attributes,
+          span: [["className", className]],
+        },
+      });
+      const html = '<span class="left right">text</span>';
+      const { container } = render(
+        <>
+          <section data-testid="left">
+            <Streamdown
+              mode={mode}
+              rehypePlugins={[rehypeRaw, [rehypeSanitize, schema(LEFT_CLASS)]]}
+            >
+              {html}
+            </Streamdown>
+          </section>
+          <section data-testid="right">
+            <Streamdown
+              mode={mode}
+              rehypePlugins={[rehypeRaw, [rehypeSanitize, schema(RIGHT_CLASS)]]}
+            >
+              {html}
+            </Streamdown>
+          </section>
+        </>
+      );
+      expect(
+        container.querySelector('[data-testid="left"] span')?.className
+      ).toBe("left");
+      expect(
+        container.querySelector('[data-testid="right"] span')?.className
+      ).toBe("right");
+    });
+  }
+
+  it("reuses processors for an equal RegExp in new option wrappers", () => {
+    let setups = 0;
+    const plugin: Plugin<[{ pattern: RegExp }], Root> = (options) => {
+      setups += 1;
+      return (tree) => {
+        visit(tree, "text", (node) => {
+          node.value = node.value.replace(options.pattern, "*");
+        });
+      };
+    };
+    // Two RegExp objects with the same pattern.
+    const { container, rerender } = render(
+      <Markdown
+        remarkPlugins={[[plugin, { pattern: new RegExp(LEFT_PATTERN) }]]}
+      >
+        left right
+      </Markdown>
+    );
+    rerender(
+      <Markdown
+        remarkPlugins={[[plugin, { pattern: new RegExp(LEFT_PATTERN) }]]}
+      >
+        left left
+      </Markdown>
+    );
+    expect(container.textContent).toBe("* left");
+    expect(setups).toBe(1);
+  });
+
+  it("distinguishes RegExp, Map and Set values from equal JSON data", () => {
+    const plugin: Plugin<[{ value: unknown }], Root> = (options) => (tree) => {
+      visit(tree, "text", (node) => {
+        node.value = Object.prototype.toString.call(options.value);
+      });
+    };
+    const cases: [unknown, string][] = [
+      [LEFT_PATTERN, "[object RegExp]"],
+      ["/left/", "[object String]"],
+      [new Map([["left", 1]]), "[object Map]"],
+      [[["left", 1]], "[object Array]"],
+      [new Set(["left"]), "[object Set]"],
+      [["left"], "[object Array]"],
+    ];
+    for (const [value, expected] of cases) {
+      const { container, unmount } = render(
+        <Markdown remarkPlugins={[[plugin, { value }]]}>input</Markdown>
       );
       expect(container.textContent).toBe(expected);
       unmount();

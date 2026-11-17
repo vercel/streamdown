@@ -81,6 +81,7 @@ const getPluginId = (plugin: Function): number => {
 const serializeOptions = (options: unknown): string => {
   const paths = new WeakMap<object, string[]>();
   const callbacks: [string[], number][] = [];
+  const types: [string[], string][] = [];
   const data = JSON.stringify(
     options,
     function (this: object, key, value: unknown) {
@@ -88,14 +89,26 @@ const serializeOptions = (options: unknown): string => {
       const path = parentPath ? [...parentPath, key] : [];
       if (typeof value === "function") {
         callbacks.push([path, getPluginId(value)]);
-      } else if (value !== null && typeof value === "object") {
-        paths.set(value, path);
+        return value;
       }
-      return value;
+      // JSON.stringify writes a RegExp, Map or Set as `{}`, so write its
+      // pattern or contents instead and record its type.
+      let serialized = value;
+      if (value instanceof RegExp) {
+        types.push([path, "RegExp"]);
+        serialized = String(value);
+      } else if (value instanceof Map || value instanceof Set) {
+        types.push([path, value instanceof Map ? "Map" : "Set"]);
+        serialized = [...value];
+      }
+      if (serialized !== null && typeof serialized === "object") {
+        paths.set(serialized, path);
+      }
+      return serialized;
     }
   );
-  // Separate callback paths/identities from user data to avoid tag collisions.
-  return JSON.stringify([data, callbacks]);
+  // Separate callback and type paths from user data to avoid tag collisions.
+  return JSON.stringify([data, callbacks, types]);
 };
 
 // LRU Cache for unified processors
