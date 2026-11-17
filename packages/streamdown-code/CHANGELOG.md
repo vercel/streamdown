@@ -1,5 +1,11 @@
 # @streamdown/code
 
+## 2.0.1
+
+### Patch Changes
+
+- 7dcabc6: Support `exactOptionalPropertyTypes`: add `| undefined` to optional props in the plugin option types so possibly-`undefined` values can be forwarded to `createCodePlugin`, `createMathPlugin` and `createMermaidPlugin` without type errors
+
 ## 2.0.0
 
 ### Major Changes

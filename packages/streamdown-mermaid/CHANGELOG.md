@@ -1,5 +1,12 @@
 # @streamdown/mermaid
 
+## 1.0.4
+
+### Patch Changes
+
+- db1a468: Add an option to use Mermaid's native theme and font defaults.
+- 7dcabc6: Support `exactOptionalPropertyTypes`: add `| undefined` to optional props in the plugin option types so possibly-`undefined` values can be forwarded to `createCodePlugin`, `createMathPlugin` and `createMermaidPlugin` without type errors
+
 ## 1.0.3
 
 ### Patch Changes
