@@ -1,5 +1,28 @@
 # remend
 
+## 1.5.0
+
+### Minor Changes
+
+- 2dc4aa6: Heal emphasis the way CommonMark and GFM parse it
+
+  - Closes only openers that exist, innermost first, within the paragraph, list item or link text that holds them. An open code span closes before the emphasis around it.
+  - Leaves literal markers alone: `**Note:**This`, `*.ts`, `x**2`, `(+, -, *, /)`, fill-in blanks like `______`, and runs after an escaped marker like `\**`. A trailing backslash is escaped so it can't escape the closers.
+  - Stops closing an opener once its line has ended and the next line has started, since models close emphasis on the line that opens it. A stray `*` in code written outside a fence, like `char *name`, no longer italicizes what follows.
+  - Closes an inline code span only within its own block, and never with a closer that would start a fence. A `[` before a complete link stays literal instead of healing a second link.
+  - The `bold`, `italic`, `boldItalic` and `strikethrough` options still apply, but the built-in handlers they controlled are now one `emphasis` handler at priority 30. Custom handlers ordered against the old priorities may need new ones.
+
+### Patch Changes
+
+- ae6fa3b: Support `exactOptionalPropertyTypes`: add `| undefined` to optional props in the public types so possibly-`undefined` values can be forwarded to `<Streamdown>` and `remend` without type errors
+- 04dd684: Skip completed-link searches for brackets already known to be literal, avoiding quadratic work on unmatched bracket prefixes before a completed link.
+- fdc4255: Avoid quadratic emphasis processing for unmatched opening brackets followed by many completed links, including when link and image healing are disabled. Invalidate enclosing brackets in constant time while preserving link and image label scoping.
+- 2dc4aa6: Complete unfinished links and images only in the current block: the paragraph, list item, heading or table row at the end of the text. An unclosed `[` or `](` in an earlier block no longer adds `](streamdown:incomplete-link)` to later text, or drops the text after it.
+- e54bc44: docs: describe the loading placeholder for incomplete images in the README
+- b393921: Stop adding a zero-width space to a dash that starts a new list item after a list item or block quote, which made it show as a stray "-" on the line above.
+- d96e8c0: Stop escaping single tildes inside URLs and HTML tag attributes, so links like `https://example.com/a~b` keep a working address instead of getting a backslash in the middle.
+- 63bd417: Avoid quadratic emphasis gating on messages with many skipped delimiter openers by precomputing content and delimiter lookups and skipping disabled or overlength runs before gating.
+
 ## 1.4.0
 
 ### Minor Changes
