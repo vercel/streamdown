@@ -1,0 +1,169 @@
+---
+title: Admonitions
+description: Render GitHub-style alert callouts with built-in icons, colors, and full customization.
+type: guide
+summary: Display note, tip, important, warning, and caution callout boxes from standard GFM alert syntax.
+prerequisites:
+  - /docs/getting-started
+related:
+  - /docs/gfm
+  - /docs/components
+  - /docs/internationalization
+  - /docs/styling
+---
+
+Admonitions are callout boxes that highlight important information using GitHub-style alert syntax. Streamdown renders them with distinct icons, colors, and titles for each type.
+
+## Syntax
+
+Use the `> [!TYPE]` blockquote syntax from GitHub Flavored Markdown:
+
+```markdown
+> [!NOTE]
+> Useful background information.
+
+> [!TIP]
+> Helpful advice for getting the most out of a feature.
+
+> [!IMPORTANT]
+> Key details you need to know.
+
+> [!WARNING]
+> Potential issues to watch out for.
+
+> [!CAUTION]
+> Negative consequences of an action.
+```
+
+## Supported types
+
+Streamdown supports all five GFM alert types:
+
+| Type | Purpose |
+|------|---------|
+| `NOTE` | Background context or supplementary information |
+| `TIP` | Helpful suggestions and best practices |
+| `IMPORTANT` | Critical details the reader must not miss |
+| `WARNING` | Potential problems or things to watch for |
+| `CAUTION` | Actions that could cause data loss or breaking changes |
+
+Each type renders with a unique icon and color scheme that matches GitHub's visual styling.
+
+## Multi-line content
+
+Admonitions support rich Markdown content inside them, including bold, code, links, and lists:
+
+```markdown
+> [!TIP]
+> You can use **bold text**, `inline code`, and [links](https://example.com) inside admonitions.
+>
+> - Lists work too
+> - Including nested content
+```
+
+## Customizing the component
+
+Override the default admonition rendering by passing a custom component:
+
+```tsx title="app/page.tsx"
+const MyAdmonition = ({ children, "data-admonition-type": type, ...props }) => (
+  <div className={`my-admonition my-admonition-${type}`} {...props}>
+    {children}
+  </div>
+);
+
+<Streamdown components={{ admonition: MyAdmonition }}>
+  {markdown}
+</Streamdown>
+```
+
+The component receives `data-admonition-type` as a prop with the lowercase type string (`"note"`, `"tip"`, `"important"`, `"warning"`, or `"caution"`).
+
+<Callout type="warn">
+  Custom components **fully replace** the default implementation, including the built-in icon, title bar, and styles. See the [Components](/docs/components) documentation for details on component overrides.
+</Callout>
+
+## Customizing icons
+
+Replace individual admonition icons through the `icons` prop:
+
+```tsx title="app/page.tsx"
+import { InfoIcon } from "lucide-react";
+
+<Streamdown icons={{ AdmonitionNoteIcon: InfoIcon }}>
+  {markdown}
+</Streamdown>
+```
+
+Available icon keys:
+
+- `AdmonitionNoteIcon`
+- `AdmonitionTipIcon`
+- `AdmonitionImportantIcon`
+- `AdmonitionWarningIcon`
+- `AdmonitionCautionIcon`
+
+## Customizing title text (i18n)
+
+Override the title text displayed in admonition headers using the `translations` prop:
+
+```tsx title="app/page.tsx"
+<Streamdown
+  translations={{
+    admonitionNote: "Nota",
+    admonitionTip: "Consejo",
+    admonitionImportant: "Importante",
+    admonitionWarning: "Advertencia",
+    admonitionCaution: "Precaucion",
+  }}
+>
+  {markdown}
+</Streamdown>
+```
+
+See the [Internationalization](/docs/internationalization) documentation for the full list of translation keys.
+
+## Styling with CSS
+
+Target admonitions using `data-streamdown` and `data-admonition-type` attribute selectors:
+
+```css title="styles/streamdown.css"
+/* Style all admonitions */
+[data-streamdown="admonition"] {
+  border-radius: 0.5rem;
+}
+
+/* Style a specific type */
+[data-streamdown="admonition"][data-admonition-type="note"] {
+  background-color: #dbeafe;
+  border-left: 4px solid #3b82f6;
+}
+
+/* Style the title bar */
+[data-streamdown="admonition-title"] {
+  font-weight: 600;
+}
+
+/* Style the content area */
+[data-streamdown="admonition-content"] {
+  padding: 0.75rem 1rem;
+}
+```
+
+See the [Styling](/docs/styling) documentation for more on CSS customization.
+
+## Disabling admonitions
+
+To disable admonition rendering, provide custom `remarkPlugins` that exclude the admonition plugin:
+
+```tsx title="app/page.tsx"
+import { Streamdown, defaultRemarkPlugins } from "streamdown";
+
+const { admonition, ...remainingPlugins } = defaultRemarkPlugins;
+
+<Streamdown remarkPlugins={Object.values(remainingPlugins)}>
+  {markdown}
+</Streamdown>
+```
+
+With admonitions disabled, `> [!NOTE]` blocks render as standard blockquotes.
