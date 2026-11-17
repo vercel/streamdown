@@ -9,9 +9,13 @@ const IMAGE_END = "\uE001";
 const escapeImageAlt = (alt: string): string =>
   alt.replace(/[\\[\]|]/g, (char) => `\\${char}`).replace(/\n/g, " ");
 
+// encodeURIComponent leaves ( and ) alone, but they would end the link early
+const imageSrcEscapes: Record<string, string> = { "(": "%28", ")": "%29" };
+
 const encodeImageSrc = (src: string): string =>
-  src.replace(/[\s()|]/g, (char) =>
-    char === "(" ? "%28" : char === ")" ? "%29" : encodeURIComponent(char)
+  src.replace(
+    /[\s()|]/g,
+    (char) => imageSrcEscapes[char] ?? encodeURIComponent(char)
   );
 
 // Serialises an <img> as Markdown from its attributes, so the result never

@@ -983,10 +983,11 @@ describe("Table Utils", () => {
 
     it("should copy broken images rendered by Streamdown's image component", () => {
       const { container } = render(
-        createElement(Streamdown, {
-          children:
-            "| Logo | Name |\n| --- | --- |\n| ![Acme logo](https://example.com/hfbhb.png) | not working |",
-        })
+        createElement(
+          Streamdown,
+          null,
+          "| Logo | Name |\n| --- | --- |\n| ![Acme logo](https://example.com/hfbhb.png) | not working |"
+        )
       );
       const img = container.querySelector("table img") as HTMLImageElement;
       fireEvent.error(img);
