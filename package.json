@@ -19,7 +19,7 @@
     "test:ui": "turbo run test:ui"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.7",
+    "@biomejs/biome": "2.4.5",
     "@changesets/cli": "^2.31.1",
     "turbo": "^2.11.11",
     "typescript": "5.9.3",
