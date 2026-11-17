@@ -948,7 +948,9 @@ describe("Table Utils", () => {
         '<img alt="H" src="https://example.com/h.png">'
       );
 
-      expect(toMarkdown(table)).toContain("| ![H](https://example.com/h.png) | Name |");
+      expect(toMarkdown(table)).toContain(
+        "| ![H](https://example.com/h.png) | Name |"
+      );
     });
 
     it("should keep literal image-like text escaped", () => {
