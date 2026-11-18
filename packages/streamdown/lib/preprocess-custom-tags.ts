@@ -7,8 +7,10 @@
  *    treats the tag as inline HTML inside a paragraph, so nested markdown still
  *    runs as phrasing content. So is a tag that follows text on its line
  *    (`Note: <tag>a\nb</tag>`): padding it would end the paragraph after the
- *    opening tag and leave the tag empty. Self-closing tags (`<tag />`) are
- *    left alone too.
+ *    opening tag and leave the tag empty. The same goes for a tag at the start
+ *    of a line that continues a paragraph, and padding would also break a
+ *    blockquote or a list item around the tag (see startsBlock). Self-closing
+ *    tags (`<tag />`) are left alone too.
  *
  * 2. **Multi-line content** must interrupt the HTML block for nested markdown
  *    to parse. HTML blocks end at a blank line, the same shape used by
@@ -21,7 +23,7 @@
  *        </tag>
  *
  *    This function normalizes multi-line custom tags that start a block (see
- *    createStartsBlock) into that shape: a blank line after the opening tag
+ *    startsBlock) into that shape: a blank line after the opening tag
  *    and before the closing tag (with a trailing blank line so later markdown
  *    is not absorbed).
  *
@@ -61,10 +63,27 @@ const openTagSource = (tagName: string): string =>
   `<${escapeRegExp(tagName)}(?=[\\s>/])(?:[^>]*[^>/])?>`;
 
 // A run that a tag may follow at the start of its line, or after the closing
-// tag of a padded container, and still start a block: indentation, list or
-// blockquote markers, and closing tags.
+// tag of a padded container, and still start a block: indentation, list
+// markers, and closing tags. Not a blockquote marker: the blank lines padding
+// adds carry no `>`, so they would end the quote.
 const BLOCK_PREFIX_RE =
-  /[ \t]*(?:(?:[*+-]|\d{1,9}[.)])[ \t]+|>[ \t]*|<\/[A-Za-z][^<>\n]*>[ \t]*)*/y;
+  /[ \t]*(?:(?:[*+-]|\d{1,9}[.)])[ \t]+|<\/[A-Za-z][^<>\n]*>[ \t]*)*/y;
+
+// Indentation and a list item marker at the start of a line.
+const LINE_LEAD_RE = /[ \t]*((?:[*+-]|\d{1,9}[.)])[ \t])?/y;
+
+// Nothing but whitespace up to the end of the line.
+const BLANK_REST_RE = /[ \t]*(?:\r?\n|$)/y;
+
+// Indentation, blockquote and list item markers at the start of a line.
+const LINE_MARKERS_RE =
+  /^(?:[ \t]*(?:>|(?:[*+-]|\d{1,9}[.)])(?=[ \t]|$)))*[ \t]*/;
+
+// A line, after its markers, that leaves no paragraph open for the next line
+// to continue: a blank line, a heading, a thematic break or setext underline,
+// a code fence, or a lone tag, which may be part of an HTML block.
+const NO_PARAGRAPH_LINE_RE =
+  /^(?:$|#{1,6}(?:[ \t]|$)|([*_-])(?:[ \t]*\1){2,}$|=+$|-+$|`{3,}|~{3,}|<\/?[A-Za-z][^<>]*>$)/;
 
 // Index of the last number in ascending `sorted` that is at most `value`.
 const findLastAtMost = (sorted: number[], value: number): number => {
@@ -227,12 +246,13 @@ const multilinePairs = (markdown: string, tagNames: string[]): Container[] => {
 
 const createLineScanner = (markdown: string) => {
   const prefixEnds = new Map<number, number>();
+  // remark drops a byte order mark at the start of the document.
+  const firstLineStart = markdown.startsWith("\uFEFF") ? 1 : 0;
   let lineStarts: number[] | undefined;
 
   const lineStartOf = (index: number): number => {
     if (!lineStarts) {
-      // remark drops a byte order mark at the start of the document.
-      lineStarts = [markdown.startsWith("\uFEFF") ? 1 : 0];
+      lineStarts = [firstLineStart];
       for (
         let newline = markdown.indexOf("\n");
         newline !== -1;
@@ -255,20 +275,60 @@ const createLineScanner = (markdown: string) => {
     return end;
   };
 
-  /**
-   * Whether the tag at `index` starts a block. It does when only a block
-   * prefix run (see BLOCK_PREFIX_RE) precedes it on its line, or separates it
-   * from the closing tag of a padded container: padding puts a blank line
-   * after that closing tag. `paddedEnd` is the nearest padded closing tag end
-   * at or before `index`; a padded close further back would have to reach the
-   * tag through it, so it settles the second case. Otherwise the tag follows
-   * text, which makes it inline HTML rather than a container.
-   */
-  const startsBlock = (index: number, paddedEnd: number): boolean => {
-    const lineStart = lineStartOf(index);
+  // Whether the line that starts at `lineStart` continues a paragraph on the
+  // line above. `paddedEnd` is as in startsBlock: padding puts a blank line
+  // after that closing tag, so a line above that ends with it ends the
+  // paragraph.
+  const continuesParagraph = (lineStart: number, paddedEnd: number) => {
+    if (lineStart <= firstLineStart) {
+      return false;
+    }
+    const above = lineStartOf(lineStart - 1);
+    const line = markdown.slice(above, lineStart - 1).trimEnd();
     return (
-      prefixEnd(lineStart) === index ||
-      (paddedEnd > lineStart && prefixEnd(paddedEnd) === index)
+      above + line.length !== paddedEnd &&
+      !NO_PARAGRAPH_LINE_RE.test(line.replace(LINE_MARKERS_RE, ""))
+    );
+  };
+
+  /**
+   * Whether the opening tag at `index`, ending at `openEnd`, starts a block. It
+   * does when only a block prefix run (see BLOCK_PREFIX_RE) precedes it on its
+   * line, or separates it from the closing tag of a padded container: padding
+   * puts a blank line after that closing tag. `paddedEnd` is the nearest
+   * padded closing tag end at or before `index`; a padded close further back
+   * would have to reach the tag through it, so it settles the second case.
+   * Otherwise the tag follows text, which makes it inline HTML rather than a
+   * container. Two more cases keep a tag at the start of its line inline:
+   *
+   * - The line continues a paragraph (a soft line break). CommonMark does not
+   *   let an HTML block of this kind interrupt a paragraph, so padding would
+   *   only end the paragraph after the opening tag and leave the tag empty. A
+   *   list marker before the tag starts a new item instead.
+   * - The line is indented or a list item, and text follows the opening tag.
+   *   Padding would move that text to a new line without the item's indent,
+   *   which ends the list.
+   */
+  const startsBlock = (
+    index: number,
+    openEnd: number,
+    paddedEnd: number
+  ): boolean => {
+    const lineStart = lineStartOf(index);
+    if (paddedEnd > lineStart && prefixEnd(paddedEnd) === index) {
+      return true;
+    }
+    if (prefixEnd(lineStart) !== index) {
+      return false;
+    }
+    LINE_LEAD_RE.lastIndex = lineStart;
+    const [lead = "", listMarker] = LINE_LEAD_RE.exec(markdown) ?? [];
+    BLANK_REST_RE.lastIndex = openEnd;
+    if (lead && !BLANK_REST_RE.test(markdown)) {
+      return false;
+    }
+    return (
+      listMarker !== undefined || !continuesParagraph(lineStart, paddedEnd)
     );
   };
 
@@ -309,7 +369,7 @@ const parseContainers = (markdown: string, tagNames: string[]) => {
     ) {
       continue;
     }
-    pair.padded = startsBlock(pair.open, paddedEnd);
+    pair.padded = startsBlock(pair.open, pair.openEnd, paddedEnd);
     (parent ? parent.children : roots).push(pair);
     stack.push(pair);
   }
@@ -320,9 +380,9 @@ const parseContainers = (markdown: string, tagNames: string[]) => {
 
   return {
     roots,
-    startsBlock: (index: number): boolean => {
+    startsBlock: (index: number, openEnd: number): boolean => {
       const i = findLastAtMost(paddedEnds, index);
-      return startsBlock(index, i === -1 ? -1 : paddedEnds[i]);
+      return startsBlock(index, openEnd, i === -1 ? -1 : paddedEnds[i]);
     },
   };
 };
@@ -392,7 +452,7 @@ const normalizeUnclosedOpenTags = (
   tagNames: string[]
 ): string => {
   const openOnly = new RegExp(tagNames.map(openTagSource).join("|"), "gi");
-  let startsBlock: ((index: number) => boolean) | undefined;
+  let startsBlock: ((index: number, openEnd: number) => boolean) | undefined;
   let lastCloses: Map<string, number> | undefined;
   // Where the last closing tag of each name starts, so checking for a tag's
   // own close does not rescan the rest of the document for every open tag.
@@ -438,7 +498,7 @@ const normalizeUnclosedOpenTags = (
     // A tag that follows text on its line is inline HTML, not a streaming
     // container.
     startsBlock ??= parseContainers(markdown, tagNames).startsBlock;
-    if (!startsBlock(match.index)) {
+    if (!startsBlock(match.index, openEnd)) {
       match = openOnly.exec(markdown);
       continue;
     }

@@ -168,10 +168,84 @@ describe("Custom tag position on the line", () => {
     );
   });
 
+  it("should keep a list whole around a multi-line tag in an item", () => {
+    const Verse = (props: CustomComponentProps) => (
+      <span data-testid="verse">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ quran: ["verseKey"] }}
+        components={{ quran: Verse }}
+        mode="static"
+      >
+        {'- <quran verseKey="1:1-2">a\n  b</quran> text\n- c'}
+      </Streamdown>
+    );
+
+    const lists = container.querySelectorAll("ul");
+    expect(lists).toHaveLength(1);
+    const items = lists[0].querySelectorAll("li");
+    expect(items).toHaveLength(2);
+    expect(items[0].querySelector('[data-testid="verse"]')?.textContent).toBe(
+      "a\nb"
+    );
+  });
+
+  it.each([
+    ["text after the opening tag", "> <verse>a\n> b</verse> text"],
+    ["the opening tag on its own line", "> <verse>\n> a\n> b\n> </verse>"],
+  ])("should keep a blockquote whole around a multi-line tag with %s", (_name, md) => {
+    const Verse = (props: CustomComponentProps) => (
+      <span data-testid="verse">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ verse: [] }}
+        components={{ verse: Verse }}
+        mode="static"
+      >
+        {md}
+      </Streamdown>
+    );
+
+    const quotes = container.querySelectorAll("blockquote");
+    expect(quotes).toHaveLength(1);
+    const verse = quotes[0].querySelector('[data-testid="verse"]');
+    expect(verse?.textContent?.trim()).toBe("a\nb");
+  });
+
+  it.each([
+    ["text after the opening tag", "Text\n<verse>a\nb</verse> more"],
+    ["the opening tag on its own line", "Text\n<verse>\na\nb\n</verse> more"],
+  ])("should keep a multi-line tag after a soft line break in its paragraph, with %s", (_name, md) => {
+    const Verse = (props: CustomComponentProps) => (
+      <span data-testid="verse">{props.children as React.ReactNode}</span>
+    );
+
+    const { container } = render(
+      <Streamdown
+        allowedTags={{ verse: [] }}
+        components={{ verse: Verse }}
+        mode="static"
+      >
+        {md}
+      </Streamdown>
+    );
+
+    const paragraphs = container.querySelectorAll("p");
+    expect(paragraphs).toHaveLength(1);
+    const verse = paragraphs[0].querySelector('[data-testid="verse"]');
+    expect(verse?.textContent?.trim()).toBe("a\nb");
+  });
+
   it.each([
     ["a bullet item", "- <note>\n  **bold**\n  </note>"],
+    ["a later bullet item", "- a\n- <note>\n  **bold**\n  </note>"],
     ["an ordered item", "1. <note>\n   **bold**\n   </note>"],
     ["an indented line", "- a\n\n  <note>\n  **bold**\n  </note>"],
+    ["the line after a heading", "# Title\n<note>\n**bold**\n</note>"],
   ])("should still parse markdown in a tag that starts %s", (_name, md) => {
     const Note = (props: CustomComponentProps) => (
       <div data-testid="note">{props.children as React.ReactNode}</div>
