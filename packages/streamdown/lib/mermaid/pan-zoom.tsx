@@ -255,11 +255,17 @@ export const PanZoom = ({
 
   const handleWheel = useCallback(
     (e: WheelEvent) => {
+      // With the zoom controls hidden (controls.mermaid.panZoom: false) there
+      // is no reset button, so a plain wheel scrolls the page past the diagram.
+      // Ctrl + wheel (and a trackpad pinch, sent as one) still zooms.
+      if (!(showControls || e.ctrlKey)) {
+        return;
+      }
       e.preventDefault();
       const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
       handleZoom(delta);
     },
-    [handleZoom, zoomStep]
+    [handleZoom, showControls, zoomStep]
   );
 
   const handlePointerDown = useCallback(
