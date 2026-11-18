@@ -774,26 +774,25 @@ export const inHtmlTagAt = (scan: TextScan, position: number): boolean => {
 // counts as neither whitespace nor punctuation.
 const AUTOLINK_START_PATTERN = /https?:\/\/|www\./gi;
 const AUTOLINK_HINT_PATTERN = /:\/\/|www\./i;
+// The first character that ends a URL: none of these are surrogates, so a
+// search over the whole text agrees with a test per code unit
+const AUTOLINK_END_PATTERN = /[\s<]|\][([]/g;
 const AUTOLINK_TRAIL = "!\"')*,.:;?_~]";
 const WWW_PREVIOUS = " \t\n\r(*_[]~";
-const asciiLetterPattern = /^[A-Za-z]$/;
 const whitespaceOrPunctuationPattern = /[\s\p{P}\p{S}]/u;
-const whitespacePattern = /\s/;
 
+const isAsciiLetter = (char: string | undefined): boolean =>
+  char !== undefined &&
+  ((char >= "a" && char <= "z") || (char >= "A" && char <= "Z"));
+
+// Letters and digits skip the Unicode test, which dominates the scan
 const isDomainChar = (char: string): boolean =>
+  isAsciiLetter(char) ||
+  (char >= "0" && char <= "9") ||
   char === "-" ||
   char === "." ||
   char === "_" ||
   !whitespaceOrPunctuationPattern.test(char);
-
-// Whether only block quote markers come before `start` on its line
-const followsQuoteMarkers = (text: string, start: number): boolean => {
-  let i = start;
-  while (i > 0 && (text[i - 1] === ">" || text[i - 1] === " ")) {
-    i -= 1;
-  }
-  return i === 0 || text[i - 1] === "\n";
-};
 
 // Whether a literal autolink can start at the http://, https:// or www. at
 // `start`, given the character before it and the one after the prefix
@@ -807,19 +806,23 @@ const opensAutolink = (
   if (next === undefined) {
     return false;
   }
-  if (prefix.length === 4) {
+  if (prefix.length !== 4) {
     return (
-      previous === undefined ||
-      WWW_PREVIOUS.includes(previous) ||
-      (previous === ">" && followsQuoteMarkers(text, start))
+      !isAsciiLetter(previous) &&
+      next > " " &&
+      next !== "\x7f" &&
+      !whitespaceOrPunctuationPattern.test(next)
     );
   }
-  return (
-    !asciiLetterPattern.test(previous ?? "") &&
-    next >= " " &&
-    next !== "\x7f" &&
-    !whitespaceOrPunctuationPattern.test(next)
-  );
+  if (previous === undefined || WWW_PREVIOUS.includes(previous)) {
+    return true;
+  }
+  // Otherwise only block quote markers may come before it on its line
+  let i = start;
+  while (i > 0 && (text[i - 1] === ">" || text[i - 1] === " ")) {
+    i -= 1;
+  }
+  return previous === ">" && (i === 0 || text[i - 1] === "\n");
 };
 
 // Where the punctuation GFM drops from the end of [start, end) begins
@@ -833,7 +836,7 @@ const trimAutolinkTrail = (
     if (text[i - 1] === ";") {
       // A character reference like &amp; trails as a whole
       let j = i - 2;
-      while (j >= start && asciiLetterPattern.test(text[j])) {
+      while (j >= start && isAsciiLetter(text[j])) {
         j -= 1;
       }
       if (j < i - 2 && j >= start && text[j] === "&") {
@@ -849,24 +852,6 @@ const trimAutolinkTrail = (
   return i;
 };
 
-// The last underscore in the domain's last two segments, or -1 if none
-const findDomainUnderscore = (
-  text: string,
-  start: number,
-  end: number
-): number => {
-  let dots = 0;
-  for (let i = end - 1; i >= start && dots < 2; i -= 1) {
-    if (text[i] === "_") {
-      return i;
-    }
-    if (text[i] === ".") {
-      dots += 1;
-    }
-  }
-  return -1;
-};
-
 // Where the literal autolink whose domain starts at `domainStart` ends, or -1
 // when GFM doesn't link it, and where the next one can start
 const measureAutolink = (
@@ -877,29 +862,21 @@ const measureAutolink = (
   while (domainEnd < text.length && isDomainChar(text[domainEnd])) {
     domainEnd += 1;
   }
-  let runEnd = domainEnd;
-  while (
-    runEnd < text.length &&
-    text[runEnd] !== "<" &&
-    !whitespacePattern.test(text[runEnd]) &&
-    !(
-      text[runEnd] === "]" &&
-      (text[runEnd + 1] === "(" || text[runEnd + 1] === "[")
-    )
-  ) {
-    runEnd += 1;
-  }
+  AUTOLINK_END_PATTERN.lastIndex = domainEnd;
+  const runEnd = AUTOLINK_END_PATTERN.exec(text)?.index ?? text.length;
   const end = trimAutolinkTrail(text, domainStart, runEnd);
-  const underscore = findDomainUnderscore(
-    text,
-    domainStart,
-    Math.min(domainEnd, end)
-  );
-  // A www. inside a domain GFM rejects can only link if it starts after
-  // that domain's last underscore
-  return underscore === -1
-    ? { end, skipTo: end }
-    : { end: -1, skipTo: underscore + 1 };
+  // An underscore in the domain's last two segments rejects the link. A www.
+  // inside that domain can only link if it starts after the underscore.
+  let dots = 0;
+  for (let i = Math.min(domainEnd, end) - 1; i >= domainStart; i -= 1) {
+    if (text[i] === "_") {
+      return { end: -1, skipTo: i + 1 };
+    }
+    if (text[i] === "." && ++dots === 2) {
+      break;
+    }
+  }
+  return { end, skipTo: end };
 };
 
 const buildAutolinkMask = (scan: TextScan): Uint8Array => {
