@@ -397,6 +397,25 @@ describe("animate plugin", () => {
   });
 
   describe("shared timeline (cross-block / cross-tick chaining) (#482)", () => {
+    it("tracks the last scheduled word start across committed passes (#669)", () => {
+      const timeline = createAnimateTimeline({ now: () => 1000 });
+      expect(timeline.lastStartAt()).toBe(Number.NEGATIVE_INFINITY);
+
+      timeline.beginPass(1000);
+      timeline.take(3, 40, 1000);
+      // Uncommitted passes don't count.
+      expect(timeline.lastStartAt()).toBe(Number.NEGATIVE_INFINITY);
+      timeline.commitPass();
+      // Words start at 1000, 1040, 1080.
+      expect(timeline.lastStartAt()).toBe(1080);
+
+      // A pass that schedules nothing leaves it alone.
+      timeline.beginPass(1500);
+      timeline.take(0, 40, 1500);
+      timeline.commitPass();
+      expect(timeline.lastStartAt()).toBe(1080);
+    });
+
     it("chains delays across sibling blocks in one pass", async () => {
       const timeline = createAnimateTimeline({ now: () => 1000 });
       const block0 = createAnimatePlugin({ stagger: 50, timeline });
