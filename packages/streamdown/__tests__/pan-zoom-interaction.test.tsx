@@ -226,6 +226,57 @@ describe("PanZoom pointer interactions", () => {
     });
   });
 
+  it("should let a plain wheel scroll the page when controls are hidden", () => {
+    const { container } = render(
+      <PanZoom initialZoom={1} showControls={false} zoomStep={0.1}>
+        <div>Content</div>
+      </PanZoom>
+    );
+
+    const containerDiv = container.firstElementChild;
+    const content = container.querySelector('[role="application"]');
+
+    const wheelEvent = new WheelEvent("wheel", {
+      deltaY: 100,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    act(() => {
+      containerDiv?.dispatchEvent(wheelEvent);
+    });
+
+    expect(wheelEvent.defaultPrevented).toBe(false);
+    expect(content?.getAttribute("style")).toContain("scale(1)");
+  });
+
+  it("should still zoom on ctrl + wheel when controls are hidden", async () => {
+    const { container } = render(
+      <PanZoom initialZoom={1} showControls={false} zoomStep={0.1}>
+        <div>Content</div>
+      </PanZoom>
+    );
+
+    const containerDiv = container.firstElementChild;
+    const content = container.querySelector('[role="application"]');
+
+    const wheelEvent = new WheelEvent("wheel", {
+      deltaY: 100,
+      ctrlKey: true,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    act(() => {
+      containerDiv?.dispatchEvent(wheelEvent);
+    });
+
+    expect(wheelEvent.defaultPrevented).toBe(true);
+    await waitFor(() => {
+      expect(content?.getAttribute("style")).toContain("scale(0.9)");
+    });
+  });
+
   it("should position controls based on fullscreen prop", () => {
     const { container } = render(
       <PanZoom fullscreen={true}>
