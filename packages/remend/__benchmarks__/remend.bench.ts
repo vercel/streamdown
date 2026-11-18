@@ -318,3 +318,54 @@ describe("Scaling", () => {
     );
   }
 });
+
+// Bare URLs build the literal autolink mask; prose without :// or www. skips
+// it entirely.
+describe("Bare URLs", () => {
+  const urlParagraph =
+    "Static files live at https://example.com/_next/static/chunks/main.js and the " +
+    "package entry is https://github.com/python/cpython/blob/main/Lib/__init__.py, " +
+    "while www.example.com/docs/*/items lists the routes and **bold** stays bold.\n\n";
+  const urlMessage = `${urlParagraph.repeat(20)}Finally see https://example.com/__in`;
+  const proseMessage = `${"This is a long paragraph of chat prose with **bold**, *italic* and snake_case words but no links at all.\n\n".repeat(30)}And **an open`;
+  const linksAndBold = `${"Read [the docs](https://example.com/_a) and https://example.com/_b then **more\n\n".repeat(20)}**open`;
+  const streamed = `${urlParagraph.repeat(30)}`.slice(0, 8000);
+  const prefixes: string[] = [];
+  for (let i = 1; i <= streamed.length; i += 1) {
+    prefixes.push(streamed.slice(0, i));
+  }
+
+  bench(
+    `chat message with many bare URLs (${urlMessage.length} chars)`,
+    () => {
+      remend(urlMessage);
+    },
+    { iterations: 200 }
+  );
+
+  bench(
+    `long prose without URLs (${proseMessage.length} chars)`,
+    () => {
+      remend(proseMessage);
+    },
+    { iterations: 200 }
+  );
+
+  bench(
+    `links, bare URLs and open bold (${linksAndBold.length} chars)`,
+    () => {
+      remend(linksAndBold);
+    },
+    { iterations: 200 }
+  );
+
+  bench(
+    `streaming every prefix of a ${streamed.length}-char message with URLs`,
+    () => {
+      for (const prefix of prefixes) {
+        remend(prefix);
+      }
+    },
+    { iterations: 3 }
+  );
+});
