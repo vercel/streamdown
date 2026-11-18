@@ -23,7 +23,7 @@ describe("portal target", () => {
     expect(getPortal).not.toHaveBeenCalled();
   });
 
-  it("should treat portal as an initializing prop", () => {
+  it("should apply a changed portal when the Markdown is unchanged", () => {
     const firstRoot = document.createElement("div");
     const secondRoot = document.createElement("div");
     document.body.append(firstRoot, secondRoot);
@@ -40,10 +40,10 @@ describe("portal target", () => {
     fireEvent.click(button);
 
     expect(
-      firstRoot.querySelector('[data-streamdown="table-fullscreen"]')
+      secondRoot.querySelector('[data-streamdown="table-fullscreen"]')
     ).toBeTruthy();
     expect(
-      secondRoot.querySelector('[data-streamdown="table-fullscreen"]')
+      firstRoot.querySelector('[data-streamdown="table-fullscreen"]')
     ).toBeNull();
 
     unmount();
