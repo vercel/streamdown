@@ -3,18 +3,23 @@ export interface TableData {
   rows: string[][];
 }
 
-const IMAGE_START = "\uE000";
-const IMAGE_END = "\uE001";
-
+// Alt text is inline Markdown, so it uses the same escapes as a table cell.
+// Newlines become spaces because <br> would not be plain alt text.
 const escapeImageAlt = (alt: string): string =>
-  alt.replace(/[\\[\]|]/g, (char) => `\\${char}`).replace(/\n/g, " ");
+  escapeMarkdownTableCell(alt.replace(/\r?\n/g, " "));
 
-// encodeURIComponent leaves ( and ) alone, but they would end the link early
-const imageSrcEscapes: Record<string, string> = { "(": "%28", ")": "%29" };
+// encodeURIComponent leaves ( and ) alone, but they would end the link early.
+// & is backslash-escaped instead of encoded so the query keeps its meaning
+// while sequences like &amp; are not decoded as character references.
+const imageSrcEscapes: Record<string, string> = {
+  "(": "%28",
+  ")": "%29",
+  "&": "\\&",
+};
 
 const encodeImageSrc = (src: string): string =>
   src.replace(
-    /[\s()|]/g,
+    /[\s()|\\<>&]/g,
     (char) => imageSrcEscapes[char] ?? encodeURIComponent(char)
   );
 
@@ -23,48 +28,78 @@ const encodeImageSrc = (src: string): string =>
 const imageToMarkdown = (img: Element): string =>
   `![${escapeImageAlt(img.getAttribute("alt") ?? "")}](${encodeImageSrc(img.getAttribute("src") ?? "")})`;
 
-// Remembers which `![alt](src)` strings in a TableData came from real <img>
-// elements (as opposed to literal text), so tableDataToMarkdown can keep them
-// unescaped without changing the shape of TableData.
+// Where a real <img> was serialised within a cell's text.
+interface CellImage {
+  markdown: string;
+  start: number;
+}
+
+// Remembers where the `![alt](src)` strings in a TableData came from real
+// <img> elements (as opposed to literal text), so tableDataToMarkdown can keep
+// them unescaped without changing the shape of TableData.
 interface TableImages {
-  headers: string[][];
-  rows: string[][][];
+  headers: CellImage[][];
+  rows: CellImage[][][];
 }
 const tableImages = new WeakMap<TableData, TableImages>();
 
-function extractCellText(node: Node, images: string[]): string {
+interface CellText {
+  images: CellImage[];
+  text: string;
+}
+
+function extractCellText(node: Node, cell: CellText): void {
   if (node.nodeType === Node.TEXT_NODE) {
-    return node.textContent ?? "";
+    cell.text += node.textContent ?? "";
+    return;
   }
 
   if (node.nodeType !== Node.ELEMENT_NODE) {
-    return "";
+    return;
   }
 
   const element = node as HTMLElement;
 
   if (element.tagName === "BR") {
-    return "\n";
+    cell.text += "\n";
+    return;
   }
 
   // UI-only fallback ("Image not available"), never part of the content
   if (element.getAttribute("data-streamdown") === "image-fallback") {
-    return "";
+    return;
   }
 
   if (element.tagName === "IMG") {
     if (!element.getAttribute("src")) {
-      return "";
+      return;
     }
     const markdown = imageToMarkdown(element);
-    images.push(markdown);
-    return markdown;
+    cell.images.push({ start: cell.text.length, markdown });
+    cell.text += markdown;
+    return;
   }
 
-  return Array.from(element.childNodes)
-    .map((child) => extractCellText(child, images))
-    .join("");
+  for (const child of element.childNodes) {
+    extractCellText(child, cell);
+  }
 }
+
+// Extracts a cell's trimmed text and the offsets of its images in that text.
+const extractCell = (element: Element): CellText => {
+  const cell: CellText = { text: "", images: [] };
+  extractCellText(element, cell);
+  const text = cell.text.trim();
+  // Images never start or end with whitespace, so trimming only shifts them
+  const offset = cell.text.length - cell.text.trimStart().length;
+  return {
+    text,
+    images: cell.images.map(({ start, markdown }) => ({
+      start: start - offset,
+      markdown,
+    })),
+  };
+};
 
 export const extractTableDataFromElement = (
   tableElement: HTMLElement
@@ -76,8 +111,8 @@ export const extractTableDataFromElement = (
   // Extract headers
   const headerCells = tableElement.querySelectorAll("thead th");
   for (const cell of headerCells) {
-    const images: string[] = [];
-    headers.push(extractCellText(cell, images).trim());
+    const { text, images } = extractCell(cell);
+    headers.push(text);
     imageMap.headers.push(images);
   }
 
@@ -85,12 +120,12 @@ export const extractTableDataFromElement = (
   const bodyRows = tableElement.querySelectorAll("tbody tr");
   for (const row of bodyRows) {
     const rowData: string[] = [];
-    const rowImages: string[][] = [];
+    const rowImages: CellImage[][] = [];
     // Row headers (<th scope="row">) are content too, so keep them in order
     const cells = row.querySelectorAll("th, td");
     for (const cell of cells) {
-      const images: string[] = [];
-      rowData.push(extractCellText(cell, images).trim());
+      const { text, images } = extractCell(cell);
+      rowData.push(text);
       rowImages.push(images);
     }
     rows.push(rowData);
@@ -294,35 +329,27 @@ export const escapeMarkdownTableCell = (cell: string): string => {
   return parts.join("");
 };
 
-const imagePlaceholderPattern = new RegExp(
-  `${IMAGE_START}(\\d+)${IMAGE_END}`,
-  "g"
-);
-
-// Escapes a cell while leaving the given real images (in order) as Markdown.
-const escapeCellKeepingImages = (cell: string, images: string[] = []) => {
+// Escapes a cell while leaving the given real images (by position) as Markdown.
+// Text around the images is escaped piece by piece, so no placeholder is needed.
+const escapeCellKeepingImages = (cell: string, images: CellImage[] = []) => {
   if (images.length === 0) {
     return escapeMarkdownTableCell(cell);
   }
 
-  let rest = cell;
-  let text = "";
-  const kept: string[] = [];
-  for (const image of images) {
-    const at = rest.indexOf(image);
-    if (at === -1) {
+  let result = "";
+  let position = 0;
+  for (const { start, markdown } of images) {
+    // Skip images whose position no longer matches (e.g. the cell was edited)
+    if (
+      start < position ||
+      cell.slice(start, start + markdown.length) !== markdown
+    ) {
       continue;
     }
-    text += `${rest.slice(0, at)}${IMAGE_START}${kept.length}${IMAGE_END}`;
-    kept.push(image);
-    rest = rest.slice(at + image.length);
+    result += escapeMarkdownTableCell(cell.slice(position, start)) + markdown;
+    position = start + markdown.length;
   }
-  text += rest;
-
-  return escapeMarkdownTableCell(text).replace(
-    imagePlaceholderPattern,
-    (match, index) => kept[Number(index)] ?? match
-  );
+  return result + escapeMarkdownTableCell(cell.slice(position));
 };
 
 export const tableDataToMarkdown = (data: TableData) => {

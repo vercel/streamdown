@@ -972,6 +972,78 @@ describe("Table Utils", () => {
       expect(markdown).toContain("!\\[lit\\]");
     });
 
+    it("should copy the real image when identical literal image text comes first", () => {
+      const table = buildTable(
+        '  ![a](https://example.com/b.png) <img alt="a" src="https://example.com/b.png">'
+      );
+
+      expect(toMarkdown(table)).toContain(
+        "| !\\[a\\](https\\://example.com/b.png) ![a](https://example.com/b.png) |"
+      );
+    });
+
+    it("should round-trip literal image text and an identical real image", () => {
+      const table = buildTable(
+        '![a](https://example.com/b.png) <img alt="a" src="https://example.com/b.png">'
+      );
+      const { container } = render(
+        createElement(Streamdown, { mode: "static" }, toMarkdown(table))
+      );
+      const cell = container.querySelector("tbody td") as HTMLElement;
+      const images = cell.querySelectorAll("img");
+
+      expect(images).toHaveLength(1);
+      expect(images[0].getAttribute("src")).toBe("https://example.com/b.png");
+      expect(cell.textContent).toContain("![a](https://example.com/b.png)");
+    });
+
+    it("should not put placeholders or markers in CSV and TSV", () => {
+      const data = extractTableDataFromElement(
+        buildTable(' x <img alt="a" src="https://example.com/b.png">')
+      );
+
+      expect(data.rows[0][0]).toBe("x ![a](https://example.com/b.png)");
+      expect(tableDataToCSV(data)).toBe(
+        "Logo,Name\nx ![a](https://example.com/b.png),Acme"
+      );
+      expect(tableDataToTSV(data)).toBe(
+        "Logo\tName\nx ![a](https://example.com/b.png)\tAcme"
+      );
+    });
+
+    it("should escape Markdown and character references in alt and src", () => {
+      const img = document.createElement("img");
+      img.setAttribute("alt", "*b* _i_ `c` ~s~ &amp; &copy; a\\b");
+      img.setAttribute(
+        "src",
+        "https://example.com/a_*b*.png?x=1&amp;y=2&copy\\z"
+      );
+      const table = buildTable(img.outerHTML);
+
+      expect(toMarkdown(table)).toContain(
+        "| ![\\*b\\* \\_i\\_ \\`c\\` \\~s\\~ &amp;amp; &amp;copy; a\\\\b](https://example.com/a_*b*.png?x=1\\&amp;y=2\\&copy%5Cz) |"
+      );
+    });
+
+    it.each([
+      ["*b* _i_ `c` ~s~ $x$ @me", "https://example.com/a_*b*.png"],
+      ["&amp; &lt; &copy; &#169;", "https://example.com/a.png?x=1&amp;y=2"],
+      ["a\\b [c] | d <e>", "https://example.com/a.png?c=&copy;&q=a\\b"],
+    ])("should round-trip alt %j and src %j through Streamdown", (alt, src) => {
+      const img = document.createElement("img");
+      img.setAttribute("alt", alt);
+      img.setAttribute("src", src);
+      const markdown = toMarkdown(buildTable(img.outerHTML));
+      const { container } = render(
+        createElement(Streamdown, { mode: "static" }, markdown)
+      );
+      const restored = container.querySelector("tbody img") as HTMLImageElement;
+
+      expect(restored.getAttribute("alt")).toBe(alt);
+      // Only the backslash changes: URL normalisation percent-encodes it anyway
+      expect(restored.getAttribute("src")).toBe(src.replaceAll("\\", "%5C"));
+    });
+
     it("should escape image-like text when the data was not extracted from the DOM", () => {
       expect(
         tableDataToMarkdown({
