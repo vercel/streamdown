@@ -186,6 +186,42 @@ describe("setext heading handling", () => {
     expect(remend("> quote\n-")).toBe("> quote\n-");
   });
 
+  it("should protect a dash or equals sign inside a block quote", () => {
+    // Without it, the quoted line flashes as a heading until the list item
+    // after the dash arrives
+    expect(remend("> Steps:\n> -")).toBe("> Steps:\n> -\u200B");
+    expect(remend("> Steps:\n>-")).toBe("> Steps:\n>-\u200B");
+    expect(remend("> Title\n> =")).toBe("> Title\n> =\u200B");
+    expect(remend("> > Nested:\n> > --")).toBe("> > Nested:\n> > --\u200B");
+    expect(remend("- item\n  > quote\n  > -")).toBe(
+      "- item\n  > quote\n  > -\u200B"
+    );
+  });
+
+  it("should NOT modify a quoted dash that starts a list item", () => {
+    expect(remend("> - a\n> -")).toBe("> - a\n> -");
+    expect(remend("> 1. a\n> 2. b\n> -")).toBe("> 1. a\n> 2. b\n> -");
+    // The quote starts the list, so a run that starts at 2 is still a list
+    expect(remend("Intro\n\n> 2. item\n> -")).toBe("Intro\n\n> 2. item\n> -");
+  });
+
+  it("should NOT modify a dash inside an unclosed code fence", () => {
+    // The lines are code, so a zero-width space would end up in the code
+    expect(remend("```\n> Steps:\n> -")).toBe("```\n> Steps:\n> -");
+    expect(remend("~~~md\n> Title\n> =")).toBe("~~~md\n> Title\n> =");
+    expect(remend("```sql\nSELECT 1;\n--")).toBe("```sql\nSELECT 1;\n--");
+    // A closed fence doesn't change anything after it
+    expect(remend("```\ncode\n```\n> Steps:\n> -")).toBe(
+      "```\ncode\n```\n> Steps:\n> -​"
+    );
+  });
+
+  it("should NOT modify a dash in another block quote", () => {
+    // A different number of markers puts the dash in another container
+    expect(remend("> quote\n> > -")).toBe("> quote\n> > -");
+    expect(remend("> > quote\n> -")).toBe("> > quote\n> -");
+  });
+
   it("should still protect a dash indented into the list item", () => {
     // Indented to the item's content, the dash would underline "a"
     expect(remend("- a\n  -")).toBe("- a\n  -\u200B");
