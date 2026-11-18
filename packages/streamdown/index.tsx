@@ -571,6 +571,55 @@ const sameComponents = (
   );
 };
 
+const MAX_SAME_VALUE_DEPTH = 4;
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  // React elements, memo/forwardRef components and similar tagged objects are
+  // compared by reference.
+  if ("$$typeof" in value) {
+    return false;
+  }
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
+};
+
+// Structural equality for config-like props (mermaid, controls, remend, icons,
+// allowedTags, plugin arrays) so inline literals like `mermaid={{ ... }}` or
+// `remarkPlugins={[[plugin, opts]]}` don't defeat memoization, while a real
+// change still re-renders. Functions, components and DOM nodes use identity.
+const sameValue = (
+  prev: unknown,
+  next: unknown,
+  depth = MAX_SAME_VALUE_DEPTH
+): boolean => {
+  if (Object.is(prev, next)) {
+    return true;
+  }
+  if (depth <= 0) {
+    return false;
+  }
+  if (Array.isArray(prev) && Array.isArray(next)) {
+    return (
+      prev.length === next.length &&
+      prev.every((item, index) => sameValue(item, next[index], depth - 1))
+    );
+  }
+  if (isPlainObject(prev) && isPlainObject(next)) {
+    const prevKeys = Object.keys(prev);
+    return (
+      prevKeys.length === Object.keys(next).length &&
+      prevKeys.every(
+        (key) =>
+          Object.hasOwn(next, key) && sameValue(prev[key], next[key], depth - 1)
+      )
+    );
+  }
+  return false;
+};
+
 export const Block = memo(
   // Destructure internal props to prevent them from leaking to the DOM
   ({
@@ -1316,6 +1365,19 @@ export const Streamdown = memo(
     prevProps.prefix === nextProps.prefix &&
     prevProps.dir === nextProps.dir &&
     prevProps.fallbackComponent === nextProps.fallbackComponent &&
+    prevProps.parseIncompleteMarkdown === nextProps.parseIncompleteMarkdown &&
+    prevProps.BlockComponent === nextProps.BlockComponent &&
+    prevProps.parseMarkdownIntoBlocksFn ===
+      nextProps.parseMarkdownIntoBlocksFn &&
+    prevProps.caret === nextProps.caret &&
+    prevProps.portal === nextProps.portal &&
+    sameValue(prevProps.mermaid, nextProps.mermaid) &&
+    sameValue(prevProps.controls, nextProps.controls) &&
+    sameValue(prevProps.remarkPlugins, nextProps.remarkPlugins) &&
+    sameValue(prevProps.rehypePlugins, nextProps.rehypePlugins) &&
+    sameValue(prevProps.allowedTags, nextProps.allowedTags) &&
+    sameValue(prevProps.icons, nextProps.icons) &&
+    sameValue(prevProps.remend, nextProps.remend) &&
     sameRootAttributes(prevProps, nextProps)
 );
 Streamdown.displayName = "Streamdown";

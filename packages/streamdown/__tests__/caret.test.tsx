@@ -378,7 +378,7 @@ const x = 1;
   });
 
   describe("Caret Memoization", () => {
-    it("should not re-render when only caret prop changes due to memoization", () => {
+    it("should update when only caret prop changes", () => {
       const { rerender, container } = render(
         <Streamdown caret="block" isAnimating={true}>
           Content
@@ -389,7 +389,7 @@ const x = 1;
       let style = (wrapper as HTMLElement)?.style;
       expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ▋"');
 
-      // Change only caret prop (component won't re-render due to memoization)
+      // Change only caret prop (caret is part of the memo comparison)
       rerender(
         <Streamdown caret="circle" isAnimating={true}>
           Content
@@ -398,8 +398,7 @@ const x = 1;
 
       wrapper = container.firstElementChild;
       style = (wrapper as HTMLElement)?.style;
-      // Still shows block caret because component is memoized and doesn't include caret in comparison
-      expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ▋"');
+      expect(style?.getPropertyValue("--streamdown-caret")).toBe('" ●"');
     });
 
     it("should memoize and update when isAnimating changes", () => {
