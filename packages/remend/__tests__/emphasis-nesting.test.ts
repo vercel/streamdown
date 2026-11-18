@@ -92,7 +92,7 @@ describe("emphasis nesting", () => {
     {
       name: "dash that starts the next list item",
       input: "_*\n- ",
-      expected: "_*\n-\u200B",
+      expected: "_*\n- \u200B",
     },
     {
       name: "bold before a dash rule",

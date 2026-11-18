@@ -778,6 +778,14 @@ export const Streamdown = memo(
       [allowedTags]
     );
 
+    const effectiveRemendOptions = useMemo(
+      () =>
+        remendOptions?.pendingInlineMarkers
+          ? { ...remendOptions, pendingInlineMarkers: isAnimating }
+          : remendOptions,
+      [remendOptions, isAnimating]
+    );
+
     // Apply remend to fix incomplete markdown BEFORE parsing into blocks
     // This prevents partial list items from being interpreted as setext headings
     // Tail-bounded repair state for this message. It is checked against each
@@ -799,11 +807,11 @@ export const Streamdown = memo(
           streamRepairRef.current = repairStream(
             streamRepairRef.current,
             children,
-            remendOptions
+            effectiveRemendOptions
           );
           result = streamRepairRef.current.repaired;
         } else {
-          result = remend(children, remendOptions);
+          result = remend(children, effectiveRemendOptions);
         }
       }
 
@@ -827,7 +835,7 @@ export const Streamdown = memo(
       children,
       mode,
       shouldParseIncompleteMarkdown,
-      remendOptions,
+      effectiveRemendOptions,
       allowedTagNames,
       literalTagContent,
       parseMarkdownIntoBlocksFn,
