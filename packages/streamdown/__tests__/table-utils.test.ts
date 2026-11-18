@@ -786,15 +786,30 @@ describe("Table Utils", () => {
       );
     });
 
-    it("should return empty string if no headers", () => {
+    it("should emit an empty header row when there are no headers", () => {
       const data: TableData = {
         headers: [],
         rows: [["Value1", "Value2"]],
       };
 
-      const result = tableDataToMarkdown(data);
+      expect(tableDataToMarkdown(data)).toBe(
+        "|  |  |\n| --- | --- |\n| Value1 | Value2 |"
+      );
+    });
 
-      expect(result).toBe("");
+    it("should size the empty header row to the widest row", () => {
+      const data: TableData = {
+        headers: [],
+        rows: [["a"], ["b", "c", "d"]],
+      };
+
+      expect(tableDataToMarkdown(data)).toBe(
+        "|  |  |  |\n| --- | --- | --- |\n| a |  |  |\n| b | c | d |"
+      );
+    });
+
+    it("should return empty string if there are no headers and no rows", () => {
+      expect(tableDataToMarkdown({ headers: [], rows: [] })).toBe("");
     });
 
     it("should handle empty rows", () => {
@@ -832,6 +847,302 @@ describe("Table Utils", () => {
       expect(result).toBe(
         "| Description |\n| --- |\n| Paragraph one.<br>Paragraph two. |"
       );
+    });
+  });
+
+  describe("table images", () => {
+    const buildTable = (cellHtml: string, headerHtml = "Logo") => {
+      const table = document.createElement("table");
+      table.innerHTML = `<thead><tr><th>${headerHtml}</th><th>Name</th></tr></thead><tbody><tr><td>${cellHtml}</td><td>Acme</td></tr></tbody>`;
+      return table;
+    };
+    const toMarkdown = (table: HTMLElement) =>
+      tableDataToMarkdown(extractTableDataFromElement(table));
+    const fallback =
+      '<span data-streamdown="image-fallback">Image not available</span>';
+
+    it("should copy a valid image as Markdown", () => {
+      const table = buildTable(
+        '<img alt="Acme logo" src="https://example.com/logo.png">'
+      );
+
+      expect(toMarkdown(table)).toBe(
+        "| Logo | Name |\n| --- | --- |\n| ![Acme logo](https://example.com/logo.png) | Acme |"
+      );
+    });
+
+    it("should copy a broken image as Markdown without the fallback text", () => {
+      const table = buildTable(
+        `<div><img alt="Acme logo" src="https://example.com/broken.png" class="hidden">${fallback}</div>`
+      );
+
+      const markdown = toMarkdown(table);
+
+      expect(markdown).toBe(
+        "| Logo | Name |\n| --- | --- |\n| ![Acme logo](https://example.com/broken.png) | Acme |"
+      );
+      expect(markdown).not.toContain("Image not available");
+    });
+
+    it("should not include the fallback text in the extracted data", () => {
+      const table = buildTable(
+        `<img alt="a" src="https://example.com/a.png">${fallback}`
+      );
+
+      expect(extractTableDataFromElement(table).rows[0][0]).toBe(
+        "![a](https://example.com/a.png)"
+      );
+    });
+
+    it("should keep the image when the src is malformed", () => {
+      const table = buildTable('<img alt="Bad" src="htp:/not a url">');
+
+      expect(toMarkdown(table)).toContain("| ![Bad](htp:/not%20a%20url) |");
+    });
+
+    it("should keep relative and data sources as images", () => {
+      const table = buildTable(
+        '<img alt="rel" src="/images/a_b.png"><img alt="data" src="data:image/png;base64,AAAA">'
+      );
+
+      expect(toMarkdown(table)).toContain(
+        "| ![rel](/images/a_b.png)![data](data:image/png;base64,AAAA) |"
+      );
+    });
+
+    it("should keep an image with empty alt text", () => {
+      const table = buildTable('<img src="https://example.com/a.png">');
+
+      expect(toMarkdown(table)).toContain("| ![](https://example.com/a.png) |");
+    });
+
+    it("should skip an image without a src", () => {
+      const table = buildTable('<img alt="nothing">');
+
+      expect(toMarkdown(table)).toContain("|  | Acme |");
+    });
+
+    it("should escape special characters in alt and src", () => {
+      const table = buildTable(
+        '<img alt="a [b] | c" src="https://example.com/a (1).png">'
+      );
+
+      expect(toMarkdown(table)).toContain(
+        "| ![a \\[b\\] \\| c](https://example.com/a%20%281%29.png) |"
+      );
+    });
+
+    it("should keep images next to escaped text in the same cell", () => {
+      const table = buildTable(
+        '*note* <img alt="x" src="https://example.com/x.png"> a|b'
+      );
+
+      expect(toMarkdown(table)).toContain(
+        "| \\*note\\* ![x](https://example.com/x.png) a\\|b |"
+      );
+    });
+
+    it("should copy images in header cells", () => {
+      const table = buildTable(
+        "text",
+        '<img alt="H" src="https://example.com/h.png">'
+      );
+
+      expect(toMarkdown(table)).toContain(
+        "| ![H](https://example.com/h.png) | Name |"
+      );
+    });
+
+    it("should keep literal image-like text escaped", () => {
+      const table = buildTable("![lit](https://example.com/lit.png)");
+
+      expect(toMarkdown(table)).toContain(
+        "| !\\[lit\\](https\\://example.com/lit.png) |"
+      );
+    });
+
+    it("should copy only the real image when literal image text is also present", () => {
+      const table = buildTable(
+        '![lit](https://example.com/lit.png)<img alt="real" src="https://example.com/real.png">'
+      );
+
+      const markdown = toMarkdown(table);
+
+      expect(markdown).toContain("![real](https://example.com/real.png)");
+      expect(markdown).toContain("!\\[lit\\]");
+    });
+
+    it("should copy the real image when identical literal image text comes first", () => {
+      const table = buildTable(
+        '  ![a](https://example.com/b.png) <img alt="a" src="https://example.com/b.png">'
+      );
+
+      expect(toMarkdown(table)).toContain(
+        "| !\\[a\\](https\\://example.com/b.png) ![a](https://example.com/b.png) |"
+      );
+    });
+
+    it("should round-trip literal image text and an identical real image", () => {
+      const table = buildTable(
+        '![a](https://example.com/b.png) <img alt="a" src="https://example.com/b.png">'
+      );
+      const { container } = render(
+        createElement(Streamdown, { mode: "static" }, toMarkdown(table))
+      );
+      const cell = container.querySelector("tbody td") as HTMLElement;
+      const images = cell.querySelectorAll("img");
+
+      expect(images).toHaveLength(1);
+      expect(images[0].getAttribute("src")).toBe("https://example.com/b.png");
+      expect(cell.textContent).toContain("![a](https://example.com/b.png)");
+    });
+
+    it("should not put placeholders or markers in CSV and TSV", () => {
+      const data = extractTableDataFromElement(
+        buildTable(' x <img alt="a" src="https://example.com/b.png">')
+      );
+
+      expect(data.rows[0][0]).toBe("x ![a](https://example.com/b.png)");
+      expect(tableDataToCSV(data)).toBe(
+        "Logo,Name\nx ![a](https://example.com/b.png),Acme"
+      );
+      expect(tableDataToTSV(data)).toBe(
+        "Logo\tName\nx ![a](https://example.com/b.png)\tAcme"
+      );
+    });
+
+    it("should escape Markdown and character references in alt and src", () => {
+      const img = document.createElement("img");
+      img.setAttribute("alt", "*b* _i_ `c` ~s~ &amp; &copy; a\\b");
+      img.setAttribute(
+        "src",
+        "https://example.com/a_*b*.png?x=1&amp;y=2&copy\\z"
+      );
+      const table = buildTable(img.outerHTML);
+
+      expect(toMarkdown(table)).toContain(
+        "| ![\\*b\\* \\_i\\_ \\`c\\` \\~s\\~ &amp;amp; &amp;copy; a\\\\b](https://example.com/a_*b*.png?x=1\\&amp;y=2\\&copy%5Cz) |"
+      );
+    });
+
+    it.each([
+      ["*b* _i_ `c` ~s~ $x$ @me", "https://example.com/a_*b*.png"],
+      ["&amp; &lt; &copy; &#169;", "https://example.com/a.png?x=1&amp;y=2"],
+      ["a\\b [c] | d <e>", "https://example.com/a.png?c=&copy;&q=a\\b"],
+    ])("should round-trip alt %j and src %j through Streamdown", (alt, src) => {
+      const img = document.createElement("img");
+      img.setAttribute("alt", alt);
+      img.setAttribute("src", src);
+      const markdown = toMarkdown(buildTable(img.outerHTML));
+      const { container } = render(
+        createElement(Streamdown, { mode: "static" }, markdown)
+      );
+      const restored = container.querySelector("tbody img") as HTMLImageElement;
+
+      expect(restored.getAttribute("alt")).toBe(alt);
+      // Only the backslash changes: URL normalisation percent-encodes it anyway
+      expect(restored.getAttribute("src")).toBe(src.replaceAll("\\", "%5C"));
+    });
+
+    it("should escape image-like text when the data was not extracted from the DOM", () => {
+      expect(
+        tableDataToMarkdown({
+          headers: ["A"],
+          rows: [["![x](https://example.com/x.png)"]],
+        })
+      ).toContain("!\\[x\\]");
+    });
+
+    it("should copy broken images rendered by Streamdown's image component", () => {
+      const { container } = render(
+        createElement(
+          Streamdown,
+          null,
+          "| Logo | Name |\n| --- | --- |\n| ![Acme logo](https://example.com/hfbhb.png) | not working |"
+        )
+      );
+      const img = container.querySelector("table img") as HTMLImageElement;
+      fireEvent.error(img);
+
+      const table = container.querySelector("table") as HTMLTableElement;
+      expect(table.textContent).toContain("Image not available");
+      expect(toMarkdown(table)).toBe(
+        "| Logo | Name |\n| --- | --- |\n| ![Acme logo](https://example.com/hfbhb.png) | not working |"
+      );
+    });
+  });
+
+  describe("tables with row headers and no header row", () => {
+    const htmlTable =
+      "<table><tbody><tr><th>Revenue</th><td>100</td></tr><tr><th>Costs</th><td>40</td></tr></tbody></table>";
+    const buildTable = (html: string) => {
+      const container = document.createElement("div");
+      container.innerHTML = html;
+      return container.querySelector("table") as HTMLTableElement;
+    };
+
+    it("should keep <th> cells in body rows", () => {
+      expect(extractTableDataFromElement(buildTable(htmlTable))).toEqual({
+        headers: [],
+        rows: [
+          ["Revenue", "100"],
+          ["Costs", "40"],
+        ],
+      });
+    });
+
+    it("should copy a table without a header row as valid Markdown", () => {
+      const table = buildTable(htmlTable);
+
+      expect(tableDataToMarkdown(extractTableDataFromElement(table))).toBe(
+        "|  |  |\n| --- | --- |\n| Revenue | 100 |\n| Costs | 40 |"
+      );
+    });
+
+    it("should keep every cell in CSV and TSV", () => {
+      const data = extractTableDataFromElement(buildTable(htmlTable));
+
+      expect(tableDataToCSV(data)).toBe("Revenue,100\nCosts,40");
+      expect(tableDataToTSV(data)).toBe("Revenue\t100\nCosts\t40");
+    });
+
+    it("should keep row headers when the table also has a thead", () => {
+      const table = buildTable(
+        "<table><thead><tr><th>Item</th><th>Amount</th></tr></thead><tbody><tr><th>Revenue</th><td>100</td></tr></tbody></table>"
+      );
+
+      expect(tableDataToMarkdown(extractTableDataFromElement(table))).toBe(
+        "| Item | Amount |\n| --- | --- |\n| Revenue | 100 |"
+      );
+    });
+
+    it("should keep images in row headers", () => {
+      const table = buildTable(
+        '<table><tbody><tr><th><img alt="Acme" src="https://example.com/a.png"></th><td>1</td></tr></tbody></table>'
+      );
+
+      expect(tableDataToMarkdown(extractTableDataFromElement(table))).toBe(
+        "|  |  |\n| --- | --- |\n| ![Acme](https://example.com/a.png) | 1 |"
+      );
+    });
+
+    it("should produce a table that renders back with the same cells", () => {
+      const markdown = tableDataToMarkdown(
+        extractTableDataFromElement(buildTable(htmlTable))
+      );
+      const { container } = render(
+        Markdown({ children: markdown, remarkPlugins: [remarkGfm] })
+      );
+      const restored = container.querySelector("table") as HTMLTableElement;
+
+      expect(
+        [...restored.querySelectorAll("tbody tr")].map((row) =>
+          [...row.querySelectorAll("td")].map((cell) => cell.textContent)
+        )
+      ).toEqual([
+        ["Revenue", "100"],
+        ["Costs", "40"],
+      ]);
     });
   });
 });
