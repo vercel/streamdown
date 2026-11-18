@@ -54,9 +54,9 @@ Regular paragraph text with **bold**, *italic*, ***bold italic***, and ~~striket
 
 ## Links and Images
 
-Visit [Streamdown on GitHub](https://github.com/haydenbleasel/streamdown) or paste a raw URL like https://streamdown.dev and it becomes a link automatically.
+Visit [Streamdown on GitHub](https://github.com/vercel/streamdown) or paste a raw URL like https://streamdown.ai and it becomes a link automatically.
 
-![Streamdown logo](https://streamdown.dev/og.png)
+![Vercel logo](https://vercel.com/geist/brands/assets/vercel-logotype-white.svg)
 
 ---
 
