@@ -1,5 +1,12 @@
 # streamdown
 
+## 2.8.1
+
+### Patch Changes
+
+- b266322: Fix table copy and download losing content: images are copied as Markdown (`![alt](src)`) whether or not they loaded, body-row `<th>` cells are kept, and tables without a header row copy with an empty header row instead of an empty string. Image alt text and sources are escaped so they render back unchanged, and literal image syntax in a cell is never mistaken for a real image.
+- 147f339: Mermaid diagrams no longer zoom on a plain mouse wheel when their zoom controls are hidden (`controls.mermaid.panZoom: false`), so the page scrolls past them. Ctrl + wheel and trackpad pinch still zoom.
+
 ## 2.8.0
 
 ### Minor Changes
