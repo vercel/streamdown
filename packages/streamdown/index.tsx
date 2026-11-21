@@ -410,36 +410,77 @@ interface HastNode {
   type?: string;
 }
 
-/** Normalize sanitized ids and keep fragment links aligned with their targets. */
-function rehypeUndoubleClobberPrefix() {
-  const doubled = `${CLOBBER_PREFIX}${CLOBBER_PREFIX}`;
-  const visit = (node: HastNode) => {
-    if (
-      node.type === "element" &&
-      typeof node.properties?.id === "string" &&
-      node.properties.id.startsWith(doubled)
-    ) {
-      node.properties.id = node.properties.id.slice(CLOBBER_PREFIX.length);
+interface UndoubleClobberPrefixOptions {
+  /**
+   * Raw HTML ids declared elsewhere in the document. Streaming renders each
+   * block separately, so a link can point at an id that lives in another block.
+   */
+  ids?: readonly string[];
+}
+
+const RAW_HTML_ID_PATTERN = /\sid\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/gi;
+
+/** Collect the ids declared by raw HTML attributes in a markdown document. */
+function collectRawHtmlIds(markdown: string): string[] {
+  if (!markdown.includes("id")) {
+    return [];
+  }
+  const ids = new Set<string>();
+  for (const match of markdown.matchAll(RAW_HTML_ID_PATTERN)) {
+    const id = match[1] ?? match[2] ?? match[3];
+    if (id) {
+      ids.add(id);
     }
-    // Fragment targets are sanitized too. Rewrite even when the target is in
-    // another streaming block, but leave already-prefixed footnote links alone.
+  }
+  return [...ids].sort();
+}
+
+/**
+ * Normalize sanitized ids and keep fragment links aligned with their targets.
+ * Only links whose target was clobbered are rewritten; every other `#` link
+ * (hash routes, anchors to ids the host app owns) is left as written.
+ */
+function rehypeUndoubleClobberPrefix(options?: UndoubleClobberPrefixOptions) {
+  const doubled = `${CLOBBER_PREFIX}${CLOBBER_PREFIX}`;
+  const visit = (node: HastNode, targets: Set<string>) => {
+    if (node.type === "element" && typeof node.properties?.id === "string") {
+      if (node.properties.id.startsWith(doubled)) {
+        node.properties.id = node.properties.id.slice(CLOBBER_PREFIX.length);
+      }
+      if (node.properties.id.startsWith(CLOBBER_PREFIX)) {
+        targets.add(node.properties.id.slice(CLOBBER_PREFIX.length));
+      }
+    }
+    if (Array.isArray(node.children)) {
+      for (const child of node.children) {
+        visit(child, targets);
+      }
+    }
+  };
+  const rewrite = (node: HastNode, targets: Set<string>) => {
+    // Fragment targets are sanitized too. Rewrite only when the target id was
+    // clobbered (in this tree, or in another streaming block). Links that are
+    // already prefixed, such as footnote refs, are left alone.
     if (
       node.type === "element" &&
       typeof node.properties?.href === "string" &&
       node.properties.href.startsWith("#") &&
       node.properties.href.length > 1 &&
-      !node.properties.href.startsWith(`#${CLOBBER_PREFIX}`)
+      !node.properties.href.startsWith(`#${CLOBBER_PREFIX}`) &&
+      targets.has(node.properties.href.slice(1))
     ) {
       node.properties.href = `#${CLOBBER_PREFIX}${node.properties.href.slice(1)}`;
     }
     if (Array.isArray(node.children)) {
       for (const child of node.children) {
-        visit(child);
+        rewrite(child, targets);
       }
     }
   };
   return (tree: HastNode) => {
-    visit(tree);
+    const targets = new Set<string>(options?.ids);
+    visit(tree, targets);
+    rewrite(tree, targets);
   };
 }
 
@@ -1079,6 +1120,20 @@ export const Streamdown = memo(
       return result;
     }, [remarkPlugins, plugins?.math, plugins?.cjk, disableAutolinkProtocols]);
 
+    // Raw HTML ids are clobbered per block; share them document-wide so links
+    // in one streaming block still reach targets declared in another.
+    const rawHtmlIdsKey = useMemo(
+      () => collectRawHtmlIds(processedChildren).join("\n"),
+      [processedChildren]
+    );
+    const undoubleClobberPrefixPlugin = useMemo<Pluggable>(
+      () =>
+        rawHtmlIdsKey
+          ? [rehypeUndoubleClobberPrefix, { ids: rawHtmlIdsKey.split("\n") }]
+          : defaultRehypePlugins.undoubleClobberPrefix,
+      [rawHtmlIdsKey]
+    );
+
     const mergedRehypePlugins = useMemo(() => {
       let result = rehypePlugins;
 
@@ -1108,6 +1163,17 @@ export const Streamdown = memo(
         ];
       }
 
+      if (
+        undoubleClobberPrefixPlugin !==
+        defaultRehypePlugins.undoubleClobberPrefix
+      ) {
+        result = result.map((plugin) =>
+          plugin === defaultRehypePlugins.undoubleClobberPrefix
+            ? undoubleClobberPrefixPlugin
+            : plugin
+        );
+      }
+
       if (literalTagContent && literalTagContent.length > 0) {
         result = [...result, [rehypeLiteralTagContent, literalTagContent]];
       }
@@ -1131,6 +1197,7 @@ export const Streamdown = memo(
       literalTagContent,
       dir,
       mode,
+      undoubleClobberPrefixPlugin,
     ]);
 
     const style = useMemo(

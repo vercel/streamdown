@@ -24,6 +24,38 @@ describe("Sanitized fragment links", () => {
     ]);
   });
 
+  for (const mode of ["static", "streaming"] as const) {
+    it(`leaves hash-route and same-page links without a clobbered target alone in ${mode} mode`, () => {
+      const { container } = render(
+        <Streamdown linkSafety={{ enabled: false }} mode={mode}>
+          {"[a](#/tools/x) and [b](#section)"}
+        </Streamdown>
+      );
+
+      expect(
+        Array.from(container.querySelectorAll("a"), (link) =>
+          link.getAttribute("href")
+        )
+      ).toEqual(["#/tools/x", "#section"]);
+    });
+  }
+
+  it("only rewrites links whose raw HTML target exists", () => {
+    const { container } = render(
+      <Streamdown linkSafety={{ enabled: false }} mode="streaming">
+        {
+          '<div id="details">Details</div>\n\n[Go](#details) [Route](#/tools/x) [Other](#section)'
+        }
+      </Streamdown>
+    );
+
+    expect(
+      Array.from(container.querySelectorAll("a"), (link) =>
+        link.getAttribute("href")
+      )
+    ).toEqual(["#user-content-details", "#/tools/x", "#section"]);
+  });
+
   it("keeps footnote references and backrefs aligned", () => {
     const { container } = render(
       <Streamdown linkSafety={{ enabled: false }} mode="static">
