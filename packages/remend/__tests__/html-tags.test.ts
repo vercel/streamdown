@@ -2,6 +2,20 @@ import { describe, expect, it } from "vitest";
 import remend from "../src";
 
 describe("incomplete HTML tag stripping", () => {
+  it("should preserve escaped tag openers", () => {
+    expect(remend("Hello \\<div")).toBe("Hello \\<div");
+    expect(remend("Hello \\</div")).toBe("Hello \\</div");
+    expect(remend("Hello \\\\\\<custom")).toBe("Hello \\\\\\<custom");
+  });
+
+  it("should strip tags after an escaped backslash", () => {
+    expect(remend("Hello \\\\<div")).toBe("Hello \\\\");
+  });
+
+  it("should find a real tag after an escaped opener", () => {
+    expect(remend("Hello \\<literal <div")).toBe("Hello \\<literal");
+  });
+
   it("should strip incomplete opening tags at end", () => {
     expect(remend("Hello <div")).toBe("Hello");
     expect(remend("Hello <custom")).toBe("Hello");

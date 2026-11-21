@@ -1,4 +1,5 @@
 import { isInsideCodeBlock } from "./code-block-utils";
+import { isEscaped } from "./scan";
 import { isWithinMathBlock } from "./utils";
 
 // Matches an incomplete HTML tag at the end of the string.
@@ -30,7 +31,11 @@ export const handleIncompleteHtmlTag = (text: string): string => {
   const checkMath = hasMathDelimiters(text);
 
   for (let index = match.index; index < text.length; index += 1) {
-    if (text[index] !== "<" || !startsTag(text, index)) {
+    if (
+      text[index] !== "<" ||
+      !startsTag(text, index) ||
+      isEscaped(text, index)
+    ) {
       continue;
     }
 
