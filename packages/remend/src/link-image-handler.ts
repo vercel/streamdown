@@ -1,7 +1,7 @@
 import { isInsideCodeBlock } from "./code-block-utils";
 import { findInlineBlockStart } from "./inline-block";
 import { handleIncompleteInlineCode } from "./inline-code-handler";
-import { getScan, isCompleteSpanAt, isFenceAt } from "./scan";
+import { getScan, isCompleteSpanAt, isEscaped, isFenceAt } from "./scan";
 import {
   findMatchingClosingBracket,
   findMatchingOpeningBracket,
@@ -69,7 +69,7 @@ const findFirstIncompleteBracket = (
   blockStart: number
 ): number => {
   for (let j = blockStart; j < maxPos; j++) {
-    if (text[j] === "[" && !isInsideCodeBlock(text, j)) {
+    if (text[j] === "[" && !isEscaped(text, j) && !isInsideCodeBlock(text, j)) {
       // Skip if it's an image
       if (j > 0 && text[j - 1] === "!") {
         continue;
@@ -164,6 +164,14 @@ const opensCompleteLink = (text: string, open: number): boolean => {
   );
 };
 
+const findLastUrlOpener = (text: string): number => {
+  let index = text.lastIndexOf("](");
+  while (index > 0 && isEscaped(text, index)) {
+    index = text.lastIndexOf("](", index - 1);
+  }
+  return index;
+};
+
 // One healing step over the trailing incomplete link or image, if any
 const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
   // Look for patterns like [text]( or ![text]( at the end of text
@@ -176,7 +184,7 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
   const blockStart = findInlineBlockStart(scan);
 
   // Start from the end and look for ]( pattern
-  const lastParenIndex = text.lastIndexOf("](");
+  const lastParenIndex = findLastUrlOpener(text);
   if (
     lastParenIndex >= blockStart &&
     !isInsideCodeBlock(text, lastParenIndex)
@@ -200,8 +208,10 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
     i >= blockStart;
     i = i === 0 ? -1 : text.lastIndexOf("[", i - 1)
   ) {
+    const escaped = isEscaped(text, i);
     // An unclosed backtick renders as text, so a link after one still counts
     const isLink = !(
+      escaped ||
       (i > 0 && text[i - 1] === "!") ||
       isFenceAt(scan, i) ||
       isCompleteSpanAt(scan, i)
@@ -214,7 +224,7 @@ const healTrailingLinkOrImage = (text: string, linkMode: LinkMode): string => {
     }
     const closesHere = isLink && opensCompleteLink(text, i);
     enclosesLink ||= closesHere;
-    if (!(closesHere || isInsideCodeBlock(text, i))) {
+    if (!(escaped || closesHere || isInsideCodeBlock(text, i))) {
       const result = handleIncompleteText(text, i, linkMode, blockStart);
       if (result !== null) {
         return result;

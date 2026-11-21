@@ -5,6 +5,7 @@ import {
   inLinkUrlAt,
   inMathAt,
   isCompleteSpanAt,
+  isEscaped,
   isFenceAt,
 } from "./scan";
 
@@ -49,9 +50,9 @@ export const findMatchingOpeningBracket = (
     if (isCompleteSpanAt(scan, i)) {
       continue;
     }
-    if (text[i] === "]") {
+    if (text[i] === "]" && !isEscaped(text, i)) {
       depth += 1;
-    } else if (text[i] === "[") {
+    } else if (text[i] === "[" && !isEscaped(text, i)) {
       depth -= 1;
       if (depth === 0) {
         return i;
@@ -73,9 +74,9 @@ export const findMatchingClosingBracket = (
     if (isCompleteSpanAt(scan, i)) {
       continue;
     }
-    if (text[i] === "[") {
+    if (text[i] === "[" && !isEscaped(text, i)) {
       depth += 1;
-    } else if (text[i] === "]") {
+    } else if (text[i] === "]" && !isEscaped(text, i)) {
       depth -= 1;
       if (depth === 0) {
         return i;

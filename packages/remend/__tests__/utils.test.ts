@@ -30,6 +30,14 @@ describe("isWordChar", () => {
 });
 
 describe("findMatchingOpeningBracket", () => {
+  it.each([
+    "a \\] b",
+    "a \\[ b",
+  ])("should ignore escaped brackets in %s", (label) => {
+    const text = `[${label}]`;
+    expect(findMatchingOpeningBracket(text, text.length - 1)).toBe(0);
+  });
+
   it("should return -1 when no matching opening bracket exists", () => {
     const text = "some text]";
     expect(findMatchingOpeningBracket(text, 9)).toBe(-1);
@@ -48,6 +56,14 @@ describe("findMatchingOpeningBracket", () => {
 });
 
 describe("findMatchingClosingBracket", () => {
+  it.each([
+    "a \\] b",
+    "a \\[ b",
+  ])("should ignore escaped brackets in %s", (label) => {
+    const text = `[${label}]`;
+    expect(findMatchingClosingBracket(text, 0)).toBe(text.length - 1);
+  });
+
   it("should return -1 when no matching closing bracket exists", () => {
     const text = "[some text";
     expect(findMatchingClosingBracket(text, 0)).toBe(-1);

@@ -2,6 +2,66 @@ import { describe, expect, it } from "vitest";
 import remend from "../src";
 
 describe("link handling", () => {
+  it.each([
+    "protocol",
+    "text-only",
+  ] as const)("should match link labels around escaped brackets in %s mode", (linkMode) => {
+    for (const label of ["a \\] b", "a \\[ b"]) {
+      const input = `[${label}](https://exa`;
+      const expected =
+        linkMode === "protocol"
+          ? `[${label}](streamdown:incomplete-link)`
+          : label;
+      expect(remend(input, { linkMode })).toBe(expected);
+    }
+  });
+
+  it("should preserve complete links with escaped brackets", () => {
+    for (const label of ["a \\] b", "a \\[ b"]) {
+      const text = `[${label}](https://example.com)`;
+      expect(remend(text)).toBe(text);
+    }
+  });
+
+  it("should treat brackets after escaped backslashes as delimiters", () => {
+    expect(remend("\\\\[label")).toBe(
+      "\\\\[label](streamdown:incomplete-link)"
+    );
+    expect(remend("[label\\\\](https://exa")).toBe(
+      "[label\\\\](streamdown:incomplete-link)"
+    );
+  });
+
+  it("should not treat an escaped closing bracket as a URL opener", () => {
+    expect(remend("[label\\](partial")).toBe(
+      "[label\\](partial](streamdown:incomplete-link)"
+    );
+  });
+
+  it("should remove the real opening bracket in text-only mode", () => {
+    expect(remend("[outer \\[ inner", { linkMode: "text-only" })).toBe(
+      "outer \\[ inner"
+    );
+  });
+
+  it("should match image labels around escaped brackets", () => {
+    expect(remend("![a \\] b](https://exa")).toBe(
+      "![a \\] b](streamdown:incomplete-image)"
+    );
+  });
+
+  it("should close a label containing an escaped closing bracket", () => {
+    expect(remend("[a \\] b")).toBe("[a \\] b](streamdown:incomplete-link)");
+  });
+
+  it.each([
+    "protocol",
+    "text-only",
+  ] as const)("should preserve escaped link openers in %s mode", (linkMode) => {
+    const text = "Text \\[literal";
+    expect(remend(text, { linkMode })).toBe(text);
+  });
+
   it("should preserve incomplete links with special marker", () => {
     expect(remend("Text with [incomplete link")).toBe(
       "Text with [incomplete link](streamdown:incomplete-link)"
