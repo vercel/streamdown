@@ -56,6 +56,36 @@ describe("Sanitized fragment links", () => {
     ).toEqual(["#user-content-details", "#/tools/x", "#section"]);
   });
 
+  it("rewrites links to non-ASCII raw HTML ids across streaming blocks", () => {
+    const { container } = render(
+      <Streamdown linkSafety={{ enabled: false }} mode="streaming">
+        {'<div id="café">Details</div>\n\n[Go](#café) [Other](#cafe)'}
+      </Streamdown>
+    );
+
+    expect(
+      Array.from(container.querySelectorAll("a"), (link) =>
+        link.getAttribute("href")
+      )
+    ).toEqual(["#user-content-caf%C3%A9", "#cafe"]);
+  });
+
+  it("decodes character references in raw HTML ids across streaming blocks", () => {
+    const { container } = render(
+      <Streamdown linkSafety={{ enabled: false }} mode="streaming">
+        {
+          '<div id="a&amp;b">One</div>\n\n<div id="caf&#233;">Two</div>\n\n[One](#a&b) [Two](#café)'
+        }
+      </Streamdown>
+    );
+
+    expect(
+      Array.from(container.querySelectorAll("a"), (link) =>
+        link.getAttribute("href")
+      )
+    ).toEqual(["#user-content-a&b", "#user-content-caf%C3%A9"]);
+  });
+
   it("keeps footnote references and backrefs aligned", () => {
     const { container } = render(
       <Streamdown linkSafety={{ enabled: false }} mode="static">

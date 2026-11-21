@@ -1,5 +1,6 @@
 "use client";
 
+import { decodeNamedCharacterReference } from "decode-named-character-reference";
 import {
   type AriaAttributes,
   type ComponentProps,
@@ -419,6 +420,33 @@ interface UndoubleClobberPrefixOptions {
 }
 
 const RAW_HTML_ID_PATTERN = /\sid\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/gi;
+const CHARACTER_REFERENCE_PATTERN =
+  /&(?:#(\d+)|#x([\da-f]+)|([a-z][\da-z]*));/gi;
+
+/** Decode HTML character references (`&amp;`, `&#233;`, `&#xe9;`) in an attribute value. */
+function decodeCharacterReferences(value: string): string {
+  return value.replace(
+    CHARACTER_REFERENCE_PATTERN,
+    (reference, decimal, hex, name) => {
+      if (name) {
+        return decodeNamedCharacterReference(name) || reference;
+      }
+      const codePoint = Number.parseInt(decimal ?? hex, decimal ? 10 : 16);
+      return codePoint > 0 && codePoint <= 0x10_ff_ff
+        ? String.fromCodePoint(codePoint)
+        : reference;
+    }
+  );
+}
+
+/** Decode a percent-encoded URL fragment, falling back to the raw value. */
+function decodeFragment(fragment: string): string {
+  try {
+    return decodeURIComponent(fragment);
+  } catch {
+    return fragment;
+  }
+}
 
 /** Collect the ids declared by raw HTML attributes in a markdown document. */
 function collectRawHtmlIds(markdown: string): string[] {
@@ -429,7 +457,7 @@ function collectRawHtmlIds(markdown: string): string[] {
   for (const match of markdown.matchAll(RAW_HTML_ID_PATTERN)) {
     const id = match[1] ?? match[2] ?? match[3];
     if (id) {
-      ids.add(id);
+      ids.add(decodeCharacterReferences(id));
     }
   }
   return [...ids].sort();
@@ -443,12 +471,14 @@ function collectRawHtmlIds(markdown: string): string[] {
 function rehypeUndoubleClobberPrefix(options?: UndoubleClobberPrefixOptions) {
   const doubled = `${CLOBBER_PREFIX}${CLOBBER_PREFIX}`;
   const visit = (node: HastNode, targets: Set<string>) => {
-    if (node.type === "element" && typeof node.properties?.id === "string") {
-      if (node.properties.id.startsWith(doubled)) {
-        node.properties.id = node.properties.id.slice(CLOBBER_PREFIX.length);
-      }
-      if (node.properties.id.startsWith(CLOBBER_PREFIX)) {
-        targets.add(node.properties.id.slice(CLOBBER_PREFIX.length));
+    const properties = node.type === "element" ? node.properties : undefined;
+    if (typeof properties?.id === "string") {
+      const id = properties.id.startsWith(doubled)
+        ? properties.id.slice(CLOBBER_PREFIX.length)
+        : properties.id;
+      properties.id = id;
+      if (id.startsWith(CLOBBER_PREFIX)) {
+        targets.add(id.slice(CLOBBER_PREFIX.length));
       }
     }
     if (Array.isArray(node.children)) {
@@ -467,7 +497,8 @@ function rehypeUndoubleClobberPrefix(options?: UndoubleClobberPrefixOptions) {
       node.properties.href.startsWith("#") &&
       node.properties.href.length > 1 &&
       !node.properties.href.startsWith(`#${CLOBBER_PREFIX}`) &&
-      targets.has(node.properties.href.slice(1))
+      // Hrefs are percent-encoded (non-ASCII ids), while ids are not.
+      targets.has(decodeFragment(node.properties.href.slice(1)))
     ) {
       node.properties.href = `#${CLOBBER_PREFIX}${node.properties.href.slice(1)}`;
     }
