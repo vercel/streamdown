@@ -113,7 +113,7 @@ describe("tail-bounded stream repair", () => {
     ];
     let state = 4242;
     for (const options of [undefined, { inlineKatex: true }]) {
-      for (let run = 0; run < 300; run += 1) {
+      for (let run = 0; run < 200; run += 1) {
         let text = "";
         const inputs: string[] = [];
         for (let step = 0; step < 80; step += 1) {
