@@ -1185,6 +1185,46 @@ describe("Table Utils", () => {
       expect(restored.getAttribute("src")).toBe(src.replaceAll("\\", "%5C"));
     });
 
+    it.each([
+      "\r",
+      "\n",
+      "\r\n",
+    ])("should keep image alt line endings %j inside table cells", (lineEnding) => {
+      const table = buildTable(
+        '<img src="https://example.com/body.png">',
+        '<img src="https://example.com/header.png">'
+      );
+      for (const img of table.querySelectorAll("img")) {
+        // Set the DOM attribute directly: HTML parsing normalizes bare CRs.
+        img.setAttribute(
+          "alt",
+          `logo${lineEnding}${lineEnding}# Deceptive heading${lineEnding}https://example.com/deceptive`
+        );
+      }
+
+      const markdown = toMarkdown(table);
+      const { container } = render(
+        createElement(Streamdown, { mode: "static" }, markdown)
+      );
+      const markedContainer = document.createElement("div");
+      markedContainer.innerHTML = marked.parse(markdown, { async: false });
+
+      for (const output of [container, markedContainer]) {
+        expect(output.querySelectorAll("table")).toHaveLength(1);
+        expect(output.querySelectorAll("tr")).toHaveLength(2);
+        expect(output.querySelectorAll("th, td")).toHaveLength(4);
+        expect(output.querySelectorAll("th img, td img")).toHaveLength(2);
+        for (const img of output.querySelectorAll("img")) {
+          expect(img.getAttribute("alt")).toBe(
+            "logo  # Deceptive heading https://example.com/deceptive"
+          );
+        }
+        expect(output.querySelector("h1, a")).toBeNull();
+      }
+      expect(markdown).not.toContain("\r");
+      expect(markdown.split("\n")).toHaveLength(3);
+    });
+
     it("should escape image-like text when the data was not extracted from the DOM", () => {
       expect(
         tableDataToMarkdown({

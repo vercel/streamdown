@@ -6,7 +6,7 @@ export interface TableData {
 // Alt text is inline Markdown, so it uses the same escapes as a table cell.
 // Newlines become spaces because <br> would not be plain alt text.
 const escapeImageAlt = (alt: string): string =>
-  escapeMarkdownTableCell(alt.replace(/\r?\n/g, " "));
+  escapeMarkdownTableCell(alt.replace(/\r\n|[\r\n]/g, " "));
 
 // encodeURIComponent leaves ( and ) alone, but they would end the link early.
 // & is backslash-escaped instead of encoded so the query keeps its meaning
