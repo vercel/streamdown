@@ -154,6 +154,13 @@ export const getTableCsvSeparator = (
   return tableConfig.csvSeparator ?? ",";
 };
 
+// CSV quoting does not stop spreadsheets from evaluating cell formulas.
+// Include whitespace/control-prefixed formulas and leading tab/line breaks.
+const spreadsheetFormulaPrefix = /^[\s\p{Cc}]*[=+@-]|^[\t\r\n]/u;
+
+const neutralizeSpreadsheetFormula = (value: string): string =>
+  spreadsheetFormulaPrefix.test(value) ? `'${value}` : value;
+
 export const tableDataToCSV = (
   data: TableData,
   separator: CSVSeparator = ","
@@ -173,7 +180,8 @@ export const tableDataToCSV = (
   }
   const { headers, rows } = data;
 
-  const escapeCSV = (value: string): string => {
+  const escapeCSV = (cell: string): string => {
+    const value = neutralizeSpreadsheetFormula(cell);
     let needsEscaping = false;
 
     for (const char of value) {
@@ -218,7 +226,8 @@ export const tableDataToCSV = (
 export const tableDataToTSV = (data: TableData): string => {
   const { headers, rows } = data;
 
-  const escapeTSV = (value: string): string => {
+  const escapeTSV = (cell: string): string => {
+    const value = neutralizeSpreadsheetFormula(cell);
     // OPTIMIZATION: Check characters directly instead of multiple includes() calls
     let needsEscaping = false;
     for (const char of value) {

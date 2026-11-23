@@ -736,3 +736,69 @@ describe("TableDownloadDropdown", () => {
     );
   });
 });
+
+describe("CSV formula injection through download controls", () => {
+  it.each([
+    "button",
+    "dropdown",
+  ] as const)("neutralizes row headers and data cells through the %s", async (control) => {
+    const { save } = await import("../lib/utils");
+    const { container, getByTitle, getByText } = render(
+      <StreamdownContext.Provider
+        value={{
+          isAnimating: false,
+          mode: "streaming",
+          shikiTheme: ["github-light", "github-dark"],
+          controls: true,
+        }}
+      >
+        <div data-streamdown="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>=1+1</th>
+                <th>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">+1+1</th>
+                <td>@SUM(1)</td>
+              </tr>
+            </tbody>
+          </table>
+          {control === "button" ? (
+            <TableDownloadButton />
+          ) : (
+            <TableDownloadDropdown />
+          )}
+        </div>
+      </StreamdownContext.Provider>
+    );
+
+    const download = () => {
+      if (control === "button") {
+        fireEvent.click(getByTitle("Download table as CSV"));
+      } else {
+        fireEvent.click(getByTitle("Download table"));
+        fireEvent.click(getByText("CSV"));
+      }
+    };
+
+    download();
+    expect(save).toHaveBeenLastCalledWith(
+      "table.csv",
+      "'=1+1,Amount\n'+1+1,'@SUM(1)",
+      "text/csv"
+    );
+
+    // Headerless tables must retain row headers without exporting formulas.
+    container.querySelector("thead")?.remove();
+    download();
+    expect(save).toHaveBeenLastCalledWith(
+      "table.csv",
+      "'+1+1,'@SUM(1)",
+      "text/csv"
+    );
+  });
+});

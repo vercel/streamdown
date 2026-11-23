@@ -356,6 +356,77 @@ describe("Table Utils", () => {
     });
   });
 
+  describe("spreadsheet formula injection protection", () => {
+    const formulas = [
+      "=1+1",
+      "+1+1",
+      "-1+1",
+      "@SUM(1)",
+      " \t=1+1",
+      "\r\n+1+1",
+      "\u0000=1+1",
+      "\ttext",
+      "\rtext",
+      "\ntext",
+    ];
+
+    it.each(
+      formulas
+    )("neutralizes %j in CSV headers and body cells", (value) => {
+      const data = { headers: [value], rows: [[value]] };
+      const safeValue = `'${value}`;
+      // These inputs contain no separators or quotes, only possible newlines.
+      const escaped =
+        value.includes("\n") || value.includes("\r")
+          ? `"${safeValue}"`
+          : safeValue;
+
+      expect(tableDataToCSV(data)).toBe(`${escaped}\n${escaped}`);
+      expect(data).toEqual({ headers: [value], rows: [[value]] });
+    });
+
+    it.each(
+      formulas
+    )("neutralizes %j in TSV headers and body cells", (value) => {
+      const escaped = `'${value
+        .replaceAll("\t", "\\t")
+        .replaceAll("\n", "\\n")
+        .replaceAll("\r", "\\r")}`;
+
+      expect(tableDataToTSV({ headers: [value], rows: [[value]] })).toBe(
+        `${escaped}\n${escaped}`
+      );
+    });
+
+    it.each([
+      ",",
+      ";",
+      "\t",
+    ] as const)("neutralizes formulas before escaping CSV with %j separators", (separator) => {
+      const value = `=HYPERLINK("https://example.com"${separator}"label")`;
+      const escaped = `"'${value.replaceAll('"', '""')}"`;
+
+      expect(
+        tableDataToCSV({ headers: [value], rows: [[value, "safe"]] }, separator)
+      ).toBe(`${escaped}\n${escaped}${separator}safe`);
+    });
+
+    it("preserves safe strings and does not neutralize Markdown exports", () => {
+      const data = {
+        headers: ["Text", ""],
+        rows: [
+          ["a=b", "1+1"],
+          ["plain text", "'=1+1"],
+        ],
+      };
+      expect(tableDataToCSV(data)).toBe("Text,\na=b,1+1\nplain text,'=1+1");
+      expect(tableDataToTSV(data)).toBe("Text\t\na=b\t1+1\nplain text\t'=1+1");
+      expect(
+        tableDataToMarkdown({ headers: ["Formula"], rows: [["=1+1"]] })
+      ).toBe("| Formula |\n| --- |\n| =1+1 |");
+    });
+  });
+
   describe("getTableCsvSeparator", () => {
     it("returns comma when controls is a boolean", () => {
       expect(getTableCsvSeparator(true)).toBe(",");
