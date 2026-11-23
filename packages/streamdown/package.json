@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "decode-named-character-reference": "^1.2.0",
     "hast-util-to-jsx-runtime": "^2.3.7",
     "html-url-attributes": "^3.0.1",
     "marked": "^18.2.0",

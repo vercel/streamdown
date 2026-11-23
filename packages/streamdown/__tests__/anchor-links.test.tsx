@@ -24,6 +24,68 @@ describe("Sanitized fragment links", () => {
     ]);
   });
 
+  for (const mode of ["static", "streaming"] as const) {
+    it(`leaves hash-route and same-page links without a clobbered target alone in ${mode} mode`, () => {
+      const { container } = render(
+        <Streamdown linkSafety={{ enabled: false }} mode={mode}>
+          {"[a](#/tools/x) and [b](#section)"}
+        </Streamdown>
+      );
+
+      expect(
+        Array.from(container.querySelectorAll("a"), (link) =>
+          link.getAttribute("href")
+        )
+      ).toEqual(["#/tools/x", "#section"]);
+    });
+  }
+
+  it("only rewrites links whose raw HTML target exists", () => {
+    const { container } = render(
+      <Streamdown linkSafety={{ enabled: false }} mode="streaming">
+        {
+          '<div id="details">Details</div>\n\n[Go](#details) [Route](#/tools/x) [Other](#section)'
+        }
+      </Streamdown>
+    );
+
+    expect(
+      Array.from(container.querySelectorAll("a"), (link) =>
+        link.getAttribute("href")
+      )
+    ).toEqual(["#user-content-details", "#/tools/x", "#section"]);
+  });
+
+  it("rewrites links to non-ASCII raw HTML ids across streaming blocks", () => {
+    const { container } = render(
+      <Streamdown linkSafety={{ enabled: false }} mode="streaming">
+        {'<div id="café">Details</div>\n\n[Go](#café) [Other](#cafe)'}
+      </Streamdown>
+    );
+
+    expect(
+      Array.from(container.querySelectorAll("a"), (link) =>
+        link.getAttribute("href")
+      )
+    ).toEqual(["#user-content-caf%C3%A9", "#cafe"]);
+  });
+
+  it("decodes character references in raw HTML ids across streaming blocks", () => {
+    const { container } = render(
+      <Streamdown linkSafety={{ enabled: false }} mode="streaming">
+        {
+          '<div id="a&amp;b">One</div>\n\n<div id="caf&#233;">Two</div>\n\n[One](#a&b) [Two](#café)'
+        }
+      </Streamdown>
+    );
+
+    expect(
+      Array.from(container.querySelectorAll("a"), (link) =>
+        link.getAttribute("href")
+      )
+    ).toEqual(["#user-content-a&b", "#user-content-caf%C3%A9"]);
+  });
+
   it("keeps footnote references and backrefs aligned", () => {
     const { container } = render(
       <Streamdown linkSafety={{ enabled: false }} mode="static">
