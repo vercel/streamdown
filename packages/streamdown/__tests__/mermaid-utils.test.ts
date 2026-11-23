@@ -200,19 +200,21 @@ describe("normalizeMermaidInlineSvg", () => {
   const payloadBody =
     '<style>#m{font-family:x" onanimationstart="alert(1)" a=";}</style><text>Test</text></svg>';
 
-  it.each([["$'"], ["$&"], ["$`"], ["$$"]])(
-    "should not expand %s replacement patterns from the viewBox",
-    (token) => {
-      const input = `<svg width="100%" style="max-width: 900px;" viewBox="0 0 900${token} 500">${payloadBody}`;
+  it.each([
+    ["$'"],
+    ["$&"],
+    ["$`"],
+    ["$$"],
+  ])("should not expand %s replacement patterns from the viewBox", (token) => {
+    const input = `<svg width="100%" style="max-width: 900px;" viewBox="0 0 900${token} 500">${payloadBody}`;
 
-      const output = normalizeMermaidInlineSvg(input);
+    const output = normalizeMermaidInlineSvg(input);
 
-      expect(output).toContain(`viewBox="0 0 900${token} 500"`);
-      expect(output.endsWith(payloadBody)).toBe(true);
-      const attrs = getRootSvgAttributes(output);
-      expect(attrs.some((name) => name.startsWith("on"))).toBe(false);
-    }
-  );
+    expect(output).toContain(`viewBox="0 0 900${token} 500"`);
+    expect(output.endsWith(payloadBody)).toBe(true);
+    const attrs = getRootSvgAttributes(output);
+    expect(attrs.some((name) => name.startsWith("on"))).toBe(false);
+  });
 
   it("should not expand replacement patterns from the svg tag without a style attribute", () => {
     const input = `<svg width="100%" viewBox="0 0 900$' 500">${payloadBody}`;
