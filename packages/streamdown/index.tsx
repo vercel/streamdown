@@ -416,7 +416,7 @@ interface UndoubleClobberPrefixOptions {
    * Raw HTML ids declared elsewhere in the document. Streaming renders each
    * block separately, so a link can point at an id that lives in another block.
    */
-  ids?: readonly string[];
+  ids?: ReadonlySet<string>;
 }
 
 const RAW_HTML_ID_PATTERN = /\sid\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'>]+))/gi;
@@ -449,18 +449,18 @@ function decodeFragment(fragment: string): string {
 }
 
 /** Collect the ids declared by raw HTML attributes in a markdown document. */
-function collectRawHtmlIds(markdown: string): string[] {
-  if (!markdown.includes("id")) {
-    return [];
-  }
+function collectRawHtmlIds(markdown: string): ReadonlySet<string> {
   const ids = new Set<string>();
+  if (!markdown.includes("id")) {
+    return ids;
+  }
   for (const match of markdown.matchAll(RAW_HTML_ID_PATTERN)) {
     const id = match[1] ?? match[2] ?? match[3];
     if (id) {
       ids.add(decodeCharacterReferences(id));
     }
   }
-  return [...ids].sort();
+  return ids;
 }
 
 /**
@@ -498,7 +498,8 @@ function rehypeUndoubleClobberPrefix(options?: UndoubleClobberPrefixOptions) {
       node.properties.href.length > 1 &&
       !node.properties.href.startsWith(`#${CLOBBER_PREFIX}`) &&
       // Hrefs are percent-encoded (non-ASCII ids), while ids are not.
-      targets.has(decodeFragment(node.properties.href.slice(1)))
+      (targets.has(decodeFragment(node.properties.href.slice(1))) ||
+        options?.ids?.has(decodeFragment(node.properties.href.slice(1))))
     ) {
       node.properties.href = `#${CLOBBER_PREFIX}${node.properties.href.slice(1)}`;
     }
@@ -509,7 +510,8 @@ function rehypeUndoubleClobberPrefix(options?: UndoubleClobberPrefixOptions) {
     }
   };
   return (tree: HastNode) => {
-    const targets = new Set<string>(options?.ids);
+    // Keep tree-local additions separate: never copy or mutate the shared IDs.
+    const targets = new Set<string>();
     visit(tree, targets);
     rewrite(tree, targets);
   };
@@ -1154,16 +1156,20 @@ export const Streamdown = memo(
     // Raw HTML ids are clobbered per block; share them document-wide so links
     // in one streaming block still reach targets declared in another.
     const rawHtmlIdsKey = useMemo(
-      () => collectRawHtmlIds(processedChildren).join("\n"),
+      () => JSON.stringify([...collectRawHtmlIds(processedChildren)]),
       [processedChildren]
     );
-    const undoubleClobberPrefixPlugin = useMemo<Pluggable>(
-      () =>
-        rawHtmlIdsKey
-          ? [rehypeUndoubleClobberPrefix, { ids: rawHtmlIdsKey.split("\n") }]
-          : defaultRehypePlugins.undoubleClobberPrefix,
-      [rawHtmlIdsKey]
-    );
+    const undoubleClobberPrefixPlugin = useMemo<Pluggable>(() => {
+      const ids: ReadonlySet<string> = new Set<string>(
+        JSON.parse(rawHtmlIdsKey)
+      );
+      if (ids.size === 0) {
+        return defaultRehypePlugins.undoubleClobberPrefix;
+      }
+      // Capture the lookup in a stable plugin instead of plugin options:
+      // processor cache keys must not serialize every ID for every block.
+      return () => rehypeUndoubleClobberPrefix({ ids });
+    }, [rawHtmlIdsKey]);
 
     const mergedRehypePlugins = useMemo(() => {
       let result = rehypePlugins;
