@@ -288,13 +288,14 @@ const healLinksAndImages = (text: string, linkMode: LinkMode): string => {
 
   // Removing a trailing incomplete image can expose another incomplete
   // construct that ended immediately before it (an input ending in "![!["
-  // heals to "![", which is itself incomplete). Iterate until healed text
-  // re-heals to itself, so healing is idempotent. A step that grows the text
-  // has completed the construct, and truncating steps strictly shorten,
-  // so the loop terminates.
+  // heals to "![", which is itself incomplete). Completing one can leave the
+  // link around it open too: "[![alt" heals to "[![alt](…)", whose "[" still
+  // needs closing. Iterate until healed text re-heals to itself, so healing
+  // is idempotent. Each step heals the innermost open construct, and the
+  // pass bound keeps the loop finite.
   for (let pass = 0; pass < MAX_HEAL_PASSES; pass += 1) {
     const next = healTrailingLinkOrImage(current, linkMode);
-    if (next.length >= current.length) {
+    if (next === current) {
       return next;
     }
     current = next;

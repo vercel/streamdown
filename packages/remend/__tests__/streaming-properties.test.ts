@@ -24,6 +24,7 @@ const INLINE_ATOMS = [
   "a_b_c",
   "[label](https://example.com)",
   "![alt](https://example.com/pic.png)",
+  "[![alt](pic.png)](page.html)",
   "<b>tag</b>",
   "value is 20~25 degrees",
 ];

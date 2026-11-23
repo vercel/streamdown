@@ -37,6 +37,29 @@ describe("image handling", () => {
     );
   });
 
+  it("should close the link around an incomplete image", () => {
+    // A linked image (a badge, a video thumbnail) streams its inner image
+    // first. Healing only the image left the outer "[" as literal text.
+    const link = (alt: string) =>
+      `[${incompleteImage(alt)}](streamdown:incomplete-link)`;
+    expect(remend("[![")).toBe(link(""));
+    expect(remend("[![Deploy")).toBe(link("Deploy"));
+    expect(remend("See [![logo](https://example.com/lo")).toBe(
+      `See ${link("logo")}`
+    );
+    expect(remend(remend("[![Deploy"))).toBe(remend("[![Deploy"));
+
+    // text-only drops the outer bracket and keeps the image
+    expect(
+      remend("[![logo](https://example.com/lo", { linkMode: "text-only" })
+    ).toBe(incompleteImage("logo"));
+
+    // Once the image is complete the link is healed as before
+    expect(remend("[![logo](logo.png)](https://example.com/pa")).toBe(
+      "[![logo](logo.png)](streamdown:incomplete-link)"
+    );
+  });
+
   it("should not add trailing underscore for images with underscores in URL (#284)", () => {
     const markdown =
       "textContent ![image](https://img.alicdn.com/imgextra/i4/6000000003603/O1CN01ApW8bQ1cUE8LduPra_!!6000000003603-2-skyky.png)";
