@@ -50,6 +50,28 @@ const renderInTableWrapper = (
 };
 
 describe("TableDownloadDropdown", () => {
+  it("should report oversized Markdown exports without saving or copying", async () => {
+    const { save } = await import("../lib/utils");
+    const onError = vi.fn();
+    const onSuccess = vi.fn();
+    const { container, getByTitle } = renderInTableWrapper(
+      <TableDownloadDropdown onDownload={onSuccess} onError={onError} />
+    );
+    const cell = container.querySelector("tbody td");
+    expect(cell).toBeTruthy();
+    if (cell) {
+      cell.textContent = "&".repeat(1_000_001);
+    }
+    fireEvent.click(getByTitle("Download table"));
+    fireEvent.click(getByTitle("Download table as Markdown"));
+
+    expect(onError).toHaveBeenCalledWith(
+      new RangeError("Table is too large to export as Markdown")
+    );
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -324,6 +346,31 @@ describe("TableDownloadDropdown", () => {
 });
 
 describe("TableDownloadButton with format='markdown'", () => {
+  it("should report oversized Markdown exports without saving or copying", async () => {
+    const { save } = await import("../lib/utils");
+    const onError = vi.fn();
+    const onSuccess = vi.fn();
+    const { container, getByTitle } = renderInTableWrapper(
+      <TableDownloadButton
+        format="markdown"
+        onDownload={onSuccess}
+        onError={onError}
+      />
+    );
+    const cell = container.querySelector("tbody td");
+    expect(cell).toBeTruthy();
+    if (cell) {
+      cell.textContent = "&".repeat(1_000_001);
+    }
+    fireEvent.click(getByTitle("Download table as Markdown"));
+
+    expect(onError).toHaveBeenCalledWith(
+      new RangeError("Table is too large to export as Markdown")
+    );
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+  });
+
   beforeEach(() => {
     vi.resetAllMocks();
   });
@@ -489,6 +536,29 @@ describe("TableDownloadButton with format='markdown'", () => {
 });
 
 describe("TableCopyDropdown", () => {
+  it("should report oversized Markdown exports without saving or copying", async () => {
+    const { save } = await import("../lib/utils");
+    const onError = vi.fn();
+    const onSuccess = vi.fn();
+    const { container, getByTitle } = renderInTableWrapper(
+      <TableCopyDropdown onCopy={onSuccess} onError={onError} />
+    );
+    const cell = container.querySelector("tbody td");
+    expect(cell).toBeTruthy();
+    if (cell) {
+      cell.textContent = "&".repeat(1_000_001);
+    }
+    fireEvent.click(getByTitle("Copy table"));
+    fireEvent.click(getByTitle("Copy table as Markdown"));
+
+    expect(onError).toHaveBeenCalledWith(
+      new RangeError("Table is too large to export as Markdown")
+    );
+    expect(onSuccess).not.toHaveBeenCalled();
+    expect(save).not.toHaveBeenCalled();
+    expect(navigator.clipboard.write).not.toHaveBeenCalled();
+  });
+
   const originalClipboard = navigator.clipboard;
   const originalClipboardItem = globalThis.ClipboardItem;
 
