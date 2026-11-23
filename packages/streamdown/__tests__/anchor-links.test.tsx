@@ -1,5 +1,5 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Streamdown } from "../index";
 
 describe("Sanitized fragment links", () => {
@@ -84,6 +84,78 @@ describe("Sanitized fragment links", () => {
         link.getAttribute("href")
       )
     ).toEqual(["#user-content-a&b", "#user-content-caf%C3%A9"]);
+  });
+
+  for (const count of [32, 64]) {
+    it(`bounds document-wide ID work linearly for ${count} streaming blocks`, () => {
+      const markdown = Array.from(
+        { length: count },
+        (_, index) => `<div id="linear-id-${index}">Target</div>`
+      ).join("\n\n");
+      // Count operations, not elapsed time: each ID should be collected once,
+      // not copied or serialized again for every independently rendered block.
+      const addSpy = vi.spyOn(Set.prototype, "add");
+      const stringifySpy = vi.spyOn(JSON, "stringify");
+      let idInsertions = 0;
+      let serializedIds = 0;
+      try {
+        const { container } = render(<Streamdown>{markdown}</Streamdown>);
+        expect(container.querySelectorAll("div[id]")).toHaveLength(count);
+        idInsertions = addSpy.mock.calls.filter(
+          ([value]) =>
+            typeof value === "string" && value.startsWith("linear-id-")
+        ).length;
+        serializedIds = stringifySpy.mock.results.reduce(
+          (total, result) =>
+            total +
+            (result.type === "return" && typeof result.value === "string"
+              ? [...result.value.matchAll(/linear-id-/g)].length
+              : 0),
+          0
+        );
+      } finally {
+        addSpy.mockRestore();
+        stringifySpy.mockRestore();
+      }
+      expect.soft(idInsertions).toBeLessThanOrEqual(count * 4);
+      expect.soft(serializedIds).toBeLessThanOrEqual(count * 4);
+    });
+  }
+
+  it("does not reuse document IDs after streaming content changes", () => {
+    const { container, rerender } = render(
+      <Streamdown linkSafety={{ enabled: false }}>
+        {'[Go](#details)\n\n<div id="details">Details</div>'}
+      </Streamdown>
+    );
+    expect(container.querySelector("a")?.getAttribute("href")).toBe(
+      "#user-content-details"
+    );
+
+    rerender(
+      <Streamdown linkSafety={{ enabled: false }}>
+        {'[Go](#details)\n\n<div id="other">Other</div>'}
+      </Streamdown>
+    );
+    expect(container.querySelector("a")?.getAttribute("href")).toBe("#details");
+  });
+
+  it("does not share document IDs between simultaneous renderers", () => {
+    const { container } = render(
+      <>
+        <Streamdown linkSafety={{ enabled: false }}>
+          {'[First](#details)\n\n<div id="details">Details</div>'}
+        </Streamdown>
+        <Streamdown linkSafety={{ enabled: false }}>
+          {'[Second](#details)\n\n<div id="other">Other</div>'}
+        </Streamdown>
+      </>
+    );
+    expect(
+      Array.from(container.querySelectorAll("a"), (link) =>
+        link.getAttribute("href")
+      )
+    ).toEqual(["#user-content-details", "#details"]);
   });
 
   it("keeps footnote references and backrefs aligned", () => {
