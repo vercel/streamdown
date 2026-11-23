@@ -92,23 +92,29 @@ export const normalizeMermaidInlineSvg = (svgString: string): string => {
         .join(";");
 
       const mergedStyle = `${sizeDeclarations}${filtered ? `${filtered};` : ""}`;
+      // Function replacements are used throughout so that `$'`, `$&`, `` $` ``
+      // etc. in attacker-influenced SVG content (e.g. a viewBox derived from
+      // diagram config) are never expanded as replacement patterns. Expansion
+      // would splice sanitized SVG body into the root tag and break attribute
+      // boundaries after DOMPurify has already run.
       updatedSvgTag = updatedSvgTag.replace(
         STYLE_ATTR_REGEX,
-        ` style=${styleQuote}${mergedStyle}${styleQuote}`
+        () => ` style=${styleQuote}${mergedStyle}${styleQuote}`
       );
     } else {
       updatedSvgTag = updatedSvgTag.replace(
         SVG_OPEN_TAG_REGEX,
-        `<svg style="${sizeDeclarations}"`
+        () => `<svg style="${sizeDeclarations}"`
       );
     }
 
     updatedSvgTag = updatedSvgTag.replace(
       SVG_OPEN_TAG_REGEX,
-      `<svg width="${width}" height="${height}"`
+      () => `<svg width="${width}" height="${height}"`
     );
 
-    return svgString.replace(svgTag, updatedSvgTag);
+    const finalSvgTag = updatedSvgTag;
+    return svgString.replace(svgTag, () => finalSvgTag);
   } catch {
     return svgString;
   }
