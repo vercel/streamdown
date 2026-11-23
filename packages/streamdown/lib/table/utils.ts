@@ -353,7 +353,7 @@ const escapeCellKeepingImages = (cell: string, images: CellImage[] = []) => {
 };
 
 // Bound synchronous serialization before allocating escaped cells or output rows.
-// Count synthetic header/separator cells too. The size estimate allows five
+// Count padded body cells and synthetic header/separator cells too. The estimate allows five
 // code units per input code unit (the largest escape is & -> &amp;).
 const maxMarkdownCells = 100_000;
 const maxMarkdownOutputSize = 5_000_000;
@@ -394,6 +394,14 @@ const getMarkdownColumnCount = ({ headers, rows }: TableData): number => {
   cellCount += columnCount * (headers.length === 0 ? 2 : 1);
   outputSize += columnCount * (headers.length === 0 ? 9 : 6);
   checkBudget();
+  // Budget the rectangular output, not just the sparse input. Do this before
+  // allocating any padded rows, including when a late row sets the width.
+  for (const row of rows) {
+    const padding = Math.max(0, columnCount - row.length);
+    cellCount += padding;
+    outputSize += padding * 3;
+    checkBudget();
+  }
   return columnCount;
 };
 
@@ -435,10 +443,14 @@ export const tableDataToMarkdown = (data: TableData) => {
 
   // Add data rows
   for (const [r, row] of rows.entries()) {
-    // GFM fills missing body cells. Padding here would amplify a sparse
-    // table into rows.length * columnCount cells on the browser thread.
-    const escapedRow = row.map((cell, i) =>
-      escapeCellKeepingImages(cell, images?.rows[r]?.[i])
+    // The preflight budget includes padding, so preserve explicit empty cells
+    // without allowing sparse input to trigger unbounded expansion.
+    const escapedRow = Array.from(
+      { length: Math.max(columnCount, row.length) },
+      (_, i) =>
+        i < row.length
+          ? escapeCellKeepingImages(row[i], images?.rows[r]?.[i])
+          : ""
     );
     markdownRows[rowIndex] = `| ${escapedRow.join(" | ")} |`;
     rowIndex += 1;

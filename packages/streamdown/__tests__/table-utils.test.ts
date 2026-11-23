@@ -773,7 +773,7 @@ describe("Table Utils", () => {
       expect(result).toBe("| Path |\n| --- |\n| C:\\\\Users\\\\Name |");
     });
 
-    it("should leave short rows unpadded for GFM to fill", () => {
+    it("should pad rows with empty strings if shorter than headers", () => {
       const data: TableData = {
         headers: ["Col1", "Col2", "Col3"],
         rows: [["A", "B"]],
@@ -782,7 +782,7 @@ describe("Table Utils", () => {
       const result = tableDataToMarkdown(data);
 
       expect(result).toBe(
-        "| Col1 | Col2 | Col3 |\n| --- | --- | --- |\n| A | B |"
+        "| Col1 | Col2 | Col3 |\n| --- | --- | --- |\n| A | B |  |"
       );
     });
 
@@ -804,28 +804,52 @@ describe("Table Utils", () => {
       };
 
       expect(tableDataToMarkdown(data)).toBe(
-        "|  |  |  |\n| --- | --- | --- |\n| a |\n| b | c | d |"
+        "|  |  |  |\n| --- | --- | --- |\n| a |  |  |\n| b | c | d |"
       );
     });
 
-    it("should keep sparse headerless exports proportional to actual cells", () => {
-      const width = 1000;
-      const shortRowCount = 1000;
+    it.each([
+      false,
+      true,
+    ])("should reject sparse expansion with headers=%s", (hasHeaders) => {
+      const wideRow = Array.from({ length: 1000 }, () => "x");
+      const shortRows = Array.from({ length: 1000 }, () => ["y"]);
+      expect(() =>
+        tableDataToMarkdown({
+          headers: hasHeaders ? wideRow : [],
+          // Put the widest row last to cover width discovery before budgeting.
+          rows: [...shortRows, wideRow],
+        })
+      ).toThrow("Table is too large to export as Markdown");
+    });
+
+    it("should pad a sparse headerless table within the budget", () => {
       const markdown = tableDataToMarkdown({
         headers: [],
-        rows: [
-          Array.from({ length: width }, () => "x"),
-          ...Array.from({ length: shortRowCount }, () => ["y"]),
-        ],
+        rows: [["a"], ["b", "c", "d"], []],
       });
-
-      expect(markdown.length).toBeLessThan(20_000);
-      expect(markdown.split("\n").slice(3)).toEqual(
-        Array.from({ length: shortRowCount }, () => "| y |")
+      expect(markdown).toBe(
+        "|  |  |  |\n| --- | --- | --- |\n| a |  |  |\n| b | c | d |\n|  |  |  |"
       );
     });
 
-    it("should let GFM restore missing cells, including empty rows", () => {
+    it("should include padding and synthetic rows at the cell budget boundary", () => {
+      const headers = Array.from({ length: 100 }, () => "");
+      expect(() =>
+        tableDataToMarkdown({
+          headers,
+          rows: Array.from({ length: 998 }, () => ["a"]),
+        })
+      ).not.toThrow();
+      expect(() =>
+        tableDataToMarkdown({
+          headers,
+          rows: Array.from({ length: 999 }, () => ["a"]),
+        })
+      ).toThrow("Table is too large to export as Markdown");
+    });
+
+    it("should round-trip padded cells, including empty rows", () => {
       const markdown = tableDataToMarkdown({
         headers: [],
         rows: [["a", "b", "c"], ["d"], []],
