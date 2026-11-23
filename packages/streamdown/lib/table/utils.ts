@@ -352,19 +352,66 @@ const escapeCellKeepingImages = (cell: string, images: CellImage[] = []) => {
   return result + escapeMarkdownTableCell(cell.slice(position));
 };
 
+// Bound synchronous serialization before allocating escaped cells or output rows.
+// Count padded body cells and synthetic header/separator cells too. The estimate allows five
+// code units per input code unit (the largest escape is & -> &amp;).
+const maxMarkdownCells = 100_000;
+const maxMarkdownOutputSize = 5_000_000;
+
+const getMarkdownColumnCount = ({ headers, rows }: TableData): number => {
+  let cellCount = 0;
+  // Four code units per row conservatively covers its edges and newline,
+  // including empty rows, which would otherwise bypass a cell-only budget.
+  let outputSize = (rows.length + 2) * 4;
+  const checkBudget = () => {
+    if (
+      rows.length > maxMarkdownCells ||
+      cellCount > maxMarkdownCells ||
+      outputSize > maxMarkdownOutputSize
+    ) {
+      throw new RangeError("Table is too large to export as Markdown");
+    }
+  };
+  const countRow = (row: string[]) => {
+    cellCount += row.length;
+    outputSize += row.length * 3;
+    checkBudget();
+    for (const cell of row) {
+      outputSize += cell.length * 5;
+      checkBudget();
+    }
+  };
+
+  countRow(headers);
+  let columnCount = headers.length;
+  for (const row of rows) {
+    countRow(row);
+    if (headers.length === 0) {
+      columnCount = Math.max(columnCount, row.length);
+    }
+  }
+
+  cellCount += columnCount * (headers.length === 0 ? 2 : 1);
+  outputSize += columnCount * (headers.length === 0 ? 9 : 6);
+  checkBudget();
+  // Budget the rectangular output, not just the sparse input. Do this before
+  // allocating any padded rows, including when a late row sets the width.
+  for (const row of rows) {
+    const padding = Math.max(0, columnCount - row.length);
+    cellCount += padding;
+    outputSize += padding * 3;
+    checkBudget();
+  }
+  return columnCount;
+};
+
 export const tableDataToMarkdown = (data: TableData) => {
   const { headers, rows } = data;
   const images = tableImages.get(data);
 
   // A GFM table needs a header row. When the source has none (e.g. a raw HTML
   // table with only a <tbody>), emit an empty one so no cell is lost.
-  const hasHeaders = headers.length > 0;
-  let columnCount = headers.length;
-  if (!hasHeaders) {
-    for (const row of rows) {
-      columnCount = Math.max(columnCount, row.length);
-    }
-  }
+  const columnCount = getMarkdownColumnCount(data);
 
   if (columnCount === 0) {
     return "";
@@ -396,25 +443,17 @@ export const tableDataToMarkdown = (data: TableData) => {
 
   // Add data rows
   for (const [r, row] of rows.entries()) {
-    // Pad row with empty strings if it's shorter than the column count
-    // OPTIMIZATION: Only pad if necessary
-    if (row.length < columnCount) {
-      const paddedRow = new Array(columnCount);
-      for (let i = 0; i < columnCount; i += 1) {
-        paddedRow[i] =
-          i < row.length
-            ? escapeCellKeepingImages(row[i], images?.rows[r]?.[i])
-            : "";
-      }
-      markdownRows[rowIndex] = `| ${paddedRow.join(" | ")} |`;
-      rowIndex += 1;
-    } else {
-      const escapedRow = row.map((cell, i) =>
-        escapeCellKeepingImages(cell, images?.rows[r]?.[i])
-      );
-      markdownRows[rowIndex] = `| ${escapedRow.join(" | ")} |`;
-      rowIndex += 1;
-    }
+    // The preflight budget includes padding, so preserve explicit empty cells
+    // without allowing sparse input to trigger unbounded expansion.
+    const escapedRow = Array.from(
+      { length: Math.max(columnCount, row.length) },
+      (_, i) =>
+        i < row.length
+          ? escapeCellKeepingImages(row[i], images?.rows[r]?.[i])
+          : ""
+    );
+    markdownRows[rowIndex] = `| ${escapedRow.join(" | ")} |`;
+    rowIndex += 1;
   }
 
   return markdownRows.join("\n");

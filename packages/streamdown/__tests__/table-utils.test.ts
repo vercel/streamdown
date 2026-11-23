@@ -808,6 +808,76 @@ describe("Table Utils", () => {
       );
     });
 
+    it.each([
+      false,
+      true,
+    ])("should reject sparse expansion with headers=%s", (hasHeaders) => {
+      const wideRow = Array.from({ length: 1000 }, () => "x");
+      const shortRows = Array.from({ length: 1000 }, () => ["y"]);
+      expect(() =>
+        tableDataToMarkdown({
+          headers: hasHeaders ? wideRow : [],
+          // Put the widest row last to cover width discovery before budgeting.
+          rows: [...shortRows, wideRow],
+        })
+      ).toThrow("Table is too large to export as Markdown");
+    });
+
+    it("should pad a sparse headerless table within the budget", () => {
+      const markdown = tableDataToMarkdown({
+        headers: [],
+        rows: [["a"], ["b", "c", "d"], []],
+      });
+      expect(markdown).toBe(
+        "|  |  |  |\n| --- | --- | --- |\n| a |  |  |\n| b | c | d |\n|  |  |  |"
+      );
+    });
+
+    it("should include padding and synthetic rows at the cell budget boundary", () => {
+      const headers = Array.from({ length: 100 }, () => "");
+      expect(() =>
+        tableDataToMarkdown({
+          headers,
+          rows: Array.from({ length: 998 }, () => ["a"]),
+        })
+      ).not.toThrow();
+      expect(() =>
+        tableDataToMarkdown({
+          headers,
+          rows: Array.from({ length: 999 }, () => ["a"]),
+        })
+      ).toThrow("Table is too large to export as Markdown");
+    });
+
+    it("should round-trip padded cells, including empty rows", () => {
+      const markdown = tableDataToMarkdown({
+        headers: [],
+        rows: [["a", "b", "c"], ["d"], []],
+      });
+      const table = document.createElement("table");
+      table.innerHTML = marked.parse(markdown) as string;
+
+      expect(extractTableDataFromElement(table).rows).toEqual([
+        ["a", "b", "c"],
+        ["d", "", ""],
+        ["", "", ""],
+      ]);
+    });
+
+    it.each([
+      { headers: [], rows: [Array.from({ length: 100_001 }, () => "")] },
+      { headers: Array.from({ length: 100_001 }, () => ""), rows: [] },
+      { headers: ["A"], rows: Array.from({ length: 100_001 }, () => []) },
+      { headers: [], rows: [Array.from({ length: 40_000 }, () => "")] },
+      { headers: ["A"], rows: [["&".repeat(1_000_001)]] },
+      { headers: ["&".repeat(1_000_001)], rows: [] },
+      { headers: ["A"], rows: [["&".repeat(500_000)], ["&".repeat(500_000)]] },
+    ])("should reject oversized Markdown exports before serialization ($headers.length headers, $rows.length rows)", (data) => {
+      expect(() => tableDataToMarkdown(data)).toThrow(
+        "Table is too large to export as Markdown"
+      );
+    });
+
     it("should return empty string if there are no headers and no rows", () => {
       expect(tableDataToMarkdown({ headers: [], rows: [] })).toBe("");
     });
