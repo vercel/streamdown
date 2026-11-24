@@ -28,7 +28,7 @@
     "test:coverage": "vitest --coverage run"
   },
   "dependencies": {
-    "mdast-util-gfm-autolink-literal": "^2.1.0",
+    "mdast-util-gfm-autolink-literal": "^2.1.2",
     "remark-cjk-friendly": "^2.3.4",
     "remark-cjk-friendly-gfm-strikethrough": "^2.3.3",
     "unist-util-visit": "^5.2.0"
@@ -36,14 +36,14 @@
   "devDependencies": {
     "@types/mdast": "^4.0.4",
     "@types/unist": "^3.0.3",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.12",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "remark-stringify": "^11.0.0",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "unified": "^11.0.5",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
