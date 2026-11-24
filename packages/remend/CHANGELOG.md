@@ -1,5 +1,14 @@
 # remend
 
+## 1.5.1
+
+### Patch Changes
+
+- 46c12c4: Heal nested link and image brackets in linear time.
+- 44edda9: Cache URL run boundaries and trimmed endpoints across rejected autolink candidates, preventing quadratic scanning of slash-separated HTTP URLs with invalid hostnames during Markdown repair.
+- 3934920: Close the link around an incomplete image, so a streaming linked image (`[![alt](…`) no longer shows a literal `[` before the image placeholder.
+- 44edda9: Leave `_`, `*` and `~` inside bare URLs alone. GFM links `https://example.com/_next` or `www.example.com/_next` as they are, so remend no longer adds a closer for the marker in the URL, which showed up as a stray `_` after the link.
+
 ## 1.5.0
 
 ### Minor Changes

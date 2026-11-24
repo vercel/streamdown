@@ -1,5 +1,24 @@
 # streamdown
 
+## 2.8.1
+
+### Patch Changes
+
+- 0cd0c44: Correct the formatting and lint commands in the contributing guide.
+- b266322: Fix table copy and download losing content: images are copied as Markdown (`![alt](src)`) whether or not they loaded, body-row `<th>` cells are kept, and tables without a header row copy with an empty header row instead of an empty string. Image alt text and sources are escaped so they render back unchanged, and literal image syntax in a cell is never mistaken for a real image.
+- e715020: Normalize all image alt text line endings when exporting Markdown tables so bare carriage returns cannot inject content outside the image and table cell.
+- 80d2335: Only rewrite `#` links to the `user-content-` prefix when their target id was clobbered, so hash-route and same-page links to ids the host app owns keep working.
+- 61bac79: Harden Mermaid inline SVG size normalization so replacement patterns in diagram content are not expanded.
+- cb65880: Reuse the document-wide HTML ID lookup across streaming blocks to avoid quadratic ID copying and processor cache-key serialization while preserving sanitized fragment links.
+- 147f339: Mermaid diagrams no longer zoom on a plain mouse wheel when their zoom controls are hidden (`controls.mermaid.panZoom: false`), so the page scrolls past them. Ctrl + wheel and trackpad pinch still zoom.
+- ae65f5b: Neutralize spreadsheet formula prefixes in CSV and TSV table exports, including column headers, body-row headers, and data cells. Prefix potentially executable values with an apostrophe before delimiter escaping, including formulas hidden behind leading whitespace or control characters. Markdown exports and the source table data remain unchanged.
+- 340bbea: Prevent oversized Markdown table copy/download from freezing the browser by preflighting a 100,000-cell budget (including padded body cells and synthetic headers/separators), a 100,000-row limit, and a conservative 5,000,000-code-unit output estimate before serialization. Preserve explicit empty-cell padding for short rows. Oversized exports report an error through the controls' existing `onError` callbacks instead of producing a partial export.
+- Updated dependencies [46c12c4]
+- Updated dependencies [44edda9]
+- Updated dependencies [3934920]
+- Updated dependencies [44edda9]
+  - remend@1.5.1
+
 ## 2.8.0
 
 ### Minor Changes
