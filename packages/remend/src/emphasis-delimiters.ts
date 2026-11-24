@@ -1,6 +1,7 @@
 import { findInlineBlockStart } from "./inline-block";
 import {
   getScan,
+  inAutolinkAt,
   inHtmlTagAt,
   inLinkUrlAt,
   inMathAt,
@@ -153,7 +154,7 @@ const findOpenInlineMath = (scan: TextScan, inlineMath: boolean): number => {
 };
 
 // An unclosed code span or inline math span renders as literal text, so its
-// markers still count
+// markers still count. Markers inside a bare URL are part of the link.
 const isProseAt = (
   scan: TextScan,
   i: number,
@@ -164,7 +165,8 @@ const isProseAt = (
     scan.regions[i] === REGION.CODE_SPAN_OPEN) &&
   !(i < openMath && inMathAt(scan, i, inlineMath)) &&
   !inLinkUrlAt(scan, i) &&
-  !inHtmlTagAt(scan, i);
+  !inHtmlTagAt(scan, i) &&
+  !inAutolinkAt(scan, i);
 
 interface LinkLabel {
   end: number;
