@@ -29,16 +29,16 @@
     "test:coverage": "vitest --coverage run"
   },
   "dependencies": {
-    "katex": "^0.16.27",
+    "katex": "^0.16.47",
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.12",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "unified": "^11.0.5",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.1"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0"
