@@ -375,6 +375,7 @@ const LinkComponent = ({
             "wrap-anywhere appearance-none text-start font-medium text-primary underline",
             className
           )}
+          data-href={href}
           data-incomplete={isIncomplete}
           data-streamdown="link"
           onClick={handleClick}

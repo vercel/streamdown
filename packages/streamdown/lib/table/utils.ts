@@ -28,14 +28,14 @@ const encodeImageSrc = (src: string): string =>
 const imageToMarkdown = (img: Element): string =>
   `![${escapeImageAlt(img.getAttribute("alt") ?? "")}](${encodeImageSrc(img.getAttribute("src") ?? "")})`;
 
-// Where a real <img> was serialised within a cell's text.
+// Where a real <img> or <a href> was serialised within a cell's text.
 interface CellImage {
   markdown: string;
   start: number;
 }
 
-// Remembers where the `![alt](src)` strings in a TableData came from real
-// <img> elements (as opposed to literal text), so tableDataToMarkdown can keep
+// Remembers where the `![alt](src)` and `[text](href)` strings in a TableData came from real
+// <img> and <a href> elements (as opposed to literal text), so tableDataToMarkdown can keep
 // them unescaped without changing the shape of TableData.
 interface TableImages {
   headers: CellImage[][];
@@ -80,9 +80,78 @@ function extractCellText(node: Node, cell: CellText): void {
     return;
   }
 
+  if (
+    element.tagName === "A" ||
+    element.getAttribute("data-streamdown") === "link"
+  ) {
+    const markdown = linkToMarkdown(element);
+    if (markdown !== undefined) {
+      cell.images.push({ start: cell.text.length, markdown });
+      cell.text += markdown;
+      return;
+    }
+  }
+
   for (const child of element.childNodes) {
     extractCellText(child, cell);
   }
+}
+
+// Compares addresses the way a reader would, so an encoded href still matches
+// the text it was linkified from.
+const normalizeUrl = (url: string): string | undefined => {
+  try {
+    return decodeURI(new URL(url).href);
+  } catch {
+    return;
+  }
+};
+
+// A GFM autolink literal shows its own address (`www.` gains `http://`, an
+// email gains `mailto:`), so its text already keeps it.
+const isAutolink = (text: string, href: string): boolean => {
+  let decoded = href;
+  try {
+    decoded = decodeURI(href);
+  } catch {
+    // A malformed escape is compared as written
+  }
+  const target = normalizeUrl(href);
+  return [text, `http://${text}`, `mailto:${text}`].some(
+    (candidate) =>
+      candidate === href ||
+      candidate === decoded ||
+      (target !== undefined && normalizeUrl(candidate) === target)
+  );
+};
+
+// Serialises a link as `[text](href)`, so an export keeps the address and not
+// only the text. With link safety on, a link renders as a button that carries
+// its address in data-href. The text is escaped like any cell text, except for
+// images inside it, which stay Markdown. A link whose text is its own address
+// (an autolink) already keeps it, and a link that is still streaming in has no
+// real address yet, so both are left as plain text.
+function linkToMarkdown(link: Element): string | undefined {
+  const href =
+    link.tagName === "A"
+      ? link.getAttribute("href")
+      : link.getAttribute("data-href");
+  if (!href || href === "streamdown:incomplete-link") {
+    return;
+  }
+  const inner: CellText = { text: "", images: [] };
+  for (const child of link.childNodes) {
+    extractCellText(child, inner);
+  }
+  if (inner.images.length === 0 && isAutolink(inner.text, href)) {
+    return;
+  }
+  // Newlines become spaces (same length, so image offsets still hold), as a
+  // <br> would break the link apart.
+  const text = inner.text.replace(/\r\n|[\r\n]/g, (match) =>
+    " ".repeat(match.length)
+  );
+  return `[${escapeCellKeepingImages(text, inner.images)}](${encodeImageSrc(href)})`;
 }
 
 // Extracts a cell's trimmed text and the offsets of its images in that text.
