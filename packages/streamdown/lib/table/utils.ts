@@ -108,8 +108,25 @@ const normalizeUrl = (url: string): string | undefined => {
 };
 
 // A GFM autolink literal shows its own address (`www.` gains `http://`, an
-// email gains `mailto:`), so its text already keeps it.
+// email gains `mailto:`), so its text already keeps it. A label that merely
+// equals the href (for example `/docs` or a bare domain) is not an autolink.
+const wwwAutolinkPattern = /^www\./i;
+const schemeAutolinkPattern = /^(https?:\/\/)/i;
+const emailAutolinkPattern = /^[^\s@]+@[^\s@]+$/;
+
+const isWwwAutolink = (text: string): boolean => wwwAutolinkPattern.test(text);
+const isSchemeAutolink = (text: string): boolean =>
+  schemeAutolinkPattern.test(text);
+const isEmailAutolink = (text: string): boolean =>
+  emailAutolinkPattern.test(text);
+
 const isAutolink = (text: string, href: string): boolean => {
+  if (
+    !(isWwwAutolink(text) || isSchemeAutolink(text) || isEmailAutolink(text))
+  ) {
+    return false;
+  }
+
   let decoded = href;
   try {
     decoded = decodeURI(href);
@@ -117,7 +134,14 @@ const isAutolink = (text: string, href: string): boolean => {
     // A malformed escape is compared as written
   }
   const target = normalizeUrl(href);
-  return [text, `http://${text}`, `mailto:${text}`].some(
+  const candidates = [text];
+  if (isWwwAutolink(text)) {
+    candidates.push(`http://${text}`);
+  }
+  if (isEmailAutolink(text)) {
+    candidates.push(`mailto:${text}`);
+  }
+  return candidates.some(
     (candidate) =>
       candidate === href ||
       candidate === decoded ||
@@ -407,8 +431,10 @@ export const escapeMarkdownTableCell = (cell: string): string => {
   return parts.join("");
 };
 
-// Escapes a cell while leaving the given real images (by position) as Markdown.
-// Text around the images is escaped piece by piece, so no placeholder is needed.
+// Escapes a cell while leaving the given real images and links (by position)
+// as Markdown. Text around them is escaped piece by piece, so no placeholder
+// is needed. A literal ! immediately before [text](href) is escaped so the
+// export is not parsed as an image; a genuine ![alt](src) is left intact.
 const escapeCellKeepingImages = (cell: string, images: CellImage[] = []) => {
   if (images.length === 0) {
     return escapeMarkdownTableCell(cell);
@@ -424,7 +450,14 @@ const escapeCellKeepingImages = (cell: string, images: CellImage[] = []) => {
     ) {
       continue;
     }
-    result += escapeMarkdownTableCell(cell.slice(position, start)) + markdown;
+    let prefix = cell.slice(position, start);
+    // Links start with "[", images with "![", so this only protects links.
+    const escapeBang = markdown.startsWith("[") && prefix.endsWith("!");
+    if (escapeBang) {
+      prefix = prefix.slice(0, -1);
+    }
+    result +=
+      escapeMarkdownTableCell(prefix) + (escapeBang ? "\\!" : "") + markdown;
     position = start + markdown.length;
   }
   return result + escapeMarkdownTableCell(cell.slice(position));

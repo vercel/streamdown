@@ -117,5 +117,63 @@ describe("table links", () => {
     expect(toMarkdown(buildTable("<a>anchor</a>"))).toContain(
       "| Release | anchor |"
     );
+    expect(
+      toMarkdown(
+        buildTable('<a href="http://www.example.com/x">www.example.com/x</a>')
+      )
+    ).toContain("| Release | www.example.com/x |");
+  });
+
+  it("should not serialize a bang before a cell link as an image", () => {
+    const { container } = render(
+      <Streamdown linkSafety={{ enabled: false }}>
+        {
+          "| Item | Link |\n|---|---|\n| Note | \\![Release](https://example.com/release) |"
+        }
+      </Streamdown>
+    );
+    const table = container.querySelector("table") as HTMLTableElement;
+    const data = extractTableDataFromElement(table);
+
+    expect(tableDataToMarkdown(data)).toBe(
+      "| Item | Link |\n| --- | --- |\n| Note | \\![Release](https://example.com/release) |"
+    );
+    expect(tableDataToCSV(data)).toBe(
+      "Item,Link\nNote,![Release](https://example.com/release)"
+    );
+    expect(tableDataToTSV(data)).toBe(
+      "Item\tLink\nNote\t![Release](https://example.com/release)"
+    );
+  });
+
+  it("should keep a genuine table image as an image", () => {
+    const { container } = render(
+      <Streamdown>
+        {
+          "| Item | Image |\n|---|---|\n| Logo | ![Release](https://example.com/release) |"
+        }
+      </Streamdown>
+    );
+    const table = container.querySelector("table") as HTMLTableElement;
+
+    expect(toMarkdown(table)).toBe(
+      "| Item | Image |\n| --- | --- |\n| Logo | ![Release](https://example.com/release) |"
+    );
+  });
+
+  it("should keep the target of a link whose label is a path", () => {
+    const { container } = render(
+      <Streamdown linkSafety={{ enabled: false }}>
+        {"| Item | Link |\n|---|---|\n| Docs | [/docs](/docs) |"}
+      </Streamdown>
+    );
+    const table = container.querySelector("table") as HTMLTableElement;
+    const data = extractTableDataFromElement(table);
+
+    expect(tableDataToMarkdown(data)).toBe(
+      "| Item | Link |\n| --- | --- |\n| Docs | [/docs](/docs) |"
+    );
+    expect(tableDataToCSV(data)).toBe("Item,Link\nDocs,[/docs](/docs)");
+    expect(tableDataToTSV(data)).toBe("Item\tLink\nDocs\t[/docs](/docs)");
   });
 });
