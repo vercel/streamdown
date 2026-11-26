@@ -172,8 +172,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(next@16.4.6(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
       '@vercel/geistdocs':
-        specifier: 3.0.4
-        version: 3.0.4(@svta/cml-cta@1.0.1(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1))(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1)(@tanstack/react-router@1.151.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(lucide-react@1.73.0(@types/react@19.3.0)(react@19.3.1))(mermaid@11.16.1)(next@16.4.6(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.5)(vite@7.3.1(@types/node@24.10.10)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.21.0)(yaml@2.9.0))
+        specifier: 3.0.5
+        version: 3.0.5(@svta/cml-cta@1.0.1(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1))(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1)(@tanstack/react-router@1.151.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(lucide-react@1.73.0(@types/react@19.3.0)(react@19.3.1))(mermaid@11.16.1)(next@16.4.6(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.5)(vite@7.3.1(@types/node@24.10.10)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.21.0)(yaml@2.9.0))
       '@vercel/speed-insights':
         specifier: ^2.1.0
         version: 2.1.0(next@16.4.6(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
@@ -4315,8 +4315,8 @@ packages:
     resolution: {integrity: sha512-89ybsa2rnVNdw6RI3jGOVvqUJaBj6Umm4IagC1o3PKtr/MXxBKOLek+yyUgF0csA0O5W+dzcpdIhKxVXhgVVtA==}
     engines: {node: '>= 20'}
 
-  '@vercel/geistdocs@3.0.4':
-    resolution: {integrity: sha512-bFaG3yFvbOlEuRNjtiJpiazo/m7ZArBmOVmPDe4i5UPPyq1T5Nal4A2pDrwvaTd0j85NbhAdRi/uyK3h5ZJMcw==}
+  '@vercel/geistdocs@3.0.5':
+    resolution: {integrity: sha512-7FQDiKEZkcBhPzTf/t1sPxJ/6cb4vagL9thzXuQiIsBBax0N6YVyISBBE4VjermnBYiTl/w987UD/QFvDkWI7g==}
     hasBin: true
     peerDependencies:
       mermaid: ^11.12.2
@@ -10992,7 +10992,7 @@ snapshots:
 
   '@vercel/firewall@1.2.6': {}
 
-  '@vercel/geistdocs@3.0.4(@svta/cml-cta@1.0.1(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1))(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1)(@tanstack/react-router@1.151.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(lucide-react@1.73.0(@types/react@19.3.0)(react@19.3.1))(mermaid@11.16.1)(next@16.4.6(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.5)(vite@7.3.1(@types/node@24.10.10)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.21.0)(yaml@2.9.0))':
+  '@vercel/geistdocs@3.0.5(@svta/cml-cta@1.0.1(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1))(@svta/cml-structured-field-values@1.0.1(@svta/cml-utils@1.0.1))(@svta/cml-utils@1.0.1)(@tanstack/react-router@1.151.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@types/react-dom@19.3.0(@types/react@19.3.0))(lucide-react@1.73.0(@types/react@19.3.0)(react@19.3.1))(mermaid@11.16.1)(next@16.4.6(@opentelemetry/api@1.9.0)(@types/node@24.10.10)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(tailwindcss@4.3.5)(vite@7.3.1(@types/node@24.10.10)(jiti@2.7.0)(lightningcss@1.33.0)(tsx@4.21.0)(yaml@2.9.0))':
     dependencies:
       '@ai-sdk/react': 3.0.201(react@19.3.1)(zod@4.6.7)
       '@clack/prompts': 0.11.0
