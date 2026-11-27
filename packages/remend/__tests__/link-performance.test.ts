@@ -32,6 +32,26 @@ describe("completed link detection", () => {
   });
 });
 
+describe("link destination scanning", () => {
+  it.each([
+    "protocol",
+    "text-only",
+  ] as const)("stays linear for many links with unclosed parentheses in %s mode", (linkMode) => {
+    // Every "](" opens a destination with an unbalanced "(" and no space, so
+    // each one scans as far as it can; the scan cap keeps that bounded.
+    const make = (n: number) => "[a](b_(".repeat(n);
+    const options = { linkMode };
+    const small = make(2000);
+    const large = make(8000);
+
+    // Thousands of nested incomplete links exceed MAX_HEAL_PASSES, so this
+    // input isn't healed to a fixed point (as before); only the cost matters.
+    expect(bestTime(large, options) / bestTime(small, options)).toBeLessThan(
+      10
+    );
+  });
+});
+
 describe("nested bracket healing", () => {
   const nested = (n: number) => `${"[".repeat(n)}${"]".repeat(n)}`;
   const image = "](streamdown:incomplete-image)";

@@ -12,6 +12,127 @@ export type LinkMode = "protocol" | "text-only";
 // survives rehype-sanitize + rehype-harden under default config (same as links).
 export const INCOMPLETE_IMAGE_PLACEHOLDER = "streamdown:incomplete-image";
 
+// Real URLs stay far below this. Past it we fall back to "any ) closes the
+// link", which keeps every scan bounded however adversarial the input is.
+const MAX_DESTINATION_SCAN = 2048;
+
+// Scan results that aren't positions
+const OPEN = -1; // ran out of text: the link may still be streaming
+const INVALID = -2; // not a link destination per CommonMark
+
+const isSpace = (char: string | undefined): boolean =>
+  char === " " || char === "\t" || char === "\n" || char === "\r";
+
+const skipSpaces = (text: string, i: number, limit: number): number => {
+  let j = i;
+  while (j < limit && isSpace(text[j])) {
+    j += 1;
+  }
+  return j;
+};
+
+// Index just past a <...> destination starting at i, OPEN or INVALID
+const scanAngleDestination = (
+  text: string,
+  i: number,
+  limit: number
+): number => {
+  let j = i + 1;
+  while (j < limit && text[j] !== ">") {
+    if (text[j] === "\n" || text[j] === "<") {
+      return INVALID;
+    }
+    j += text[j] === "\\" ? 2 : 1;
+  }
+  return j < limit ? j + 1 : OPEN;
+};
+
+// Scans a destination without <...>, where parentheses must be balanced or
+// escaped. `closes` is true when an unmatched ")" ends the link right there.
+const scanBareDestination = (
+  text: string,
+  i: number,
+  limit: number
+): { end: number; closes: boolean } => {
+  let depth = 0;
+  let j = i;
+  while (j < limit && !isSpace(text[j])) {
+    if (text[j] === "\\") {
+      j += 2;
+      continue;
+    }
+    if (text[j] === "(") {
+      depth += 1;
+    } else if (text[j] === ")") {
+      if (depth === 0) {
+        return { end: j, closes: true };
+      }
+      depth -= 1;
+    }
+    j += 1;
+  }
+  return { end: j, closes: false };
+};
+
+const TITLE_CLOSERS: Record<string, string> = { '"': '"', "'": "'", "(": ")" };
+
+// Index just past a "...", '...' or (...) title starting at i, OPEN or INVALID
+const scanTitle = (text: string, i: number, limit: number): number => {
+  const closer = TITLE_CLOSERS[text[i]];
+  if (!closer) {
+    return INVALID;
+  }
+  let j = i + 1;
+  while (j < limit && text[j] !== closer) {
+    j += text[j] === "\\" ? 2 : 1;
+  }
+  return j < limit ? j + 1 : OPEN;
+};
+
+// Where the link whose "(" is at `open` ends, following CommonMark's inline
+// link rules: the destination may contain balanced or backslash-escaped
+// parentheses, or anything inside <...>, and an optional title may sit before
+// the closing ")". Returns -1 while the link is still open. Text that can't be
+// a link destination, or a scan cut short by the cap, falls back to the first
+// ")", as before.
+export const findLinkClose = (text: string, open: number): number => {
+  const limit = Math.min(text.length, open + 1 + MAX_DESTINATION_SCAN);
+  const settle = (result: number): number =>
+    result === OPEN && limit === text.length ? -1 : text.indexOf(")", open + 1);
+
+  let i = skipSpaces(text, open + 1, limit);
+  if (text[i] === "<") {
+    const next = scanAngleDestination(text, i, limit);
+    if (next < 0) {
+      return settle(next);
+    }
+    i = next;
+  } else {
+    const destination = scanBareDestination(text, i, limit);
+    if (destination.closes) {
+      return destination.end;
+    }
+    i = destination.end;
+  }
+
+  i = skipSpaces(text, i, limit);
+  if (i >= limit) {
+    return settle(OPEN);
+  }
+  if (text[i] === ")") {
+    return i;
+  }
+  const afterTitle = scanTitle(text, i, limit);
+  if (afterTitle < 0) {
+    return settle(afterTitle);
+  }
+  i = skipSpaces(text, afterTitle, limit);
+  if (i >= limit) {
+    return settle(OPEN);
+  }
+  return text[i] === ")" ? i : settle(INVALID);
+};
+
 // Helper function to handle incomplete URLs in links/images
 const handleIncompleteUrl = (
   text: string,
@@ -19,8 +140,7 @@ const handleIncompleteUrl = (
   linkMode: LinkMode,
   blockStart: number
 ): string | null => {
-  const afterParen = text.substring(lastParenIndex + 2);
-  if (afterParen.includes(")")) {
+  if (findLinkClose(text, lastParenIndex + 1) !== -1) {
     return null;
   }
 
@@ -112,15 +232,18 @@ const findFirstIncompleteBracket = (
         return j;
       }
       // This [ is complete, check if it's a full link [text](url)
-      // Only search for ")" when one exists, so each search ends at a ")"
-      // that j then skips past, keeping the loop linear
+      // Only search for ")" when one exists; each search is bounded and
+      // ends at the link's own ")", which j then skips past
       if (
         closingIdx + 1 < text.length &&
         text[closingIdx + 1] === "(" &&
         brackets.lastParen >= closingIdx + 2
       ) {
-        // Skip past this complete link
-        j = text.indexOf(")", closingIdx + 2);
+        const linkClose = findLinkClose(text, closingIdx + 1);
+        if (linkClose !== -1) {
+          // Skip past this complete link
+          j = linkClose;
+        }
       }
     }
   }
@@ -206,7 +329,10 @@ const opensCompleteLink = (
 ): boolean => {
   const close = brackets.closeOf[open];
   return (
-    close !== -1 && text[close + 1] === "(" && brackets.lastParen >= close + 2
+    close !== -1 &&
+    text[close + 1] === "(" &&
+    brackets.lastParen >= close + 2 &&
+    findLinkClose(text, close + 1) !== -1
   );
 };
 
