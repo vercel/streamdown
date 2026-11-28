@@ -29,16 +29,21 @@ export default function Page() {
 
 The component only re-renders when one of these props changes:
 - `children` (markdown content)
-- `shikiTheme`
-- `isAnimating`
-- `animated`
-- `mode`
+- `components`
 - `plugins`
-- `className`
-- `linkSafety`
-- `normalizeHtmlIndentation`
+- `remarkPlugins`, `rehypePlugins`
+- `allowedTags`, `literalTagContent`, `disableAutolinkProtocols`
+- `mode`, `isAnimating`, `animated`, `caret`
+- `shikiTheme`, `lineNumbers`, `codeBlockMaxHeight`, `tableMaxHeight`, `codeBlockRawLanguages`
+- `mermaid`, `controls`, `icons`, `portal`, `linkSafety`
+- `parseIncompleteMarkdown`, `remend`, `normalizeHtmlIndentation`
+- `BlockComponent`, `parseMarkdownIntoBlocksFn`, `fallbackComponent`
+- `className`, `dir`, `prefix`, `translations`
+- `data-*` and `aria-*` attributes
 
-All other prop changes are ignored, ensuring optimal performance.
+Object and array props such as `mermaid`, `controls`, `icons`, `allowedTags`, `remend`, `remarkPlugins` and `rehypePlugins` are compared by value, so passing a new inline literal with the same contents does not trigger a re-render. Functions, components and DOM nodes (for example `portal`, `BlockComponent` or plugin functions) are compared by reference, so keep them stable.
+
+Other props, such as event callbacks, do not trigger a re-render on their own.
 
 ### Block-Level Memoization
 
