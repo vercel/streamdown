@@ -8,7 +8,7 @@ related:
   - /docs/memoization
 ---
 
-Streamdown supports per-word streaming animation through the built-in `animated` prop. Words fade in as they mount, creating a smooth text-reveal effect during AI streaming. When streaming ends, the animation is removed entirely, leaving zero DOM overhead on completed messages.
+Streamdown supports per-word streaming animation through the built-in `animated` prop. Words fade in as they mount, creating a smooth text-reveal effect during AI streaming. Once streaming ends and the last words have finished fading in, the animation is removed entirely, leaving zero DOM overhead on completed messages.
 
 ## Enabling animation
 
@@ -27,7 +27,7 @@ export default function Page() {
 }
 ```
 
-The `isAnimating` prop controls when the animation is active. When `false`, the animate plugin is excluded from the rehype pipeline entirely, so completed messages render as plain text with no extra `<span>` wrappers.
+The `isAnimating` prop controls when the animation is active. Once it is `false` and the words still queued or mid-fade have finished (typically within `maxBacklogMs` + `duration`, about 470ms with the defaults), the animate plugin is excluded from the rehype pipeline entirely, so completed messages render as plain text with no extra `<span>` wrappers. Keeping the spans until then stops the end of a reply from popping in all at once.
 
 ## How it works
 
@@ -90,6 +90,8 @@ export default function Page() {
         duration: 200,         // milliseconds (default: 150)
         easing: "ease-out",    // CSS timing function (default: "ease")
         sep: "word",           // "word" | "char" (default: "word")
+        stagger: 40,           // milliseconds between words (default: 40)
+        maxBacklogMs: 320,     // max scheduling lead in milliseconds (default: 320)
       }}
       isAnimating={status === "streaming"}
     >
@@ -107,6 +109,16 @@ export default function Page() {
 | `duration` | `number` | `150` | Animation duration in milliseconds. |
 | `easing` | `string` | `"ease"` | CSS timing function. |
 | `sep` | `"word" \| "char"` | `"word"` | Split text by word or character. |
+| `stagger` | `number` | `40` | Delay in milliseconds between consecutive new words in a batch, so a burst of tokens fades in as a cascade instead of all at once. `0` turns the spread off and every word in a batch starts together. |
+| `maxBacklogMs` | `number` | `320` | Soft cap in milliseconds on how far ahead of the clock words may be scheduled. When a fast stream would queue more than this, the stagger is compressed to fit, so the animation stays caught up with the text. |
+
+### Stagger and backlog
+
+New words are scheduled on a timeline shared by every block. Each word gets an inline `--sd-delay` of `stagger` ms after the previous one, which turns a batch of tokens into a cascade. If a fast model produces more words than fit in `maxBacklogMs`, the stagger shrinks (down to a 4ms floor) so the cascade never runs more than about `maxBacklogMs` behind the stream.
+
+Avoid `stagger: 0` unless you want that: all words in a commit then fade in together, which looks chunky with bursty streams. Raising `maxBacklogMs` allows longer cascades but delays the last words further behind the stream.
+
+When `isAnimating` turns `false`, Streamdown keeps the animation until the last scheduled word has started and finished its fade, so words still waiting on their delay don't appear in a single frame.
 
 ### Character-level animation
 
@@ -238,6 +250,7 @@ Each animated span receives these CSS custom properties via inline styles:
 | `--sd-animation` | The `@keyframes` name to use |
 | `--sd-duration` | Animation duration |
 | `--sd-easing` | CSS timing function |
+| `--sd-delay` | Start delay from the stagger timeline (omitted when `0`) |
 
 The `[data-sd-animate]` selector in `styles.css` reads these properties:
 
