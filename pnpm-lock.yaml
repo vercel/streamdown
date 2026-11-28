@@ -18,6 +18,7 @@ overrides:
   postcss-selector-parser@>=7.0.0 <7.1.6: ^7.1.6
   rollup@>=4.0.0 <4.59.0: ^4.59.0
   source-map-js@<1.2.2: ^1.2.2
+  undici@>=4.0.0 <6.29.1: ^6.29.1
   uuid@<11.1.1: ^11.1.1
   vite: ^7.3.7
   ws@>=8.0.0 <8.21.0: ^8.21.0
@@ -1045,10 +1046,6 @@ packages:
     peerDependenciesMeta:
       '@noble/hashes':
         optional: true
-
-  '@fastify/busboy@2.1.1':
-    resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
-    engines: {node: '>=14'}
 
   '@floating-ui/core@1.8.0':
     resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
@@ -6023,10 +6020,6 @@ packages:
   undici-types@7.24.6:
     resolution: {integrity: sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==}
 
-  undici@5.29.0:
-    resolution: {integrity: sha512-raqeBD6NQK4SkWhQzeYKd1KmIG6dllBOTt55Rmkt4HtI9mwdWtJljnrXjAFUBLTSN67HWrOIZ3EPF4kjUw80Bg==}
-    engines: {node: '>=14.0'}
-
   undici@6.29.1:
     resolution: {integrity: sha512-EvRlUt/QqAEvXdQeRMYUfwOQsfzpDztykrG2owGEE/rBOBoYv9uF39ZzsNDh4lTFHhTr2XOZjKkYgueD12ZmGA==}
     engines: {node: '>=18.17'}
@@ -6447,7 +6440,7 @@ snapshots:
       '@ai-sdk/provider': 2.0.5
       '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.1.1
-      undici: 5.29.0
+      undici: 6.29.1
       zod: 4.6.7
 
   '@ai-sdk/provider-utils@4.0.67(zod@4.6.7)':
@@ -6938,8 +6931,6 @@ snapshots:
     optional: true
 
   '@exodus/bytes@1.9.0': {}
-
-  '@fastify/busboy@2.1.1': {}
 
   '@floating-ui/core@1.8.0':
     dependencies:
@@ -12689,10 +12680,6 @@ snapshots:
       oxlint: 1.39.0
 
   undici-types@7.24.6: {}
-
-  undici@5.29.0:
-    dependencies:
-      '@fastify/busboy': 2.1.1
 
   undici@6.29.1: {}
 
