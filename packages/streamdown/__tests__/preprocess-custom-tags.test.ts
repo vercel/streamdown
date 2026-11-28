@@ -99,13 +99,13 @@ describe("preprocessCustomTags", () => {
   });
 
   it("should pad a nested unclosed tag after an already-interrupted one", () => {
-    const md = "<outer>\n\n**x**\n<inner>\n**y**";
+    const md = "<outer>\n\n**x**\n\n<inner>\n**y**";
     const result = preprocessCustomTags(md, ["outer", "inner"]);
-    expect(result).toBe("<outer>\n\n**x**\n<inner>\n\n**y**");
+    expect(result).toBe("<outer>\n\n**x**\n\n<inner>\n\n**y**");
   });
 
   it("should replace blank lines between nested unclosed tags either way", () => {
-    const expected = "<outer>\n\nx\n<!---->\ny\n<inner>\n\nz\n<!---->\nw";
+    const expected = "<outer>\n\nx\n<!---->\ny\n<inner>\nz\n<!---->\nw";
     const tags = ["outer", "inner"];
     expect(preprocessCustomTags("<outer>\nx\n\ny\n<inner>\nz\n\nw", tags)).toBe(
       expected
@@ -193,6 +193,42 @@ describe("preprocessCustomTags", () => {
   });
 
   it.each([
+    ["continues a paragraph", "Text\n<verse>a\nb</verse> more"],
+    ["continues a paragraph on its own line", "Text\n<verse>\na\n</verse>"],
+    ["continues a paragraph while streaming", "Text\n<verse>\na"],
+    ["continues a list item's line", "- <verse>a\n  b</verse> text\n- c"],
+    ["opens a line in a blockquote", "> <verse>a\n> b</verse> text"],
+    ["is on its own line in a blockquote", "> <verse>\n> a\n> </verse>"],
+  ])("should leave a multi-line tag that %s unchanged", (_name, md) => {
+    expect(preprocessCustomTags(md, ["verse"])).toBe(md);
+  });
+
+  it.each([
+    [
+      "a heading",
+      "# Title\n<note>\n**b**\n</note>",
+      "# Title\n<note>\n\n**b**\n\n</note>\n\n",
+    ],
+    [
+      "a code fence",
+      "```\nx\n```\n<note>\n**b**\n</note>",
+      "```\nx\n```\n<note>\n\n**b**\n\n</note>\n\n",
+    ],
+    [
+      "an HTML tag on its own line",
+      "<div>\n<note>\n**b**\n</note>\n</div>",
+      "<div>\n<note>\n\n**b**\n\n</note>\n\n\n</div>",
+    ],
+    [
+      "a padded closing tag",
+      "<note>\na</note>\n<note>\n**b**\n</note>",
+      "<note>\n\na\n\n</note>\n\n\n<note>\n\n**b**\n\n</note>\n\n",
+    ],
+  ])("should still pad a tag on the line after %s", (_name, md, expected) => {
+    expect(preprocessCustomTags(md, ["note"])).toBe(expected);
+  });
+
+  it.each([
     ["<note>a</note> <note>\n**b**\n</note>"],
     ["Text <note>\na</note><note>\n**b**\n</note>"],
   ])("should leave a tag after an inline tag on the same line unchanged", (md) => {
@@ -262,9 +298,9 @@ describe("preprocessCustomTags", () => {
 
   it("should distinguish inline and multiline siblings across lines", () => {
     const md =
-      "<note>x</note>\n<note>y</note>\n<note>\nz\n</note>\n<note>w</note>";
+      "<note>x</note>\n<note>y</note>\n\n<note>\nz\n</note>\n<note>w</note>";
     expect(preprocessCustomTags(md, ["note"])).toBe(
-      "<note>x</note>\n<note>y</note>\n<note>\n\nz\n\n</note>\n\n\n<note>w</note>"
+      "<note>x</note>\n<note>y</note>\n\n<note>\n\nz\n\n</note>\n\n\n<note>w</note>"
     );
   });
 
