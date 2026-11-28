@@ -23,6 +23,7 @@ const INLINE_ATOMS = [
   "user__id",
   "a_b_c",
   "[label](https://example.com)",
+  "[pi](w/Pi_(c))",
   "![alt](https://example.com/pic.png)",
   "[![alt](pic.png)](page.html)",
   "<b>tag</b>",
