@@ -2,6 +2,8 @@
 // Setext headings use --- or === on the line below text to create headings
 // During streaming, partial list items (like "-") can be misinterpreted as setext heading underlines
 
+import { getScan } from "./scan";
+
 // Regex patterns defined at top level for performance
 const DASH_ONLY_PATTERN = /^-{1,2}$/;
 const DASH_WITH_SPACE_PATTERN = /^[\s]*-{1,2}[\s]+$/;
@@ -63,6 +65,28 @@ const isOutsidePreviousContainer = (
   return BLOCKQUOTE_PATTERN.test(previousLine);
 };
 
+// Counts up to `maxDepth` block quote markers that open a line, each after
+// up to 3 spaces, and returns the rest of the line after them
+const splitQuoteMarkers = (
+  line: string,
+  maxDepth = Number.POSITIVE_INFINITY
+): { depth: number; rest: string } => {
+  let depth = 0;
+  let start = 0;
+  while (depth < maxDepth) {
+    let i = start;
+    while (line[i] === " " && i - start < 3) {
+      i += 1;
+    }
+    if (line[i] !== ">") {
+      break;
+    }
+    depth += 1;
+    start = line[i + 1] === " " ? i + 2 : i + 1;
+  }
+  return { depth, rest: line.slice(start) };
+};
+
 /**
  * Detects if the text ends with a potential incomplete setext heading underline
  * and adds a space to break the setext heading pattern
@@ -80,8 +104,29 @@ export const handleIncompleteSetextHeading = (text: string): string => {
     return text;
   }
 
-  const lastLine = text.substring(lastNewlineIndex + 1);
-  const previousContent = text.substring(0, lastNewlineIndex);
+  // Inside an unterminated fenced code block every line is code, so nothing
+  // can turn into a heading and a zero-width space would end up in the code
+  if (getScan(text).openFence) {
+    return text;
+  }
+
+  // An underline only belongs to a paragraph in the same block quote, so
+  // compare the lines after their quote markers. A line with more or fewer
+  // markers is in another container and can't underline it.
+  const last = splitQuoteMarkers(text.substring(lastNewlineIndex + 1));
+  const rawLines = text.substring(0, lastNewlineIndex).split("\n");
+  if (splitQuoteMarkers(rawLines.at(-1) ?? "").depth !== last.depth) {
+    return text;
+  }
+  const lastLine = last.rest;
+  // A line outside the quote ends any list inside it
+  const quotedLines =
+    last.depth === 0
+      ? rawLines
+      : rawLines.map((line) => {
+          const quoted = splitQuoteMarkers(line, last.depth);
+          return quoted.depth < last.depth ? "" : quoted.rest;
+        });
 
   // Check if last line is only dashes or equals (potential setext heading underline)
   // We need to check for patterns like: "-", "--", "=", "=="
@@ -97,14 +142,13 @@ export const handleIncompleteSetextHeading = (text: string): string => {
     !lastLine.match(DASH_WITH_SPACE_PATTERN)
   ) {
     // Check if there's content on the previous line (required for setext heading)
-    const lines = previousContent.split("\n");
-    const previousLine = lines.at(-1);
+    const previousLine = quotedLines.at(-1);
 
     // If the previous line has content, this could be interpreted as a setext heading
     if (
       previousLine &&
       previousLine.trim().length > 0 &&
-      !isOutsidePreviousContainer(previousLine, lastLine, lines)
+      !isOutsidePreviousContainer(previousLine, lastLine, quotedLines)
     ) {
       // Add text to break the setext heading pattern
       // We add a zero-width space (\u200B) which breaks the pattern without being visible
@@ -120,8 +164,7 @@ export const handleIncompleteSetextHeading = (text: string): string => {
     !lastLine.match(EQUALS_WITH_SPACE_PATTERN)
   ) {
     // Check if there's content on the previous line
-    const lines = previousContent.split("\n");
-    const previousLine = lines.at(-1);
+    const previousLine = quotedLines.at(-1);
 
     if (previousLine && previousLine.trim().length > 0) {
       // Add text to break the setext heading pattern
